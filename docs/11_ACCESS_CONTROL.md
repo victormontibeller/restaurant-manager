@@ -89,7 +89,9 @@ Criação recebe um UUID de intenção gerado pelo cliente. Sob o mesmo lock emp
 
 Inativação é lógica: preserva cadastro e vínculos, mas remove imediatamente a elegibilidade nas consultas e ações operacionais atuais. Reativação restaura essa elegibilidade para vínculos ainda existentes. Não confundir inativação de unidade com suspensão comercial da empresa. Antes de introduzir pedidos/comandas, a Sprint 03 precisa proteger a conclusão de operações existentes também nesse fluxo; não há pedidos nesta entrega.
 
-Rotas: `GET/POST /api/v1/configuracoes/unidades`, `GET/PUT /api/v1/configuracoes/unidades/{id}`. [Contrato OpenAPI parcial](api/unidades.yaml). UI separa unidades e acessos em navegação interna, mostra conflitos e conserva o UUID durante reenvios no formulário aberto. Horários, canais, regiões e parâmetros ainda dependem das sprints seguintes.
+Rotas: `GET/POST /api/v1/configuracoes/unidades`, `GET/PUT /api/v1/configuracoes/unidades/{id}`. [Contrato OpenAPI parcial](api/unidades.yaml). UI separa unidades e acessos em navegação interna e mostra conflitos. Horários, canais, regiões e parâmetros ainda dependem das sprints seguintes.
+
+No candidato do ciclo 7, a criação incerta conserva UUID/payload em memória, segregados por conta e origem, inclusive após logout e novo login na mesma página. Rejeição de um retry não apaga intenção anterior: consulta por UUID reconcilia o resultado. Navegação entre seções aguarda operações; página/lista só mudam juntas após resposta válida. Logout continua permitido por segurança e login fica bloqueado enquanto o encerramento anterior não for confirmado. Nenhum token ou payload é gravado em armazenamento do navegador; fechar/recarregar a página ainda perde o rascunho, com aviso de saída enquanto houver pendência. Não afirmar recuperação durável de navegador encerrado. Os testes e o SHA efetivamente validado estão no checkpoint.
 
 ## Referências relacionadas
 

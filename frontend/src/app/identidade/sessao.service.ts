@@ -2,6 +2,9 @@ import { Injectable, signal } from '@angular/core';
 
 export interface Identidade { usuarioId: string; perfil: string; emailVerificado: boolean; }
 interface Access { accessToken: string; expiresIn: number; }
+export class ApiFailure extends Error {
+  constructor(readonly status:number,mensagem:string) {super(mensagem);}
+}
 
 @Injectable({ providedIn: 'root' })
 export class SessaoService {
@@ -41,7 +44,7 @@ export class SessaoService {
     if (!response.ok) {
       if (response.status===401) this.limpar();
       const error=await response.json() as {mensagem?:string};
-      throw new Error(error.mensagem??'Não foi possível concluir a operação.');
+      throw new ApiFailure(response.status,error.mensagem??'Não foi possível concluir a operação.');
     }
     return response.status===204?undefined as T:await response.json() as T;
   }

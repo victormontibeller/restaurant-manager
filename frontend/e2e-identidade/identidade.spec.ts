@@ -22,6 +22,7 @@ test('S01-UI03: abas concorrentes e logout após perda de conexão', async ({pag
   await context.setOffline(true);
   await page.getByRole('button',{name:'Sair da conta'}).click();
   await expect(page.getByRole('button',{name:'Tentar encerrar novamente'})).toBeEnabled();
+  await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeDisabled();
   await expect(page.getByText('Sessão encerrada no servidor.')).toHaveCount(0);
   await context.setOffline(false);
   await page.getByRole('button',{name:'Tentar encerrar novamente'}).click();

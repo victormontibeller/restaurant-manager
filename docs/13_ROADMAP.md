@@ -22,9 +22,9 @@ Para cada sprint: vincular requisitos a cenários, registrar testes executados/r
 
 ## Como acompanhar as sprints
 
-Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. Todas estão **não iniciadas**, sem duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
+Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. A fundação foi integrada; Sprint 01 está em andamento e 02–05 ainda não iniciaram, conforme o checkpoint. Não há duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
 
-A execução pelo Hermes segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). Avança entre tarefas/sprints sem nova confirmação, usando branches encadeadas por incremento, push e deploy automático em homologação após os gates. Isso não autoriza merge em `main` ou produção nem permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
+A execução pelo Hermes segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). A missão vigente autoriza uma branch `hermes/...` e um PR por Sprint, com merge normal em `main` após os gates; a seguinte parte da main integrada. Sem commit direto, auto-merge ou force push. Homologação fictícia permanece autorizada após validação, produção não. Nenhuma autorização permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
 
 ## Rastreabilidade mínima da revisão
 

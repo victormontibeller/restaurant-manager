@@ -1,4 +1,4 @@
-import {Component,ElementRef,ViewChild,inject,signal} from '@angular/core';
+import {Component,ElementRef,OnInit,ViewChild,inject,output,signal} from '@angular/core';
 import {SessaoService} from '../identidade/sessao.service';
 interface Acao {codigo:string;descricao:string;escopo:string;dependencia:string|null}
 interface Matriz {versao:number;acoes:Acao[];perfis:Record<string,string[]>}
@@ -64,7 +64,7 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
   `,
   styles:`:host{display:block}form{display:grid;gap:.5rem;margin:1rem 0;max-width:28rem}input:not([type=checkbox]),select{max-width:100%;width:100%;min-height:48px;font:inherit;padding:.5rem;margin-bottom:.7rem}label{display:block}input[type=checkbox]{width:22px;height:22px;margin:.7rem;vertical-align:middle}fieldset{min-width:0;margin:1rem 0;border:1px solid #6b7a70;border-radius:.5rem}.acao{padding:.5rem;border-bottom:1px solid #d9e2dc}.acao small{display:block;overflow-wrap:anywhere}article{padding:1rem;border:1px solid #6b7a70;border-radius:.5rem;margin:1rem 0}h4{overflow-wrap:anywhere}.erro{color:#9d2424}nav{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}`,
 })
-export class AcessosComponent {
+export class AcessosComponent implements OnInit {
   private readonly sessao=inject(SessaoService);
   readonly perfis=['GERENTE','ATENDIMENTO','CAIXA','COZINHA','EXPEDICAO'];
   readonly matriz=signal<Matriz|null>(null);
@@ -77,14 +77,15 @@ export class AcessosComponent {
   readonly erro=signal('');
   readonly aviso=signal('');
   readonly pagina=signal(0);
+  readonly bloqueio=output<boolean>();
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
-  constructor(){void this.carregar();}
-  async carregar():Promise<void>{
+  ngOnInit():void{void this.carregar();}
+  async carregar(pagina=this.pagina()):Promise<void>{
     await this.executar(async()=>{
       const m=await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
-      const e=await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina='+this.pagina());
+      const e=await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina='+pagina);
       const u=await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
-      this.matriz.set(m);this.equipe.set(e);this.unidades.set(u);this.selecionar(this.perfil());
+      this.matriz.set(m);this.equipe.set(e);this.unidades.set(u);this.pagina.set(pagina);this.selecionar(this.perfil());
     });
   }
   selecionar(perfil:string):void {this.perfil.set(perfil);this.escolhidas.set(new Set(this.matriz()?.perfis[perfil]??[]));}
@@ -96,10 +97,10 @@ export class AcessosComponent {
   mudarPerfil(f:Funcionario,perfil:string):void{f.perfil=perfil;if(perfil==='ADMINISTRADOR')f.unidades=[];}
   vincular(f:Funcionario,id:string,marcado:boolean):void{f.unidades=marcado?[...new Set([...f.unidades,id])]:f.unidades.filter(u=>u!==id);}
   async salvarFuncionario(f:Funcionario):Promise<void>{await this.executar(async()=>{const result=await this.sessao.api<Funcionario>('/api/v1/equipe/'+f.id,'PUT',{versao:f.versao,perfil:f.perfil,ativo:f.ativo,unidades:f.unidades});this.equipe.update(rows=>rows.map(row=>row.id===result.id?result:row));this.aviso.set('Funcionário atualizado no servidor.');await this.sessao.atualizarIdentidade();});}
-  paginaAnterior():void{this.pagina.update(p=>Math.max(0,p-1));void this.carregar();}
-  proximaPagina():void{this.pagina.update(p=>p+1);void this.carregar();}
+  paginaAnterior():void{void this.carregar(Math.max(0,this.pagina()-1));}
+  proximaPagina():void{void this.carregar(this.pagina()+1);}
   private async executar(action:()=>Promise<void>):Promise<void>{
-    if(this.ocupado())return;this.ocupado.set(true);this.erro.set('');this.aviso.set('');
-    try{await action();}catch(error){this.erro.set(error instanceof Error?error.message:'Não foi possível concluir. Recarregue para conferir o resultado.');setTimeout(()=>this.alerta?.nativeElement.focus());}finally{this.ocupado.set(false);}
+    if(this.ocupado())return;this.ocupado.set(true);this.bloqueio.emit(true);this.erro.set('');this.aviso.set('');
+    try{await action();}catch(error){this.erro.set(error instanceof Error?error.message:'Não foi possível concluir. Recarregue para conferir o resultado.');setTimeout(()=>this.alerta?.nativeElement.focus());}finally{this.ocupado.set(false);this.bloqueio.emit(false);}
   }
 }

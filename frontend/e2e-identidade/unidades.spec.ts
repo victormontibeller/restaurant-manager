@@ -20,7 +20,9 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito',async(
   await expect(page.getByRole('alert')).toHaveText('Confirme sua senha antes de alterar acessos.');
   await expect(page.getByRole('alert')).toBeFocused();
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
+  const reauth=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar')&&r.request().method()==='POST',{timeout:12000});
   await page.getByRole('button',{name:'Confirmar identidade'}).click();
+  expect((await reauth).status()).toBe(204);
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
   await page.getByLabel('Fuso da nova unidade').fill('Inexistente/Fuso');
   await page.getByRole('button',{name:'Criar unidade',exact:true}).click();
