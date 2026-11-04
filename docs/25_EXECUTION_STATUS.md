@@ -2,6 +2,22 @@
 
 ## Retomada ciclo 11 — incremento de manutenção
 
+Estado consolidado às 21:44Z: retorno corrigido REAL aprovado, original hml
+OID16392 e cinco tabelas/três linhas recuperados integralmente. Fundação449ce3c
+UP/PID380082. Candidato125325 preservado/bloqueado, nenhum banco apagado;
+`healthy.json` permaneceu intacto. CI80c446a passou nos dois runs, com log de
+173 backend e99 Python sem falha/erro/skip. CI3cd4eeb havia falhado por umask;
+guardas não foram relaxadas, journal agora fixa0600 antes de escrever.
+
+Build durável3cd4eeb em execução, não repetido para correção posterior de scripts.
+Fonte do worker80c446a em clone imutável; worker finito aguarda build e CI, depois
+executa dez combinações UI04/UI05, manutenção rm_test e, somente se aprovadas,
+instalação/seed inicial hml por CLI/API. Falha após instalar exige retorno.
+Não é coordenador adicional nem promoção de baseline; fases futuras não aprovadas.
+Registros privados identificam job, unidade, PID, scripts e logs. Não iniciar
+outra suíte/build/migration enquanto essas execuções estiverem ativas.
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-11.md).
+
 Atualização: transição REAL serviu identidade e847fee por HTTPS no banco hml
 clonado, migrador Java0 e deploy comum recusado durante manutenção pendente.
 Retorno inicial falhou antes de mutar o banco: OID PostgreSQL foi serializado

@@ -2,9 +2,23 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, retomada ciclo 10. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos em validação em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, retomada ciclo 11. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Identidade foi servida temporariamente em hml no ensaio de manutenção e retornou à fundação. Não há aprovação integrada de identidade em homologação; consulte o checkpoint para os SHAs.
 
-## Atualização vigente — retomada ciclo 10
+## Atualização vigente — retomada ciclo 11
+
+No JAR e847fee, S01-UI35 passou cinco combinações; identidade UI01–09 teve
+42 aprovações e três falhas, zero skip/retry/flaky. UI04 carregou lentamente no
+WebKit; UI05 pressupunha que unidade recém-criada continuaria na primeira página
+após recarga ordenada. Correções preservam expectativas e usam cargas/paginação
+reais. Reexecução no artefato novo ainda pendente nesta atualização.
+
+Transição hml real, migration Java, HTTPS e recusa de deploy concorrente entre
+ciclos foram exercitadas. Retorno inicial falhou por OID textual; após correção,
+original restaurado e inventário igual, candidato bloqueado/preservado. Fundação
+hml não tinha empresas/identidades: cinco tabelas/três linhas não aprovam dados
+empresariais. Baseline não foi promovido. [Evidência do ciclo 11](sprint-01-retomada-ciclo-11.md).
+
+## Histórico — retomada ciclo 10
 
 No artefato e847fee, S01-UI41 passou cinco combinações. S01-UI35 teve quatro
 aprovações/uma falha WebKit de sincronização de carregamento; correção publicada,
