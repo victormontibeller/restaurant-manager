@@ -51,7 +51,9 @@ test('S00-API01: gestão privada e domínio arbitrário negados', async ({ reque
   const unknown = await request.get('/api/v1/unidades', { headers: { Host: 'desconhecido.localhost' } });
   expect(unknown.status()).toBe(404);
   expect((await unknown.json()).codigo).toBe('EMPRESA_INDISPONIVEL');
-  const privateRoute = await request.get('/api/v1/equipe', { headers: { Host: 'a.localhost' } });
+  const privateHost=process.env['RM_PRIVATE_HOST']??'a.localhost';
+  expect(['a.localhost','hmla.localhost']).toContain(privateHost);
+  const privateRoute = await request.get('/api/v1/equipe', { headers: { Host: privateHost } });
   expect(privateRoute.status()).toBe(401);
   expect((await privateRoute.json()).codigo).toBe('AUTENTICACAO_NECESSARIA');
   const health = await request.get('/actuator/health');

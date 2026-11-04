@@ -205,8 +205,28 @@ def assert_no_hml_maintenance(root):
     for name in ('state.json', 'database-swap.json'):
         for path in (root / 'maintenance-releases').glob('*/' + name):
             record = json.loads(path.read_text())
-            if record.get('stage') != 'hml' or record.get('state') != 'original-restaurado':
+            if record.get('stage') == 'hml' and record.get('state') == 'identidade-aceita':
+                verify_hml_acceptance(path.parent)
+            elif record.get('stage') != 'hml' or record.get('state') != 'original-restaurado':
                 raise ValueError('Manutenção de homologação pendente; validar/retornar antes de outro deploy.')
+
+
+def verify_hml_acceptance(attempt):
+    """Aceitação só libera o ledger quando todos os registros foram confirmados."""
+    receipt_path = private_runtime_path(str(attempt / 'acceptance.json'))
+    receipt = json.loads(receipt_path.read_text())
+    state = json.loads((attempt / 'state.json').read_text())
+    swap = json.loads((attempt / 'database-swap.json').read_text())
+    evidence = private_runtime_path(str(attempt / 'identity-evidence.json'))
+    digest = artifact_hash(receipt_path)
+    if (receipt.get('approved') is not True or receipt.get('stage') != 'hml'
+            or receipt.get('attempt') != str(attempt)
+            or receipt.get('evidence_sha256') != artifact_hash(evidence)
+            or any(r.get('state') != 'identidade-aceita' or r.get('acceptance_sha256') != digest
+                   for r in (state, swap))
+            or any(receipt.get(k) != state.get(k) for k in ('git_sha', 'artifact_sha256'))
+            or any(receipt.get(k) != swap.get(k) for k in ('original_oid', 'candidate_oid'))):
+        raise ValueError('Manutenção com aceitação incompleta/divergente; reconciliar antes de deploy.')
 
 
 def verify_listener(pid, port=8088):

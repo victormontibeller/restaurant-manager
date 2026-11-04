@@ -100,6 +100,8 @@ class Operations:
             raise ValueError('Ledger de homologação divergente.')
         if self.record.get('state') == 'original-restaurado':
             raise ValueError('Retorno já concluído; conferir release, sem repetir mutações.')
+        if self.record.get('state') in ('aceitacao-pendente', 'identidade-aceita'):
+            raise ValueError('Aceitação iniciada: não retornar banco antigo e perder dados posteriores; reconciliar.')
         for key in ('git_sha', 'previous_sha', 'runner_sha'):
             if not re.fullmatch('[0-9a-f]{40}', self.record.get(key, '')):
                 raise ValueError('SHA inválido no ledger.')

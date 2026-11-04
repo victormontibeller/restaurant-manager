@@ -62,3 +62,16 @@ manifesto/logs/resultados duráveis e candidato próprio rm_test. Não é outro
 coordenador. Executa as demais famílias sem repetir UI04/UI05 já aprovados no
 mesmo artefato. Resultado ainda não consolidado neste registro; preservá-la se
 atravessar ciclos. Continuidade da suíte não significa aprovação antecipada.
+
+## Handoff final observado às23:18:53Z
+
+Verificação passou15combinações e cadastro20 no mesmo JAR3cd4eeb, sem falha,
+skip/retry/flaky; recuperação em execução. Worker permanece independente, não
+foi interrompido. Ainda não existe resultado aprovado das demais famílias nem
+aprovação global. Ambos checks CI de e91a12f passaram. PR3 continua OPEN/draft.
+
+Após essa consulta o executor avisou orçamento quase esgotado; somente handoff
+obrigatório foi gravado. Última verificação hml manteve3cd4eeb/UP/PID399982;
+originalOID16392 bloqueado e clone135836 ativo. Não houve nova verificação depois
+do aviso. RelatórioHTML privado é snapshot anterior23:09:58Z; STATUS distingue
+resultados posteriores. Documentos finais locais após o push devem ser preservados.

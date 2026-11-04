@@ -6,13 +6,42 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
+from typing import Any
 
 from application_recovery import private_file, require
 from hml_accounts import atomic_json, validate_runtime
-from release_support import artifact_hash, clean_sha, durable_artifact, verify
+from maintenance_database import Admin, DatabaseSwap
+from release_support import artifact_hash, clean_sha, durable_artifact, verify, verify_e2e_coverage, private_runtime_path
 
 PROJECTS = ('chromium-desktop', 'chromium-mobile', 'chromium-tablet', 'firefox-desktop', 'webkit-desktop')
 SCENARIOS = tuple('S01-HML' + str(i).zfill(2) for i in range(1, 11))
+
+
+def runtime_database(root, gate):
+    candidate = json.loads(private_runtime_path(str(root / 'candidate.json')).read_text())
+    attempt = private_runtime_path(candidate['maintenance_attempt'], directory=True)
+    require(attempt.parent == root / 'maintenance-releases', 'Tentativa hml fora do registro.')
+    state = json.loads(private_runtime_path(str(attempt / 'state.json')).read_text())
+    require(state.get('stage') == 'hml' and state.get('state') in (
+        'health-aprovado-e2e-pendente', 'aceitacao-pendente', 'identidade-aceita')
+        and all(state.get(k) == gate[k] for k in ('git_sha', 'artifact_sha256')),
+        'Tentativa não corresponde ao runtime de identidade.')
+    admin = Admin(root, sys.stderr)
+    admin.verify_policy('rm_hml', 'hml')
+    swap = DatabaseSwap.resume(admin, 'hml', attempt)
+    require(swap.confirm('rm_hml', swap.record['candidate_oid'])['allowed'] is True
+            and swap.confirm(swap.backup, swap.record['original_oid'])['allowed'] is False
+            and admin.connections(swap.backup) == 0, 'Bancos da tentativa divergentes.')
+    return dict(attempt=str(attempt), database='rm_hml', candidate_oid=swap.record['candidate_oid'],
+                original_oid=swap.record['original_oid'])
+
+
+def foundation_coverage(data):
+    found = verify_e2e_coverage(data)
+    expected = {(p, s) for p in PROJECTS for s in ('S00-UI01', 'S00-UI02', 'S00-UI03', 'S00-API01')}
+    require(set(found) == expected, 'Regressão da fundação exige vinte combinações exatas.')
+    return found
 
 
 def coverage(data):
@@ -46,6 +75,7 @@ def main():
     parser.add_argument('--job', type=Path, required=True)
     parser.add_argument('--fixture', type=Path, required=True)
     parser.add_argument('--report', type=Path, required=True)
+    parser.add_argument('--foundation', action='store_true', help='Regressão do shell/API no candidato de identidade, sem promover baseline.')
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     root = Path(os.environ.get('RM_HOME', Path.home() / '.local/share/restaurant-manager')).resolve()
@@ -64,28 +94,33 @@ def main():
         before = verify(root, gate['git_sha'])
         environ = dict(x.split(b'=', 1) for x in Path(f'/proc/{before["pid"]}/environ').read_bytes().split(b'\0') if b'=' in x)
         validate_runtime(before, gate, environ)
+        database = runtime_database(root, gate)
         baseline_hash = artifact_hash(root / 'healthy.json')
-        record = dict(approved=False, scope='sprint-01-smoke-identidades-hml',
+        scope = 'sprint-01-regressao-fundacao-hml' if args.foundation else 'sprint-01-smoke-identidades-hml'
+        config = 'playwright.hml-fundacao.config.ts' if args.foundation else 'playwright.hml-identidade.config.ts'
+        record: dict[str, Any] = dict(approved=False, scope=scope, database=database,
                       runner_sha=runner_sha, **before, started_at=datetime.now(timezone.utc).isoformat(),
                       fixture_sha256=artifact_hash(args.fixture), runner_pid=os.getpid())
         atomic_json(args.report / 'running.json', record)
         code = 1
         try:
             env = dict(os.environ, RM_BASE_URL='https://hmla.localhost:8088', RM_HML_FIXTURE=str(args.fixture),
+                       RM_PRIVATE_HOST='hmla.localhost',
                        RM_REPORT_DIR=str(args.report), PLAYWRIGHT_BROWSERS_PATH=str(root / 'browsers'),
                        LD_LIBRARY_PATH=str(root / 'toolchains/browser-libs/usr/lib/x86_64-linux-gnu'),
                        RM_WEBKIT_EXECUTABLE=str(repo / 'scripts/webkit-local.sh'))
             with (args.report / 'execution.log').open('x') as log:
                 result = subprocess.run(['npm', '--prefix', 'frontend', 'run', 'e2e', '--',
-                                         '--config=playwright.hml-identidade.config.ts'],
+                                         '--config=' + config],
                                         cwd=repo, env=env, stdout=log, stderr=log, timeout=2400,
                                         pass_fds=(lock.fileno(), workflow.fileno()))
             record['playwright_exit_code'] = result.returncode
             data = json.loads((args.report / 'results.json').read_text())
             record['stats'] = data['stats']
             require(result.returncode == 0, 'Smoke possui falhas; nenhum baseline promovido.')
-            record['coverage'] = coverage(data)
+            record['coverage'] = foundation_coverage(data) if args.foundation else coverage(data)
             require(verify(root, gate['git_sha']) == before, 'Runtime mudou durante smoke.')
+            require(runtime_database(root, gate) == database, 'Banco mudou durante smoke.')
             require(artifact_hash(args.fixture) == record['fixture_sha256'], 'Fixture mudou durante smoke.')
             require(artifact_hash(root / 'healthy.json') == baseline_hash, 'Baseline mudou durante smoke.')
             durable_artifact(args.job, root, repo)

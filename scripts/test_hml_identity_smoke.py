@@ -11,6 +11,18 @@ from hml_identity_smoke import PROJECTS, SCENARIOS, coverage
 
 
 class SmokeCoverageTest(unittest.TestCase):
+    def test_foundation_does_not_accept_identity_or_extra_scenarios(self):
+        data=self.fixture()
+        with self.assertRaises(ValueError): subject.foundation_coverage(data)
+        specs=data['suites'][0]['specs']
+        data['suites'][0]['specs']=specs[:4]
+        for spec,scenario in zip(specs,('S00-UI01','S00-UI02','S00-UI03','S00-API01')):
+            spec['title']=scenario+': fixture'
+        data['stats']['expected']=20
+        self.assertEqual(len(subject.foundation_coverage(data)),20)
+        data['suites'][0]['specs'].append(copy.deepcopy(specs[0]))
+        with self.assertRaises(ValueError): subject.foundation_coverage(data)
+
     def test_runner_records_process_separately_and_preserves_failure(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
             root=Path(directory); fixture=root/'fixture.json'; report=root/'report'
@@ -21,7 +33,7 @@ class SmokeCoverageTest(unittest.TestCase):
             with patch.dict(os.environ,RM_HOME=str(root)), patch('sys.argv',['smoke','--job',str(root/'job'),'--fixture',str(fixture),'--report',str(report)]), \
                  patch.object(subject,'clean_sha',return_value='c'*40), patch.object(subject,'durable_artifact',return_value=(root/'app.jar',gate)), \
                  patch.object(subject,'private_file',return_value=fixture),patch.object(subject,'verify',return_value=before), \
-                 patch.object(subject,'validate_runtime'),patch.object(subject.subprocess,'run',side_effect=RuntimeError('injetada')):
+                 patch.object(subject,'validate_runtime'),patch.object(subject,'runtime_database',return_value={'database':'fixture'}),patch.object(subject.subprocess,'run',side_effect=RuntimeError('injetada')):
                 self.assertEqual(subject.main(),1)
             record=json.loads((report/'release-evidence.json').read_text())
             self.assertEqual(record['pid'],before['pid'])

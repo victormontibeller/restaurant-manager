@@ -1,5 +1,49 @@
 # Checkpoint de execução
 
+## Incremento em execução — retomada ciclo 14, 2026-11-04
+
+Retomada conferiu e91a12f/PR3 draft/CI verde, hml3cd4eeb UP/PID399982,
+originalOID16392 bloqueado e cloneOID135836 ativo. Regressão herdada preservada;
+verificação15/cadastro20/recuperação15/convites20 aprovados até23:45Z, identidade
+em execução. Não repetir build nem interromper worker.
+
+Novo consolidador/promotor em validação, sem promoção real: exige cobertura
+exata do mesmo JAR, manutenção, OIDs hml e capturas revisadas. Revisão independente
+encontrou vínculo de clone ausente, captura reutilizável e finalização parcial;
+correções e testes adicionados. Smoke antigo sem OID não libera este promotor:
+reexecução direcionada documentada necessária, sem apagar o resultado anterior.
+Sprint01 NÃO concluída; exportação e demonstração assistida da fila hml ainda
+pendentes, além do gate integrado/revisão visual.02–05 não iniciadas.
+
+## Encerramento — retomada ciclo 13, 2026-11-04
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta23:18:53Z;
+depois somente handoff obrigatório. Missão NÃO concluída. Sem merge nem
+CONCLUSAO.json; nenhum build repetido ou worker interrompido.
+
+Head publicado e91a12f20c6f82653862ec188fa3b2dbb3686bfc, remoto/PR3 OPEN/draft/
+base main/corpo relidos. Ambos checks CI desse head passaram na consulta final.
+Este handoff posterior ao push fica local; preservar.
+
+Hml serve identidade3cd4eeb, hash1697a473d968c0246a0b83b23bbd192b7e7fddbc282f061d66cf5f08a6c9d744,
+HTTPS loopback/UP/PID399982 na última verificação23:12Z aproximadamente.
+Original hmlOID16392 bloqueado, zero conexões; cloneOID135836 ativo. Baseline
+healthy.json449ce3c preservado, NÃO promovido. Dez contas fictícias e acesso
+privado preparados, API e smoke hml50combinações aprovados, revisão visual parcial.
+
+Worker finito de regressão permanece ativo/MainPID408252 às23:18:53Z, candidato
+próprio rm_test PID412215. Fonte imutável dc3240c/JAR3cd4eeb. Verificação passou
+15combinações e cadastro20, zero falha/skip/retry/flaky; fase recuperação em
+execução, demais resultados ainda não observados. Não repetir nem interromper:
+recolher unidade/manifests/logs antes de outra suíte, build ou migration.
+UI04/UI05 já aprovados no mesmo artefato e deliberadamente não repetidos.
+
+Relatório privado navegável é snapshot23:09:58Z, anterior aos dois resultados
+acima; STATUS/checkpoint privado finais distinguem isso. Próximo: recolher/corrigir
+regressão, completar fundação no mesmo JAR, revisão visual/restantes critérios e
+promotor de identidade; só então gates/merge Sprint01.02–05 não iniciadas.
+[Evidência](evidencias/sprint-01-retomada-ciclo-13.md).
+
 ## Incremento — retomada ciclo 13, 2026-11-04
 
 Manutenção corrigida REAL aprovada22:42:59Z:2061tabelas/19146linhas, clone/migração,

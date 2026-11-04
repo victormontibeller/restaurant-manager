@@ -44,6 +44,29 @@ class ReleaseGuardsTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Manutenção'):
                 runpy.run_path(str(Path(__file__).parent / 'deploy-hml.py'), run_name='__main__')
 
+    def test_aceitacao_parcial_nao_libera_deploy(self):
+        attempt = self.root / 'maintenance-releases' / ('a' * 32)
+        attempt.mkdir(parents=True, mode=0o700)
+        evidence=attempt/'identity-evidence.json';evidence.write_text('{}');evidence.chmod(0o600)
+        receipt=dict(approved=True,stage='hml',attempt=str(attempt),git_sha='b'*40,
+                     artifact_sha256='c'*64,original_oid='1',candidate_oid='2',
+                     evidence_sha256=artifact_hash(evidence))
+        file=attempt/'acceptance.json';file.write_text(json.dumps(receipt));file.chmod(0o600)
+        state=dict(stage='hml',state='identidade-aceita',acceptance_sha256=artifact_hash(file),
+                   git_sha=receipt['git_sha'],artifact_sha256=receipt['artifact_sha256'])
+        swap=dict(stage='hml',state='identidade-aceita',acceptance_sha256=artifact_hash(file),
+                  original_oid='1',candidate_oid='2')
+        for name,value in [('state.json',state),('database-swap.json',swap)]:
+            (attempt/name).write_text(json.dumps(value))
+        release_support.assert_no_hml_maintenance(self.root)
+        for key,value in [('state','clone-pronto'),('candidate_oid','3'),('acceptance_sha256','d'*64)]:
+            (attempt/'database-swap.json').write_text(json.dumps(dict(swap,**{key:value})))
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                release_support.assert_no_hml_maintenance(self.root)
+        (attempt/'database-swap.json').write_text(json.dumps(swap))
+        evidence.write_text('{"alterado":true}')
+        with self.assertRaises(ValueError):release_support.assert_no_hml_maintenance(self.root)
+
     def test_config_publica_recusada(self):
         self.save()
         self.config.chmod(0o644)

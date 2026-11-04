@@ -266,6 +266,39 @@ NÃO substitui testes mutantes/concorrentes, recuperação ou matriz integral e 
 promove `healthy.json`; os wrappers de fundação continuam recusando identidade.
 Resultado efetivamente observado fica no checkpoint, não é presumido pelo script.
 
+### Consolidação e aceitação de identidade — ciclo 14
+
+O smoke registra agora tentativa de manutenção e OIDs original/candidato antes
+e depois dos navegadores. SHA igual não permite reutilizar teste de outro clone.
+Recibos antigos sem esse vínculo continuam como evidência histórica, mas não
+liberam o novo promotor. `--foundation` executa somente os vinte cenários do
+shell/API em HTTPS hml; não os confunde com os cinquenta de identidades.
+
+`identity_evidence.py --bundle <MANIFESTO_PRIVADO> --output <RESULTADO_NOVO>`
+reabre os relatórios reais e exige as combinações exatas S01-UI01–41, S00-UI01–03,
+S00-API01 e S01-HML01–10 nos cinco projetos, sem duplicatas/skip/retry/flaky.
+O manifesto referencia job aprovado, manutenção, recibos/fontes imutáveis e
+revisões visuais por superfície em mobile/desktop, com notas/hash do PNG.
+Capturas precisam pertencer ao cenário/projeto correspondente. Não cria revisão
+visual automaticamente. Parcelas explicitamente aprovadas de um worker cuja
+fase posterior falhou podem ser consideradas isoladamente no MESMO artefato;
+hash dos resultados e fonte são obrigatórios. Isso não aprova a fase falha.
+
+`identity_acceptance.py --attempt <TENTATIVA_HML> --bundle <MANIFESTO_PRIVADO>`
+refaz essa conferência sob lock, valida OIDs/política/runtime e publica apenas
+o baseline das funcionalidades de identidade disponíveis. Preserva baseline
+anterior e banco original bloqueado. Não migra, reinicia, renomeia ou apaga banco;
+não conclui Sprint/projeto. Critérios adicionais, como exportação e jornada hml
+assistida da fila, continuam exigindo suas próprias evidências.
+
+A intenção e o estado pendente antecedem a publicação. Falha parcial conserva
+ledger bloqueante; a mesma intenção pode reconciliar seus registros após conferir
+o estado real. Retorno automático ao banco da fundação fica recusado depois de
+iniciada a aceitação: perderia as contas/dados posteriores. Mudança incompatível
+futura ainda exige outro procedimento de manutenção; o deploy comum conserva
+sua guarda de fingerprints. Código/testes unitários não significam aceitação
+real; o checkpoint informa se o comando foi efetivamente aprovado.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 
