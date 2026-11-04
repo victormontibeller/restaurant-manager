@@ -5,7 +5,14 @@
 
 [Índice da documentação](README.md)
 
-**Status:** em andamento desde 2026-11-04. Provisionamento, autenticação empresarial, equipe existente, matriz e unidades têm implementação e testes em banco exclusivo. Recuperação de senha foi validada nos cinco projetos de navegador no candidato herdado; cadastro teve falha de sincronização no teste WebKit, corrigida e reexecutada parcialmente no ciclo 11. Convites de funcionários estão em validação no incremento novo. APIs/telas SaaS, verificação de funcionários preexistentes, eventos e demais critérios continuam pendentes. Não concluída; não implantada em homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
+**Status:** em andamento desde 2026-11-04. Há implementação empresarial e SaaS,
+convites/verificação/recuperação, matriz/equipe/unidades, eventos cadastrais e fila
+de provisionamento. Testes locais e E2E possuem resultados por artefato, não uma
+aprovação integrada da Sprint. Retomada ciclo 7 corrige revogação com unidade
+inativa e interrupção da fila, e acrescenta ensaio isolado de banco. Permanecem
+gate integrado, jornadas UI de todos os perfis aplicáveis, manutenção/migrations,
+aplicação restaurada e publicação em hml. Não concluída; não implantada em
+homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
 
 Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
 HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID;

@@ -65,7 +65,7 @@ cluster isolado; mídia/chaves/manutenção e aplicação restaurada não cobert
 | T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Parcial, família não aprovada | Acompanhamento cadastral da unidade em validação; eventos operacionais nas Sprints 03–04 |
-| T28 | Parcial, família não aprovada | Provisionamento CLI testado; identidade SaaS/consulta e suspensão comercial em validação; provisionamento HTTP e integração com pedidos pendentes |
+| T28 | Parcial, família não aprovada | HTTP/UI/CLI/fila, identidade SaaS e suspensão implementados; retomada operacional, gate integrado/hml e integração futura com pedidos pendentes |
 
 ## Cenários transversais
 
@@ -85,7 +85,7 @@ cluster isolado; mídia/chaves/manutenção e aplicação restaurada não cobert
 | X12 | Não implementado/não executado | Sprints 02–04 |
 | X13 | Parcial, não aprovado como cenário completo | Pool/thread comprovados; jobs/mídia futuros |
 | X14 | Parcial, não aprovado como cenário completo | Shell informa offline; PWA/sessão/transações futuras |
-| X15 | Parcial, não aprovado como cenário completo | SHA/hash, migrador e retorno nativo comprovados; backup/restore e manutenção incompatível pendentes |
+| X15 | Parcial, não aprovado como cenário completo | SHA/hash, migrador, retorno nativo e restore isolado de banco comprovados; mídia/chaves, aplicação restaurada e manutenção incompatível pendentes |
 
 ## Incremento de provisionamento — retomada ciclo 4
 

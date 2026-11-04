@@ -28,9 +28,12 @@ no segundo, conforme esperado. Runner falhou ao parar timer transitório já
 removido; constraint foi limpa. Retomada do UUID falho ainda pendente; não
 confundir lote observado com aprovação integral. Hml fundação preservada.
 
-Build identificado/CI/E2E deste incremento ainda pendentes; PR #3 draft, sem
-merge. Próximo: publicar alterações revisadas, build durável, S01-UI35/UI04 e
-retomada operacional; depois manutenção e demais critérios. 02–05 não iniciadas.
+Publicado `dfe496cd450044cb6e35d390443913944f1dff97`; remoto/PR head relidos.
+CI aprovada nos dois runs; log confirma 165 backend/50 Python sem falha/erro/skip.
+Build local identificado e worker E2E finito em execução independente; não
+repetir nem interromper. E2E aguarda gate e faz S01-UI35/UI04/eventos e retomada
+do UUID da fila. Sem aprovação futura presumida. [Evidência](evidencias/sprint-01-retomada-ciclo-7.md).
+PR #3 draft, sem merge. Depois: manutenção e demais critérios; 02–05 não iniciadas.
 
 ## Registro herdado — encerramento ciclo 6
 
