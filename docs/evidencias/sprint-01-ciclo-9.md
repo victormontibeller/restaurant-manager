@@ -28,7 +28,13 @@ TDD e revisão:
 - Após correções, doze testes de recuperação/PostgreSQL e três testes de proteção/captura passaram: quinze aprovados, zero falhas/erros/skip. Rodada distinta do build herdado.
 - Segunda revisão confirmou correções e encontrou conteúdo NULL ainda escapando do tratamento de corrupção. Novo vermelho reproduziu NullPointerException; corrigido para falha terminal sanitizada. Quatro testes de proteção/captura passaram na reexecução, zero falhas/erros/skip. Typecheck aplicação/E2E, diff e scanner documental/segredos passaram. Build integrado ainda é gate separado.
 
-## Gates ainda abertos neste registro
+## Resultado final e gates ainda abertos
+
+Commit `7818ba626cfa94aafa7015d835111d818c84579c` publicado, remoto e PR #3 draft relidos. Dois runs CI (`41813105884`, `41813113657`) conferidos com SHA exato e SUCCESS: 93 testes backend aprovados em cada execução, zero falhas/erros/skip; Angular/backend e auditorias aprovados. Não somar conjuntos repetidos.
+
+O aviso de orçamento efetivo do executor impediu continuar a rodada local. Build local foi encerrado explicitamente pela ferramenta de processos; não aprovado, sem novo gate/hash confirmado. Nenhum candidato novo nem E2E S01-UI10–12 foi iniciado. A validação herdada permanece vinculada apenas ao 589ea43. Os registros finais são locais posteriores ao commit, sem novo push após o aviso.
+
+### Estado anterior à confirmação da CI
 
 Build identificado do incremento novo, CI e quinze combinações E2E S01-UI10–12 ainda pendentes nesta gravação. Cenários escritos cobrem recuperação capturada, código consumido, senha inválida, foco/teclado, offline e perda real da resposta de confirmação. Não somar aprovação do SHA herdado como aprovação da UI nova.
 

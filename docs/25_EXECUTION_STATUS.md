@@ -2,7 +2,19 @@
 
 [Índice](README.md) · [Ciclo 9](evidencias/sprint-01-ciclo-9.md) · [Cobertura](evidencias/cobertura.md)
 
-## Ciclo 9 — incremento em validação, 2026-11-04
+## Encerramento do ciclo 9 — 2026-11-04
+
+Missão NÃO concluída. O executor avisou orçamento efetivo quase esgotado durante o build local. O processo próprio do build foi encerrado pela ferramenta (`killed`) para não deixar suíte concorrente na retomada. Depois do aviso, somente encerramento seguro e gravação de handoff; nenhum candidato novo foi iniciado.
+
+Commit publicado e remoto/PR relidos: `7818ba626cfa94aafa7015d835111d818c84579c`, branch `hermes/sprint-01-identidade-acessos`, PR #3 OPEN/draft, base main. Primeiro push recebeu erro interno do GitHub; remoto conferido antes da segunda tentativa bem-sucedida. Dois runs CI `41813105884` e `41813113657` concluíram SUCCESS no SHA exato: cada um executou **93 testes backend**, zero falhas/erros/skip, build Angular/backend e auditorias. São duas execuções do mesmo conjunto, não 186 testes distintos.
+
+Build local identificado foi interrompido e NÃO constitui aprovação; não há novo gate/hash local confirmado. Os quinze testes focados e quatro unitários da correção final passaram antes do commit, conforme evidência. E2E herdado de `589ea43` passou integralmente (45 identidade + 20 fundação), mas S01-UI10–12 e regressão integrada do novo SHA NÃO foram executados. Runners privados preparados; nenhum JAR `cycle9-candidate.jar` foi copiado/iniciado neste ciclo.
+
+Última verificação de hml antes do aviso: SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, hash `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`, PID 41392, health UP. Sem deploy/reinício/migration hml. V7/V8 somente em rm_test. Estes registros finais de checkpoint/evidência permanecem locais após o commit; preservá-los. Não houve novo commit/push após o aviso.
+
+Retomada concreta: conferir processos/bancos/Git, preservar e publicar documentos finais após checks; repetir build local completo com checkout limpo, conferir gate/SHA/hash, iniciar candidato HTTPS e executar a nova matriz de recuperação mais regressões. Não reutilizar gate/JAR herdados V6 contra banco V8. Depois avançar cadastro/verificação/convites, SaaS/suspensão/eventos e demais critérios. Sprint 01 segue aberta; 02–05 não iniciadas. Sem CONCLUSAO.json.
+
+## Registro intermediário do ciclo 9
 
 Missão não concluída. A retomada reconciliou Git, PR #3 draft, bancos/processos e release hml saudável. completion-rejected.json ausente. O build herdado de `589ea43551727a95626cfe35bd8686da92a6ffcb` foi confirmado com 77 testes backend aprovados e hash `9ad019a9f72b208e7a101cb2cb297b12fc203fae7ee2a7065e457aa5f991cc2c`; E2E completo herdado aprovado: 45 identidade + 20 fundação, sem retries/skip/flaky. Candidato de teste foi encerrado antes das migrations do incremento seguinte; hml não foi alterada.
 
