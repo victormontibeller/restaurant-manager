@@ -46,6 +46,16 @@ class FakeAdmin:
 
 
 class MaintenanceDatabaseTest(unittest.TestCase):
+    def test_journal_e_privado_mesmo_com_umask_permissiva(self):
+        previous = os.umask(0o022)
+        try:
+            swap = self.swap()
+            self.assertEqual((self.root / 'database-swap.json').stat().st_mode & 0o777, 0o600)
+            swap.clone()
+            DatabaseSwap.resume(self.admin, 'test', self.root)
+        finally:
+            os.umask(previous)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(dir=os.environ['TMPDIR'])
         self.addCleanup(self.temp.cleanup)

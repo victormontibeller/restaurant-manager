@@ -15,7 +15,9 @@ import uuid
 
 def durable_journal(path, record):
     temporary = path.with_suffix('.new')
-    with temporary.open('w') as stream:
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, 'w') as stream:
+        os.fchmod(stream.fileno(), 0o600)
         stream.write(json.dumps(record, indent=2) + '\n')
         stream.flush()
         os.fsync(stream.fileno())
