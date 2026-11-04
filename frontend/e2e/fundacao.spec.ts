@@ -30,6 +30,23 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({ page
   await expect(page.getByRole('status')).toContainText('Sistema conectado');
 });
 
+test('S00-UI03: carregamento aguarda resposta real sem duplicar consulta', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  // Somente retarda a requisição; resposta continua sendo da API/PostgreSQL reais.
+  await page.route('**/actuator/health', async route => {
+    await gate;
+    await route.continue();
+  });
+  try {
+    await page.goto('/');
+    await expect(page.getByRole('status')).toHaveText('Verificando conexão…');
+    await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeDisabled();
+  } finally { release(); }
+  await expect(page.getByRole('status')).toContainText('Sistema conectado');
+  await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeEnabled();
+});
+
 test('S00-API01: gestão privada e domínio arbitrário negados', async ({ request }) => {
   const unknown = await request.get('/api/v1/unidades', { headers: { Host: 'desconhecido.localhost' } });
   expect(unknown.status()).toBe(404);

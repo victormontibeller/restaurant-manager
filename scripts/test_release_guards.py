@@ -1,10 +1,14 @@
 """Testes determinísticos das travas, sem substituir ensaio nativo."""
 import os
+import json
+import socket
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
+import release_support
 from release_support import private_config, runtime_config, migration_fingerprint, install_artifact, artifact_hash, restore_healthy, UNIT
 
 
@@ -99,6 +103,39 @@ class ReleaseGuardsTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 restore_healthy(self.root, self.root / 'unit', 'fingerprint')
             ctl.assert_called_once_with('stop', UNIT)
+
+
+    def test_sha_nulo_para_servico(self):
+        (self.root / 'healthy.json').write_text(json.dumps({'served_sha': None}))
+        with patch('release_support.systemctl') as ctl:
+            with self.assertRaises(RuntimeError):
+                restore_healthy(self.root, self.root / 'unit', 'fingerprint')
+            ctl.assert_called_once_with('stop', UNIT)
+
+    def test_jar_corrompido_para_servico(self):
+        sha = 'a' * 40
+        (self.root / 'healthy.json').write_text(json.dumps({'served_sha': sha}))
+        release = self.root / 'releases' / sha
+        release.mkdir(parents=True)
+        (release / 'app.jar').write_bytes(b'nao-e-zip')
+        with patch('release_support.systemctl') as ctl:
+            with self.assertRaises(RuntimeError):
+                restore_healthy(self.root, self.root / 'unit', 'fingerprint')
+            ctl.assert_called_once_with('stop', UNIT)
+
+    def test_socket_real_exige_proprietario_do_processo(self):
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            release_support.verify_listener(os.getpid(), port)
+            process = subprocess.Popen(['sleep', '15'])
+            try:
+                with self.assertRaises(ValueError):
+                    release_support.verify_listener(process.pid, port)
+            finally:
+                process.terminate()
+                process.wait(timeout=3)
 
 
 if __name__ == '__main__':

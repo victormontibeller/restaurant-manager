@@ -88,10 +88,75 @@ def systemctl(*args):
     subprocess.run(['systemctl', '--user', *args], check=True)
 
 
+def verify_listener(pid, port=8088):
+    """Liga health ao inode TCP do PID real, inclusive IPv4 mapeado em IPv6."""
+    sockets = set()
+    for fd in Path(f'/proc/{pid}/fd').iterdir():
+        try:
+            sockets.add(os.readlink(fd))
+        except FileNotFoundError:
+            continue  # descritor transitório; o socket servidor deve permanecer
+    listeners = []
+    loopback = {'0100007F', '0000000000000000FFFF00000100007F',
+                '00000000000000000000000001000000'}
+    for table in ('tcp', 'tcp6'):
+        for line in Path(f'/proc/{pid}/net/{table}').read_text().splitlines()[1:]:
+            fields = line.split()
+            address, encoded_port = fields[1].split(':')
+            if fields[3] == '0A' and int(encoded_port, 16) == port:
+                if address not in loopback or f'socket:[{fields[9]}]' not in sockets:
+                    raise ValueError('Listener não pertence ao processo ou expõe rede externa.')
+                listeners.append(fields[9])
+    if not listeners:
+        raise ValueError('Processo não possui listener esperado.')
+
+
+def clean_sha(repo, expected=None):
+    sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()
+    if subprocess.check_output(['git', 'status', '--porcelain'], cwd=repo, text=True).strip():
+        raise ValueError('Checkout sujo; evidência não identifica código imutável.')
+    if expected is not None and sha != expected:
+        raise ValueError('HEAD mudou durante a execução.')
+    return sha
+
+
+def verify_e2e_coverage(data):
+    """Inventário mínimo da fundação; famílias futuras não são aprovadas aqui."""
+    projects = ('chromium-desktop', 'chromium-mobile', 'chromium-tablet',
+                'firefox-desktop', 'webkit-desktop')
+    scenarios = ('S00-UI01', 'S00-UI02', 'S00-UI03', 'S00-API01')
+    expected = {(project, scenario) for project in projects for scenario in scenarios}
+    stats = data['stats']
+    if data.get('errors') or any(stats[key] for key in ('unexpected', 'skipped', 'flaky')):
+        raise ValueError('Relatório contém falhas ou cenários não aprovados.')
+    found = set()
+    total = 0
+    def visit(suite):
+        nonlocal total
+        for spec in suite.get('specs', []):
+            for test in spec.get('tests', []):
+                total += 1
+                key = (test['projectName'], spec['title'].split(':', 1)[0])
+                results = test['results']
+                if (key in found or test['expectedStatus'] != 'passed' or test['status'] != 'expected'
+                        or len(results) != 1 or results[0]['status'] != 'passed'
+                        or results[0].get('retry', 0) != 0 or results[0].get('errors')):
+                    raise ValueError('Cenário repetido, instável ou não aprovado.')
+                found.add(key)
+        for child in suite.get('suites', []):
+            visit(child)
+    for suite in data['suites']:
+        visit(suite)
+    if not expected.issubset(found) or stats['expected'] != total:
+        raise ValueError('Inventário obrigatório incompleto ou contador divergente.')
+    return sorted(found)
+
+
 def verify(root, expected_sha=None):
     pid = int(subprocess.check_output(['systemctl', '--user', 'show', UNIT, '--property=MainPID', '--value'], text=True))
     if pid <= 0:
         raise ValueError('Serviço sem processo ativo.')
+    verify_listener(pid)
     args = Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0')
     jar = Path(os.fsdecode(args[args.index(b'-jar') + 1])).resolve()
     if not jar.is_relative_to(root / 'releases'):
@@ -116,6 +181,10 @@ def verify(root, expected_sha=None):
     with urllib.request.urlopen('http://127.0.0.1:8088/', timeout=3) as response:
         if b'<app-root>' not in response.read():
             raise ValueError('Shell Angular não servido.')
+    current_pid = int(subprocess.check_output(['systemctl', '--user', 'show', UNIT, '--property=MainPID', '--value'], text=True))
+    if current_pid != pid or Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0') != args:
+        raise ValueError('Processo mudou durante verificação.')
+    verify_listener(pid)
     return {'served_sha': sha, 'artifact_sha256': manifest['artifact_sha256'], 'health': 'UP', 'pid': pid}
 
 
@@ -133,8 +202,10 @@ def restore_healthy(root, unit, fingerprint):
     """Retorna somente para baseline comprovado; erro de recuperação para o serviço."""
     try:
         healthy = json.loads((root / 'healthy.json').read_text())
+        if not isinstance(healthy, dict):
+            raise ValueError('Marcador de retorno inválido.')
         sha = healthy['served_sha']
-        if not re.fullmatch(r'[0-9a-f]{40}', sha):
+        if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-f]{40}', sha):
             raise ValueError('SHA de retorno inválido.')
         restored = root / 'releases' / sha
         if migration_fingerprint(restored / 'app.jar') != fingerprint:
@@ -148,6 +219,6 @@ def restore_healthy(root, unit, fingerprint):
         systemctl('daemon-reload')
         systemctl('restart', UNIT)
         return wait_for_release(root, sha)
-    except (OSError, ValueError, KeyError, RuntimeError, subprocess.CalledProcessError):
+    except (OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile, RuntimeError, subprocess.CalledProcessError):
         systemctl('stop', UNIT)
         raise RuntimeError('Retorno não verificado; serviço parado.') from None
