@@ -26,6 +26,34 @@ snapshot separado nem na preparação única da fixture por JVM. O snapshot não
 protege contra DDL concorrente; lock e coordenação operacional continuam
 obrigatórios. Não foi executado teste novo pelo revisor.
 
+## Manutenção — implementação e testes unitários
+
+Novo ensaio nativo conserva o banco original, clona sob nome canônico e retorna
+por OID, sem DROP nem encerramento de clientes desconhecidos. O runner aceita
+somente rm_test; hml é observada e preservada. Código e limites no
+[runbook](../22_PRODUCTION_RUNBOOK.md). Nenhuma mutação real deste ensaio havia
+sido executada na gravação deste registro.
+
+Revisão independente encontrou retomada cega de clone abandonado, janela de
+CREATE DATABASE com resposta perdida, journal sem fsync e redirects no probe.
+Correções recusam ledger/banco pendente, conservam ambos os bancos quando o OID
+novo é incerto, sincronizam journal/diretórios e rejeitam redirects sem propagar
+Bearer/CSRF. Vermelho dos testes novos reproduziu duas falhas comportamentais e
+uma importação ainda ausente. A primeira rodada do módulo teve somente erro de
+importação, não demonstração comportamental.
+
+Suíte Python passou 83 testes, incluindo doze de manutenção e duas novas provas
+do cliente HTTP. O negativo de redirect usa servidor HTTP loopback real e conta
+requisições: destino não autorizado não é chamado. Fixtures de clone são
+unitárias, não demonstram manutenção PostgreSQL nem aprovam hml.
+
+Build herdado e847fee terminou exit0/gate true, hash
+`7bd1db646ab2ddabe4a92facb133fb41cc2af85e85429b813223e3df3caa19dd`.
+Recontados 22 XML/170 testes backend, zero falhas/erros/skip. Build inteiro entre
+20:18:11Z e20:41:16Z; Maven reportou19:17. Não repetir: alterações deste ciclo
+são scripts/testes/docs, sem mudança na fonte compilável. Worker9 prossegue E2E.
+CI a939142 aprovada nos dois checks; isso não encerra gate de release.
+
 ## Pendências
 
 Manutenção/migrations com recuperação, gate integrado e publicação Sprint01;

@@ -8,10 +8,49 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from application_recovery import private_file, read_bundle, validate_fixture, prepare
+from application_recovery import Client, private_file, read_bundle, validate_fixture, prepare
 
 
 class ApplicationRecoveryTest(unittest.TestCase):
+    def test_probe_nao_encaminha_bearer_em_redirect(self):
+        import http.server
+        import threading
+        import urllib.request
+        import urllib.error
+        reached = []
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                reached.append(self.path)
+                if self.path == '/redirect':
+                    self.send_response(302)
+                    self.send_header('Location', '/destino-nao-autorizado')
+                else:
+                    self.send_response(200)
+                self.end_headers()
+            def log_message(self, format, *args):
+                pass
+        with http.server.HTTPServer(('127.0.0.1', 0), Handler) as server:
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
+            try:
+                client = Client('a.localhost')
+                request = urllib.request.Request(f'http://127.0.0.1:{server.server_port}/redirect',
+                                                 headers={'Authorization': 'Bearer fixture-nao-real'})
+                with self.assertRaises(urllib.error.HTTPError) as error:
+                    client.client.open(request, timeout=5)
+                self.assertEqual(error.exception.code, 302)
+                error.exception.close()
+                self.assertEqual(reached, ['/redirect'])
+            finally:
+                server.shutdown(); thread.join(timeout=5)
+
+    def test_origem_e_tls_da_manutencao_falham_fechado(self):
+        for origin in ('https://externo.example', 'http://127.0.0.1:8091', 'https://127.0.0.1:8088'):
+            with self.assertRaises(ValueError):
+                Client('a.localhost', origin)
+        with self.assertRaises(ValueError):
+            Client('a.localhost', 'https://127.0.0.1:8091')
+
     def fixture(self, certificate) -> dict:
         a, b = str(uuid.uuid4()), str(uuid.uuid4())
         return dict(jwt_secret=secrets.token_hex(32), email_secret=base64.b64encode(os.urandom(32)).decode(),

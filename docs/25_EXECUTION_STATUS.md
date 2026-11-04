@@ -11,8 +11,14 @@ no probe, identificada por revisão independente. Barreira ApplicationRef.whenSt
 aplicada após operações; três motores passaram localmente com API fictícia.
 Não é aprovação E2E nem liberação da Sprint. Revisão de snapshot/preparação JVM
 sem regressão bloqueante identificada. [Evidência](evidencias/sprint-01-retomada-ciclo-10.md).
-Próximo: recolher execução herdada e avançar manutenção/recuperação, preservando
-hml. Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
+Atualização: build e847fee terminou exit0/gate true,170backend sem falha/erro/skip,
+hash7bd1db646ab2ddabe4a92facb133fb41cc2af85e85429b813223e3df3caa19dd.
+CI a939142 aprovada nos dois checks; worker9 E2E ainda ativo neste registro.
+Ensaio de manutenção rm_test implementado/revisado; achados de reconciliação,
+journal e redirects corrigidos.83Python aprovados, mas ensaio nativo novo ainda
+pendente: não atribuir aprovação operacional a fixtures. Próximo: recolher
+worker9 e executar manutenção real sem concorrência; depois integrar promoção
+Sprint01. Hml preservada. Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
 
 ## Encerramento — retomada ciclo 9, 2026-11-04
 

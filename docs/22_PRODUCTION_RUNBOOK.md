@@ -174,6 +174,43 @@ de homologação. Health/configuração corretos não promovem esse candidato a
 último release validado. O contrato de configuração não comprova por si que um
 PKCS12 contenha a chave/certificado corretos nem substitui startup/health real.
 
+## Ensaio de manutenção nativa — retomada ciclo 10
+
+`rehearse_maintenance.py` é um ensaio finito, exclusivamente em `rm_test`.
+Exige job aprovado, configuração runtime privada correspondente e fixture de
+contas fictícias. Adquire `deploy.lock`; antes de executar, recolher qualquer
+worker E2E/build e comprovar que não há outro escritor que possa reconectar.
+Não executar este ensaio junto de suítes nem interromper um worker para liberar
+o banco. O script recusa conexões restantes, sem matar clientes.
+
+O serviço próprio `restaurant-manager-maintenance-test.service` usa loopback8091,
+TLS verificado, identidade rm_test_app e nenhuma credencial owner. Após conferir
+contas e negativos, para o serviço e inventaria o banco. `maintenance_database.py`
+bloqueia novas conexões, preserva o original por OID sob nome `_before_<UUID>` e
+cria uma cópia canônica, com política de privilégios/configuração explicitamente
+reaplicada e conferida. Não há DROP. Configurações não reconhecidas são recusadas.
+
+O ensaio compara integralmente o inventário, executa o migrador Java real no
+clone e verifica a aplicação. Depois confirma DDL exclusivo do ensaio e injeta
+uma falha SQL explícita. Essa injeção NÃO é uma migration de produto falhando.
+Retorna o banco original por OID, preserva o clone falho bloqueado, compara o
+inventário e relê contas/isolamento após reinício nativo. Hml é conferida antes e
+depois, sem alterar serviço/banco. Só o resultado observado aprova o ensaio.
+
+O journal privado usa fsync de arquivo/diretórios e rename; registra fases antes
+das mudanças de disponibilidade. Tentativa anterior pendente ou banco `_before_`
+impede nova execução. Em perda da resposta de CREATE DATABASE, OID não registrado
+NÃO é adotado automaticamente: ambos os bancos ficam preservados e é exigida
+reconciliação. Conferir ledger, `pg_database` (nome/OID/proprietário/conexões),
+unidade/cgroup e logs antes de decidir o retorno. Nunca editar o OID só para
+silenciar a guarda. Interrupção abrupta não tem recuperação automática.
+
+Esta primitiva não instala um promotor hml e não remove a guarda de migrations
+do deploy. Cópia no mesmo cluster/disco é ponto de retorno fictício, não backup
+externo nem substituto do ensaio pg_dump/restore. Não cobre mídia ou reconciliação
+de efeitos externos; não encerra X15. Artefatos preservados exigem limpeza futura
+explicitamente revisada, não exclusão automática.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 

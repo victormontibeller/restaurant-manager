@@ -97,13 +97,24 @@ def read_bundle(bundle) -> dict[str, Any]:
     return data
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None  # Nunca encaminhar Bearer/CSRF para outro destino.
+
+
 class Client:
-    def __init__(self, host):
+    def __init__(self, host, origin='https://127.0.0.1:8090', context=None):
+        if origin not in ('https://127.0.0.1:8090', 'https://127.0.0.1:8091'):
+            raise ValueError('Probe HTTP deve usar somente origem loopback isolada.')
+        if origin.endswith(':8091') and context is None:
+            raise ValueError('Ensaio de manutenção exige confiança TLS explícita.')
+        self.origin = origin
         self.host = host
         self.cookies = http.cookiejar.CookieJar()
         self.client = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+            NoRedirect(),
             urllib.request.HTTPCookieProcessor(self.cookies),
-            urllib.request.HTTPSHandler(context=ssl._create_unverified_context()))
+            urllib.request.HTTPSHandler(context=context if context is not None else ssl._create_unverified_context()))
         self.csrf = None
 
     def request(self, path, body=None, token=None, method=None) -> tuple[int, Any]:
@@ -114,7 +125,7 @@ class Client:
             headers[self.csrf['headerName']] = self.csrf['token']
         if token:
             headers['Authorization'] = 'Bearer ' + token
-        request = urllib.request.Request('https://127.0.0.1:8090' + path,
+        request = urllib.request.Request(self.origin + path,
             data=None if body is None else json.dumps(body).encode(), headers=headers, method=method)
         try:
             response = self.client.open(request, timeout=30)
