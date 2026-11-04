@@ -119,7 +119,50 @@ Não armazena código no navegador nem o coloca na URL. Expurgo limitado remove
 códigos cuja expiração passou há mais de 24 horas. [OpenAPI](api/verificacao.yaml).
 Este incremento não entrega identidade SaaS ou homologação externa de e-mail.
 
-## Documentos relacionados
+## Identidade SaaS — incremento da retomada, ciclo 2
+
+Em validação, não implantado em homologação. Operador usa cadastro e sessões
+exclusivos em `public`, fora do EntityManager empresarial. O serviço usa transação
+JDBC explícita e recusa contexto empresarial/transação ambiente. Não existe
+impersonação nem concessão implícita de Administrador de restaurante.
+
+Origem SaaS configurada por `rm.platform.host`, padrão local `plataforma.localhost`.
+Host diferente ou também registrado para uma empresa falha fechado com 404;
+Forwarded não escolhe origem nem schema. A UI fica em `/?area=plataforma`, mas
+essa seleção visual não concede autenticação. API [documentada](api/plataforma.yaml).
+
+JWT tem audiência única `restaurant-manager-plataforma`, sem tenant, validade de
+cinco minutos; identidade empresarial não é aceita nessa cadeia e vice-versa.
+Usa as mesmas chaves locais ativa/anterior e validações estritas do emissor,
+com decodificador de audiência separado. Sessões, usuários e cookies são distintos;
+a separação não depende de esconder botões. Nenhum segredo de assinatura novo
+é introduzido por esse incremento.
+
+Refresh de 256 bits, somente hash no banco, prazo absoluto de doze horas,
+rotação serializada e replay com revogação confirmada. Cookies exclusivos
+`RM_PLATFORM_REFRESH` e `__Host-RM_PLATFORM_CSRF`, host-only/Secure/HttpOnly/Strict;
+refresh com path `/api/v1/plataforma/auth`. CSRF obrigatório nas mutações por
+cookie mesmo com Bearer. Login limita cinco tentativas por e-mail e cem por origem
+em quinze minutos, sem enumeração; BCrypt custo 12. Auditoria mínima registra
+login, logout e replay, sem tokens ou endereço de origem bruto.
+
+Cadastro/administração inicial do operador permanece assistido pelo owner fora
+do runtime HTTP; não há endpoint público de cadastro SaaS. Inativação e mudança
+de hash no registro público revogam sessões na mesma transação via trigger;
+reativação não restaura tokens antigos. `FOR SHARE` no login protege contra
+inativação simultânea; privilégio UPDATE restrito à coluna id atende o requisito
+SQL do lock, sem conceder escrita de credenciais/estado ao runtime.
+
+Retenção técnica remove até cem sessões expiradas há mais de 24 horas e cem
+limitadores antigos a cada ciclo de dez minutos; conserva hashes consumidos até
+o término dessa janela. Auditoria não é expurgada. Interface mantém access só
+em memória, coordena refresh entre abas e limpa metadados ao encerrar sessão;
+falha de logout bloqueia novo login até reconciliação. Consulta SaaS retorna até
+cinquenta empresas por página, somente id/nome/estado/versão/domínios. Não retorna
+schema, credenciais, clientes ou consumo. Provisionamento/suspensão pela UI e
+as demais condições de T28 continuam pendentes; testes não aprovam essas lacunas.
+
+## Referências relacionadas
 
 - [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)
 - [Isolamento e contexto](06_MULTI_TENANT.md)

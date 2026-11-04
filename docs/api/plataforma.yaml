@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: Identidade e consulta SaaS — contrato parcial
+  version: 0.1.0
+servers:
+  - url: https://plataforma.localhost:8089/api/v1/plataforma
+paths:
+  /auth/csrf:
+    get:
+      summary: Obter CSRF mascarado vinculado ao cookie exclusivo SaaS
+      responses:
+        '200':
+          description: token e headerName; cookie __Host-RM_PLATFORM_CSRF Secure/HttpOnly/Strict
+        '404':
+          description: Origem diferente da configurada ou domínio empresarial
+  /auth/login:
+    post:
+      summary: Autenticar operador cadastrado de forma assistida
+      security:
+        - csrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, senha]
+              properties:
+                email: {type: string, format: email, maxLength: 254}
+                senha: {type: string, minLength: 1, maxLength: 72, writeOnly: true}
+      responses:
+        '200':
+          description: Access JWT de 300 segundos, expiresIn e refresh exclusivo em cookie HttpOnly/Secure/Strict
+        '400': {description: Campos inválidos ou desconhecidos}
+        '401': {description: Credencial inválida ou conta inativa; sem enumeração}
+        '403': {description: CSRF inválido ou ausente}
+        '429': {description: Cinco tentativas por e-mail ou cem por origem em quinze minutos}
+  /auth/refresh:
+    post:
+      summary: Rotacionar refresh; replay revoga a família, mesmo com access válido
+      security:
+        - csrf: []
+          refresh: []
+      responses:
+        '200': {description: Novo access e cookie; prazo absoluto de doze horas não é renovado}
+        '401': {description: Refresh inválido, consumido, sessão expirada/revogada ou operador inativo}
+        '403': {description: CSRF obrigatório mesmo com Bearer}
+  /auth/logout:
+    post:
+      summary: Revogar sessão no servidor e expirar cookie
+      security:
+        - csrf: []
+          refresh: []
+      responses:
+        '204': {description: Sessão revogada}
+        '401': {description: Refresh ausente ou inválido}
+        '403': {description: CSRF inválido}
+  /auth/me:
+    get:
+      summary: Identidade SaaS atual, sem contexto empresarial
+      security:
+        - bearer: []
+      responses:
+        '200': {description: usuarioId, sessaoId e perfil OPERADOR_SAAS}
+        '401': {description: JWT ou sessão inválida; audiência empresarial não é aceita}
+  /empresas:
+    get:
+      summary: Listar somente metadados empresariais, em ordem estável de UUID
+      security:
+        - bearer: []
+      parameters:
+        - in: query
+          name: pagina
+          schema: {type: integer, minimum: 0, maximum: 10000, default: 0}
+      responses:
+        '200':
+          description: Até cinquenta empresas; não contém schema, credenciais, clientes ou consumo
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 50
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [id, nome, estado, versao, dominios]
+                  properties:
+                    id: {type: string, format: uuid}
+                    nome: {type: string}
+                    estado: {type: string, enum: [PROVISIONANDO, ATIVO, FALHOU, SUSPENSO]}
+                    versao: {type: integer}
+                    dominios: {type: array, items: {type: string}}
+        '400': {description: Página inválida}
+        '401': {description: Autenticação SaaS obrigatória}
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Audiência única restaurant-manager-plataforma; sem claim tenant
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: Token mascarado obtido em auth/csrf; cookie correspondente também obrigatório
+    refresh:
+      type: apiKey
+      in: cookie
+      name: RM_PLATFORM_REFRESH
+      description: Host-only, path /api/v1/plataforma/auth, HttpOnly, Secure e SameSite Strict

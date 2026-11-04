@@ -82,3 +82,13 @@ Autenticação local requer `RM_JWT_SECRET` privado aleatório de pelo menos 64 
 O candidato do ciclo 9 acrescenta recuperação de senha com captura local fictícia. Configure `RM_EMAIL_SECRET` (32 bytes aleatórios em base64) e `RM_EMAIL_CAPTURE_DIRECTORY` (diretório absoluto 0700, fora do checkout). Não imprimir nem publicar a chave/capturas. Sem essa configuração, a recuperação retorna indisponibilidade; os demais fluxos continuam independentes. `rm.email.agendado=false` desativa somente o worker para testes determinísticos. A suíte específica usa `--config=playwright.recuperacao.config.ts` e `RM_RECOVERY_FIXTURE` privado com `emails` por projeto de navegador e `captureDirectory` exclusivo do tenant de teste. Resultados e limitações ficam no checkpoint; nenhum e-mail externo é enviado.
 
 Não versionar credenciais, arquivos de ambiente reais, dados de clientes, dumps ou mídias privadas. Exemplos de configuração devem usar somente placeholders. Não reutilizar os bancos dos projetos de referência.
+
+O candidato da retomada ciclo 2 acrescenta identidade SaaS e consulta de empresas
+em `https://plataforma.localhost:<PORTA>/?area=plataforma`, com origem dedicada
+configurável por `rm.platform.host`. Operador é cadastrado de forma assistida no
+registro público pelo owner; não reutiliza uma conta empresarial implicitamente.
+Não há ainda formulário de provisionamento/suspensão. API e fronteiras em
+[Segurança](docs/04_SECURITY.md) e [OpenAPI SaaS](docs/api/plataforma.yaml).
+Playwright: `--config=playwright.plataforma.config.ts`, `RM_PLATFORM_FIXTURE`
+privado com `email`/`senha`, HTTPS e banco rm_test previamente verificado. Não
+executar a suíte mutante contra hml. Evidências e pendências no checkpoint.

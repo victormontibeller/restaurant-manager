@@ -43,6 +43,10 @@ Contrato da retomada: [verificação de conta existente](api/verificacao.yaml),
 sem alteração de senha/perfil nem criação de sessão. Implementação em validação;
 resultados e artefatos aprovados são registrados no checkpoint.
 
+Contrato SaaS parcial: [identidade de operador e consulta de empresas](api/plataforma.yaml).
+Audiência, sessões, CSRF e origem separados; não há acesso implícito aos schemas
+empresariais. Provisionamento HTTP e suspensão ainda não são contratos entregues.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

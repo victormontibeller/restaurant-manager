@@ -53,6 +53,15 @@ de aprovação/merge. A correção inicial do runner teve revisão independente 
 
 ## Limites
 
+Atualização final: commit publicado `543d440fb35fa1442cd0b681bab3a37aa41295e0`.
+Build local completo terminou exit 0/gate true, hash
+`d19cfb078805f270ea092706ffb3513276a83e116f3ad4fc44aef16cd5e4985f`.
+Dois runs CI success no SHA exato; log do primeiro confirmou 129 testes backend
+sem falhas/erros/ignorados. Aviso efetivo de orçamento impediu nova consolidação
+do XML local e E2E positivo. Runner encerrado; dez contas fictícias preparadas.
+S01-UI20–22 e reexecução de convites continuam pendentes; não atribuir aprovação
+ao novo artefato apenas por build/CI. Reporte privado final separa essas evidências.
+
 Sprint 01 não concluída; identidade SaaS, suspensão comercial, eventos/projeções,
 critérios restantes e manutenção/backup/restore continuam pendentes. Sprints
 02–05 não iniciadas. Homologação permanece no último release saudável da fundação.

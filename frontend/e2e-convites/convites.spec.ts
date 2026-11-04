@@ -72,7 +72,9 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   await expect(page.getByRole('alert')).toContainText('Resultado incerto.');await expect(page.getByRole('button',{name:'Gerenciar acessos',exact:true})).toBeDisabled();
   await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
   // Mantém a mesma página: pendência é memória segregada por conta, não storage.
-  await page.getByLabel('E-mail',{exact:true}).fill(auth.email);await page.getByLabel('Senha',{exact:true}).fill(auth.senha);await page.getByRole('button',{name:'Entrar',exact:true}).click();
+  await page.getByLabel('E-mail',{exact:true}).fill(auth.email);await page.getByLabel('Senha',{exact:true}).fill(auth.senha);
+  const login=page.waitForResponse(r=>r.url().endsWith('/auth/login')&&r.request().method()==='POST');
+  await page.getByRole('button',{name:'Entrar',exact:true}).click();expect((await login).status()).toBe(200);
   await expect(page.getByRole('heading',{name:'Convites de funcionários',exact:true})).toBeVisible();await expect(page.getByRole('status').filter({hasText:'Convite com resultado pendente'})).toContainText(id);
   await confirmarIdentidade(page);
   const retry=page.waitForResponse(r=>r.url().endsWith('/equipe/convites')&&r.request().method()==='POST');await page.getByRole('button',{name:'Reenviar mesma intenção',exact:true}).click();const response=await retry;

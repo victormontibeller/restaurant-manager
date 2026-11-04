@@ -38,9 +38,13 @@ Suspensão comercial não deve abandonar pedidos já pagos, atendimentos abertos
 
 O provisionamento local usa processo privilegiado separado, não bean/runtime HTTP. `--provisionar` lê arquivo privado 0600, reserva UUID/domínio/plano/auditoria em uma transação, migra somente o schema interno derivado do UUID e confirma unidade/Administrador/ativação em outra transação. O plano guarda BCrypt custo 12, não senha em claro; repetição divergente de dados ou senha conflita. `--retomar-provisionamento UUID` conclui a reserva persistida em novo processo. Erro preserva reserva, registra SQLState/código sanitizado e não publica empresa incompleta. Ambos compartilham advisory lock com o migrador global; chamada sem lock real é recusada.
 
-O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. Rotas de plataforma e a política operacional de suspensão ainda não foram implementadas.
+O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. A retomada acrescenta identidade SaaS e consulta de metadados em validação, conforme [Segurança](04_SECURITY.md). Provisionamento HTTP e política operacional de suspensão ainda não foram implementados.
 
-JDBC está limitado aqui à infraestrutura privilegiada de provisionamento/migração, fora do EntityManager que depende de tenant já provisionado. A persistência empresarial runtime continua JPA/Hibernate. Esse bootstrap não concede poderes SaaS a uma sessão empresarial e não libera endpoint HTTP administrativo.
+JDBC atende à infraestrutura privilegiada de provisionamento/migração e ao registro
+público explícito da identidade SaaS, fora do EntityManager que exige tenant já
+provisionado. O serviço SaaS utiliza apenas credencial runtime e transação própria;
+não herda credenciais de DDL. Persistência empresarial continua JPA/Hibernate.
+Bootstrap não concede poderes SaaS a uma sessão empresarial nem libera DDL HTTP.
 
 - Nas requisições empresariais, resolva o tenant por domínio confiável cadastrado antes de autenticar. JWT, sessão, recurso e unidade devem corresponder ao contexto. Plataforma usa contexto público separado; webhooks validam o provedor e resolvem tenant pelo mapeamento interno de conta/recurso. Nunca derive um schema diretamente de entrada arbitrária.
 - Separe o contexto público da plataforma do contexto empresarial. Limpe contexto de tenant e conexão do pool em sucesso, erro e cancelamento; falha de resolução não pode cair em outro tenant.

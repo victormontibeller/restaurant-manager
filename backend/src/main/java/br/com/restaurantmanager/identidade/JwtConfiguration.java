@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
@@ -45,10 +46,12 @@ public class JwtConfiguration {
         return NimbusJwtEncoder.withSecretKey(keys.ativa()).algorithm(MacAlgorithm.HS256)
                 .jwkPostProcessor(builder -> builder.keyID(keys.ativaId())).build();
     }
-    @Bean JwtDecoder jwtDecoder(Chaves keys) {
+    @Bean @Primary JwtDecoder jwtDecoder(Chaves keys) { return decoder(keys, AUDIENCE); }
+    @Bean("platformJwtDecoder") JwtDecoder platformJwtDecoder(Chaves keys) { return decoder(keys, "restaurant-manager-plataforma"); }
+    private JwtDecoder decoder(Chaves keys, String audience) {
         var configured = new LinkedHashMap<String, JwtDecoder>();
-        configured.put(keys.ativaId(), decoder(keys.ativa()));
-        if (keys.anterior() != null) configured.put(keys.anteriorId(), decoder(keys.anterior()));
+        configured.put(keys.ativaId(), decoder(keys.ativa(), audience));
+        if (keys.anterior() != null) configured.put(keys.anteriorId(), decoder(keys.anterior(), audience));
         Map<String, JwtDecoder> decoders = Map.copyOf(configured);
         return token -> {
             if (token == null || token.length() > 8192) throw invalido();
@@ -68,7 +71,7 @@ public class JwtConfiguration {
     private static boolean identificadorValido(String id) { return id != null && id.matches("[A-Za-z0-9_-]{1,64}"); }
     private static SecretKey chave(String secret) { return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"); }
     private static BadJwtException invalido() { return new BadJwtException("Token JWT inválido."); }
-    private static JwtDecoder decoder(SecretKey key) {
+    private static JwtDecoder decoder(SecretKey key, String audience) {
         var decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
         var converter = MappedJwtClaimSetConverter.withDefaults(Map.of());
         decoder.setClaimSetConverter(claims -> {
@@ -77,7 +80,7 @@ public class JwtConfiguration {
             return converter.convert(claims);
         });
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer(ISSUER),
-                new JwtClaimValidator<java.util.List<String>>("aud", aud -> aud != null && aud.equals(java.util.List.of(AUDIENCE))),
+                new JwtClaimValidator<java.util.List<String>>("aud", aud -> aud != null && aud.equals(java.util.List.of(audience))),
                 new JwtClaimValidator<java.time.Instant>("exp", exp -> exp != null),
                 new JwtClaimValidator<java.time.Instant>("iat", iat -> iat != null && !iat.isAfter(java.time.Instant.now().plusSeconds(30)))));
         return decoder;

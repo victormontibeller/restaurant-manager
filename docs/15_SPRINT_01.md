@@ -7,7 +7,13 @@
 
 **Status:** em andamento desde 2026-11-04. Provisionamento, autenticação empresarial, equipe existente, matriz e unidades têm implementação e testes em banco exclusivo. Recuperação de senha foi validada nos cinco projetos de navegador no candidato herdado; cadastro teve falha de sincronização no teste WebKit, corrigida e reexecutada parcialmente no ciclo 11. Convites de funcionários estão em validação no incremento novo. APIs/telas SaaS, verificação de funcionários preexistentes, eventos e demais critérios continuam pendentes. Não concluída; não implantada em homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
 
-Itens compostos permanecem abertos. O primeiro incremento implementa reserva durável, domínio único, migração de schema reservado, administrador/unidade e ativação atômica, com retomada por novo processo. Não é provisionamento pela UI nem homologação de login. [Evidências](evidencias/sprint-01-ciclo-3.md).
+Itens compostos permanecem abertos. A retomada ciclo 2 acrescenta identidade SaaS
+e consulta de metadados empresariais em validação, sem provisionamento/suspensão
+HTTP ou impersonação. Verificação de funcionários preexistentes passou nos cinco
+projetos no candidato herdado. [Evidências atuais](evidencias/sprint-01-retomada-ciclo-2.md).
+O primeiro incremento implementa reserva durável, domínio único, migração de schema
+reservado, administrador/unidade e ativação atômica, com retomada por novo processo.
+Não é provisionamento pela UI. [Evidências](evidencias/sprint-01-ciclo-3.md).
 
 ## Entregáveis
 

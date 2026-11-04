@@ -47,7 +47,7 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 | T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Não implementado/não executado | Sprints 03–04 |
-| T28 | Parcial, família não aprovada | Provisionamento CLI/reserva/ativação/retomada testados; API/UI/operador SaaS/suspensão pendentes |
+| T28 | Parcial, família não aprovada | Provisionamento CLI testado; identidade SaaS e consulta de metadados em validação na retomada ciclo 2; provisionamento HTTP/suspensão pendentes |
 
 ## Cenários transversais
 
@@ -71,7 +71,7 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 
 ## Atores ainda pendentes
 
-Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa e operador SaaS ainda sem identidade/jornada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
+Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa ainda sem identidade/jornada; identidade SaaS e consulta de empresas estão em validação no ciclo 2 da retomada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
 
 ## Identidade e acessos — cobertura incremental
 
@@ -87,7 +87,9 @@ Administrador tem jornadas de login, matriz e equipe; unidades em validação. G
 | S01-UI13–16 | Cadastro verificado, login restrito, código consumido, erros/offline e resposta perdida/502 após commit | Público/Cliente fictício | Testes escritos; execução positiva do candidato novo pendente |
 | S01-UI17–19 | Criar/aceitar/revogar convite, login de funcionário, resultado incerto/replay após logout e validações/foco | Administrador e funcionário convidado | Testes escritos no ciclo 11; resultados no checkpoint, não presumir execução |
 | S01-API03 | Convites, autorização, intenção concorrente, aceite único, rollback, expiração após lock e expurgo | Administrador, demais perfis e público | ConvitesTest; resultados efetivos no checkpoint |
-| S01-UI20–22 | Verificar e-mail preexistente, preservar credenciais/perfil, erros/foco/offline e resposta perdida | Funcionário preexistente e público | Testes escritos na retomada; aprovação depende de execução no candidato identificado |
+| S01-UI20–22 | Verificar e-mail preexistente, preservar credenciais/perfil, erros/foco/offline e resposta perdida | Funcionário preexistente e público | Quinze combinações aprovadas no candidato 543d440 na retomada ciclo 2; revisão mobile realizada |
+| S01-UI23–25 | Login SaaS, metadados, refresh/logout, erros/foco/offline e origem empresarial negada | Operador SaaS | Testes escritos na retomada ciclo 2; execução nova ainda pendente neste registro |
+| S01-API05 | Audiência/origem separadas, CSRF real, refresh concorrente, revogação, quota e retenção SaaS | Operador SaaS e negativos empresariais | PlataformaTest em validação; não encerra T28 |
 | S01-API04 | Verificação existente, finalidade/tenant, concorrência, expiração após lock, rollback, quota e retenção | Funcionário e público | VerificacaoEmailTest; resultados efetivos no checkpoint |
 | S01-API01 | Matriz/equipe, revogação com JWT válido, vínculos e concorrência | Seis funcionários e Cliente | AcessosTest; detalhes por incremento no checkpoint |
 | S01-API02 | Unidade administrativa, idempotência e concorrência | Administrador; negativos dos outros perfis | Quatro testes novos; validação final em curso |

@@ -1,10 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { IdentidadeComponent } from './app/identidade/identidade.component';
+import { PlataformaComponent } from './app/plataforma/plataforma.component';
 
 @Component({
   selector: 'app-root',
-  imports: [IdentidadeComponent],
+  imports: [IdentidadeComponent, PlataformaComponent],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
     <header><span class="marca">Restaurant Manager</span><span class="selo">Homologação · dados fictícios</span></header>
@@ -17,7 +18,7 @@ import { IdentidadeComponent } from './app/identidade/identidade.component';
         <p role="status" aria-live="polite">{{ mensagem() }}</p>
         <button (click)="verificar()" [disabled]="carregando()">Verificar conexão</button>
       </section>
-      <app-identidade />
+      @if(plataforma){<app-plataforma />}@else{<app-identidade />}
       <section aria-labelledby="escopo"><h2 id="escopo">O que você pode testar agora</h2>
         <p>Abertura da interface, navegação por teclado e conexão real com a API e o PostgreSQL.</p>
         <p>Nenhum pedido ou pagamento é aceito nesta versão. Não utilize dados pessoais reais.</p>
@@ -27,6 +28,7 @@ import { IdentidadeComponent } from './app/identidade/identidade.component';
   `,
 })
 class App {
+  readonly plataforma = new URLSearchParams(location.search).get('area') === 'plataforma';
   readonly carregando = signal(false);
   readonly mensagem = signal('Verificando conexão…');
   constructor() { void this.verificar(); }

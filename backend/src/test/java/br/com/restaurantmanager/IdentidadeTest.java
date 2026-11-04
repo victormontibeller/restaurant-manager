@@ -151,7 +151,8 @@ class IdentidadeTest {
         assertThat(cookie.getAttribute("SameSite")).isEqualTo("Strict");
         mvc.perform(get("/api/v1/auth/me").header("Host", "a.localhost").header("Authorization", "Bearer " + access)).andExpect(status().isOk());
         mvc.perform(get("/api/v1/auth/me").header("Host", "b.localhost").header("Authorization", "Bearer " + access)).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/v1/plataforma/empresas").header("Host", "a.localhost").header("Authorization", "Bearer " + access)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/plataforma/empresas").header("Host", "a.localhost").header("Authorization", "Bearer " + access)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/plataforma/empresas").header("Host", "plataforma.localhost").header("Authorization", "Bearer " + access)).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/auth/me").header("Host", "a.localhost")).andExpect(status().isUnauthorized());
     }
     @Test void refreshRotacionaEReusoRevogaFamiliaMesmoComAccessValido() throws Exception {

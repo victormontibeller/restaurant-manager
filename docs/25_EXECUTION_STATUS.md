@@ -2,6 +2,55 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Retomada — ciclo 2, 2026-11-04, em execução
+
+Missão não concluída. Fontes/estado real reconciliados, build 543d440 reutilizado
+sem reconstrução: 129 backend aprovados e gate/hash conferidos. Verificação
+S01-UI20–22 passou quinze combinações; captura mobile revisada. Convites passaram
+quatorze e falharam uma combinação Firefox na sincronização do login (HTTP 200
+em cerca de oito segundos); teste corrigido, reexecução pendente. Demais suítes
+herdadas não executadas nesta rodada, pois runner parou na falha. Candidato antigo
+encerrado antes da nova migration public. Hml 449ce3c saudável e preservada.
+
+Novo incremento real: identidade SaaS isolada, consulta de empresas e UI. Duas
+revisões independentes neste ciclo (verificação herdada e SaaS). Achados SaaS
+reproduzidos: FOR SHARE sem privilégio e reativação sem revogação durável. V4 e
+regressão corrigem; 29 testes focados aprovados, sem falhas/erros/skip; typecheck
+aplicação/E2E aprovado após remover import indisponível, sem dependência nova. Não atribuir
+evidências herdadas ao artefato novo. [Detalhes](evidencias/sprint-01-retomada-ciclo-2.md).
+PR #3 continua draft; sem merge/deploy. Provisionamento/suspensão HTTP, eventos,
+projeções, manutenção/backup/restore e demais critérios pendentes; 02–05 abertas.
+
+## Encerramento da retomada — ciclo 1, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo do executor de orçamento quase esgotado
+recebido ao recolher o segundo build; após isso, somente encerramento seguro e
+handoff. Runner da nova validação encerrado pela ferramenta; dez contas fictícias
+de verificação foram preparadas, mas nenhum E2E novo foi consolidado/aprovado.
+Conferir processos/manifesto do candidato na retomada antes de reutilizar a porta.
+
+Publicado e remoto/PR relidos: `543d440fb35fa1442cd0b681bab3a37aa41295e0`, PR #3
+OPEN/draft/base main. Build independente desse SHA terminou exit 0/gate true em
+2026-11-04T13:56:19Z; hash
+`d19cfb078805f270ea092706ffb3513276a83e116f3ad4fc44aef16cd5e4985f`.
+Não repetir o build: resultado, gate e artefato imutável estão no job privado.
+CI runs 41840935866 e 41840925360 success; log do primeiro confirmou 129 testes
+backend sem falhas/erros/ignorados. XML local completo do novo build não foi
+reconsolidado após o aviso; os quatorze focados locais já estavam conferidos.
+
+Convites anteriores: treze aprovações/duas falhas, correção de sincronização
+publicada, reexecução pendente. Verificação preexistente: API/Angular/V11 e dez
+testes novos implementados; E2E S01-UI20–22 pendente, assim como regressão integrada
+do candidato. Revisão independente do último incremento continua bloqueada pelo
+limite desta chamada, sem aprovação substituta. Sprint 01 aberta; 02–05 não iniciadas.
+
+Última verificação de hml antes do aviso: SHA
+`449ce3ccf941c73b34ac15a4754183c147f91aaa`, health UP/PID41392. Sem deploy,
+reinício ou migração hml. Checkpoint final local posterior ao push; preservar.
+Próximo passo: conferir candidato/fixture já criada, executar E2E do JAR V11
+aprovado sem reconstruí-lo, revisar captura e corrigir falhas; então continuar
+SaaS/suspensão/eventos/projeções e manutenção/backup/restore. Sem CONCLUSAO.json.
+
 ## Retomada autorizada — ciclo 1 reiniciado, 2026-11-04
 
 Missão não concluída. Git/PR #3 draft e os dois checks CI do `c3233db` conferidos;
