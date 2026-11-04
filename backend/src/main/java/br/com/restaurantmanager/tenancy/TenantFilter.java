@@ -23,7 +23,7 @@ public class TenantFilter extends OncePerRequestFilter {
     }
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        var schema = tenants.activeSchemaForHost(request.getServerName().toLowerCase(Locale.ROOT));
+        var schema = tenants.operationalSchemaForHost(request.getServerName().toLowerCase(Locale.ROOT));
         if (schema.isEmpty()) {
             response.setStatus(404);
             response.setContentType("application/json");

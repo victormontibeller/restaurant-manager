@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 public class TenantRepository {
     private final JdbcTemplate jdbc;
     public TenantRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
-    public Optional<String> activeSchemaForHost(String host) {
-        return jdbc.query("select e.schema_name from public.dominio d join public.empresa e on e.id=d.empresa_id where d.host=? and e.estado='ATIVO'",
+    public Optional<String> operationalSchemaForHost(String host) {
+        return jdbc.query("select e.schema_name from public.dominio d join public.empresa e on e.id=d.empresa_id where d.host=? and e.estado in ('ATIVO','SUSPENSO')",
                 (rs, row) -> rs.getString(1), host).stream().findFirst();
     }
     public List<String> schemasParaManutencao(String depoisDe) {

@@ -51,3 +51,21 @@ Build identificado e E2E SaaS pendentes neste registro.
 Provisionamento/suspensão HTTP, eventos/projeções, manutenção/backup/restore e
 critérios restantes da Sprint 01 seguem abertos. Sprints 02–05 não iniciadas.
 Não há aprovação artificial, merge ou declaração de conclusão técnica.
+
+## Encerramento efetivo
+
+Publicado `f00137fc9f77533be2e5263e95d448d87b4a2ed6`; remoto/PR #3 draft relidos.
+CI runs 41848026109 e 41848018333 success no SHA exato; log confirma 138 backend.
+Build local independente terminou exit0/gate true, XML 138/0/0/0 conferidos,
+26 Python e gates frontend/auditorias aprovados. Hash
+`e506684145ab225cf9cdf4f15bf7f7630137ece155e92241cf7b72341c8fa399`.
+Espera de ferramenta expirou aos 420 segundos sem interromper o worker; resultado
+foi recolhido, não houve repetição do build.
+
+Operador fictício preparado e relido em rm_test. Candidato e runner E2E SaaS
+iniciados, mas aviso efetivo de orçamento interrompeu a validação antes de
+resultado consolidado. Ambos os processos próprios foram encerrados. Nenhum
+S01-UI23–25 aprovado, nenhum convite corrigido reexecutado/aprovado neste novo
+artefato. Não somar E2E do candidato antigo ao build novo como gate integrado.
+Homologação permaneceu no último release saudável; última consulta antes do aviso.
+Retomada deve usar o JAR imutável já aprovado, sem novo build documental.

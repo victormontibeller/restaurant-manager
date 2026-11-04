@@ -38,7 +38,7 @@ Suspensão comercial não deve abandonar pedidos já pagos, atendimentos abertos
 
 O provisionamento local usa processo privilegiado separado, não bean/runtime HTTP. `--provisionar` lê arquivo privado 0600, reserva UUID/domínio/plano/auditoria em uma transação, migra somente o schema interno derivado do UUID e confirma unidade/Administrador/ativação em outra transação. O plano guarda BCrypt custo 12, não senha em claro; repetição divergente de dados ou senha conflita. `--retomar-provisionamento UUID` conclui a reserva persistida em novo processo. Erro preserva reserva, registra SQLState/código sanitizado e não publica empresa incompleta. Ambos compartilham advisory lock com o migrador global; chamada sem lock real é recusada.
 
-O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. A retomada acrescenta identidade SaaS e consulta de metadados em validação, conforme [Segurança](04_SECURITY.md). Provisionamento HTTP e política operacional de suspensão ainda não foram implementados.
+O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. A retomada acrescenta identidade SaaS e consulta de metadados em validação, conforme [Segurança](04_SECURITY.md). Provisionamento HTTP permanece pendente; suspensão comercial está descrita abaixo.
 
 JDBC atende à infraestrutura privilegiada de provisionamento/migração e ao registro
 público explícito da identidade SaaS, fora do EntityManager que exige tenant já
@@ -49,6 +49,32 @@ Bootstrap não concede poderes SaaS a uma sessão empresarial nem libera DDL HTT
 - Nas requisições empresariais, resolva o tenant por domínio confiável cadastrado antes de autenticar. JWT, sessão, recurso e unidade devem corresponder ao contexto. Plataforma usa contexto público separado; webhooks validam o provedor e resolvem tenant pelo mapeamento interno de conta/recurso. Nunca derive um schema diretamente de entrada arbitrária.
 - Separe o contexto público da plataforma do contexto empresarial. Limpe contexto de tenant e conexão do pool em sucesso, erro e cancelamento; falha de resolução não pode cair em outro tenant.
 - Inclua tenant/unidade no escopo de caches, arquivos privados, jobs, eventos em tempo real e idempotência. Listagens, exportações e relatórios também precisam de autorização.
+
+## Estado comercial — retomada ciclo 3
+
+O candidato permite ao operador SaaS alternar somente `ATIVO` e `SUSPENSO`, com
+versão esperada, motivo obrigatório de até 240 caracteres e confirmação recente
+da senha. `PROVISIONANDO`/`FALHOU` não podem ser ativados por essa rota. Mudança
+repetida, versão antiga ou transição sem mudança retornam 409: consultar o estado
+atual antes de enviar nova decisão, sem retry automático da escrita.
+
+Usuário e sessão SaaS são revalidados sob locks antes da empresa; após esperar
+a empresa, o prazo de sessão/reautenticação é conferido novamente. Estado, versão
+e auditoria de operador/sessão/antes/depois/motivo confirmam na mesma transação.
+Auditoria permanece após expurgo técnico da sessão; runtime não pode alterá-la.
+
+Suspensão comercial não é revogação de segurança. O resolvedor continua aceitando
+o domínio de empresa `SUSPENSO`, mantendo login, recuperação e consultas/gestão
+empresariais existentes, sem conceder acesso a outro tenant. Empresas incompletas
+continuam indisponíveis. Não há pedidos/recebimentos implementados neste candidato:
+o bloqueio transacional de novas vendas e a conclusão/reconciliação de pedidos
+existentes deverão consumir essa política nas Sprints 03–04, com testes próprios.
+Não alegar esse gate demonstrado por alteração de um estado cadastral.
+
+UI consulta a empresa por UUID, confirma senha, informa efeito e exige nova
+consulta após resposta incerta/conflito. Consulta exata também sincroniza o cartão
+da lista quando presente. [Contrato](api/plataforma.yaml); resultados e limitações
+na [evidência do ciclo 3](evidencias/sprint-01-retomada-ciclo-3.md).
 
 ## Documentos relacionados
 

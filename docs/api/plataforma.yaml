@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Identidade e consulta SaaS — contrato parcial
-  version: 0.1.0
+  title: Identidade e estado comercial SaaS — contrato parcial
+  version: 0.2.0
 servers:
   - url: https://plataforma.localhost:8089/api/v1/plataforma
 paths:
@@ -64,6 +64,79 @@ paths:
       responses:
         '200': {description: usuarioId, sessaoId e perfil OPERADOR_SAAS}
         '401': {description: JWT ou sessão inválida; audiência empresarial não é aceita}
+  /auth/reautenticar:
+    post:
+      summary: Confirmar senha na sessão SaaS por cinco minutos, sem renovar sua expiração absoluta
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [senha]
+              properties:
+                senha: {type: string, minLength: 1, maxLength: 72, writeOnly: true}
+      responses:
+        '204': {description: Confirmação registrada na sessão atual}
+        '400': {description: Entrada inválida ou campo desconhecido}
+        '401': {description: Bearer SaaS ou sessão inválidos; cookies não autenticam esta ação}
+        '422': {description: Senha incorreta; login permanece válido}
+        '429': {description: Cinco tentativas por operador em quinze minutos}
+  /empresas/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      summary: Consultar metadados e versão atual para reconciliar resposta incerta
+      security:
+        - bearer: []
+      responses:
+        '200':
+          description: Mesmo formato da empresa retornada na listagem
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Empresa'}
+        '401': {description: Identidade SaaS inválida}
+        '404': {description: Empresa não encontrada}
+  /empresas/{id}/estado:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      summary: Suspender ou reativar empresa completa, com versão e auditoria atômica
+      description: Não revoga sessões empresariais nem concede acesso aos dados do restaurante. Não ativa PROVISIONANDO/FALHOU. Em resposta perdida consultar por UUID antes de nova decisão; replay da versão antiga retorna 409, nunca duplica efeito.
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [versao, estado, motivo]
+              properties:
+                versao: {type: integer, minimum: 0}
+                estado: {type: string, enum: [ATIVO, SUSPENSO]}
+                motivo: {type: string, minLength: 1, maxLength: 240, description: Não vazio; sem caracteres de controle}
+      responses:
+        '200':
+          description: Estado atual e versão incrementada; auditoria confirmada na mesma transação
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Empresa'}
+        '400': {description: Entrada inválida ou desconhecida}
+        '401': {description: Identidade SaaS inválida}
+        '403': {description: Confirmação recente da senha obrigatória}
+        '404': {description: Empresa não encontrada}
+        '409': {description: Versão divergente, estado incompleto ou nenhuma transição; consultar antes de nova decisão}
   /empresas:
     get:
       summary: Listar somente metadados empresariais, em ordem estável de UUID
@@ -81,19 +154,21 @@ paths:
               schema:
                 type: array
                 maxItems: 50
-                items:
-                  type: object
-                  additionalProperties: false
-                  required: [id, nome, estado, versao, dominios]
-                  properties:
-                    id: {type: string, format: uuid}
-                    nome: {type: string}
-                    estado: {type: string, enum: [PROVISIONANDO, ATIVO, FALHOU, SUSPENSO]}
-                    versao: {type: integer}
-                    dominios: {type: array, items: {type: string}}
+                items: {$ref: '#/components/schemas/Empresa'}
         '400': {description: Página inválida}
         '401': {description: Autenticação SaaS obrigatória}
 components:
+  schemas:
+    Empresa:
+      type: object
+      additionalProperties: false
+      required: [id, nome, estado, versao, dominios]
+      properties:
+        id: {type: string, format: uuid}
+        nome: {type: string}
+        estado: {type: string, enum: [PROVISIONANDO, ATIVO, FALHOU, SUSPENSO]}
+        versao: {type: integer}
+        dominios: {type: array, items: {type: string}}
   securitySchemes:
     bearer:
       type: http

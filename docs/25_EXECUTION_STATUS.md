@@ -2,7 +2,53 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Retomada — ciclo 2, 2026-11-04, em execução
+## Em andamento — retomada ciclo 3, 2026-11-04
+
+Missão não concluída. Base f00137f e CI/PR #3 draft conferidos; documentos locais
+herdados preservados. JAR herdado reutilizado, sem reconstrução. E2E SaaS teve
+doze aprovações/três falhas nos quinze cenários: duas mensagens WebKit mascaradas
+pelo indicador de rede, corrigidas; Firefox sem resposta de login ainda pendente
+de diagnóstico/reexecução. Candidato herdado encerrado antes de V5 pública.
+
+Novo incremento: consulta exata, reautenticação e suspensão/reativação SaaS com
+versão, motivo e auditoria atômica; contexto SUSPENSO preserva acesso empresarial.
+Revisão independente apontou cartão desatualizado após reconciliação; vermelho
+reproduzido e correção aplicada. 25 testes focados aprovados, XML sem falhas,
+erros ou skip; typecheck aprovado. Build/CI/E2E novos pendentes neste registro.
+[Detalhes](evidencias/sprint-01-retomada-ciclo-3.md).
+
+Hml verificada em 449ce3c/health UP, sem deploy/migração/reinício. Não há pedidos
+nem gate de admissão de vendas entregue. Provisionamento HTTP/eventos/projeções,
+manutenção/backup/restore e critérios restantes continuam pendentes; 02–05 não
+iniciadas. Próximo passo: publicar incremento revisado, build independente e
+E2E S01-UI26–28/SaaS/convites no candidato imutável. Sem CONCLUSAO.json.
+
+## Encerramento — retomada ciclo 2, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo do executor de orçamento quase esgotado
+recebido após a consulta de 14:43:34Z. Depois disso, somente encerramento seguro
+e handoff. Runner SaaS e candidato próprios foram encerrados pela ferramenta;
+nenhum resultado E2E SaaS consolidado/aprovado. Conferir manifesto/PID/listener
+na retomada antes de reutilizar porta; a última saída apenas aguardava readiness.
+
+Commit publicado e remoto/PR relidos: `f00137fc9f77533be2e5263e95d448d87b4a2ed6`.
+PR #3 OPEN/draft; ambos os checks CI success. Build local independente exit0/gate
+true, 138 backend sem falhas/erros/skip, 26 Python e frontend/auditorias aprovados;
+hash `e506684145ab225cf9cdf4f15bf7f7630137ece155e92241cf7b72341c8fa399`.
+NÃO repetir build: job/artefato privado imutável disponíveis. Operador fictício
+foi criado e relido em rm_test; fixture privada existe, não repetir seed cegamente.
+
+Verificação herdada passou quinze combinações; convites quatorze/uma falha,
+correção publicada, reexecução ainda pendente. SaaS teve duas falhas de projeto
+identificadas na revisão, reproduzidas e corrigidas; 29 testes focados aprovados.
+Demais regressões integradas não executadas. Última verificação hml: 449ce3c,
+health UP/PID41392, sem deploy/restart/migração; não houve releitura após aviso.
+Checkpoint final local posterior ao push. Próximo passo: E2E no JAR f00137f já
+aprovado, revisar/corrigir resultados, prosseguir provisionamento/suspensão HTTP,
+eventos/projeções e manutenção/backup/restore. Sprint01 aberta;02–05 não iniciadas.
+Sem CONCLUSAO.json. Detalhes, fixture e comandos no STATUS privado do ciclo 2.
+
+## Registro intermediário — retomada ciclo 2
 
 Missão não concluída. Fontes/estado real reconciliados, build 543d440 reutilizado
 sem reconstrução: 129 backend aprovados e gate/hash conferidos. Verificação
@@ -20,6 +66,14 @@ aplicação/E2E aprovado após remover import indisponível, sem dependência no
 evidências herdadas ao artefato novo. [Detalhes](evidencias/sprint-01-retomada-ciclo-2.md).
 PR #3 continua draft; sem merge/deploy. Provisionamento/suspensão HTTP, eventos,
 projeções, manutenção/backup/restore e demais critérios pendentes; 02–05 abertas.
+
+Incremento publicado: `f00137fc9f77533be2e5263e95d448d87b4a2ed6`, remoto/PR relidos.
+Dois checks CI success, runs 41848026109/41848018333; log confirmou 138 testes
+backend sem falhas/erros/skip. Build local independente terminou exit 0/gate true
+em 2026-11-04T14:41:06Z, hash
+`e506684145ab225cf9cdf4f15bf7f7630137ece155e92241cf7b72341c8fa399`.
+A espera da ferramenta expirou aos 420 segundos, mas não interrompeu o worker;
+resultado durável foi recolhido, sem repetir build. E2E novo ainda pendente aqui.
 
 ## Encerramento da retomada — ciclo 1, 2026-11-04
 

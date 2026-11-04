@@ -98,6 +98,53 @@ public class PlataformaService {
             if(pagina<0 || pagina>10000)throw new AuthFailure(400,"PAGINA_INVALIDA","Página inválida.");return repository.empresas(pagina);
         });
     }
+    public PlataformaRepository.Empresa empresa(Identidade ator,UUID id) {
+        return executar(()->{autorizar(ator,false);return localizar(id,false);});
+    }
+    public void reautenticar(Identidade ator,String senha) {
+        executar(()->{
+            if(ator==null)throw AuthFailure.invalid();
+            String key=hash("reautenticar:"+ator.usuarioId());
+            if(repository.tentativa(key,Instant.now())>5)throw limite();
+            var user=autorizar(ator,false);
+            if(senha.getBytes(StandardCharsets.UTF_8).length>72 || !passwords.matches(senha,user.hash()))
+                throw new AuthFailure(422,"CONFIRMACAO_INVALIDA","Senha de confirmação inválida.");
+            exigirSessao(repository.sessao(ator.sessaoId(),false),Instant.now());
+            repository.reautenticar(ator.sessaoId(),Instant.now());repository.limparTentativas(key);return null;
+        });
+    }
+    public PlataformaRepository.Empresa alterarEstado(Identidade ator,UUID id,long versao,String estado,String motivo) {
+        return executar(()->{
+            autorizar(ator,true);
+            if(versao<0 || !List.of("ATIVO","SUSPENSO").contains(estado) || motivo==null || motivo.isBlank()
+                    || motivo.length()>240 || motivo.chars().anyMatch(Character::isISOControl))
+                throw new AuthFailure(400,"ENTRADA_INVALIDA","Informe estado, versão e motivo válidos.");
+            var empresa=localizar(id,true);
+            // A espera pelo lock não prolonga a sessão nem a reautenticação.
+            exigirRecente(repository.sessao(ator.sessaoId(),false));
+            if(empresa.versao()!=versao || !List.of("ATIVO","SUSPENSO").contains(empresa.estado()) || empresa.estado().equals(estado))
+                throw new AuthFailure(409,"CONFLITO_ESTADO","Estado ou versão alterados. Consulte a empresa antes de confirmar novamente.");
+            repository.alterarEstado(empresa,estado,ator.usuarioId(),ator.sessaoId(),motivo.strip());
+            return localizar(id,false);
+        });
+    }
+    private PlataformaRepository.Usuario autorizar(Identidade ator,boolean sensivel) {
+        if(ator==null)throw AuthFailure.invalid();
+        // Mesma ordem da administração assistida: usuário antes da sessão.
+        var user=repository.bloquearUsuario(ator.usuarioId());
+        var session=repository.sessao(ator.sessaoId(),true);
+        if(user==null || !user.ativo() || session==null || !session.usuario().equals(ator.usuarioId()))throw AuthFailure.invalid();
+        exigirSessao(session,Instant.now());if(sensivel)exigirRecente(session);return user;
+    }
+    private void exigirRecente(PlataformaRepository.Sessao session) {
+        Instant agora=Instant.now();exigirSessao(session,agora);
+        if(session.reautenticada()==null || session.reautenticada().isBefore(agora.minusSeconds(300)))
+            throw new AuthFailure(403,"REAUTENTICACAO_NECESSARIA","Confirme sua senha de operador antes de alterar a empresa.");
+    }
+    private PlataformaRepository.Empresa localizar(UUID id,boolean lock) {
+        var empresa=repository.empresa(id,lock);
+        if(empresa==null)throw new AuthFailure(404,"RECURSO_NAO_ENCONTRADO","Empresa não encontrada.");return empresa;
+    }
     private void exigirSessao(PlataformaRepository.Sessao session,Instant agora) {
         if(session==null || !session.valida(agora) || !repository.ativo(session.usuario()))throw AuthFailure.invalid();
     }

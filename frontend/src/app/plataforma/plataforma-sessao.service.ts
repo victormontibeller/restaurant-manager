@@ -25,10 +25,15 @@ export class PlataformaSessaoService {
     }finally{this.limpar();}
   }
   async empresas(pagina:number):Promise<EmpresaSaas[]>{return this.api<EmpresaSaas[]>('/api/v1/plataforma/empresas?pagina='+pagina);}
-  private async api<T>(url:string):Promise<T>{
+  async empresa(id:string):Promise<EmpresaSaas>{return this.api<EmpresaSaas>('/api/v1/plataforma/empresas/'+encodeURIComponent(id));}
+  async reautenticar(senha:string):Promise<void>{await this.api<void>('/api/v1/plataforma/auth/reautenticar','POST',{senha});}
+  async alterarEstado(empresa:EmpresaSaas,estado:string,motivo:string):Promise<EmpresaSaas>{
+    return this.api<EmpresaSaas>('/api/v1/plataforma/empresas/'+empresa.id+'/estado','PUT',{versao:empresa.versao,estado,motivo});
+  }
+  private async api<T>(url:string,method='GET',body?:object):Promise<T>{
     if(!this.access)throw new Error('Entre na plataforma para continuar.');
-    const r=await fetch(url,{credentials:'same-origin',cache:'no-store',headers:{Authorization:'Bearer '+this.access},signal:AbortSignal.timeout(10000)});
-    if(!r.ok){if(r.status===401)this.limpar();throw await this.erro(r);}return await r.json() as T;
+    const r=await fetch(url,{method,credentials:'same-origin',cache:'no-store',headers:{Authorization:'Bearer '+this.access,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(10000)});
+    if(!r.ok){if(r.status===401)this.limpar();throw await this.erro(r);}return r.status===204?undefined as T:await r.json() as T;
   }
   private async receber(r:Response):Promise<void>{
     if(!r.ok)throw await this.erro(r);

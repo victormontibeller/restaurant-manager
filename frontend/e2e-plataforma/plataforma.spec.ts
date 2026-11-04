@@ -22,6 +22,8 @@ test('S01-UI23: operador consulta metadados, renova e encerra sessão separada',
   await page.reload();await expect(page.getByRole('button',{name:'Entrar na plataforma',exact:true})).toBeEnabled();await expect(page.getByText('Perfil: OPERADOR_SAAS',{exact:true})).toHaveCount(0);
 });
 test('S01-UI24: credencial negada, foco, teclado e consulta offline sem dados inventados',async({page,context})=>{
+  // O indicador do sistema pode estar offline enquanto HTTP responde. Não ocultar erro real.
+  await page.addInitScript(()=>Object.defineProperty(Navigator.prototype,'onLine',{get:()=>false,configurable:true}));
   await abrir(page);await page.getByLabel('E-mail do operador').fill(fixture.email);await page.getByLabel('Senha do operador').fill('senha-incorreta');
   await page.getByRole('button',{name:'Entrar na plataforma',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Credencial inválida');await expect(page.getByRole('alert')).toBeFocused();await expect(page.getByLabel('Senha do operador')).toHaveValue('');
   await entrar(page);const quantidade=await page.getByRole('article').count();await context.setOffline(true);

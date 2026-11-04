@@ -159,8 +159,12 @@ o término dessa janela. Auditoria não é expurgada. Interface mantém access s
 em memória, coordena refresh entre abas e limpa metadados ao encerrar sessão;
 falha de logout bloqueia novo login até reconciliação. Consulta SaaS retorna até
 cinquenta empresas por página, somente id/nome/estado/versão/domínios. Não retorna
-schema, credenciais, clientes ou consumo. Provisionamento/suspensão pela UI e
-as demais condições de T28 continuam pendentes; testes não aprovam essas lacunas.
+schema, credenciais, clientes ou consumo. O ciclo 3 acrescenta consulta exata e
+suspensão/reativação comercial conforme [Tenancy](06_MULTI_TENANT.md). Escritas
+usam Bearer SaaS, não autenticação por cookie; confirmação de senha vale cinco
+minutos e limita cinco tentativas por operador em quinze minutos. Senha inválida
+retorna 422 sem invalidar login; quota persistida retorna 429. Provisionamento
+pela UI e as demais condições de T28 continuam pendentes.
 
 ## Referências relacionadas
 

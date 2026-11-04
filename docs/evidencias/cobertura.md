@@ -47,7 +47,7 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 | T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Não implementado/não executado | Sprints 03–04 |
-| T28 | Parcial, família não aprovada | Provisionamento CLI testado; identidade SaaS e consulta de metadados em validação na retomada ciclo 2; provisionamento HTTP/suspensão pendentes |
+| T28 | Parcial, família não aprovada | Provisionamento CLI testado; identidade SaaS/consulta e suspensão comercial em validação; provisionamento HTTP e integração com pedidos pendentes |
 
 ## Cenários transversais
 
@@ -90,6 +90,8 @@ Administrador tem jornadas de login, matriz e equipe; unidades em validação. G
 | S01-UI20–22 | Verificar e-mail preexistente, preservar credenciais/perfil, erros/foco/offline e resposta perdida | Funcionário preexistente e público | Quinze combinações aprovadas no candidato 543d440 na retomada ciclo 2; revisão mobile realizada |
 | S01-UI23–25 | Login SaaS, metadados, refresh/logout, erros/foco/offline e origem empresarial negada | Operador SaaS | Testes escritos na retomada ciclo 2; execução nova ainda pendente neste registro |
 | S01-API05 | Audiência/origem separadas, CSRF real, refresh concorrente, revogação, quota e retenção SaaS | Operador SaaS e negativos empresariais | PlataformaTest em validação; não encerra T28 |
+| S01-UI26–28 | Consultar empresa, confirmar senha, suspender/reativar, reconciliar resposta perdida e conflito, offline | Operador SaaS | Testes novos na retomada ciclo 3; execução positiva ainda pendente neste registro |
+| S01-API06 | Transições comerciais, versão/concorrência, revogação, rollback de auditoria e consultas em suspensão | Operador SaaS e Administrador empresarial negado | EstadoEmpresaTest em validação; não cobre bloqueio de pedidos futuros |
 | S01-API04 | Verificação existente, finalidade/tenant, concorrência, expiração após lock, rollback, quota e retenção | Funcionário e público | VerificacaoEmailTest; resultados efetivos no checkpoint |
 | S01-API01 | Matriz/equipe, revogação com JWT válido, vínculos e concorrência | Seis funcionários e Cliente | AcessosTest; detalhes por incremento no checkpoint |
 | S01-API02 | Unidade administrativa, idempotência e concorrência | Administrador; negativos dos outros perfis | Quatro testes novos; validação final em curso |
