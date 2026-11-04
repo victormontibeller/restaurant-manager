@@ -2,7 +2,59 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Incremento vigente — retomada ciclo 7, 2026-11-04
+## Retomada ciclo 8 — em execução, 2026-11-04
+
+Build herdado dfe496c preservado, backend consolidou 165 testes sem falha/erro/skip;
+gate final e worker E2E ainda em recolhimento. CI head58d89d1 aprovada nos dois
+checks. Hml449ce3c UP/PID41392 conferida, sem deploy ou migration. Registro local
+de encerramento do ciclo7 preservado abaixo. completion-rejected.json ausente.
+
+Incremento atual: probe opcional de aplicação sobre cluster restaurado isolado,
+com opt-in runtime somente test/rm_test_app em loopback55433. Comandos privilegiados
+mantêm allowlist55432. Vermelho de conexão recusada reproduzido; dois testes unitários
+Java passaram após correção. Uma tentativa intermediária falhou compilação por
+consumidor do construtor, corrigido. 54 testes Python passaram; não são ensaio
+HTTP de restore. Revisão independente apontou cwd/captura incompatíveis, negativo
+de filial inexistente e escopo excessivo das evidências; corrigidos antes de publicar.
+
+Probe copia configuração privada/certificado e prova login, isolamento e restart;
+JWT/outbox criados após restore NÃO provam recuperação de tokens/mensagens anteriores
+ao backup. Ensaio real, build novo, manutenção/migrations/hml e jornadas restantes
+continuam pendentes. Sprint01 aberta;02–05 não iniciadas. Sem merge/CONCLUSAO.json.
+
+## Encerramento — retomada ciclo 7, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido após
+inspecionar o build ainda ativo; depois somente gravações obrigatórias de handoff.
+Nenhum build/worker foi interrompido ou repetido para encerrar esta chamada.
+
+Head publicado `58d89d1e36fd6cb83deb566c0e12df429fd5c673`, remoto e PR #3
+OPEN/draft/base main/head/corpo relidos. Incremento funcional dfe496c: ambos
+checks CI aprovados, 165 backend/50 Python sem falha/erro/skip. CI do head
+documental 58d89d1 ainda estava em execução na última consulta; não transferir
+aprovação entre SHAs. Sem merge/deploy/CONCLUSAO.json.
+
+Build local dfe496c permanece independente, sem resultado consolidado observado.
+Última inspeção real encontrou JVM em BCrypt, dentro de AcessosTest, não parada
+por este agente. XML parcial somava dezenove casos completos; NÃO é total/gate
+aprovado. Worker finito de validação permanece aguardando o build, com SHA/job
+fixos, locks, manifesto e resultados privados. STATUS privado contém caminhos,
+unidades e PIDs. Recolher primeiro; não iniciar nova suíte/migration/build.
+
+Restore de banco passou conforme evidência abaixo; cluster isolado parado e
+dump 0600 conferidos. Identidades SQL dev/test/hml relidas separadas em loopback.
+Último health hml observado UP/449ce3c, sem alteração de release. ACESSO.md existe
+0600 e não foi alterado. Relatório privado navegável e checkpoint estruturado
+foram gerados às 18:43:56Z, explicitamente com build não consolidado.
+
+E2E novo S01-UI35/UI04/eventos e retomada do UUID da fila AINDA sem resultado
+consolidado observado. Depois de recolher/corrigir, prosseguir manutenção,
+aplicação restaurada, gates integrados e demais critérios Sprint01. Guardas
+hml do provisionador/runner continuam recusando esse ambiente deliberadamente;
+restore somente de banco não as libera. Sprints02–05 não iniciadas.
+Este handoff final é local posterior ao push; preservar.
+
+## Registro do incremento — ciclo 7
 
 Missão não concluída. Workers herdados recolhidos: eventos aprovou quinze
 combinações; S01-UI04 aprovou duas/falhou três. Trace confirma resposta sem espera

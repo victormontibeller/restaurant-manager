@@ -171,6 +171,30 @@ Esta prova é somente de banco: NÃO cobre mídia, recuperação de chaves,
 login da aplicação restaurada, backup externo, manutenção/migration de hml
 nem habilita o deploy ou provisionamento hml. Esses gates permanecem abertos.
 
+### Probe opcional da aplicação restaurada — ciclo 8
+
+`database_recovery.py --application-job <JOB_PRIVADO_APROVADO> --application-fixture
+<JSON_PRIVADO>` acrescenta um ensaio HTTP real após comparar integralmente o banco.
+Exige gate/hash/fonte correspondente; a fixture 0600 contém contas fictícias de
+duas empresas e funcionário restrito a uma filial, chaves JWT/comunicação e TLS.
+Nunca versionar esse JSON. Copia configuração/certificado com manifesto de hashes
+para a tentativa privada; runtime relê somente essa cópia.
+
+Neste modo, o cluster novo aceita exclusivamente rm_test_app com senha efêmera
+em 127.0.0.1:55433 e aplicação HTTPS em 127.0.0.1:8090. O runtime exige opt-in
+`--rm.recovery-test=true`, limitado a test/rm_test/rm_test_app/55433; não altera
+allowlists de migration/provisionamento nem permite recuperação sobre hml/dev.
+Processos próprios são recolhidos; erro de cleanup impede aprovação. Modo padrão
+do ensaio de banco continua sem TCP.
+
+Verificações: login/identidade de contas restauradas, JWT de outra empresa negado,
+filiais reais permitida/negada, ação administrativa negada à Cozinha, shell Angular,
+health, sessão/JWT após restart, mensagem cifrada com worker parado e captura após
+restart, reset/reuso de código e preservação de outras contas. Esses JWTs/mensagens
+são criados APÓS restore: não demonstram recuperação de tokens/outbox pré-backup.
+Mídia ainda não existe neste incremento. Não aprova X15, backup externo, manutenção,
+deploy ou recuperação integral de chaves; execução e resultados ficam no checkpoint.
+
 Backup deve abranger banco, mídias necessárias e recuperação de configuração/chaves por processo seguro separado. Banco e mídias precisam formar um ponto recuperável consistente: adotar snapshot coordenado/quiescência ou mídia imutável/versionada com retenção e inventário compatíveis com o backup do banco. Uma cópia posterior dos arquivos, sem controle de alterações concorrentes, não atende a esse requisito. Registrar o ponto de recuperação e verificar referências de mídia no restore. Agendamento, criptografia, destino externo, retenção, RPO, RTO e responsável são pendências. Backup no mesmo disco não basta como único mecanismo de recuperação.
 
 Exigir ensaio de restore em ambiente isolado: verificar pelo menos duas empresas, usuários/acessos, pedidos, recebimentos, mídia e separação dos schemas. Reconciliar efeitos externos após restauração, pois o provedor pode ter processado eventos posteriores ao ponto restaurado. Restore integral não comprova automaticamente recuperação seletiva de um tenant.

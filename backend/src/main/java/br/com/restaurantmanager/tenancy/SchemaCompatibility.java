@@ -15,23 +15,22 @@ public class SchemaCompatibility implements InitializingBean {
     private final DataSource dataSource;
     private final String runtimeRole;
     private final String stage;
+    private final boolean recoveryTest;
 
     public SchemaCompatibility(DataSource dataSource, @Value("${spring.datasource.username}") String runtimeRole,
-                               @Value("${rm.stage}") String stage) {
+                               @Value("${rm.stage}") String stage,
+                               @Value("${rm.recovery-test:false}") boolean recoveryTest) {
         this.dataSource = dataSource;
         this.runtimeRole = runtimeRole;
         this.stage = stage;
+        this.recoveryTest = recoveryTest;
     }
 
     @Override public void afterPropertiesSet() throws SQLException {
         var schemas = new ArrayList<String>();
         schemas.add("public");
         try (var connection = dataSource.getConnection()) {
-            if (!java.util.List.of("dev", "test", "hml").contains(stage)
-                    || !runtimeRole.equals("rm_" + stage + "_app")) {
-                throw new IllegalStateException("Identidade de runtime recusada.");
-            }
-            Migrations.verifyIdentity(connection, "rm_" + stage, runtimeRole);
+            RuntimeDatabaseIdentity.verify(connection, stage, runtimeRole, recoveryTest);
             // Empresas incompletas já falham fechado na resolução; não derrubam as ativas.
             schemas.addAll(Migrations.tenantSchemas(connection, false));
         }

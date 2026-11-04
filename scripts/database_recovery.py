@@ -1,8 +1,10 @@
-"""Ensaio de backup/restore de rm_test em cluster privado sem TCP.
+"""Ensaio de backup/restore de rm_test em cluster privado.
 
-Não promove release, não restaura sobre dev/test/hml, não cobre mídia ou chaves.
+Não promove release nem restaura sobre dev/test/hml. Modo padrão sem TCP;
+probe opcional de aplicação usa somente loopback e configuração privada copiada.
 O inventário e pg_dump compartilham o mesmo snapshot PostgreSQL somente leitura.
 """
+import argparse
 import fcntl
 import hashlib
 import json
@@ -155,6 +157,12 @@ def inventory(session):
 
 def main():
     os.umask(0o077)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--application-job', type=Path)
+    parser.add_argument('--application-fixture', type=Path)
+    args = parser.parse_args()
+    if bool(args.application_job) != bool(args.application_fixture):
+        parser.error('Job e configuração privada devem ser informados juntos.')
     validate_source(os.environ)
     root = Path(os.environ.get('RM_HOME', Path.home() / '.local/share/restaurant-manager')).resolve()
     scratch = Path(os.environ['TMPDIR']).resolve()
@@ -173,6 +181,8 @@ def main():
     record = dict(approved=False, started_at=datetime.now(timezone.utc).isoformat(),
                   scope='backup/restore PostgreSQL rm_test; sem mídia, chaves, aplicação ou deploy',
                   source_database='rm_test', source_port=55432, source_mutated=False)
+    application = None
+    target_database = 'rm_test' if args.application_job else 'rm_restore_test'
     atomic_json(attempt / 'running.json', record)
     active = False
     session = None
@@ -185,6 +195,10 @@ def main():
     with (root / 'deploy.lock').open('a') as lock, (attempt / 'execution.log').open('xb') as log:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if args.application_job:
+                import application_recovery
+                application = application_recovery.prepare(args.application_job, args.application_fixture, root, attempt)
+                record['scope'] = 'Banco e aplicação restaurados isoladamente; configuração/chaves privadas; sem mídia/deploy'
             session = Session(source, source_env, log)
             actual = session.query('select current_database(),current_user,inet_server_port(),host(inet_server_addr())')
             if actual != ['rm_test|rm_test_owner|55432|127.0.0.1']:
@@ -207,10 +221,15 @@ def main():
             subprocess.run([str(binary / 'initdb'), '-D', str(cluster), '-L', str(pg / 'share/postgresql/16'),
                             '--encoding=UTF8', '--locale=C.UTF-8', '--auth-local=peer', '--auth-host=reject'],
                            env=env, check=True, stdout=log, stderr=log, timeout=90)
+            if application:
+                (cluster / 'pg_hba.conf').write_text('local all all peer\n'
+                    'host rm_test rm_test_app 127.0.0.1/32 scram-sha-256\n'
+                    'host all all 0.0.0.0/0 reject\nhost all all ::/0 reject\n')
             with tempfile.TemporaryDirectory(prefix='rm-restore-', dir=scratch) as socket:
                 # Restore atômico de muitos schemas exige locks de catálogo;
                 # configuração somente do cluster descartável, nunca da origem.
-                options = "-c listen_addresses='' -c unix_socket_directories=" + socket + " -p 55433 -c shared_buffers=16MB -c max_connections=8 -c max_locks_per_transaction=2048 -c jit=off"
+                listen = '127.0.0.1' if application else ''
+                options = "-c listen_addresses='" + listen + "' -c unix_socket_directories=" + socket + " -p 55433 -c shared_buffers=16MB -c max_connections=8 -c max_locks_per_transaction=2048 -c jit=off"
                 # Marcar antes do pg_ctl para recolher também startup parcialmente concluído.
                 active = True
                 subprocess.run([str(binary / 'pg_ctl'), '-D', str(cluster), '-l', str(attempt / 'postgres.log'),
@@ -221,23 +240,30 @@ def main():
                               '-p', '55433', '-U', username, '-d', 'postgres']
                     session = Session(target, env, log)
                     actual = session.query("select current_database(),current_user,current_setting('data_directory'),current_setting('listen_addresses'),inet_server_addr() is null")
-                    if actual != [f'postgres|{username}|{cluster}||t']:
+                    if actual != [f'postgres|{username}|{cluster}|{listen}|t']:
                         raise ValueError('Cluster de restauração não corresponde ao isolado.')
+                    if application:
+                        from release_support import verify_listener
+                        verify_listener(int((cluster / 'postmaster.pid').read_text().splitlines()[0]), 55433)
                     session.query('create role rm_test_owner nologin')
                     session.query('create role rm_test_app nologin')
-                    session.query('create database rm_restore_test owner rm_test_owner')
-                    session.query('revoke all on database rm_restore_test from public')
+                    session.query('create database ' + target_database + ' owner rm_test_owner')
+                    session.query('revoke all on database ' + target_database + ' from public')
                     session.close(); session = None
                     restore_started = time.monotonic()
                     subprocess.run([str(binary / 'pg_restore'), '-h', socket, '-p', '55433', '-U', username,
-                                    '-d', 'rm_restore_test', '--exit-on-error', '--single-transaction', str(archive)],
+                                    '-d', target_database, '--exit-on-error', '--single-transaction', str(archive)],
                                    env=env, check=True, stdout=log, stderr=log, timeout=300)
-                    session = Session(target[:-1] + ['rm_restore_test'], env, log)
+                    session = Session(target[:-1] + [target_database], env, log)
                     session.query('begin isolation level repeatable read read only')
                     after = inventory(session)
                     atomic_json(attempt / 'restored-inventory.json', after)
                     verify_inventory(before, after)
                     session.close(); session = None
+                    if application:
+                        session = Session(target[:-1] + [target_database], env, log)
+                        record['application'] = application_recovery.run(application, root, attempt, session, env, binary, log)
+                        session.close(); session = None
                     record.update(approved=True, tables=len(after['tables']), tenants=after['tenants'],
                                   rows=sum(t['rows'] for t in after['tables'].values()),
                                   restore_verify_seconds=round(time.monotonic() - restore_started, 3))

@@ -227,7 +227,7 @@ class ProvisionamentoTest {
         config.setMaximumPoolSize(2);
         config.setSchema("pg_catalog");
         try (var pool = new com.zaxxer.hikari.HikariDataSource(config)) {
-            new br.com.restaurantmanager.tenancy.SchemaCompatibility(pool, "rm_test_app", "test").afterPropertiesSet();
+            new br.com.restaurantmanager.tenancy.SchemaCompatibility(pool, "rm_test_app", "test", false).afterPropertiesSet();
         }
     }
 
