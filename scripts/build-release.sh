@@ -11,6 +11,7 @@ python3 scripts/check-repository.py
 python3 -m unittest discover -s scripts -p 'test_*.py'
 npm --prefix frontend ci --ignore-scripts
 npm --prefix frontend run typecheck
+node scripts/test_platform_session.cjs
 npm --prefix frontend run build
 npm --prefix frontend audit --audit-level=moderate
 bash scripts/with-env.sh test bash backend/mvnw -B -ntp -f backend/pom.xml clean verify

@@ -69,6 +69,20 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 | X14 | Parcial, não aprovado como cenário completo | Shell informa offline; PWA/sessão/transações futuras |
 | X15 | Parcial, não aprovado como cenário completo | SHA/hash, migrador e retorno nativo comprovados; backup/restore e manutenção incompatível pendentes |
 
+## Incremento de provisionamento — retomada ciclo 4
+
+S01-UI17–19, S01-UI23–25 e S01-UI26–28: quinze combinações por suíte
+aprovadas no artefato e039dc2, com PostgreSQL real e cinco projetos, sem
+skip/retry/flaky; resultado do worker herdado recolhido nesta rodada. Isso não
+aprova a matriz integrada do código novo.
+
+| Cenário | Superfície/ação | Ator | Estado |
+| --- | --- | --- | --- |
+| S01-UI29 | Solicitação pela UI, processamento CLI real e empresa disponível sem impersonação | Operador SaaS | Escrito; execução do candidato novo pendente |
+| S01-UI30 | Resposta perdida, UUID após logout/login, consulta sem duplicação | Operador SaaS | Escrito; execução pendente |
+| S01-UI31 | Falha de ativação real, consulta, retomada versionada e conclusão | Operador SaaS | Escrito; execução pendente |
+| S01-API07 | Reserva, autorização, concorrência, rollback, falha/retomada e crash após ativação | SaaS/worker privilegiado | Nove testes PostgreSQL aprovados; não substituem build/E2E |
+
 ## Atores ainda pendentes
 
 Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa ainda sem identidade/jornada; identidade SaaS e consulta de empresas estão em validação no ciclo 2 da retomada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.

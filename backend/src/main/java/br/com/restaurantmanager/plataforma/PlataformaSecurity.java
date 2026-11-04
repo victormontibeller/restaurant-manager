@@ -37,7 +37,8 @@ public class PlataformaSecurity {
                                        @Qualifier("platformJwtDecoder") JwtDecoder decoder) throws Exception {
         return common(http,mapper,filter).securityMatcher("/api/v1/plataforma/**").csrf(c->c.disable())
                 .authorizeHttpRequests(a->a.requestMatchers(HttpMethod.GET,"/api/v1/plataforma/auth/me","/api/v1/plataforma/empresas","/api/v1/plataforma/empresas/*").authenticated()
-                        .requestMatchers(HttpMethod.POST,"/api/v1/plataforma/auth/reautenticar").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/plataforma/provisionamentos","/api/v1/plataforma/provisionamentos/*").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/plataforma/auth/reautenticar","/api/v1/plataforma/provisionamentos","/api/v1/plataforma/provisionamentos/*/retomar").authenticated()
                         .requestMatchers(HttpMethod.PUT,"/api/v1/plataforma/empresas/*/estado").authenticated().anyRequest().denyAll())
                 .oauth2ResourceServer(o->o.jwt(j->j.decoder(decoder).jwtAuthenticationConverter(jwt->{
                     try{return new UsernamePasswordAuthenticationToken(service.validar(jwt),null,java.util.List.of());}

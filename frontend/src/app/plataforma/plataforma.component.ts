@@ -1,9 +1,11 @@
 import {Component,ElementRef,ViewChild,effect,inject,signal} from '@angular/core';
 
 import {EmpresaSaas,PlataformaSessaoService} from './plataforma-sessao.service';
+import {ProvisionamentoComponent} from './provisionamento.component';
 
 @Component({
   selector:'app-plataforma',
+  imports:[ProvisionamentoComponent],
   styles:[`:host{display:block}label{display:block;margin:1rem 0 .35rem}input,select{font:inherit;max-width:100%;width:100%;padding:.65rem;border:1px solid #627367;border-radius:.4rem;min-height:48px}button{margin:.5rem .5rem .5rem 0}article{border:1px solid #d4ddd5;padding:1rem;border-radius:.5rem;margin:1rem 0;overflow-wrap:anywhere}[role=alert]{border-left:4px solid #a33;padding:.8rem;background:#fff1ed}nav{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}`],
   template:`
     <section aria-labelledby="plataforma-titulo" [attr.aria-busy]="ocupado()">
@@ -53,7 +55,8 @@ import {EmpresaSaas,PlataformaSessaoService} from './plataforma-sessao.service';
         }
         <nav aria-label="Páginas de empresas"><button (click)="carregar(pagina()-1)" [disabled]="ocupado()||pagina()===0">Página anterior</button>
           <span>Página {{pagina()+1}}</span><button (click)="carregar(pagina()+1)" [disabled]="ocupado()||empresas().length<50">Próxima página</button></nav>
-        <p>Provisionamento pela interface ainda não está disponível. Não há operação comercial neste ambiente.</p>
+        <app-provisionamento />
+        <p>Não há operação comercial neste ambiente.</p>
       }
     </section>`,
 })

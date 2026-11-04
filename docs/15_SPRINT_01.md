@@ -7,7 +7,11 @@
 
 **Status:** em andamento desde 2026-11-04. Provisionamento, autenticação empresarial, equipe existente, matriz e unidades têm implementação e testes em banco exclusivo. Recuperação de senha foi validada nos cinco projetos de navegador no candidato herdado; cadastro teve falha de sincronização no teste WebKit, corrigida e reexecutada parcialmente no ciclo 11. Convites de funcionários estão em validação no incremento novo. APIs/telas SaaS, verificação de funcionários preexistentes, eventos e demais critérios continuam pendentes. Não concluída; não implantada em homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
 
-Itens compostos permanecem abertos. A retomada ciclo 3 acrescenta suspensão e
+Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
+HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID;
+agendamento/homologação e demais critérios permanecem pendentes.
+[Evidência](evidencias/sprint-01-retomada-ciclo-4.md).
+A retomada ciclo 3 acrescenta suspensão e
 reativação comercial versionadas na API/UI, em validação; não implementa pedidos
 nem libera empresa incompleta. [Evidência](evidencias/sprint-01-retomada-ciclo-3.md).
 A retomada ciclo 2 acrescenta identidade SaaS

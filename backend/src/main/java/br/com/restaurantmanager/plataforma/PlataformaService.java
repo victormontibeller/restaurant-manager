@@ -48,7 +48,7 @@ public class PlataformaService {
         @Override public String toString() { return "TokensPlataforma[protegidos]"; }
     }
     private record Resultado<T>(T valor,AuthFailure erro) {}
-    private <T> T executar(Supplier<T> operation) {
+    <T> T executar(Supplier<T> operation) {
         if(!TenantScope.current().equals("__none__") || TransactionSynchronizationManager.isActualTransactionActive())throw AuthFailure.invalid();
         var result=transaction.execute(status->{try{return new Resultado<T>(operation.get(),null);}catch(AuthFailure failure){return new Resultado<T>(null,failure);}});
         if(result.erro()!=null)throw result.erro();return result.valor();
@@ -128,7 +128,7 @@ public class PlataformaService {
             return localizar(id,false);
         });
     }
-    private PlataformaRepository.Usuario autorizar(Identidade ator,boolean sensivel) {
+    PlataformaRepository.Usuario autorizar(Identidade ator,boolean sensivel) {
         if(ator==null)throw AuthFailure.invalid();
         // Mesma ordem da administração assistida: usuário antes da sessão.
         var user=repository.bloquearUsuario(ator.usuarioId());

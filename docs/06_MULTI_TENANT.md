@@ -76,6 +76,35 @@ consulta após resposta incerta/conflito. Consulta exata também sincroniza o ca
 da lista quando presente. [Contrato](api/plataforma.yaml); resultados e limitações
 na [evidência do ciclo 3](evidencias/sprint-01-retomada-ciclo-3.md).
 
+## Solicitação SaaS de provisionamento — retomada ciclo 4
+
+O candidato acrescenta API/UI para solicitar, listar, consultar e retomar
+provisionamento, sem credencial owner ou DDL no HTTP. A intenção UUID guarda
+autor, dados normalizados e BCrypt; consulta não retorna e-mail/senha/hash/schema.
+Mesmo autor/payload/senha reutiliza o resultado; divergência retorna 409. Domínio
+local e UUID são reservados também contra o CLI legado, usando o mesmo advisory
+lock do migrador. Se o processo privilegiado estiver ocupado, a API não espera
+a migration mantendo locks: rejeita com 409 e preserva a intenção para consulta.
+
+`SOLICITADO` é uma fila persistida, não empresa ativa. O comando privilegiado
+`--processar-solicitacao UUID` reserva/migra/ativa pelo mecanismo existente e
+confirma `CONCLUIDO`; falha sanitizada resulta em `FALHOU`. A retomada HTTP exige
+versão e reautenticação, audita e recoloca em `SOLICITADO`. Não altera payload nem
+senha. Queda entre ativação e confirmação é reconciliável sem duplicar usuário
+ou unidade e sem reativar empresa suspensa depois. Não há retry infinito de falha.
+
+O worker deste incremento é uma invocação explícita por UUID, não um agendamento
+instalado. O provisionamento continua limitado a dev/test; homologação e execução
+automática da fila dependem do gate operacional de manutenção/backup. Não
+confundir a jornada E2E que chama o CLI real com um worker de homologação ativo.
+
+UI conserva somente o UUID de resultado incerto em memória por operador/origem,
+inclusive entre logout/login na mesma página. Campos/senha precisam ser
+reinformados para replay; fechar/recarregar perde esse rascunho, com aviso. Consulta
+exata permite reconciliar um UUID guardado privadamente. Respostas de sessões
+anteriores/instâncias destruídas não podem limpar intenção nem encerrar login novo.
+[Contrato](api/provisionamento.yaml); [evidência](evidencias/sprint-01-retomada-ciclo-4.md).
+
 ## Documentos relacionados
 
 - [Modelo de dados](05_DATABASE.md)

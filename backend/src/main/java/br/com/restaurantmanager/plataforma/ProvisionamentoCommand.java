@@ -15,10 +15,12 @@ public final class ProvisionamentoCommand {
     private ProvisionamentoCommand() {}
 
     public static void executar(String[] args, Map<String, String> env) throws Exception {
-        if (args.length != 2) throw new IllegalArgumentException("Uso: --provisionar arquivo-privado ou --retomar-provisionamento UUID.");
+        if (args.length != 2) throw new IllegalArgumentException("Uso: --provisionar arquivo-privado, --retomar-provisionamento UUID ou --processar-solicitacao UUID.");
         var service = new ProvisionamentoService(env);
         ProvisionamentoService.Resultado result;
-        if (args[0].equals("--retomar-provisionamento")) {
+        if (args[0].equals("--processar-solicitacao")) {
+            result = service.processarSolicitacao(UUID.fromString(args[1]));
+        } else if (args[0].equals("--retomar-provisionamento")) {
             result = service.concluir(UUID.fromString(args[1]));
         } else if (args[0].equals("--provisionar")) {
             var p = lerPedido(Path.of(args[1]));

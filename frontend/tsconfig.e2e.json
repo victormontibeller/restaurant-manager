@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {"noEmit": true, "types": ["node"]},
-  "include": ["playwright*.config.ts", "e2e/**/*.ts", "e2e-identidade/**/*.ts", "e2e-recuperacao/**/*.ts", "e2e-cadastro/**/*.ts", "e2e-convites/**/*.ts", "e2e-verificacao/**/*.ts", "e2e-plataforma/**/*.ts", "e2e-estado-empresa/**/*.ts"]
+  "include": ["playwright*.config.ts", "e2e/**/*.ts", "e2e-identidade/**/*.ts", "e2e-recuperacao/**/*.ts", "e2e-cadastro/**/*.ts", "e2e-convites/**/*.ts", "e2e-verificacao/**/*.ts", "e2e-plataforma/**/*.ts", "e2e-estado-empresa/**/*.ts", "e2e-provisionamento/**/*.ts"]
 }

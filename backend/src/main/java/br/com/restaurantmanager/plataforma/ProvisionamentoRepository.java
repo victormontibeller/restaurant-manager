@@ -101,6 +101,24 @@ final class ProvisionamentoRepository {
     }
 
     static String schema(UUID id) { return "t_" + id.toString().replace("-", ""); }
+    SolicitacaoProvisionamentoRepository.Registro solicitacao(Connection c,UUID id) throws SQLException {
+        try(var s=c.prepareStatement("select id,operador_id,nome,host,unidade_nome,administrador_email,administrador_senha_hash,estado,versao,ultima_falha from public.solicitacao_provisionamento where id=?")) {
+            s.setObject(1,id);try(var r=s.executeQuery()) {
+                if(!r.next())return null;
+                return new SolicitacaoProvisionamentoRepository.Registro(r.getObject(1,UUID.class),r.getObject(2,UUID.class),r.getString(3),r.getString(4),r.getString(5),r.getString(6),r.getString(7),r.getString(8),r.getLong(9),r.getString(10));
+            }
+        }
+    }
+    boolean reservadoNaFila(Connection c,UUID id,String host) throws SQLException {
+        try(var s=c.prepareStatement("select exists(select 1 from public.solicitacao_provisionamento where id=? or host=?)")) {
+            s.setObject(1,id);s.setString(2,host);try(var r=s.executeQuery()){r.next();return r.getBoolean(1);}
+        }
+    }
+    void finalizarSolicitacao(Connection c,UUID id,String estado,String falha) throws SQLException {
+        try(var s=c.prepareStatement("update public.solicitacao_provisionamento set estado=?,versao=versao+1,ultima_falha=?,atualizado_em=clock_timestamp() where id=? and estado='SOLICITADO'")) {
+            s.setString(1,estado);s.setString(2,falha);s.setObject(3,id);s.executeUpdate();
+        }
+    }
     record Registro(UUID id, String nome, String schema, String estado, String host, String unidade, String email, String hash) {
         @Override public String toString() { return "Provisionamento[" + id + "," + estado + "]"; }
     }

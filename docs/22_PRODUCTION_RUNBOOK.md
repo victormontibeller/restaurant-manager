@@ -55,6 +55,24 @@ Procedimento futuro de release:
 
 Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. Autenticação e unidades da Sprint 01 ainda não foram promovidas ao serviço de homologação. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
+## Provisionamento assistido pela fila SaaS
+
+O candidato do ciclo 4 recebe solicitações pela interface SaaS. Após consultar
+e conferir o UUID, o operador técnico executa em dev/test, com configuração
+privada e artefato correspondente às migrations:
+
+```bash
+bash scripts/with-env.sh test java -Xmx128m -XX:ActiveProcessorCount=2 \
+  -jar <ARTEFATO_PRIVADO_VALIDADO> --processar-solicitacao <UUID_DA_SOLICITACAO>
+```
+
+O comando recusa hml neste estágio. Não recebe senha em argumentos e compartilha
+lock com migrador/provisionador. Retorno zero exige consultar a solicitação e a
+empresa; falha não ativa empresa incompleta. Depois de corrigir a causa, solicitar
+retomada versionada pela UI e executar o mesmo UUID. Não usar o CLI legado para
+tomar uma reserva da fila. Ainda não há timer/worker contínuo instalado nem
+aprovação de homologação para esta jornada.
+
 ## Build independente da sessão
 
 `python3 scripts/durable_build.py start` exige checkout limpo e cria clone privado

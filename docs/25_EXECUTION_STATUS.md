@@ -2,7 +2,54 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Em andamento — retomada ciclo 3, 2026-11-04
+## Registro intermediário — retomada ciclo 4, 2026-11-04
+
+Missão não concluída. Worker herdado e039dc2 terminou exit 0 e foi reconciliado:
+estado comercial, SaaS e convites aprovados nos cinco projetos, quinze combinações
+por suíte, sem retry/skip/flaky. Candidato encerrou; não houve repetição do build.
+Hml conferida saudável no 449ce3c; sem deploy/reinício/migração.
+
+Novo incremento real: solicitação SaaS de provisionamento, consulta/listagem,
+retomada versionada e UI; worker privilegiado CLI por UUID, sem DDL no HTTP.
+Duas revisões independentes; achados reproduzidos e corrigidos. Nove testes
+PostgreSQL e dois testes focados de lógica frontend passaram; typecheck aprovado.
+[Evidência](evidencias/sprint-01-retomada-ciclo-4.md). Build/CI/E2E novos pendentes
+nesta gravação; PR #3 continua draft, sem merge. Não existe timer da fila instalado.
+
+Próximo passo: publicar incremento revisado, build identificado independente e
+E2E S01-UI29–31 com worker real, depois regressões afetadas. Não usar JAR e039dc2
+contra public V6. Continuar eventos/projeções e gate de manutenção/backup/restore.
+Sprint01 aberta;02–05 não iniciadas. Sem CONCLUSAO.json.
+
+## Encerramento — retomada ciclo 3, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido depois
+da consulta de 15:30:40Z; após o aviso, somente gravação de handoff. Build e CI
+do e039dc2 aprovados conforme registro abaixo. Nenhum E2E novo consolidado antes
+do aviso; não inferir aprovação a partir do início do candidato.
+
+O worker nativo de E2E permanece independente, sem interrupção deliberada:
+`restaurant-manager-e2e.service`, PID observado 206684; candidato próprio 206695,
+health UP em loopback na última consulta. Lock exclusivo de E2E e lock de
+build/deploy recusaram aquisição concorrente real. O próximo ciclo DEVE recolher
+resultado/log/manifesto privados e conferir unidade/processos ANTES de iniciar
+outra suíte, migrar banco ou reconstruir. O worker executa somente as suítes
+predeterminadas e encerra seu candidato; não é outro coordenador nem faz deploy.
+
+Publicado: `e039dc2bc3e02c4d046257c94233d7ea065e59a5`, PR #3 OPEN/draft/base main,
+remoto relido. Checkpoint/evidência finais locais posteriores ao push; preservar.
+Corpo do PR foi atualizado antes de concluir build/CI e ainda os descreve em
+execução. Atualizar após recolher E2E. Hml permanece na fundação 449ce3c, sem
+reinício/deploy/migração; não houve nova verificação após o aviso.
+
+Próximo trabalho concreto: recolher as suítes estado-empresa/SaaS/convites do
+JAR aprovado sem repetir build, corrigir falhas e executar regressões restantes;
+seguir provisionamento HTTP/eventos/projeções e manutenção/backup/restore.
+Sprint01 aberta;02–05 não iniciadas. Sem CONCLUSAO.json. STATUS privado contém
+job, comandos, processos e limites precisos; relatório privado desta rodada
+registra somente resultados já observados, não o resultado futuro do worker.
+
+## Registro intermediário — retomada ciclo 3
 
 Missão não concluída. Base f00137f e CI/PR #3 draft conferidos; documentos locais
 herdados preservados. JAR herdado reutilizado, sem reconstrução. E2E SaaS teve
@@ -22,6 +69,16 @@ nem gate de admissão de vendas entregue. Provisionamento HTTP/eventos/projeçõ
 manutenção/backup/restore e critérios restantes continuam pendentes; 02–05 não
 iniciadas. Próximo passo: publicar incremento revisado, build independente e
 E2E S01-UI26–28/SaaS/convites no candidato imutável. Sem CONCLUSAO.json.
+
+Incremento publicado e remoto/PR relidos: `e039dc2bc3e02c4d046257c94233d7ea065e59a5`.
+CI runs 41855643192/41855632008 success no SHA exato; log confirma 147 backend.
+Build local independente terminou em 2026-11-04T15:28:43Z, exit 0/gate true,
+147 backend sem falhas/erros/skip e 26 Python; frontend/auditorias aprovados.
+Hash `33a5dc2edd61b9d2f7db3fcdaa497af70218159866553fbd0636146c02c51b01`.
+Não reconstruir este artefato para alterações documentais. E2E está em worker
+nativo próprio, serializado após build, com manifesto/log/resultado privados;
+consultar unidade/processos antes de outra suíte. Ainda sem aprovação E2E neste
+registro. Não é outro coordenador e não promove o release.
 
 ## Encerramento — retomada ciclo 2, 2026-11-04
 

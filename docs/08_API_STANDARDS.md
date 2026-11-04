@@ -46,8 +46,9 @@ resultados e artefatos aprovados são registrados no checkpoint.
 Contrato SaaS parcial: [identidade de operador e consulta de empresas](api/plataforma.yaml).
 Audiência, sessões, CSRF e origem separados; não há acesso implícito aos schemas
 empresariais. A retomada ciclo 3 acrescenta confirmação de senha SaaS, consulta
-exata e suspensão/reativação versionada, ainda em validação. Provisionamento HTTP
-permanece pendente.
+exata e suspensão/reativação versionada. A retomada ciclo 4 acrescenta
+[solicitação/consulta/retomada de provisionamento](api/provisionamento.yaml),
+em validação, com execução DDL separada por CLI e sem promoção para homologação.
 
 ## Documentos relacionados
 

@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: Solicitações de provisionamento SaaS — contrato parcial
+  version: 0.1.0
+servers:
+  - url: https://plataforma.localhost:8089/api/v1/plataforma
+security:
+  - bearer: []
+paths:
+  /provisionamentos:
+    post:
+      summary: Registrar intenção durável sem executar DDL no servidor HTTP
+      description: Exige reautenticação de cinco minutos. UUID e domínio ficam reservados; mesmo autor e payload retorna o estado atual. Limite de dez intenções novas por operador em quinze minutos. Solicitação aceita não significa empresa ativa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id, nome, host, unidade, email, senha]
+              properties:
+                id: {type: string, format: uuid}
+                nome: {type: string, minLength: 1, maxLength: 120}
+                host: {type: string, maxLength: 253, description: Um único rótulo minúsculo seguido de .localhost; sem porta. A origem SaaS não pode ser reservada.}
+                unidade: {type: string, minLength: 1, maxLength: 120}
+                email: {type: string, format: email, maxLength: 254, description: E-mail normalizado em minúsculas}
+                senha: {type: string, minLength: 12, writeOnly: true, description: Máximo 72 bytes UTF-8; armazenada somente como BCrypt custo 12}
+      responses:
+        '202':
+          description: Intenção persistida ou replay idêntico; consultar o resultado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Resumo'}
+        '400': {description: Entrada inválida ou campos desconhecidos}
+        '401': {description: Sessão SaaS inválida; identidade empresarial não serve}
+        '403': {description: Reautenticação ausente ou vencida}
+        '409': {description: ID/domínio/payload/autor divergente ou provisionador ocupado; preservar UUID}
+        '429': {description: Limite de intenções novas por operador}
+    get:
+      summary: Listar solicitações sem credenciais nem dados empresariais
+      parameters:
+        - in: query
+          name: pagina
+          schema: {type: integer, minimum: 0, maximum: 10000, default: 0}
+      responses:
+        '200':
+          description: Até cinquenta solicitações, mais recentes primeiro
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Resumo'}
+        '400': {description: Página inválida}
+        '401': {description: Sessão inválida}
+  /provisionamentos/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      summary: Reconciliar intenção por identificador, inclusive depois de perder a resposta
+      responses:
+        '200':
+          description: Estado atual; CONCLUIDO não substitui consulta do estado comercial da empresa
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Resumo'}
+        '401': {description: Sessão inválida}
+        '404': {description: Solicitação não encontrada}
+  /provisionamentos/{id}/retomar:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      summary: Recolocar solicitação FALHOU em SOLICITADO após corrigir a causa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [versao]
+              properties:
+                versao: {type: integer, minimum: 0}
+      responses:
+        '202':
+          description: Retomada auditada, ainda não concluída pelo worker
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Resumo'}
+        '400': {description: Versão inválida}
+        '401': {description: Sessão inválida}
+        '403': {description: Reautenticação necessária}
+        '404': {description: Solicitação não encontrada}
+        '409': {description: Estado ou versão conflitantes; consultar antes de repetir}
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer, bearerFormat: JWT}
+  schemas:
+    Resumo:
+      type: object
+      additionalProperties: false
+      required: [id, nome, host, estado, versao, ultimaFalha]
+      properties:
+        id: {type: string, format: uuid}
+        nome: {type: string}
+        host: {type: string}
+        estado: {type: string, enum: [SOLICITADO, CONCLUIDO, FALHOU]}
+        versao: {type: integer, minimum: 0}
+        ultimaFalha: {type: [string, 'null'], description: Código técnico sanitizado; nunca mensagem SQL ou credencial}

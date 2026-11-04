@@ -23,6 +23,8 @@ public final class ProvisionamentoService {
     public void reservar(Pedido pedido) throws SQLException {
         validar(pedido);
         try (var c = repository.abrirComLock()) {
+            if(repository.reservadoNaFila(c,pedido.id(),pedido.host()))
+                throw new IllegalStateException("Reserva pertence à fila SaaS; processe a solicitação original.");
             var existing = repository.buscar(c, pedido.id());
             if (existing != null) {
                 if (!existing.nome().equals(pedido.nome()) || !existing.host().equals(pedido.host())
@@ -47,6 +49,40 @@ public final class ProvisionamentoService {
     public Resultado concluir(UUID id) throws SQLException {
         if (id == null) throw new IllegalArgumentException("Identificador obrigatório.");
         try (var c = repository.abrirComLock()) {
+            return concluir(c,id);
+        }
+    }
+
+    /** A fila é durável; falha exige retomada explícita, sem retry infinito. */
+    public Resultado processarSolicitacao(UUID id) throws SQLException {
+        if(id==null)throw new IllegalArgumentException("Identificador obrigatório.");
+        try(var c=repository.abrirComLock()) {
+            var pedido=repository.solicitacao(c,id);
+            if(pedido==null)throw new IllegalArgumentException("Solicitação não encontrada.");
+            if(pedido.estado().equals("FALHOU"))throw new IllegalStateException("Solicite retomada pela plataforma.");
+            try {
+                var existente=repository.buscar(c,id);
+                if(existente==null) {
+                    c.setAutoCommit(false);
+                    repository.reservar(c,new Pedido(id,pedido.nome(),pedido.host(),pedido.unidade(),pedido.email(),null),pedido.hash());
+                    c.commit();c.setAutoCommit(true);
+                } else if(!existente.nome().equals(pedido.nome()) || !existente.host().equals(pedido.host())
+                        || !existente.unidade().equals(pedido.unidade()) || !existente.email().equals(pedido.email()) || !existente.hash().equals(pedido.hash())) {
+                    throw new IllegalStateException("Reserva divergente da solicitação.");
+                }
+                // Um resultado já concluído não reativa empresa suspensa posteriormente.
+                Resultado resultado=existente!=null && java.util.List.of("ATIVO","SUSPENSO").contains(existente.estado())
+                        ? new Resultado(id,existente.schema(),existente.estado()) : concluir(c,id);
+                c.setAutoCommit(false);repository.finalizarSolicitacao(c,id,"CONCLUIDO",null);c.commit();return resultado;
+            }catch(SQLException | RuntimeException failure) {
+                if(!c.getAutoCommit())c.rollback();c.setAutoCommit(false);
+                repository.finalizarSolicitacao(c,id,"FALHOU","PROVISIONAMENTO_INTERROMPIDO");c.commit();
+                throw new IllegalStateException("Solicitação interrompida; consulte o estado e solicite retomada.",failure);
+            }
+        }
+    }
+
+    private Resultado concluir(java.sql.Connection c,UUID id) throws SQLException {
             var registro = repository.buscar(c, id);
             if (registro == null) throw new IllegalArgumentException("Provisionamento não encontrado.");
             if (registro.estado().equals("ATIVO")) return new Resultado(id, registro.schema(), "ATIVO");
@@ -72,10 +108,9 @@ public final class ProvisionamentoService {
                 throw new IllegalStateException("Provisionamento interrompido; pode ser retomado.", failure);
             }
             return new Resultado(id, registro.schema(), "ATIVO");
-        }
     }
 
-    private static void validar(Pedido p) {
+    static void validar(Pedido p) {
         if (p == null || p.id() == null) throw new IllegalArgumentException("Identificador obrigatório.");
         texto(p.nome(), "Nome"); texto(p.unidade(), "Unidade");
         if (p.host() == null || p.host().length() > 253

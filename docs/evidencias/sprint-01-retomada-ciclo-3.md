@@ -53,3 +53,40 @@ Build identificado/CI/E2E novos ainda pendentes. Convites corrigidos e regressã
 integrada restante não foram executados neste ciclo até aqui. Provisionamento
 HTTP, eventos/projeções, manutenção/backup/restore e demais critérios continuam
 abertos. Sprint 01 não concluída; 02–05 não iniciadas. Nenhum merge/deploy novo.
+
+## Build e publicação do incremento
+
+Publicado `e039dc2bc3e02c4d046257c94233d7ea065e59a5`; SHA remoto, head/base e
+PR #3 OPEN/draft relidos. CI runs 41855643192/41855632008 success nesse SHA;
+log de um run confirmou 147 testes backend sem falhas/erros/skip.
+
+Build local terminou em 2026-11-04T15:28:43Z, exit 0/gate true. Dezenove XML
+somam 147 testes backend, sem falhas/erros/skip; 26 Python e gates de frontend/
+auditorias passaram. Hash do JAR conferido:
+`33a5dc2edd61b9d2f7db3fcdaa497af70218159866553fbd0636146c02c51b01`.
+Não somar testes focados à suíte completa como testes distintos.
+
+O runner de validação aguardando o build foi substituído, antes de iniciar
+qualquer cenário novo, por um worker nativo independente da sessão. O build não
+foi reiniciado. Worker registra PID/início/SHA, tem lock exclusivo de E2E e usa
+o lock de build/deploy durante a validação. JAR/checkout imutáveis, logs privados
+e agregação exata das combinações; encerra somente seu candidato. Isso permite
+recolher resultado entre ciclos sem repetir o build. Resultado ausente não é
+aprovação; interrupção abrupta continua exigindo reconciliação de processos.
+Na última consulta deste registro, candidato próprio estava iniciando; nenhum
+E2E novo aprovado ainda. Homologação preservada.
+
+## Encerramento pelo aviso efetivo do executor
+
+Aviso de orçamento quase esgotado recebido após a consulta de 15:30:40Z. Somente
+handoff depois do aviso. Candidato novo foi observado health UP em loopback,
+com SHA/hash/identidade rm_test no manifesto. Locks de E2E e build/deploy
+recusaram aquisição concorrente real. Worker nativo permanece independente;
+não foi interrompido para repetir tudo na retomada. Nenhum resultado E2E novo
+foi consolidado antes do aviso. Consultar resultado/log/unidade antes de outra
+suíte ou migration. Não afirmar continuidade concluída nem testes aprovados
+somente porque a unidade iniciou.
+
+CI e build completo aprovados conforme seção anterior; PR #3 continua draft,
+sem merge ou deploy. Checkpoint final local posterior ao push. Sprint01 e missão
+inteira permanecem abertas; demais critérios e sprints não foram reduzidos.
