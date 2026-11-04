@@ -9,6 +9,15 @@ import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoCon
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class RestaurantManagerApplication {
     public static void main(String[] args) {
+        if (args.length > 0 && (args[0].equals("--provisionar") || args[0].equals("--retomar-provisionamento"))) {
+            try {
+                br.com.restaurantmanager.plataforma.ProvisionamentoCommand.executar(args, System.getenv());
+            } catch (Exception failure) {
+                System.err.println("Provisionamento interrompido. Verifique alvo, pedido privado e registro persistido. Tipo: " + failure.getClass().getSimpleName());
+                System.exit(1);
+            }
+            return;
+        }
         if (Arrays.asList(args).contains("--migrate-only")) {
             try {
                 Migrations.run(System.getenv());

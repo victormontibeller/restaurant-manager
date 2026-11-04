@@ -44,6 +44,33 @@ public final class Migrations {
         return List.copyOf(completed);
     }
 
+    /** Chamado pelo provisionador que já detém o mesmo advisory lock do migrador. */
+    public static void migrateTenant(Connection guard, Map<String, String> env, String schema) throws SQLException {
+        if (schema == null || !schema.matches("t_[a-f0-9]{32}")) {
+            throw new IllegalArgumentException("Schema interno inválido.");
+        }
+        String stage = env.get("RM_STAGE");
+        if (!List.of("dev", "test", "hml").contains(stage == null ? "" : stage)
+                || !("jdbc:postgresql://127.0.0.1:55432/rm_" + stage).equals(env.get("RM_DB_URL"))
+                || !("rm_" + stage + "_owner").equals(env.get("RM_MIGRATION_USER"))
+                || !("rm_" + stage + "_app").equals(env.get("RM_DB_USER"))) {
+            throw new IllegalArgumentException("Destino de migração recusado.");
+        }
+        verifyIdentity(guard, "rm_" + stage, "rm_" + stage + "_owner");
+        try (var check = guard.createStatement(); var locks = check.executeQuery(
+                "select exists(select 1 from pg_locks where locktype='advisory' and pid=pg_backend_pid() and granted and classid=0 and objid=7240100 and objsubid=1)")) {
+            locks.next();
+            if (!locks.getBoolean(1)) throw new IllegalStateException("Lock de migração obrigatório.");
+        }
+        try (var statement = guard.prepareStatement("select 1 from public.empresa where schema_name=? and estado in ('PROVISIONANDO','FALHOU')")) {
+            statement.setString(1, schema);
+            try (var result = statement.executeQuery()) {
+                if (!result.next()) throw new IllegalStateException("Schema não reservado para provisionamento.");
+            }
+            migrate(env.get("RM_DB_URL"), env.get("RM_MIGRATION_USER"), env.get("RM_MIGRATION_PASSWORD"), env.get("RM_DB_USER"), schema, guard);
+        }
+    }
+
     public static void verifyIdentity(Connection connection, String database, String role) throws SQLException {
         try (var statement = connection.createStatement();
              var result = statement.executeQuery("select current_database(),current_user,inet_server_port(),host(inet_server_addr())")) {
@@ -56,10 +83,15 @@ public final class Migrations {
     }
 
     static List<String> tenantSchemas(Connection connection) throws SQLException {
+        return tenantSchemas(connection, true);
+    }
+
+    static List<String> tenantSchemas(Connection connection, boolean includeIncomplete) throws SQLException {
         var schemas = new ArrayList<String>();
         schemas.add("t_template");
         try (var statement = connection.createStatement();
-             var result = statement.executeQuery("select schema_name from public.empresa order by id")) {
+             var result = statement.executeQuery("select schema_name from public.empresa"
+                     + (includeIncomplete ? "" : " where estado in ('ATIVO','SUSPENSO')") + " order by id")) {
             while (result.next()) {
                 String schema = result.getString(1);
                 if (!schema.matches("t_[a-f0-9]{32}")) throw new IllegalStateException("Schema registrado inválido.");

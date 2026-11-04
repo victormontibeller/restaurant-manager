@@ -34,6 +34,14 @@ Suspensão comercial não deve abandonar pedidos já pagos, atendimentos abertos
 
 ## Diretrizes de implementação
 
+### Incremento disponível da Sprint 01
+
+O provisionamento local usa processo privilegiado separado, não bean/runtime HTTP. `--provisionar` lê arquivo privado 0600, reserva UUID/domínio/plano/auditoria em uma transação, migra somente o schema interno derivado do UUID e confirma unidade/Administrador/ativação em outra transação. O plano guarda BCrypt custo 12, não senha em claro; repetição divergente de dados ou senha conflita. `--retomar-provisionamento UUID` conclui a reserva persistida em novo processo. Erro preserva reserva, registra SQLState/código sanitizado e não publica empresa incompleta. Ambos compartilham advisory lock com o migrador global; chamada sem lock real é recusada.
+
+O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. Rotas de plataforma e a política operacional de suspensão ainda não foram implementadas.
+
+JDBC está limitado aqui à infraestrutura privilegiada de provisionamento/migração, fora do EntityManager que depende de tenant já provisionado. A persistência empresarial runtime continua JPA/Hibernate. Esse bootstrap não concede poderes SaaS a uma sessão empresarial e não libera endpoint HTTP administrativo.
+
 - Nas requisições empresariais, resolva o tenant por domínio confiável cadastrado antes de autenticar. JWT, sessão, recurso e unidade devem corresponder ao contexto. Plataforma usa contexto público separado; webhooks validam o provedor e resolvem tenant pelo mapeamento interno de conta/recurso. Nunca derive um schema diretamente de entrada arbitrária.
 - Separe o contexto público da plataforma do contexto empresarial. Limpe contexto de tenant e conexão do pool em sucesso, erro e cancelamento; falha de resolução não pode cair em outro tenant.
 - Inclua tenant/unidade no escopo de caches, arquivos privados, jobs, eventos em tempo real e idempotência. Listagens, exportações e relatórios também precisam de autorização.

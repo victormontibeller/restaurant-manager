@@ -2,7 +2,7 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, ciclo 2. Os IDs abaixo preservam o escopo integral; não são aprovação das famílias ainda não implementadas. Atores completos, unidades atribuídas e políticas serão exercitados nas sprints correspondentes. Público é o único ator disponível no shell atual.
+Estado em 2026-11-04, ciclo 3. Os IDs abaixo preservam o escopo integral; não são aprovação das famílias ainda não implementadas. Atores completos, unidades atribuídas e políticas serão exercitados nas sprints correspondentes. Público é o único ator disponível no shell atual; o provisionamento local de teste não habilita login/UI.
 
 ## Fundação entregue
 
@@ -10,6 +10,7 @@ Estado em 2026-11-04, ciclo 2. Os IDs abaixo preservam o escopo integral; não s
 | --- | --- | --- | --- |
 | S00-UI01 | `/`: shell, health, CSS, alvo de toque, ausência de overflow | Público | Playwright nos cinco projetos; screenshots revisados |
 | S00-UI02 | Pular conteúdo, foco, verificar conexão, offline/online | Público | Playwright nos cinco projetos, sem mock de API |
+| S00-UI03 | Carregamento e botão desabilitado durante requisição real | Público | Playwright nos cinco projetos; apenas atraso, sem resposta fabricada |
 | S00-API01 | Domínio desconhecido, rota privada, health mínimo | Público | Playwright nos cinco projetos |
 | S00-DB01 | Duas empresas A/B, unidades A1/A2/B1, contexto neutro, SQL/rollback e conexão física reutilizada | Infraestrutura | FundacaoTest, PoolIsolationTest, TenantConnectionFailureTest; PostgreSQL real |
 | S00-DB02 | Allowlist, migração reaplicada, bloqueio de segundo migrador, erro SQL e recuperação | Migrador | MigrationBoundaryTest; PostgreSQL real exclusivo |
@@ -46,7 +47,7 @@ Estado em 2026-11-04, ciclo 2. Os IDs abaixo preservam o escopo integral; não s
 | T25 | Não implementado/não executado | Sprint 01 |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Não implementado/não executado | Sprints 03–04 |
-| T28 | Não implementado/não executado | Sprint 01 |
+| T28 | Parcial, família não aprovada | Provisionamento CLI/reserva/ativação/retomada testados; API/UI/operador SaaS/suspensão pendentes |
 
 ## Cenários transversais
 
@@ -72,4 +73,4 @@ Estado em 2026-11-04, ciclo 2. Os IDs abaixo preservam o escopo integral; não s
 
 Cliente, participante de mesa, Administrador, Gerente, Atendimento, Caixa, Cozinha, Expedição e operador SaaS: ainda sem contas/jornadas implementadas. Negativos de permissão/unidade/propriedade desses atores não foram executados. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
 
-Resultados desta fundação: [ciclo 2](sprint-00-ciclo-2.md). A matriz inteira deverá ser reexecutada sobre o release final; somar este relatório aos futuros não substitui esse gate.
+Resultados da fundação: [ciclo 3](sprint-00-ciclo-3.md). Incremento de provisionamento: [Sprint 01](sprint-01-ciclo-3.md), somente rm_test, não implantado. A matriz inteira deverá ser reexecutada sobre o release final; somar relatórios de versões distintas não substitui esse gate.

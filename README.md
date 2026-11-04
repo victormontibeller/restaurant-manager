@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** Sprint 00 em andamento. Backend Spring, shell Angular e testes PostgreSQL existem; contas, catálogo, pedidos e pagamentos ainda não estão implementados. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação técnica validada; Sprint 01 em andamento com provisionamento local testado. Login, equipe/matriz, catálogo, pedidos e pagamentos ainda não estão disponíveis. Homologação preserva o shell validado da fundação. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -49,7 +49,7 @@ Decisões confirmadas, premissas propostas e dependências externas permanecem i
 
 ## Desenvolvimento
 
-A [Sprint 0 — Fundação](docs/14_SPRINT_00.md) está em andamento. Versões e limites estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md).
+A [Sprint 0 — Fundação](docs/14_SPRINT_00.md) tem gates técnicos aprovados; integração do PR ainda pendente. Versões e limites estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md).
 
 Com Java 21/Maven e Node 26 no PATH, e as variáveis de banco configuradas em ambiente privado:
 
@@ -70,5 +70,11 @@ Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
 Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap autorizado. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
+
+### Provisionamento local em desenvolvimento/testes
+
+Após o build e a migration explícita do banco `dev`/`test`, o JAR aceita `--provisionar <ARQUIVO_PRIVADO_0600>` ou `--retomar-provisionamento <UUID>`. O arquivo UTF-8 no formato properties contém exatamente `id`, `nome`, `host`, `unidade`, `email`, `senha`; deve ficar fora do checkout, com senha aleatória de 12 caracteres a 72 bytes e host local explicitamente cadastrado (ex.: `ficticia.localhost`). Não passe senha na linha de comando nem publique o arquivo. Respostas imprimem somente UUID/estado; nenhuma conta pode fazer login ainda. Repetição com o mesmo identificador/dados é idempotente; payload divergente conflita.
+
+O comando não executa migration global implicitamente. Homologação está bloqueada para esse incremento até manutenção/backup compatíveis; não contornar a recusa do deploy. Testes reproduzíveis: `bash scripts/with-env.sh test bash backend/mvnw -B -ntp -f backend/pom.xml verify`, com `TMPDIR` privado definido. A suíte exerce processo Java novo para retomada, reserva/ativação PostgreSQL, concorrência e falhas reais de SQL.
 
 Não versionar credenciais, arquivos de ambiente reais, dados de clientes, dumps ou mídias privadas. Exemplos de configuração devem usar somente placeholders. Não reutilizar os bancos dos projetos de referência.

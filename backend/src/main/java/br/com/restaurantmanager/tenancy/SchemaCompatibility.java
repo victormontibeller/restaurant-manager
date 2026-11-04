@@ -32,7 +32,8 @@ public class SchemaCompatibility implements InitializingBean {
                 throw new IllegalStateException("Identidade de runtime recusada.");
             }
             Migrations.verifyIdentity(connection, "rm_" + stage, runtimeRole);
-            schemas.addAll(Migrations.tenantSchemas(connection));
+            // Empresas incompletas já falham fechado na resolução; não derrubam as ativas.
+            schemas.addAll(Migrations.tenantSchemas(connection, false));
         }
         for (String schema : schemas) {
             var flyway = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema)

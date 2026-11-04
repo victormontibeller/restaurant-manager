@@ -5,9 +5,9 @@
 
 [Índice da documentação](README.md)
 
-**Status:** não iniciada.
+**Status:** em andamento desde 2026-11-04, ciclo 3. Provisionamento local implementado/testado em banco exclusivo; autenticação, APIs/telas SaaS, equipe e matriz ainda pendentes. Não concluída.
 
-Entregas, testes e homologações abaixo estão planejados; nenhum item está marcado como concluído.
+Itens compostos permanecem abertos. O primeiro incremento implementa reserva durável, domínio único, migração de schema reservado, administrador/unidade e ativação atômica, com retomada por novo processo. Não é provisionamento pela UI nem homologação de login. [Evidências](evidencias/sprint-01-ciclo-3.md).
 
 ## Entregáveis
 
