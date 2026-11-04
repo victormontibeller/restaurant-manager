@@ -117,6 +117,13 @@ pedidos, mesa, pagamento nem estado de leitura. Não encerrar X11 com esta parce
 
 ## Atores ainda pendentes
 
+Retomada ciclo8 acrescenta S01-UI36–40, uma jornada para cada perfil Gerente,
+Atendimento, Caixa, Cozinha e Expedição: acompanhamento da filial, revogação e
+restauração da ação com JWT existente, recarga/refresh, logout, menus ausentes e
+escrita direta de matriz/equipe negada mesmo após reautenticação. Confere estado
+persistido inalterado após negativas. Testes escritos/typecheck aprovado; execução
+ainda pendente. Isso cobre funções cadastrais atuais, não jornadas das Sprints02–04.
+
 Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa ainda sem identidade/jornada; identidade SaaS e consulta de empresas estão em validação no ciclo 2 da retomada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
 
 ## Identidade e acessos — cobertura incremental
