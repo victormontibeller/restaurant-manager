@@ -4,6 +4,22 @@
 
 ## Retomada ciclo 8 — em execução, 2026-11-04
 
+Atualização: build herdado dfe496c terminou exit0/gate true, hash778dd027c11007d0abab93030cfa4e9dba4ed576d6ef8f7f094dec67bf427635.
+Worker7 encerrou candidato e confirmou cinco vínculos, cinco acessos e quinze
+eventos sem skip/retry/flaky, mais retomada real da fila e três ativações únicas.
+Revisão visual encontrou seletor exibindo ADMINISTRADOR para modelo COZINHA;
+essa apresentação NÃO está aprovada. Vermelho Angular real reproduzido e seleção
+por opção corrigida em equipe/matriz/convites. Probes Chromium/Firefox/WebKit,
+typecheck e regressões locais passaram; E2E corrigido ainda pendente. Revisão
+independente adicional recusada pelo limite operacional de subagentes.
+
+Novo build durável e9d23d93c87010366f4bcd6a3a328ca4150d1b63 iniciou após término
+do predecessor. Worker8 aguarda gate e executa restore/aplicação e S01-UI36–40.
+Não contém correção posterior dos seletores; não interromper nem repetir.
+Tentativa de parar somente worker em espera foi bloqueada pelo executor;
+não houve parada nem contorno. CI e9d23d9 e519a283 aprovada nos dois checks.
+Sem resultado novo de restore/E2E observado neste registro. [Detalhes](evidencias/sprint-01-retomada-ciclo-8.md).
+
 Build herdado dfe496c preservado, backend consolidou 165 testes sem falha/erro/skip;
 gate final e worker E2E ainda em recolhimento. CI head58d89d1 aprovada nos dois
 checks. Hml449ce3c UP/PID41392 conferida, sem deploy ou migration. Registro local

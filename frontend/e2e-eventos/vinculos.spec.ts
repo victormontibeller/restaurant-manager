@@ -30,6 +30,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   const reauth=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar'));
   await page.getByRole('button',{name:'Confirmar identidade'}).click();expect((await reauth).status()).toBe(204);
   const card=page.getByRole('article').filter({hasText:fixture.cozinha.email});
+  await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   const link=card.getByLabel('Vínculo em unidade inativa · '+id);
   await expect(link).toBeChecked();await link.focus();await link.uncheck();await expect(link).toBeFocused();await link.check();
   await card.getByLabel('Ativo',{exact:true}).uncheck();
@@ -40,6 +41,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   await expect(link).toBeChecked();await card.getByLabel('Ativo',{exact:true}).check();await link.uncheck();
   saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
   await expect(link).toHaveCount(0);
+  await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   const updated=(await (await request.get('/api/v1/equipe',{headers})).json()).find((f:{id:string})=>f.id===fixture.cozinha.id);
   expect(updated.ativo).toBe(true);expect(updated.unidades).toEqual([]);
   expect((await request.get('/api/v1/auth/me',{headers:{Authorization:'Bearer '+worker}})).status()).toBe(401);

@@ -67,6 +67,12 @@ Os testes recusam qualquer alvo diferente de `rm_test`, roles `rm_test_owner`/`r
 
 Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL`; execute `npm --prefix frontend run e2e`. Instale browsers com o CLI Playwright; no Linux sem sudo, `scripts/install-browser-libs.py` extrai pacotes Ubuntu em prefixo privado. Relatórios e credenciais nunca vão ao Git.
 
+Probe unitário dos seletores de perfil: `node scripts/test_profile_selects.cjs`.
+Usa os componentes/templates Angular reais com API fictícia em memória, não E2E.
+Exige browser Playwright instalado; `RM_TEMPLATE_BROWSER=chromium|firefox|webkit`
+seleciona o motor, Chromium por padrão. A configuração privada de browsers/libs
+é a mesma do E2E; WebKit aceita o wrapper local em `RM_WEBKIT_EXECUTABLE`.
+
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
 Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap autorizado. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.

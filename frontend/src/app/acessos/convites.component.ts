@@ -21,8 +21,8 @@ interface Convite {id:string;email:string;perfil:string;unidades:string[];estado
       } @else {
         <form (submit)="criar($event,email.value)">
           <label for="email-convite">E-mail do funcionário convidado</label><input #email id="email-convite" type="email" required maxlength="254" autocomplete="off" [disabled]="ocupado()">
-          <label for="perfil-convite">Perfil do convite</label><select id="perfil-convite" [value]="perfil()" (change)="perfil.set($any($event.target).value);vinculos.set([])" [disabled]="ocupado()">
-            @for(p of perfis;track p){<option [value]="p">{{p}}</option>}
+          <label for="perfil-convite">Perfil do convite</label><select id="perfil-convite" (change)="perfil.set($any($event.target).value);vinculos.set([])" [disabled]="ocupado()">
+            @for(p of perfis;track p){<option [value]="p" [selected]="perfil()===p">{{p}}</option>}
           </select>
           @if(perfil()!=='ADMINISTRADOR'){
             <fieldset [disabled]="ocupado()"><legend>Unidades do convite</legend>

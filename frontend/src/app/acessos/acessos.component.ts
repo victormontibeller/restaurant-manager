@@ -22,8 +22,8 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
       @if(aviso()) {<p aria-live="polite">{{aviso()}}</p>}
       @if(matriz();as m) {
         <label for="perfil-acesso">Perfil operacional</label>
-        <select id="perfil-acesso" [value]="perfil()" (change)="selecionar($any($event.target).value)" [disabled]="ocupado()">
-          @for(p of perfis;track p){<option [value]="p">{{p}}</option>}
+        <select id="perfil-acesso" (change)="selecionar($any($event.target).value)" [disabled]="ocupado()">
+          @for(p of perfis;track p){<option [value]="p" [selected]="perfil()===p">{{p}}</option>}
         </select>
         <label for="buscar-acao">Buscar ação</label>
         <input id="buscar-acao" type="search" (input)="busca.set($any($event.target).value)">
@@ -41,9 +41,9 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
           <article>
             <h4>{{f.email}}</h4>
             <label [for]="'perfil-'+f.id">Perfil do funcionário</label>
-            <select [id]="'perfil-'+f.id" [value]="f.perfil" (change)="mudarPerfil(f,$any($event.target).value)" [disabled]="ocupado()">
-              <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-              @for(p of perfis;track p){<option [value]="p">{{p}}</option>}
+            <select [id]="'perfil-'+f.id" (change)="mudarPerfil(f,$any($event.target).value)" [disabled]="ocupado()">
+              <option value="ADMINISTRADOR" [selected]="f.perfil==='ADMINISTRADOR'">ADMINISTRADOR</option>
+              @for(p of perfis;track p){<option [value]="p" [selected]="f.perfil===p">{{p}}</option>}
             </select>
             <label><input type="checkbox" [checked]="f.ativo" (change)="f.ativo=$any($event.target).checked" [disabled]="ocupado()">Ativo</label>
             @if(f.perfil!=='ADMINISTRADOR'){
