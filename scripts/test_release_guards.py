@@ -3,8 +3,9 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
-from release_support import private_config, runtime_config, migration_fingerprint, install_artifact, artifact_hash
+from release_support import private_config, runtime_config, migration_fingerprint, install_artifact, artifact_hash, restore_healthy, UNIT
 
 
 class ReleaseGuardsTest(unittest.TestCase):
@@ -85,6 +86,19 @@ class ReleaseGuardsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             install_artifact(source, target, artifact_hash(source))
         self.assertEqual(target.read_bytes(), b'original')
+
+    def test_marcador_corrompido_para_servico_sem_falsa_recuperacao(self):
+        (self.root / 'healthy.json').write_text('invalido')
+        with patch('release_support.systemctl') as ctl:
+            with self.assertRaises(RuntimeError):
+                restore_healthy(self.root, self.root / 'unit', 'fingerprint')
+            ctl.assert_called_once_with('stop', UNIT)
+
+    def test_ausencia_de_baseline_nao_aceita_candidato(self):
+        with patch('release_support.systemctl') as ctl:
+            with self.assertRaises(RuntimeError):
+                restore_healthy(self.root, self.root / 'unit', 'fingerprint')
+            ctl.assert_called_once_with('stop', UNIT)
 
 
 if __name__ == '__main__':

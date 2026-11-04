@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 from release_support import (UNIT, artifact_hash, atomic_json, migration_fingerprint,
                              private_config, runtime_config, systemctl, wait_for_release,
-                             install_artifact, previous_artifact)
+                             install_artifact, previous_artifact, restore_healthy)
 
 os.umask(0o077)
 repo = Path(__file__).resolve().parents[1]
@@ -83,19 +83,9 @@ try:
 except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError):
     atomic_json(root / 'candidate.json', {'git_sha': sha, 'state': 'falhou-health'})
     try:
-        healthy = json.loads((root / 'healthy.json').read_text())
-        restored = root / 'releases' / healthy['served_sha']
-        if not restored.resolve().is_relative_to(root / 'releases') or migration_fingerprint(restored / 'app.jar') != fingerprint:
-            raise ValueError('Retorno incompatível.')
-        if artifact_hash(restored / 'app.jar') != healthy['artifact_sha256']:
-            raise ValueError('Artefato de retorno adulterado.')
-        unit.write_text((restored / 'validated.service').read_text())
-        systemctl('daemon-reload')
-        systemctl('restart', UNIT)
-        wait_for_release(root, healthy['served_sha'])
-        atomic_json(root / 'candidate.json', {'git_sha': sha, 'state': 'falhou-health-retorno-verificado', 'restored_sha': healthy['served_sha']})
-    except (OSError, ValueError, KeyError, RuntimeError, subprocess.CalledProcessError):
-        systemctl('stop', UNIT)
+        restored = restore_healthy(root, unit, fingerprint)
+        atomic_json(root / 'candidate.json', {'git_sha': sha, 'state': 'falhou-health-retorno-verificado', 'restored_sha': restored['served_sha']})
+    except RuntimeError:
         atomic_json(root / 'candidate.json', {'git_sha': sha, 'state': 'falhou-retorno-servico-parado'})
     raise SystemExit('Health falhou. Candidato não promovido; consulte estado privado.')
 atomic_json(root / 'candidate.json', {**observed, 'git_sha': sha, 'state': 'health-aprovado-e2e-pendente'})

@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.tenancy.SchemaCompatibility;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.util.HashMap;
 import java.sql.DriverManager;
 import java.nio.file.Files;
@@ -74,6 +77,42 @@ class MigrationBoundaryTest {
             }
             Files.deleteIfExists(script);
             Files.deleteIfExists(directory);
+        }
+    }
+
+    @Test void runtimeRecusaChecksumDivergenteSemRepararHistorico() throws Exception {
+        TestDatabase.prepare();
+        var config = new HikariConfig();
+        config.setJdbcUrl(System.getenv("RM_DB_URL"));
+        config.setUsername(System.getenv("RM_DB_USER"));
+        config.setPassword(System.getenv("RM_DB_PASSWORD"));
+        // Flyway valida com conexão de metadados e de callbacks; runtime usa pool de quatro.
+        config.setMaximumPoolSize(2);
+        config.setSchema("pg_catalog");
+        try (var runtime = new HikariDataSource(config);
+             var owner = DriverManager.getConnection(System.getenv("RM_DB_URL"),
+                     System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"));
+             var statement = owner.createStatement()) {
+            Migrations.verifyIdentity(owner, "rm_test", "rm_test_owner");
+            int checksum;
+            try (var rows = statement.executeQuery("select checksum from public.flyway_schema_history where version='1'")) {
+                rows.next(); checksum = rows.getInt(1);
+            }
+            var validator = new SchemaCompatibility(runtime, "rm_test_app", "test");
+            try {
+                statement.executeUpdate("update public.flyway_schema_history set checksum=0 where version='1'");
+                assertThatThrownBy(validator::afterPropertiesSet)
+                        .isInstanceOf(org.flywaydb.core.api.FlywayException.class)
+                        .hasMessageContaining("checksum mismatch");
+                try (var rows = statement.executeQuery("select checksum from public.flyway_schema_history where version='1'")) {
+                    rows.next(); assertThat(rows.getInt(1)).isZero();
+                }
+            } finally {
+                try (var restore = owner.prepareStatement("update public.flyway_schema_history set checksum=? where version='1'")) {
+                    restore.setInt(1, checksum); restore.executeUpdate();
+                }
+            }
+            validator.afterPropertiesSet();
         }
     }
 }

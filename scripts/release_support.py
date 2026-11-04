@@ -127,3 +127,27 @@ def wait_for_release(root, sha, seconds=90):
         except (OSError, ValueError, subprocess.CalledProcessError):
             time.sleep(1)
     raise RuntimeError('Health/identidade não aprovados dentro do prazo.')
+
+
+def restore_healthy(root, unit, fingerprint):
+    """Retorna somente para baseline comprovado; erro de recuperação para o serviço."""
+    try:
+        healthy = json.loads((root / 'healthy.json').read_text())
+        sha = healthy['served_sha']
+        if not re.fullmatch(r'[0-9a-f]{40}', sha):
+            raise ValueError('SHA de retorno inválido.')
+        restored = root / 'releases' / sha
+        if migration_fingerprint(restored / 'app.jar') != fingerprint:
+            raise ValueError('Retorno incompatível.')
+        if artifact_hash(restored / 'app.jar') != healthy['artifact_sha256']:
+            raise ValueError('Artefato de retorno adulterado.')
+        content = (restored / 'validated.service').read_text()
+        if previous_artifact(root, content) != (restored / 'app.jar').resolve():
+            raise ValueError('Unidade de retorno divergente.')
+        unit.write_text(content)
+        systemctl('daemon-reload')
+        systemctl('restart', UNIT)
+        return wait_for_release(root, sha)
+    except (OSError, ValueError, KeyError, RuntimeError, subprocess.CalledProcessError):
+        systemctl('stop', UNIT)
+        raise RuntimeError('Retorno não verificado; serviço parado.') from None
