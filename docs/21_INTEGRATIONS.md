@@ -49,6 +49,14 @@ Falha terminal/corrupção elimina imediatamente conteúdo cifrado recuperável,
 
 O ciclo 11 acrescenta mensagens `CONVITE` preparadas na transação administrativa, com código único já cifrado. O mesmo lease/retry reutiliza o conteúdo; revogação impede aceite, mas não promete recolher captura em andamento. Captura continua local e fictícia; E05 não está encerrado.
 
+## Atualizações cadastrais — retomada ciclo 5
+
+Primeiro consumidor de eventos no candidato: acompanhamento de unidade por
+polling autenticado, conforme [Acessos](11_ACCESS_CONTROL.md). Persistência local
+acompanha a transação e o cursor permite replay; não há transporte externo nem
+SSE implementado. A proposta SSE/polling de cozinha/aceite/mesas permanece para a
+Sprint 03, sem converter esta entrega cadastral em notificação operacional pronta.
+
 ## Documentos relacionados
 
 - [Regras financeiras e comunicação do produto](20_BUSINESS_RULES.md)

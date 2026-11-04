@@ -9,10 +9,11 @@ import { AceitarConviteComponent } from './aceitar-convite.component';
 import { ConvitesComponent } from '../acessos/convites.component';
 import { ConvitePendenteService } from '../acessos/convite-pendente.service';
 import { VerificacaoComponent } from './verificacao.component';
+import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
 
 @Component({
   selector:'app-identidade',
-  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent,AceitarConviteComponent,ConvitesComponent,VerificacaoComponent],
+  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent,AceitarConviteComponent,ConvitesComponent,VerificacaoComponent,EventosUnidadeComponent],
   template:`
     <section [attr.aria-labelledby]="!sessao.identidade()&&verificacao()?'verificacao-titulo':!sessao.identidade()&&convite()?'aceitar-convite-titulo':!sessao.identidade()&&cadastro()?'cadastro-titulo':recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
@@ -22,6 +23,10 @@ import { VerificacaoComponent } from './verificacao.component';
         @if(!pessoa.emailVerificado){<p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p>}
         <p>Acesso empresarial autenticado. As jornadas operacionais ainda estão em desenvolvimento.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
+        @if(pessoa.perfil!=='CLIENTE'){
+          <button type="button" (click)="acompanhar.set(!acompanhar())" [attr.aria-expanded]="acompanhar()">Acompanhar atualizações da unidade</button>
+          @if(acompanhar()){<app-eventos-unidade />}
+        }
         @if(pessoa.perfil==='ADMINISTRADOR'){
           <nav aria-label="Configurações da empresa">
             <button type="button" (click)="configuracao.set('acessos')" [disabled]="configuracaoBloqueada()" [attr.aria-pressed]="configuracao()==='acessos'">Gerenciar acessos</button>
@@ -72,6 +77,7 @@ export class IdentidadeComponent {
   readonly cadastro = signal(false);
   readonly convite = signal(false);
   readonly verificacao = signal(false);
+  readonly acompanhar = signal(false);
   readonly configuracao = signal<'acessos'|'unidades'|'convites'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
@@ -97,6 +103,7 @@ export class IdentidadeComponent {
     finally { this.ocupado.set(false); }
   }
   private prepararConta():void {
+    this.acompanhar.set(false);
     const pessoa=this.sessao.identidade();
     const pendente=!!(pessoa&&this.pendencias.daConta(pessoa.usuarioId)());
     const convite=!!(pessoa&&this.convitesPendentes.daConta(pessoa.usuarioId)());

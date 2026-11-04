@@ -63,6 +63,15 @@ visual. Rebuild e regressões integradas corrigidas continuam pendentes. Revisã
 local do diff realizada; tentativa de terceira revisão independente foi bloqueada
 pelo limite de dois subagentes da chamada, sem alegar aprovação substituta.
 
+## Handoff efetivo
+
+Aviso do executor de orçamento quase esgotado recebido após 16:18:52Z. Build
+31cda03 ainda sem resultado consolidado; E2E durável aguardando esse gate.
+Não houve aprovação nova de build/E2E, nem encerramento deliberado dos workers.
+Head bd30b09 publicado e remoto/PR relidos; CI ainda queued na última consulta.
+Homologação conferida saudável em449ce3c, sem deploy/reinício/migração.
+Relatório privado navegável gerado com esses estados, sem resultado futuro.
+
 Sprint 01 continua aberta: agendamento operacional, eventos/projeções, matriz de
 perfis e manutenção/backup/restore, além da regressão integrada. Sprints 02–05 não
 iniciadas. Sem merge/deploy neste registro, sem conclusão técnica artificial.

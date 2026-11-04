@@ -15,11 +15,13 @@ export class PlataformaSessaoService {
   private readonly canal=new BroadcastChannel('rm-plataforma');
   constructor(){this.canal.onmessage=e=>{if(e.data==='saiu')this.limpar();};}
   async entrar(email:string,senha:string):Promise<void>{
-    await navigator.locks.request('rm-plataforma',async()=>this.receber(await this.comando('login',{email,senha})));
+    await navigator.locks.request('rm-plataforma',async()=>{const geracao=this.geracao;await this.receber(await this.comando('login',{email,senha}),geracao);});
   }
   async restaurar():Promise<void>{
     if(!this.restauracao)this.restauracao=navigator.locks.request('rm-plataforma',async()=>{
-      const r=await this.comando('refresh');if(r.status===401){this.limpar();return;}await this.receber(r);
+      const geracao=this.geracao;const r=await this.comando('refresh');
+      if(geracao!==this.geracao)throw new Error('Restauração de sessão anterior descartada.');
+      if(r.status===401){this.limpar();return;}await this.receber(r,geracao);
     }).finally(()=>{this.restauracao=null;});
     return this.restauracao;
   }
@@ -45,18 +47,21 @@ export class PlataformaSessaoService {
   private async api<T>(url:string,method='GET',body?:object):Promise<T>{
     if(!this.access)throw new Error('Entre na plataforma para continuar.');
     const geracao=this.geracao;
+    const access=this.access;
     const r=await fetch(url,{method,credentials:'same-origin',cache:'no-store',headers:{Authorization:'Bearer '+this.access,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(10000)});
     if(geracao!==this.geracao)throw new Error('Resposta de sessão anterior descartada.');
-    if(!r.ok){if(r.status===401)this.limpar();throw await this.erro(r);}
+    if(!r.ok){if(r.status===401&&access!==this.access)throw new Error('Credencial renovada durante a consulta. Consulte novamente antes de repetir uma operação.');if(r.status===401)this.limpar();throw await this.erro(r);}
     const resultado=r.status===204?undefined as T:await r.json() as T;
     if(geracao!==this.geracao)throw new Error('Resposta de sessão anterior descartada.');return resultado;
   }
-  private async receber(r:Response):Promise<void>{
+  private async receber(r:Response,geracao=this.geracao):Promise<void>{
+    if(geracao!==this.geracao)throw new Error('Resposta de sessão anterior descartada.');
     if(!r.ok)throw await this.erro(r);
-    const tokens=await r.json() as {accessToken:string;expiresIn:number};this.access=tokens.accessToken;
-    try{const me=await this.api<{usuarioId:string}>('/api/v1/plataforma/auth/me');this.usuarioId.set(me.usuarioId);}catch(e){this.limpar();throw e;}
+    const tokens=await r.json() as {accessToken:string;expiresIn:number};
+    if(geracao!==this.geracao)throw new Error('Resposta de sessão anterior descartada.');this.access=tokens.accessToken;
+    try{const me=await this.api<{usuarioId:string}>('/api/v1/plataforma/auth/me');if(geracao!==this.geracao)throw new Error('Resposta de sessão anterior descartada.');this.usuarioId.set(me.usuarioId);}catch(e){if(geracao===this.geracao)this.limpar();throw e;}
     this.autenticado.set(true);clearTimeout(this.timer);
-    this.timer=setTimeout(()=>{void this.restaurar().catch(()=>this.limpar());},Math.max(1,tokens.expiresIn-60)*1000);
+    this.timer=setTimeout(()=>{void this.restaurar().catch(()=>{if(geracao===this.geracao)this.limpar();});},Math.max(1,tokens.expiresIn-60)*1000);
   }
   private limpar():void{this.geracao++;clearTimeout(this.timer);this.access=null;this.autenticado.set(false);this.usuarioId.set('');}
   private async comando(action:string,body?:object):Promise<Response>{

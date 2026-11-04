@@ -32,6 +32,7 @@ class AcessosTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
     @Autowired br.com.restaurantmanager.identidade.AcessosService acessos;
+    @Autowired br.com.restaurantmanager.unidades.ConfiguracaoUnidadeService configuracaoUnidade;
     @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
     private final List<UUID> criados = new ArrayList<>();
     private final String senha = UUID.randomUUID().toString();
@@ -64,9 +65,12 @@ class AcessosTest {
         return id;
     }
     private String login(UUID id) throws Exception {
-        var csrf = mvc.perform(get("/api/v1/auth/csrf").header("Host",host)).andReturn().getResponse();
+        return login(id,host);
+    }
+    private String login(UUID id,String dominio) throws Exception {
+        var csrf = mvc.perform(get("/api/v1/auth/csrf").header("Host",dominio)).andReturn().getResponse();
         var data = mapper.readTree(csrf.getContentAsString());
-        var result = mvc.perform(post("/api/v1/auth/login").header("Host",host).cookie(csrf.getCookie("__Host-RM_CSRF"))
+        var result = mvc.perform(post("/api/v1/auth/login").header("Host",dominio).cookie(csrf.getCookie("__Host-RM_CSRF"))
                 .header(data.get("headerName").asText(),data.get("token").asText()).with(r -> {r.setRemoteAddr("2001:db8:"+id.toString().substring(0,4)+"::1"); return r;})
                 .contentType("application/json").content(mapper.writeValueAsString(Map.of("email",id+"@example.invalid","senha",senha)))).andReturn();
         assertThat(result.getResponse().getStatus()).isEqualTo(200);
@@ -95,6 +99,127 @@ class AcessosTest {
     private MvcResult criarUnidade(String access,UUID id,String nome,String fuso,boolean ativa) throws Exception {
         return mvc.perform(post("/api/v1/configuracoes/unidades").header("Host",host).header("Authorization","Bearer "+access)
                 .contentType("application/json").content(mapper.writeValueAsString(Map.of("id",id,"nome",nome,"fuso",fuso,"ativa",ativa)))).andReturn();
+    }
+    private String eventos(UUID unidade,long depois) { return "/api/v1/operacao/unidades/"+unidade+"/eventos?depois="+depois; }
+    @Test void eventosDuraveisProjetamSomenteUnidadeEReenvioNaoDuplica() throws Exception {
+        assertThat(consultar(token,eventos(U1,-1)).getResponse().getStatus()).isEqualTo(200);
+        reautenticar(token);UUID id=UUID.randomUUID();
+        assertThat(criarUnidade(token,id,"Unidade monitorada","UTC",true).getResponse().getStatus()).isEqualTo(200);
+        assertThat(criarUnidade(token,id,"Unidade monitorada","UTC",true).getResponse().getStatus()).isEqualTo(200);
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Unidade monitorada","fuso","UTC","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Nome atualizado","fuso","UTC","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        var response=consultar(token,eventos(id,-1)).getResponse();
+        assertThat(response.getStatus()).isEqualTo(200);
+        var body=mapper.readTree(response.getContentAsString());
+        assertThat(body.get("eventos").size()).isEqualTo(2);
+        assertThat(body.get("proximo").asText()).isEqualTo("1");
+        assertThat(body.get("temMais").asBoolean()).isFalse();
+        assertThat(body.get("eventos").get(0).get("tipo").asText()).isEqualTo("UNIDADE_CRIADA");
+        assertThat(body.get("eventos").get(1).get("nome").asText()).isEqualTo("Nome atualizado");
+        assertThat(response.getContentAsString()).doesNotContain("email","senha","ator","payload","schema","criacaoPayload");
+        assertThat(mapper.readTree(consultar(token,eventos(id,1)).getResponse().getContentAsString()).get("eventos").size()).isZero();
+        assertThat(consultar(token,eventos(id,-2)).getResponse().getStatus()).isEqualTo(400);
+        assertThat(consultar(token,eventos(id,99)).getResponse().getStatus()).isEqualTo(409);
+        assertThat(consultar(token,eventos(U2,-1)).getResponse().getContentAsString()).doesNotContain("Nome atualizado");
+        assertThat(mvc.perform(get(eventos(id,-1)).header("Host","b.localhost").header("Authorization","Bearer "+token)).andReturn().getResponse().getStatus()).isEqualTo(401);
+    }
+    @Test void eventosRevalidamTodosPerfisPermissaoVinculoESessaoComMesmoJwt() throws Exception {
+        reautenticar(token);long politica=0;
+        for(String perfil:List.of("GERENTE","ATENDIMENTO","CAIXA","COZINHA","EXPEDICAO")) {
+            UUID id=criar(perfil);String access=login(id);
+            assertThat(alterar(token,"/api/v1/equipe/"+id,vinculo(perfil,true,0,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U1,-1)).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U2,-1)).getResponse().getStatus()).isEqualTo(404);
+            assertThat(alterar(token,"/api/v1/configuracoes/acessos",Map.of("versao",politica++,"perfil",perfil,"acoes",List.of())).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U1,-1)).getResponse().getStatus()).isEqualTo(403);
+            assertThat(alterar(token,"/api/v1/configuracoes/acessos",Map.of("versao",politica++,"perfil",perfil,"acoes",List.of("unidade.acompanhar"))).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U1,-1)).getResponse().getStatus()).isEqualTo(200);
+            assertThat(alterar(token,"/api/v1/equipe/"+id,vinculo(perfil,true,1,Set.of(U2))).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U1,-1)).getResponse().getStatus()).isEqualTo(404);
+            assertThat(alterar(token,"/api/v1/equipe/"+id,vinculo(perfil,false,2,Set.of(U2))).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(access,eventos(U2,-1)).getResponse().getStatus()).isEqualTo(401);
+        }
+        assertThat(consultar(login(criar("CLIENTE")),eventos(U1,-1)).getResponse().getStatus()).isEqualTo(403);
+    }
+    @Test void eventosPaginamSemPerdaENegamUnidadeInativa() throws Exception {
+        reautenticar(token);UUID id=UUID.randomUUID();criarUnidade(token,id,"Paginação","UTC",true);
+        for(int i=0;i<51;i++) assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",i,"nome","Versão "+i,"fuso","UTC","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        var first=mapper.readTree(consultar(token,eventos(id,-1)).getResponse().getContentAsString());
+        assertThat(first.get("eventos").size()).isEqualTo(50);assertThat(first.get("temMais").asBoolean()).isTrue();assertThat(first.get("proximo").asText()).isEqualTo("49");
+        var next=mapper.readTree(consultar(token,eventos(id,49)).getResponse().getContentAsString());
+        assertThat(next.get("eventos").size()).isEqualTo(2);assertThat(next.get("proximo").asText()).isEqualTo("51");assertThat(next.get("temMais").asBoolean()).isFalse();
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",51,"nome","Inativa","fuso","UTC","ativa",false)).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(token,eventos(id,51)).getResponse().getStatus()).isEqualTo(404);
+    }
+    @Test void falhaDoEventoReverteUnidadeEAuditoria() throws Exception {
+        reautenticar(token);UUID id=UUID.randomUUID();String constraint="teste_evento_"+id.toString().replace("-","");
+        try(var c=banco();var s=c.createStatement()){s.execute("alter table "+schema+".evento_unidade add constraint "+constraint+" check(unidade_id<>'"+id+"'::uuid)");}
+        try{assertThat(criarUnidade(token,id,"Reverter","UTC",true).getResponse().getStatus()).isEqualTo(500);}
+        finally{try(var c=banco();var s=c.createStatement()){s.execute("alter table "+schema+".evento_unidade drop constraint "+constraint);}}
+        assertThat(consultar(token,"/api/v1/configuracoes/unidades/"+id).getResponse().getStatus()).isEqualTo(404);
+        try(var c=banco();var s=c.createStatement();var r=s.executeQuery("select count(*) from "+schema+".auditoria_acesso where recurso_id='"+id+"'")){r.next();assertThat(r.getLong(1)).isZero();}
+    }
+    @Test void eventosAguardamEscritorERevalidamRevogacaoDepoisDoLock() throws Exception {
+        UUID id=criar("COZINHA");String access=login(id);reautenticar(token);
+        alterar(token,"/api/v1/equipe/"+id,vinculo("COZINHA",true,0,Set.of(U1)));
+        try(var c=banco();var pool=Executors.newSingleThreadExecutor()) {
+            c.setAutoCommit(false);
+            try(var s=c.createStatement()){s.execute("select id from "+schema+".politica_acesso where id=1 for update");}
+            var started=new java.util.concurrent.CountDownLatch(1);
+            var future=pool.submit(()->{started.countDown();return consultar(access,eventos(U1,-1)).getResponse().getStatus();});
+            try {
+                assertThat(started.await(5,TimeUnit.SECONDS)).isTrue();
+                org.assertj.core.api.Assertions.assertThatThrownBy(()->future.get(1,TimeUnit.SECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);
+                try(var s=c.createStatement()){s.execute("delete from "+schema+".permissao_perfil where perfil='COZINHA' and acao='unidade.acompanhar'");}
+            }finally{c.commit();}
+            assertThat(future.get(20,TimeUnit.SECONDS)).isEqualTo(403);
+        }
+    }
+    @Test void eventosNaoPulamEscritaNaoConfirmadaNemPublicamRollback() throws Exception {
+        reautenticar(token);UUID id=UUID.randomUUID();criarUnidade(token,id,"Inicial","UTC",true);
+        var principal=mapper.readValue(consultar(token,"/api/v1/auth/me").getResponse().getContentAsString(),br.com.restaurantmanager.identidade.IdentidadeAtual.class);
+        for(boolean rollback:List.of(true,false)) {
+            var gravou=new java.util.concurrent.CountDownLatch(1);var liberar=new java.util.concurrent.CountDownLatch(1);
+            try(var pool=Executors.newFixedThreadPool(2)) {
+                var writer=pool.submit(()->{
+                    try(var scope=br.com.restaurantmanager.tenancy.TenantScope.open(schema)) {
+                        new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status->{
+                            configuracaoUnidade.alterar(principal,id,0,"Confirmada","UTC",true);gravou.countDown();
+                            try {if(!liberar.await(10,TimeUnit.SECONDS))throw new IllegalStateException("Leitor não liberou escritor.");}
+                            catch(InterruptedException e){Thread.currentThread().interrupt();throw new IllegalStateException(e);}
+                            if(rollback)status.setRollbackOnly();
+                        });
+                    }
+                });
+                assertThat(gravou.await(10,TimeUnit.SECONDS)).isTrue();
+                var reader=pool.submit(()->consultar(token,eventos(id,0)));
+                try{org.assertj.core.api.Assertions.assertThatThrownBy(()->reader.get(1,TimeUnit.SECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);}
+                finally{liberar.countDown();}
+                writer.get(20,TimeUnit.SECONDS);var response=reader.get(20,TimeUnit.SECONDS).getResponse();assertThat(response.getStatus()).isEqualTo(200);
+                var body=mapper.readTree(response.getContentAsString());assertThat(body.get("eventos").size()).isEqualTo(rollback?0:1);
+                assertThat(body.get("proximo").asText()).isEqualTo(rollback?"0":"1");
+                assertThat(body.get("unidade").get("nome").asText()).isEqualTo(rollback?"Inicial":"Confirmada");
+            }
+        }
+    }
+    @Test void eventosComMesmoUuidEIdentidadesValidasIsolamDoisTenants() throws Exception {
+        UUID outra=UUID.randomUUID();String outroSchema="t_"+outra.toString().replace("-","");String outroHost="evento-"+outra+".localhost";
+        TestDatabase.migrate(outroSchema,"tenant");
+        try {
+            try(var c=banco();var s=c.createStatement()) {
+                s.execute("insert into public.empresa(id,nome,schema_name,estado) values ('"+outra+"','Outra empresa','"+outroSchema+"','ATIVO')");
+                s.execute("insert into public.dominio(host,empresa_id) values ('"+outroHost+"','"+outra+"')");
+                s.execute("insert into "+outroSchema+".unidade(id,nome) values ('"+U1+"','Somente B')");
+                s.execute("insert into "+outroSchema+".usuario(id,email,senha_hash,perfil,email_verificado) select id,email,senha_hash,perfil,email_verificado from "+schema+".usuario where id='"+admin+"'");
+                s.execute("insert into "+outroSchema+".evento_unidade(id,unidade_id,versao,tipo,nome,fuso,ativa,ocorrido_em) values ('"+UUID.randomUUID()+"','"+U1+"',0,'UNIDADE_CRIADA','Somente B','UTC',true,now())");
+            }
+            String other=login(admin,outroHost);
+            var b=mvc.perform(get(eventos(U1,-1)).header("Host",outroHost).header("Authorization","Bearer "+other)).andReturn().getResponse();
+            assertThat(b.getStatus()).isEqualTo(200);assertThat(b.getContentAsString()).contains("Somente B").doesNotContain("A1");
+            var a=consultar(token,eventos(U1,-1)).getResponse();assertThat(a.getStatus()).isEqualTo(200);assertThat(a.getContentAsString()).contains("A1").doesNotContain("Somente B");
+        }finally{
+            try(var c=banco();var s=c.createStatement()){s.execute("delete from public.dominio where empresa_id='"+outra+"'");s.execute("delete from public.empresa where id='"+outra+"'");s.execute("drop schema "+outroSchema+" cascade");}
+        }
     }
     @Test void unidadesExigemAdminReautenticacaoEValidacaoSemElevarPrivilegios() throws Exception {
         UUID id=UUID.randomUUID();

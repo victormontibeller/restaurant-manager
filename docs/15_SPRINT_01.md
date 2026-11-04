@@ -24,6 +24,10 @@ Não é provisionamento pela UI. [Evidências](evidencias/sprint-01-ciclo-3.md).
 
 ## Entregáveis
 
+Retomada ciclo 5 acrescenta acompanhamento cadastral por unidade com persistência
+e polling autenticado, em validação. Revogação/projeção deste caso não aprova
+eventos de pedidos futuros nem encerra o gate integrado. [Evidência](evidencias/sprint-01-retomada-ciclo-5.md).
+
 - [ ] Registro de domínio/empresa, provisionamento retomável e migrações por schema.
 - [ ] Identidade empresarial/plataforma separada, JWT, refresh/revogação, convite e recuperação conforme P04.
 - [ ] Unidades, funcionários, perfis fixos, matriz com versão/auditoria e ações exclusivas do Administrador.

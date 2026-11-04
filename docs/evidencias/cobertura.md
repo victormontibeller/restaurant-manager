@@ -85,6 +85,18 @@ permanece reprovada até reexecução com CSS e comparação de viewport corrigi
 | S01-UI31 | Falha de ativação real, consulta, retomada versionada e conclusão | Operador SaaS | Escrito; execução pendente |
 | S01-API07 | Reserva, autorização, concorrência, rollback, falha/retomada e crash após ativação | SaaS/worker privilegiado | Nove testes PostgreSQL aprovados; não substituem build/E2E |
 
+## Acompanhamento cadastral — retomada ciclo 5
+
+| Cenário | Superfície/ação | Ator | Estado |
+| --- | --- | --- | --- |
+| S01-UI32 | Selecionar unidade, receber alteração persistida e recuperar após offline, teclado/mobile | Administrador | Escrito; execução pendente |
+| S01-UI33 | Consulta por unidade; retirar ação/vínculo e encerrar acompanhamento com JWT ainda válido | Cozinha e Administrador | Escrito; execução pendente |
+| S01-UI34 | Ausência de UI e negação direta, outro tenant e sessão encerrada | Cliente | Escrito; execução pendente |
+| S01-API08 | Projeção mínima, replay/paginação, seis perfis, revogação, rollback/commit concorrente e duas identidades empresariais válidas | Equipe/Cliente | Testes PostgreSQL novos; resultado consolidado no checkpoint |
+
+T27 continua parcial: esse acompanhamento é cadastral, não entrega eventos de
+pedidos, mesa, pagamento nem estado de leitura. Não encerrar X11 com esta parcela.
+
 ## Atores ainda pendentes
 
 Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa ainda sem identidade/jornada; identidade SaaS e consulta de empresas estão em validação no ciclo 2 da retomada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.

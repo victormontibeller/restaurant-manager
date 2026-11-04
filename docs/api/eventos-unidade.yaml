@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: Atualizações cadastrais por unidade
+  version: 0.1.0
+  description: Polling autenticado; não inclui eventos de pedidos, clientes ou pagamentos.
+paths:
+  /api/v1/operacao/unidades/{id}/eventos:
+    get:
+      summary: Recuperar estado atual e até cinquenta alterações duráveis
+      security:
+        - bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: depois
+          in: query
+          description: Versão exclusiva desta unidade; -1 inicia a consulta. Nunca transportar JWT na URL.
+          schema: {type: integer, format: int64, minimum: -1, default: -1}
+      responses:
+        '200':
+          description: Projeção mínima, ação unidade.acompanhar e unidade ativa permitidas. Resposta não cacheável.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [unidade, eventos, proximo, temMais]
+                properties:
+                  unidade:
+                    type: object
+                    required: [id, nome, fuso, versao]
+                    properties:
+                      id: {type: string, format: uuid}
+                      nome: {type: string}
+                      fuso: {type: string}
+                      versao: {type: string, pattern: '^[0-9]+$'}
+                  eventos:
+                    type: array
+                    maxItems: 50
+                    items:
+                      type: object
+                      required: [versao, tipo, nome, fuso, ativa, ocorridoEm]
+                      properties:
+                        versao: {type: string, pattern: '^[0-9]+$'}
+                        tipo: {type: string, enum: [UNIDADE_CRIADA, UNIDADE_ALTERADA]}
+                        nome: {type: string}
+                        fuso: {type: string}
+                        ativa: {type: boolean}
+                        ocorridoEm: {type: string, format: date-time}
+                  proximo: {type: string, pattern: '^[0-9]+$'}
+                  temMais: {type: boolean}
+        '400': {description: UUID/cursor inválido}
+        '401': {description: Sessão inválida, expirada, revogada ou tenant incompatível}
+        '403': {description: Perfil não empresarial ou ação removida}
+        '404': {description: Unidade inexistente, inativa ou não atribuída}
+        '409': {description: Cursor posterior à versão atual; reiniciar consulta da unidade}
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer, bearerFormat: JWT}

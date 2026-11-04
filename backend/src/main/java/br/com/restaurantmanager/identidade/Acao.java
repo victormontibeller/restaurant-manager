@@ -5,6 +5,7 @@ import java.util.List;
 
 /** Catálogo explícito: cadastrar uma ação não implementa a operação correspondente. */
 public enum Acao {
+    UNIDADE_ACOMPANHAR("unidade.acompanhar", "Acompanhar atualizações cadastrais da unidade", "UNIDADE", null),
     CATALOGO_CONSULTAR("catalogo.consultar", "Consultar catálogo operacional", "UNIDADE", null),
     CATALOGO_EDITAR("catalogo.editar", "Editar catálogo compartilhado entre filiais", "EMPRESA", "catalogo.consultar"),
     CATALOGO_UNIDADE("catalogo.alterar_unidade", "Alterar preço e disponibilidade", "UNIDADE", "catalogo.consultar"),

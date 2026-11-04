@@ -14,8 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ConfiguracaoUnidadeService {
     private final UnidadeRepository repository;
     private final AcessosService acessos;
-    public ConfiguracaoUnidadeService(UnidadeRepository repository,AcessosService acessos) {
-        this.repository=repository;this.acessos=acessos;
+    private final EventoUnidadeRepository eventos;
+    public ConfiguracaoUnidadeService(UnidadeRepository repository,AcessosService acessos,EventoUnidadeRepository eventos) {
+        this.repository=repository;this.acessos=acessos;this.eventos=eventos;
     }
     public record Detalhe(UUID id,String nome,String fuso,boolean ativa,long versao) {}
     @Transactional
@@ -40,6 +41,7 @@ public class ConfiguracaoUnidadeService {
         var unidade=new Unidade(id,nome.strip(),fuso,ativa,payload);
         repository.saveAndFlush(unidade);
         acessos.auditarConfiguracao(ator,id,"UNIDADE_CRIADA","INEXISTENTE",estado(unidade));
+        eventos.registrar(unidade,"UNIDADE_CRIADA");
         return dto(unidade);
     }
     @Transactional
@@ -52,6 +54,8 @@ public class ConfiguracaoUnidadeService {
         unidade.alterar(nome.strip(),fuso,ativa);
         repository.flush();
         acessos.auditarConfiguracao(ator,id,"UNIDADE_ALTERADA",antes,estado(unidade));
+        // PUT sem mudança não cria versão/evento fictício nem conflita com a criação.
+        if(unidade.getVersao()!=versao) eventos.registrar(unidade,"UNIDADE_ALTERADA");
         return dto(unidade);
     }
     private Unidade obter(UUID id) {return repository.findById(id).orElseThrow(()->new AuthFailure(404,"RECURSO_NAO_ENCONTRADO","Recurso não encontrado."));}

@@ -97,6 +97,34 @@ No candidato do ciclo 7, a criação incerta conserva UUID/payload em memória, 
 
 O candidato acrescenta criação idempotente, listagem paginada, consulta exata e revogação de convites exclusivamente pelo Administrador; escrita exige reautenticação. Aceite cria somente conta nova com os vínculos persistidos e prova de e-mail. Condições, concorrência e retenção estão na [fonte de segurança](04_SECURITY.md); [OpenAPI](api/convites.yaml). A UI Gerenciar convites é separada de equipe/matriz. Não equivale à verificação de funcionários já existentes nem à jornada SaaS. Resultado e limitações no checkpoint.
 
+## Acompanhamento cadastral por unidade — retomada ciclo 5
+
+O candidato acrescenta `unidade.acompanhar`, ação delegável de escopo UNIDADE,
+inicialmente concedida aos cinco perfis operacionais; Administrador continua
+cobrindo a empresa. Não concede consulta a pedidos, clientes ou finanças.
+O seed V12 acrescenta somente essa ação, sem restaurar permissões antigas removidas.
+
+`GET /api/v1/operacao/unidades/{id}/eventos?depois=-1` recupera estado atual e
+até cinquenta eventos de cadastro. A próxima consulta usa `proximo`, cursor
+decimal transportado como string, exclusivo da unidade. Não há contador global
+que revele volume de outra filial. Política/sessão/vínculos são revalidados a cada
+GET sob lock compartilhado; escritores mantêm lock exclusivo até confirmar
+unidade, auditoria e evento. Retirada de ação retorna 403; unidade alheia/inativa
+retorna 404; sessão revogada retorna 401, mesmo com JWT ainda não expirado.
+
+Projeção contém somente unidade, nome, fuso, versão, tipo, atividade e instante.
+Não expõe autor, e-mail, payload de criação nem estados de acesso de terceiros.
+PUT sem mudança não fabrica versão/evento; reenvio da criação não duplica evento.
+O snapshot atual também cobre cadastros anteriores ao recurso, sem inventar
+histórico retroativo. Eventos deste incremento permanecem no banco; não há
+expurgo de histórico nem SLA de entrega prometido.
+
+Angular usa polling sequencial de cinco segundos, sem token em URL/storage.
+Revogação encerra o acompanhamento e limpa dados; desconexão informa ausência
+de confirmação e recupera estado/histórico ao voltar. Tela fechada não mantém
+assinatura; retorno reconsulta o banco. Não é SSE nem comprova eventos de pedidos.
+[Contrato](api/eventos-unidade.yaml); [evidência](evidencias/sprint-01-retomada-ciclo-5.md).
+
 ## Referências relacionadas
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)

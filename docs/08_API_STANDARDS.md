@@ -50,6 +50,10 @@ exata e suspensão/reativação versionada. A retomada ciclo 4 acrescenta
 [solicitação/consulta/retomada de provisionamento](api/provisionamento.yaml),
 em validação, com execução DDL separada por CLI e sem promoção para homologação.
 
+Contrato de acompanhamento cadastral: [eventos de unidade](api/eventos-unidade.yaml),
+em validação na retomada ciclo 5. Cursor por versão, paginação, projeção mínima,
+política e sessão revalidadas por consulta. Não é contrato de eventos financeiros.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

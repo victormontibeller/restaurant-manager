@@ -2,6 +2,55 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Registro intermediário — retomada ciclo 5, 2026-11-04
+
+Missão não concluída. Build/E2E herdados de 31cda03 terminaram exit 0; candidato
+herdado encerrado antes da migration V12. Homologação segue preservada em 449ce3c.
+Correção visual bd30b09 revisada independentemente; E2E com viewport correta ainda
+pendente, sem transferir aprovação do artefato anterior.
+
+Novo incremento de produto: eventos cadastrais de unidade atômicos, cursor local,
+ação delegável e polling Angular, com limpeza/revalidação por sessão e unidade.
+Revisão independente encontrou corridas remanescentes de autenticação assíncrona;
+reproduzidas e corrigidas nos serviços empresarial/SaaS. Testes e contratos novos
+na [evidência](evidencias/sprint-01-retomada-ciclo-5.md); cinco testes PostgreSQL
+focados e seis JS passaram. Duas provas adicionais PostgreSQL aguardam o build
+integrado. Typecheck passou. Build/CI/E2E do código novo ainda pendentes.
+
+Próximo passo: consolidar testes focados e adicionais de concorrência/isolamento,
+publicar incremento revisado, build identificado e E2E de eventos/convites mais
+regressões afetadas. Fila operacional/backup/restore e demais critérios Sprint01
+permanecem pendentes;02–05 não iniciadas. Sem CONCLUSAO.json.
+
+## Encerramento — retomada ciclo 4, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo do executor de orçamento quase esgotado
+recebido após consulta de 16:18:52Z; depois somente gravação de handoff.
+
+Publicado e remoto/PR relidos: `bd30b09e7faa4cacf302baf478c8745cfd3a7f9b`,
+PR #3 OPEN/draft/base main. Corpo atualizado e relido; CI desse SHA ainda
+QUEUED na última consulta. Sem merge/deploy. Correção visual posterior ao
+`31cda03` não está no build em execução; não transferir seu gate para o head.
+
+Build nativo independente do `31cda03cee98829384a467511fc9cf5c241a6e83`
+permanece em execução, PID observado 219046. Último log contém classes concluídas
+sem falhas, mas não existe resultado/gate consolidado: NÃO declarar build aprovado.
+Worker `restaurant-manager-e2e.service`, PID observado 219715, aguarda o resultado
+antes de iniciar candidato e suítes provisionamento/SaaS/estado. Não foi outro
+coordenador nem houve interrupção deliberada. Próximo ciclo DEVE reconciliar
+unidades, job/resultados/logs e candidato antes de iniciar build/suíte/migration.
+
+Última verificação hml 16:18:52Z: 449ce3c/health UP/PID41392; sem alteração.
+Relatório privado `restart4-report.html` e checkpoint estruturado foram gerados
+com resultados reais e pendências. STATUS privado contém os caminhos completos.
+Este handoff é local posterior ao push; preservar. Sem CONCLUSAO.json.
+
+Próximo passo: recolher o build e E2E duráveis existentes SEM repetir; corrigir
+eventuais falhas. Depois revisar e validar o head com correção visual, executar
+convites e regressões com largura de viewport configurada. Continuar fila
+operacional, eventos/projeções e manutenção/backup/restore. Sprint01 aberta;
+02–05 não iniciadas. Nenhum critério pendente foi convertido em aprovação.
+
 ## Registro intermediário — retomada ciclo 4, 2026-11-04
 
 Missão não concluída. Worker herdado e039dc2 terminou exit 0 e foi reconciliado:
