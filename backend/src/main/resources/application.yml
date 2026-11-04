@@ -1,0 +1,52 @@
+server:
+  address: 127.0.0.1
+  port: ${RM_PORT:8089}
+  forward-headers-strategy: none
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: restaurant-manager
+  datasource:
+    url: ${RM_DB_URL}
+    username: ${RM_DB_USER}
+    password: ${RM_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+      connection-init-sql: SET search_path TO pg_catalog
+      schema: pg_catalog
+  flyway:
+    url: ${RM_DB_URL}
+    user: ${RM_MIGRATION_USER}
+    password: ${RM_MIGRATION_PASSWORD}
+    locations: classpath:db/migration/public
+    default-schema: public
+    clean-disabled: true
+    placeholders:
+      runtimeRole: ${RM_DB_USER}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+rm:
+  stage: ${RM_STAGE:dev}
+  release-sha: ${RM_RELEASE_SHA:desenvolvimento}
+logging:
+  level:
+    root: WARN
+    br.com.restaurantmanager: INFO

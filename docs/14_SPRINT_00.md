@@ -5,9 +5,9 @@
 
 [Índice da documentação](README.md)
 
-**Status:** não iniciada.
+**Status:** em andamento desde 2026-11-04. Não concluída; gates pendentes no checkpoint.
 
-Entregas, testes e homologações abaixo estão planejados; nenhum item está marcado como concluído.
+Os resultados verificáveis estão no checkpoint e nas evidências. Itens compostos permanecem abertos enquanto qualquer requisito estiver pendente.
 
 ## Entregáveis
 

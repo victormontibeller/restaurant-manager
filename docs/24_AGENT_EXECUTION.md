@@ -7,7 +7,7 @@
 
 ## Fluxo e responsabilidades
 
-O Hermes chama o Codex CLI autenticado na conta do usuário. O desenvolvimento e os testes acontecem no Linux do Hermes, em checkout próprio e bancos exclusivos do projeto. O Mac pode continuar como ambiente adicional, mas a execução Linux não depende de ele estar ligado.
+Na execução noturna autorizada em 2026-11-03, o Hermes executa diretamente com o provedor `openai-codex` e autenticação atual, sem instalar o Codex CLI. O desenvolvimento e os testes acontecem no Linux, em checkout e bancos exclusivos. O Mac continua ambiente adicional, sem ser dependência da execução.
 
 - **Hermes:** inicia o fluxo solicitado, fornece diretório/contexto, acompanha término e retoma o próximo incremento até concluir o escopo técnico, sem nova aprovação a cada tarefa ou sprint.
 - **Codex coordenador:** consulta a documentação, implementa, distribui subtarefas quando útil, integra alterações, verifica critérios e atualiza o checkpoint.
@@ -32,7 +32,7 @@ A autorização abaixo cobre a execução contínua do roadmap, quando o fluxo f
 | Deploy, reinício/alteração de serviços de produção, migração de produção | Fora do fluxo automático; somente quando o usuário pedir a operação correspondente |
 | Pagamentos reais, envio real de comunicações e uso de dados de clientes | Somente no escopo de homologação/operação autorizado; não usar como teste implícito |
 
-Convenção: uma branch por incremento/commit principal, como `codex/s00-i001-fundacao`, `codex/s00-i002-testes` e `codex/s01-i001-acessos`. Correções necessárias do mesmo incremento podem gerar commits adicionais nessa branch, sem reescrever histórico. Registrar branch, base e SHA publicado no checkpoint; não trocar uma branch com trabalho preexistente sem reconciliar o estado.
+Convenção desta missão: uma branch `hermes/sprint-NN-tema` e um PR por Sprint. Correções da mesma sprint geram commits adicionais, sem reescrever histórico. O proprietário solicitou também merges após os gates; nunca confundir essa solicitação com critério aprovado, nem fazer commit direto em main. Restrições efetivas do executor e gates pendentes devem ser preservados no checkpoint. Produção permanece fora do escopo.
 
 Cada nova branch parte do último SHA integrado e verificado da anterior, inclusive ao trocar de sprint. Assim, acumula o trabalho completo sem depender de merge automático em `main`. Subagentes com trabalho isolado são integrados pelo coordenador antes dessa passagem; não iniciar uma branch nova de uma `main` desatualizada e perder as entregas anteriores.
 
@@ -76,7 +76,7 @@ O diretório de resultado deve existir e ser gravável pelo operador. A captura 
 
 A autenticação permanece no host privado do operador. Não transferir a sessão da conta para CI público ou para execução de contribuições não revisadas. A escolha de modelo usa a configuração disponível e autorizada; não inventar disponibilidade de modelos nem mudar para uma modalidade de cobrança diferente silenciosamente.
 
-Até a Sprint 0 criar a base, não existem comandos de build/teste do projeto. Primeiro verificar arquivos e ferramentas disponíveis; depois implementar e documentar os comandos realmente executados. Não apresentar `make test`, wrappers Maven ou scripts de deploy como existentes antes disso.
+Os comandos reais criados na Sprint 0 estão no README. O exemplo histórico de Codex CLI acima não é o mecanismo usado nesta execução e não exige instalação/autenticação adicional. O supervisor externo já existe: não iniciar outro coordenador.
 
 ## Base técnica e bancos
 

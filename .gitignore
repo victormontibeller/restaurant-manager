@@ -1,1 +1,34 @@
 .DS_Store
+
+# Configuração privada: exemplos devem conter somente placeholders.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+*.sql.gz
+credentials*.json
+auth-state*.json
+
+# Build e dependências locais.
+backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Resultados privados e temporários; evidências sanitizadas ficam em docs/.
+coverage/
+playwright-report/
+test-results/
+blob-report/
+*.log
+.runtime/
+.private/
+.local/
