@@ -1,0 +1,38 @@
+# Segurança e autenticação
+
+> **Escopo:** JWT, sessões, dados pessoais, validação de entradas e proteções da aplicação.
+> **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
+
+[Índice da documentação](README.md)
+
+## Segurança e dados pessoais
+
+Validação estrutural na entrada, regras nos services, constraints no banco e autorização contextual em todas as ações. Permitir somente campos conhecidos nos DTOs sensíveis; evitar atribuição massiva de papel, preço, tenant, saldo ou estado. Escapar saída, usar consultas parametrizadas e limitar upload por tipo real, tamanho e resolução. URLs de mídia externa, se aceitas, exigem política contra requisições a destinos internos; a proposta inicial é upload controlado.
+
+Aplicar HTTPS no ambiente público, CORS restrito, headers compatíveis com a aplicação, política de conteúdo e proteção contra abuso em login, código de mesa, checkout e endpoints públicos. Redigir logs estruturados com correlação, tenant/unidade técnica e resultado, sem tokens, senhas, dados brutos de pagamento ou endereços completos. Restringir health/management: endpoint público só informa o mínimo; diagnóstico detalhado exige acesso protegido.
+
+Reautenticar configuração de integração e alterações sensíveis de acesso. Validar dependências e segredos no pipeline; corrigir achados conforme impacto comprovado. Política de privacidade, termos, retenção, exclusão e responsáveis por dados permanecem dependências de operação; a documentação técnica não declara conformidade jurídica automaticamente.
+
+<a id="jwt-e-sessoes"></a>
+## JWT e sessões
+
+Proposta: access JWT de curta duração com `sub` imutável, tenant, audiência, emissor, expiração e identificador da sessão; algoritmo permitido fixado, rotação de chave planejada e relógio validado. Não colocar endereço, senha ou permissões completas como única fonte de autorização. Spring Security valida tokens; serviços consultam sessão e política atuais. Referências: [JWT no Spring Security](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html) e [autorização de métodos](https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html).
+
+Access token em memória no Angular; refresh em cookie HttpOnly/Secure com escopo apropriado, rotação, detecção de reutilização e revogação. Definir SameSite e proteção CSRF conforme a topologia final, especialmente refresh/logout. Login tem limite de tentativas e resposta que não enumera contas; recuperação usa token de uso único e expiração. Logout/inativação revoga sessão no servidor. Parâmetros de duração serão fixados na Sprint 1.
+
+JWT de mesa só tem a capacidade do atendimento/participante ativo. Código temporário é aleatório, revogável, protegido contra tentativas e distinto de número de mesa; não aparece em logs. Limitar escopo a cardápio, suas rodadas, resumo autorizado e solicitações. Ações de cozinha, caixa e configuração são sempre proibidas.
+
+## Diretrizes de implementação
+
+- JWT deve ser validado quanto a assinatura, algoritmo permitido, emissor, audiência, expiração e sessão ativa. Permissões atuais são verificadas no servidor; não dependem de um JWT antigo expirar.
+- Para a proposta web, mantenha access token em memória e refresh token em cookie HttpOnly/Secure, com rotação, revogação e proteção CSRF nos endpoints que usam cookies. Não grave tokens em localStorage/sessionStorage.
+- Código de mesa e QR estático não substituem a autorização de um atendimento. Encerramento revoga a sessão temporária e impede acesso ao próximo grupo.
+- Nunca registre senhas, tokens, dados de cartão, códigos temporários ou payloads completos com dados pessoais em logs. Restrinja e audite acesso a dados sensíveis.
+- Segredos reais ficam fora do Git; exemplos contêm placeholders. Não copie `.env`, dumps ou credenciais dos projetos de referência. Dependências e uploads precisam de limites e validação.
+
+## Documentos relacionados
+
+- [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)
+- [Isolamento e contexto](06_MULTI_TENANT.md)
+- [Logs e auditoria](07_OBSERVABILITY.md)
+- [Webhooks e credenciais de provedores](21_INTEGRATIONS.md)
