@@ -46,7 +46,7 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 | T24 | Parcial, família não aprovada | Equipe existente/vínculos testados; convites/criação em validação no ciclo 11 |
 | T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
-| T27 | Não implementado/não executado | Sprints 03–04 |
+| T27 | Parcial, família não aprovada | Acompanhamento cadastral da unidade em validação; eventos operacionais nas Sprints 03–04 |
 | T28 | Parcial, família não aprovada | Provisionamento CLI testado; identidade SaaS/consulta e suspensão comercial em validação; provisionamento HTTP e integração com pedidos pendentes |
 
 ## Cenários transversais

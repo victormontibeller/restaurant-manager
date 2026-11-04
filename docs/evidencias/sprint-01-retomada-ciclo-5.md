@@ -49,3 +49,24 @@ atingiu timeout da ferramenta; reexecução completa terminou exit 0. Scanner de
 
 Build, CI, regressões e homologação do código novo não são aprovados por este
 registro intermediário. O checkpoint e o relatório privado distinguem cada SHA.
+
+## Atualização de publicação e CI
+
+Commit `dee85d3cd9455622ba35e8ee5d147c60e1858fe8` publicado e remoto/PR #3
+OPEN/draft/base main relidos. CI runs 41871742353/41871726704 success. Log do
+primeiro confirma 163 testes backend, sem falhas/erros/skip, incluindo as duas
+provas adicionais de eventos (19 testes em AcessosTest). Não somar os dois runs
+como testes distintos nem chamar esse resultado de build local aprovado.
+
+Build local independente e worker E2E identificado continuam em execução/espera,
+com registros privados. Nenhum gate futuro assumido. Homologação preservada.
+
+## Encerramento preciso
+
+Antes do aviso final, XML local de AcessosTest conferido: 19 testes aprovados,
+incluindo os sete cenários novos de eventos (duas provas adicionais executadas).
+O build inteiro ainda não tinha resultado consolidado às 17:09:59Z. Após essa
+consulta, o executor avisou orçamento quase esgotado; somente handoff foi gravado.
+Build/worker E2E independentes preservados, sem repetição ou interrupção deliberada.
+Nenhum E2E novo aprovado neste registro. Última verificação hml 17:05:24Z, saudável
+no 449ce3c, sem deploy/reinício/migration. Não houve nova verificação após o aviso.

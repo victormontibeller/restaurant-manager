@@ -2,7 +2,57 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Retomada ciclo 6 — 2026-11-04
+
+Build herdado de `dee85d3` recolhido sem repetição: exit 0/gate true, hash
+`8c70f3e21bc1352210c2d5a8b9fac26b41e51036eb5f751dcb1ff3a2a750780e`.
+Worker E2E terminou com falha antes de executar cenários: configuração de eventos
+importava a guarda de identidade e recusava seu próprio host. Corrigida derivação
+direta da configuração base, com origem de eventos restrita e prontidão preservada.
+Revisão independente detectou mock incorreto no teste de configuração; corrigido
+para carregar a configuração base real. Teste e descoberta Playwright passaram,
+sem equivaler à execução dos quinze cenários. Homologação 449ce3c saudável e
+preservada; PR #3 OPEN/draft, sem merge. Próximo: reexecutar E2E no JAR já aprovado
+com fonte de testes identificada, implementar fila operacional e critérios restantes.
+
+## Encerramento — retomada ciclo 5, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido após
+consulta de 17:09:59Z; depois somente gravações obrigatórias de handoff.
+
+Publicado: `dee85d3cd9455622ba35e8ee5d147c60e1858fe8`. PR #3 OPEN/draft,
+base main e head remoto relidos. CI dos dois runs aprovada; 163 backend sem
+falha/erro/skip. Localmente, AcessosTest terminou com 19 testes aprovados,
+incluindo os sete cenários de eventos; XML e nomes conferidos. Isso NÃO é
+resultado consolidado do build inteiro.
+
+Build independente continua sem result.json na consulta de 17:09:59Z; não foi
+interrompido nem repetido. Worker E2E próprio foi iniciado, com manifesto/PID,
+para aguardar gate/hash e executar eventos/convites/identidade/plataforma.
+Nenhum resultado E2E novo consolidado neste encerramento. Conferir unidades,
+job/resultados/logs e candidato ANTES de novo build/suíte/migration. Não usar
+JAR herdado V11 contra rm_test migrado para V12. STATUS privado contém caminhos.
+
+Última verificação hml 17:05:24Z: 449ce3c, health UP/PID41392. Sem deploy,
+reinício ou migration de hml; sem merge. Checkpoint/evidência/cobertura finais
+permanecem locais posteriores ao push; preservar. Relatório privado navegável
+contém snapshot verificável de 16:58Z; handoff final separado distingue dados
+observados depois, sem inventar resultado futuro. Sem CONCLUSAO.json.
+
+Próximo passo: recolher build/E2E duráveis sem repetir; corrigir falhas e revisar
+capturas, inclusive convites com viewport real. Prosseguir fila operacional,
+manutenção/backup/restore e critérios restantes. Sprint01 aberta;02–05 não
+iniciadas. Nenhum critério pendente foi convertido em aprovação.
+
 ## Registro intermediário — retomada ciclo 5, 2026-11-04
+
+Publicado e remoto/PR relidos: `dee85d3cd9455622ba35e8ee5d147c60e1858fe8`,
+PR #3 OPEN/draft/base main. Dois checks CI success, runs 41871742353/41871726704;
+log conferido: 163 backend, zero falhas/erros/skip, incluindo as duas provas
+adicionais de eventos. Build local independente ainda em execução; não equivale
+ao gate local. Worker E2E próprio aguarda seu resultado e executará eventos,
+convites, identidade e plataforma, sem deploy. Consultar manifests/unidades
+antes de outro build/suíte/migration; não repetir trabalho durável em andamento.
 
 Missão não concluída. Build/E2E herdados de 31cda03 terminaram exit 0; candidato
 herdado encerrado antes da migration V12. Homologação segue preservada em 449ce3c.
@@ -15,7 +65,8 @@ Revisão independente encontrou corridas remanescentes de autenticação assínc
 reproduzidas e corrigidas nos serviços empresarial/SaaS. Testes e contratos novos
 na [evidência](evidencias/sprint-01-retomada-ciclo-5.md); cinco testes PostgreSQL
 focados e seis JS passaram. Duas provas adicionais PostgreSQL aguardam o build
-integrado. Typecheck passou. Build/CI/E2E do código novo ainda pendentes.
+integrado local. Typecheck passou. Na gravação inicial, build/CI/E2E estavam
+pendentes; atualização de CI confirmada acima, sem transferir gate ao build local.
 
 Próximo passo: consolidar testes focados e adicionais de concorrência/isolamento,
 publicar incremento revisado, build identificado e E2E de eventos/convites mais
