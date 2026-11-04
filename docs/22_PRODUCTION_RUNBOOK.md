@@ -55,6 +55,24 @@ Procedimento futuro de release:
 
 Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. Autenticação e unidades da Sprint 01 ainda não foram promovidas ao serviço de homologação. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
+## Build independente da sessão
+
+`python3 scripts/durable_build.py start` exige checkout limpo e cria clone privado
+destacado do SHA, sem hardlinks. A unidade de usuário exclusiva
+`restaurant-manager-build.service` executa o build completo fora da sessão Hermes.
+Locks de lançamento/worker e o lock existente de build/deploy impedem concorrência.
+O caminho retornado contém request, PID/início do processo, log e resultado JSON,
+gate próprio e cópia do artefato cujo hash foi conferido. Não modificar esse clone.
+O próximo ciclo consulta `builds/latest.json` no diretório privado do projeto,
+o resultado do job e `systemctl --user show restaurant-manager-build.service`;
+não reinicia um build ativo. Resultado ausente ou falho nunca aprova release.
+
+Este mecanismo não faz deploy nem substitui E2E. O deploy atual ainda consome
+o gate/JAR do checkout original: não copiar somente o gate de um job para ele.
+A integração de promoção do artefato privado continua pendente. Encerramento
+abrupto sem resultado exige reconciliar unidade/log/PID; não há aprovação por
+inferência, nem garantia de persistência contra queda de energia.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 

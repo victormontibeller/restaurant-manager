@@ -2,7 +2,19 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Ciclo 11 — incremento em validação, 2026-11-04
+## Encerramento do ciclo 11 — 2026-11-04
+
+Missão NÃO concluída. O executor avisou orçamento efetivo quase esgotado após preparar o script privado de empacotamento do candidato de teste. Depois disso, somente encerramento seguro e handoff. Nenhum empacotamento/candidato novo ou E2E de convites foi iniciado.
+
+Incremento publicado: `51cd2d053fb50ca5528c842423c74884351cab12`, branch `hermes/sprint-01-identidade-acessos`, PR #3 OPEN/draft, base main; SHA remoto e metadados do PR relidos após push. CI do novo SHA ainda NÃO conferida; não transferir aprovação da CI anterior. Sem merge adicional.
+
+Vermelho da corrida revogação/expurgo reproduziu hash restaurado, com falha esperado um registro limpo e observado zero. Corrigido com lock da linha depois da política empresarial. Rodada local `ConvitesTest,CadastroClienteTest,RecuperacaoTest` seguida de typecheck terminou exit 0; no encerramento, a ferramenta respondeu `already_exited`, não houve interrupção dessa rodada. Log já observado confirmava doze testes de convites e quatorze de cadastro sem falhas/erros/skip. XML/contagem final da recuperação não foram consolidados após o aviso; não inventar total integrado. Scanner de 195 arquivos e diff passaram antes do commit.
+
+Não há build-gate/hash novo do 51cd2d0. Script privado preparado permite empacotar candidato exclusivo de testes, explicitamente SEM gate de release; NÃO foi executado. Build completo identificado continua pendente, assim como S01-UI17–19 e regressão completa corrigida. Candidato herdado foi encerrado antes de V10; nenhum novo servidor iniciado. Homologação permanece no último release saudável, sem deploy/reinício/migração neste ciclo. Última verificação foi na retomada, não após o aviso final.
+
+Retomada: conferir Git/processos/bancos, preservar estes documentos locais finais; consolidar XML/logs da rodada focada, conferir CI do 51cd2d0 e atualizar corpo do PR (ainda herdado). Executar build identificado completo de checkout limpo; novo candidato HTTPS/rm_test compatível com V10; rodar convites e regressões com cobertura exata por projeto e revisão visual. Não usar JAR V9 contra V10. Verificação de funcionários preexistentes, SaaS/suspensão/eventos/projeções, demais critérios e manutenção/backup/restore continuam pendentes. Sprint 01 aberta; 02–05 não iniciadas. Sem CONCLUSAO.json.
+
+## Registro intermediário do ciclo 11
 
 Missão NÃO concluída. Retomada reconciliou Git/PR, serviços e identidades SQL dev/test/hml. completion-rejected.json ausente. Registros herdados preservados em `8e4b1d328f02f96bf5b27033e6cad4979dc27a78`. Build identificado desse SHA passou: 107 testes backend sem falha/erro/skip, 19 Python, Angular/auditorias. Hash `b94cde1f9804263b434d516b8e140e8c2b2aa877974735fc3695ad787dff75cb`.
 
