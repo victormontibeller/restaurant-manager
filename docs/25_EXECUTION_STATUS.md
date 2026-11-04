@@ -18,6 +18,14 @@ e corrigidos. Não promove baseline. [Evidência](evidencias/sprint-01-retomada-
 Próximo: executar smoke, revisar capturas/corrigir, completar matriz/promotor.
 Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
 
+Atualização23:07Z: smoke hml passou50combinações exatas, zero falha/skip/flaky/
+retry; fonte dc3240c/JAR3cd4eeb, duração535545ms. SHA/hash/PID permaneceram estáveis;
+baseline NÃO promovido. Revisados oito recortes mobile/tablet/desktop, legíveis
+e sem overflow observado; não é inspeção integral das telas.111Python passaram.
+CI dc3240c aprovada nos dois checks. Worker finito de regressão iniciou somente
+depois do smoke e prepara/executa as demais famílias no mesmo JAR em rm_test;
+nenhum resultado final observado nesta gravação. Não repetir build/UI04/UI05.
+
 ## Encerramento — retomada ciclo 12, 2026-11-04
 
 Aviso efetivo de orçamento quase esgotado após gravar a evidência deste ciclo;

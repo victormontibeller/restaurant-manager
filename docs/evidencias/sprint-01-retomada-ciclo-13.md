@@ -35,3 +35,30 @@ Regressões adicionais validam os achados, sem chamar mock de teste integrado.
 
 Sprint 01 aberta; matriz integrada/promotor e demais critérios pendentes.
 Sprints 02–05 não iniciadas. Sem merge nem conclusão técnica artificial.
+
+## Resultado observado às 23:07Z
+
+Smoke hml encerrado com exit0: cinquenta combinações exatas de S01-HML01–10 nos
+cinco projetos, sem falha, skip, retry ou flaky. Duração535545ms. Fonte dos testes
+`dc3240c`, mesmo JAR3cd4eeb e hash acima; runtime/PID/fixture/baseline estáveis.
+O relatório não promove healthy.json. Ambos checks CI de dc3240c passaram.
+Suíte Python final:111 testes aprovados; guardas reais de fixture JS, typecheck,
+sintaxe Bash, scanner e diff aprovados. Guarda JS acrescentada a CI/build futuro,
+sem provocar rebuild local do JAR imutável.
+
+Inspeção visual direta de oito capturas: Administrador mobile/WebKit desktop,
+SaaS mobile, Cozinha/Cliente/Atendimento/Expedição mobile e Gerente tablet.
+Texto/controles visíveis legíveis e sem overflow observado; foco do seletor
+visível. São recortes de viewport: conteúdo inferior e todas as telas não foram
+visualmente aprovados. Emulação, não aparelhos físicos.
+
+Primeiro lançamento do smoke foi recusado antes dos navegadores por normalização
+do wrapper Windows no clone novo. Configuração local do clone corrigida, bytes
+comparados com o blob e checkout limpo conferido antes do segundo lançamento.
+Log da recusa preservado; não foi uma falha funcional convertida em retry verde.
+
+Regressão finita começou após término do smoke, com fonte/JAR fixos, locks,
+manifesto/logs/resultados duráveis e candidato próprio rm_test. Não é outro
+coordenador. Executa as demais famílias sem repetir UI04/UI05 já aprovados no
+mesmo artefato. Resultado ainda não consolidado neste registro; preservá-la se
+atravessar ciclos. Continuidade da suíte não significa aprovação antecipada.

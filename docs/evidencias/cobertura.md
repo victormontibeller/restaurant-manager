@@ -2,9 +2,31 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, retomada ciclo 11. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Identidade foi servida temporariamente em hml no ensaio de manutenção e retornou à fundação. Não há aprovação integrada de identidade em homologação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, retomada ciclo 13. Os IDs preservam o escopo integral;
+não são aprovação de famílias incompletas. Candidato de identidade3cd4eeb está
+servido em hml, com baseline anterior preservado. Não há aprovação integrada
+da Sprint; consulte o checkpoint para resultados consolidados e SHAs.
 
-## Atualização vigente — retomada ciclo 11
+## Atualização vigente — retomada ciclo 13
+
+Manutenção corrigida aprovada no JAR3cd4eeb, seguida de instalação real e seeds
+fictícios por CLI/API/captura. UI04/UI05 passaram dez combinações no mesmo JAR,
+sem repetir build ou testes focados. Regressão restante é serializada após smoke
+hml; resultados ainda não consolidados nesta gravação.
+
+| Cenários novos | Superfície e atores | Escopo |
+| --- | --- | --- |
+| S01-HML01–02 | Dois administradores A/B, acessos, equipe, unidades, convites | Consulta UI/API, origem/tenant, cookies/sessão/refresh/logout |
+| S01-HML03–07 | Gerente, Atendimento, Caixa, Cozinha e Expedição | Filial permitida/negada, eventos cadastrais, administração negada |
+| S01-HML08–09 | Dois clientes distintos | Identidade própria, isolamento, ausência/negação de administração e eventos |
+| S01-HML10 | Operador SaaS | Somente metadados, consulta comercial, audiência e sessão separadas |
+
+Cinquenta combinações aprovadas às23:07Z, sem falha/skip/retry/flaky, fonte dc3240c
+e JAR3cd4eeb. Runner não promove baseline nem substitui testes mutantes, backend,
+concorrência ou recuperação. Revisão visual parcial de oito recortes, não telas
+inteiras. [Evidência do ciclo13](sprint-01-retomada-ciclo-13.md).
+
+## Histórico — retomada ciclo 11
 
 No JAR e847fee, S01-UI35 passou cinco combinações; identidade UI01–09 teve
 42 aprovações e três falhas, zero skip/retry/flaky. UI04 carregou lentamente no

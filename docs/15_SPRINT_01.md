@@ -7,12 +7,12 @@
 
 **Status:** em andamento desde 2026-11-04. Há implementação empresarial e SaaS,
 convites/verificação/recuperação, matriz/equipe/unidades, eventos cadastrais e fila
-de provisionamento. Testes locais e E2E possuem resultados por artefato, não uma
-aprovação integrada da Sprint. Retomada ciclo 7 corrige revogação com unidade
-inativa e interrupção da fila, e acrescenta ensaio isolado de banco. Permanecem
-gate integrado, jornadas UI de todos os perfis aplicáveis, manutenção/migrations,
-aplicação restaurada e publicação em hml. Não concluída; não implantada em
-homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
+de provisionamento. No ciclo 13, manutenção/retorno reais permitiram instalar o
+candidato de identidade em hml, com dois tenants, A1/A2, nove contas empresariais
+e operador SaaS. Smoke API aprovado; UI e regressão integrada ainda em execução.
+O baseline da fundação permanece preservado e não foi promovido. Não concluída:
+gates integrados, revisão visual e aceitação definitiva do release continuam
+pendentes. Resultados, limites dos ensaios e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
 
 Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
 HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID;
