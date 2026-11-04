@@ -8,8 +8,10 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.DependsOn;
 
 @Component
+@DependsOn("schemaCompatibility")
 public class TenantConnections implements MultiTenantConnectionProvider<String>, CurrentTenantIdentifierResolver<String>, HibernatePropertiesCustomizer {
     private final DataSource dataSource;
     public TenantConnections(DataSource dataSource) { this.dataSource = dataSource; }

@@ -2,6 +2,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 [[ -z "$(git status --porcelain)" ]] || { printf 'Checkout sujo; commit/revisão antes do build identificado.\n'; exit 2; }
+python3 scripts/check-repository.py
+python3 -m unittest discover -s scripts -p 'test_*.py'
 npm --prefix frontend ci --ignore-scripts
 npm --prefix frontend run typecheck
 npm --prefix frontend run build

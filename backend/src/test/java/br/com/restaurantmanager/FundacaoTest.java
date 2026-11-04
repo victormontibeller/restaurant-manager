@@ -35,6 +35,7 @@ class FundacaoTest {
     @Test void saudeMinimaSemDiagnostico() throws Exception {
         mvc.perform(get("/actuator/health")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.groups").doesNotExist())
                 .andExpect(jsonPath("$.components").doesNotExist());
     }
 

@@ -19,14 +19,7 @@ spring:
       connection-init-sql: SET search_path TO pg_catalog
       schema: pg_catalog
   flyway:
-    url: ${RM_DB_URL}
-    user: ${RM_MIGRATION_USER}
-    password: ${RM_MIGRATION_PASSWORD}
-    locations: classpath:db/migration/public
-    default-schema: public
-    clean-disabled: true
-    placeholders:
-      runtimeRole: ${RM_DB_USER}
+    enabled: false
   jpa:
     open-in-view: false
     hibernate:
@@ -44,6 +37,8 @@ management:
   endpoint:
     health:
       show-details: never
+      probes:
+        enabled: false
 rm:
   stage: ${RM_STAGE:dev}
   release-sha: ${RM_RELEASE_SHA:desenvolvimento}

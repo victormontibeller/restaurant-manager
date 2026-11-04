@@ -63,9 +63,11 @@ python3 scripts/check-repository.py
 
 Os testes recusam qualquer alvo diferente de `rm_test`, roles `rm_test_owner`/`rm_test_app`, em loopback :55432. Não usam H2. Para o ambiente privado provisionado, `bash scripts/with-env.sh test <comando>` carrega a configuração sem imprimi-la. `scripts/bootstrap-database.py` cria/verifica o cluster exclusivo com binários previamente extraídos; não instala dependências globais.
 
-`scripts/build-release.sh` exige checkout limpo e gera gate vinculado ao SHA/hash. `scripts/deploy-hml.py` publica candidato no serviço nativo e não o promove antes de E2E. `scripts/verify-release.py` verifica health, PID, manifesto e hash reais. Scripts novos só contam como validados após resultados no checkpoint.
+`scripts/build-release.sh` exige checkout limpo e gera gate vinculado ao SHA/hash. `scripts/deploy-hml.py` publica candidato no serviço nativo e não o promove antes de E2E. O migrador separado (`java -jar app.jar --migrate-only`) recebe a credencial owner e valida o destino efetivo; o processo HTTP só recebe runtime. Em desenvolvimento, execute o migrador antes de iniciar o servidor. `scripts/verify-release.py [SHA]` verifica health, PID, manifesto, hash e ausência de credencial de migração no runtime. Migrations diferentes das do serviço anterior são recusadas até existir procedimento de manutenção/backup comprovado. Scripts novos só contam como validados após resultados no checkpoint.
 
 Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL`; execute `npm --prefix frontend run e2e`. Instale browsers com o CLI Playwright; no Linux sem sudo, `scripts/install-browser-libs.py` extrai pacotes Ubuntu em prefixo privado. Relatórios e credenciais nunca vão ao Git.
+
+`python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
 Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap autorizado. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
 

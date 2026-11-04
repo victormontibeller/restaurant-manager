@@ -22,6 +22,6 @@ SDK Java oficial Mercado Pago oferece `MPRequestOptions` por chamada (token, tim
 
 ## Consequências e limites
 
-Serviço inicial ainda carrega credenciais de migração para o bootstrap Flyway; separar processo migrador de runtime antes de fechar a fundação. Não há contas, pedidos, pagamentos, recuperação de backup nem PWA nesta etapa. Validação do pool é evidência técnica limitada, não conclusão da Sprint 01. Compatibilidade/rollback de migrations e segurança de dependências Java permanecem gates a ampliar.
+Migrador executável separado (`java -jar app.jar --migrate-only`), com allowlist de ambiente, identidade SQL efetiva e advisory lock. Runtime não recebe credenciais de migração; valida histórico/checksums e ausência de migrations pendentes antes do JPA. Deploy só aplica migrations iguais às do serviço anterior; diferenças exigem futuro procedimento de manutenção/backup, não uma variável que afirme compatibilidade. Retorno automático exige release previamente validado e fingerprint SQL idêntico. Não há contas, pedidos, pagamentos, recuperação de backup nem PWA nesta etapa. Validação do pool é evidência técnica limitada, não conclusão da Sprint 01.
 
 Fontes consultadas: Maven Central (metadados/artifacts Spring/Maven), API oficial Adoptium (SHA-256 validado), índices apt assinados Ubuntu, npm e angular.dev/reference/versions, Javadocs Hibernate 6.6, código oficial mercadopago/sdk-java em `MPRequestOptions.java`. JDK/Maven foram verificados por checksum antes de extrair; não houve instalação global.
