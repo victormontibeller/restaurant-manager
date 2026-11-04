@@ -9,6 +9,16 @@ from database_recovery import canonical_constraint, safe_cleanup, validate_sourc
 
 
 class DatabaseRecoveryTest(unittest.TestCase):
+    def test_manutencao_libera_locks_de_tabela_sem_encerrar_snapshot(self):
+        session = MagicMock()
+        session.query.side_effect = [['public.empresa'], [], ['a'*64], [], [], ['{"constraints":[]}'], []]
+        result = database_recovery.inventory(session, release_table_locks=True)
+        self.assertEqual(result['tables']['public.empresa']['rows'], 1)
+        queries = [call.args[0] for call in session.query.call_args_list]
+        self.assertEqual(queries[1], 'savepoint inventory_table')
+        self.assertEqual(queries[3:5], ['rollback to savepoint inventory_table', 'release savepoint inventory_table'])
+        self.assertFalse(any(q.lower().startswith(('commit', 'begin')) for q in queries))
+
     def test_inventario_fundacao_nao_inventa_identidade(self):
         session = MagicMock()
         session.query.side_effect = [[], ['{"constraints":[]}'], ['t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa']]

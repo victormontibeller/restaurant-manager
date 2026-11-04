@@ -98,7 +98,7 @@ def main():
                 session = Session(command, pg_env, log)
                 try:
                     session.query('begin isolation level repeatable read read only')
-                    return inventory(session)
+                    return inventory(session, release_table_locks=True)
                 finally:
                     session.close()
             def stop():

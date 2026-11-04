@@ -1,5 +1,64 @@
 # Checkpoint de execução
 
+## Encerramento — retomada ciclo 12, 2026-11-04
+
+Aviso efetivo de orçamento quase esgotado após gravar a evidência deste ciclo;
+depois somente handoff obrigatório. Missão NÃO concluída. Sem merge/deploy novo,
+sem CONCLUSAO.json. Alterações deste ciclo NÃO commitadas/publicadas; preservar
+também os dois documentos modificados herdados. PR3/head2c5acd2 OPEN/draft e
+ambos checks CI desse head foram conferidos na retomada, não aprovam código local.
+
+Build herdado3cd4eeb consolidado:23XML/173backend, zero falha/erro/skip,
+gate/hash correspondentes. Worker11 terminou22:03:26Z exit1: UI04/UI05 passaram
+dez combinações nos cinco projetos, sem skip/retry/flaky; manutenção falhou
+por out of shared memory no inventário de rm_test, ANTES do clone. Não instalou
+candidato hml nem executou bootstrap. Unidade worker11 inactive/MainPID0.
+Última verificação hml22:04:05Z:449ce3c UP/PID380082; baseline preservado.
+
+Correção de inventário opt-in libera locks por tabela via savepoint na mesma
+transação RR; nenhuma alteração global de PostgreSQL. Probe real passou:
+2061tabelas/19140linhas, snapshot preservado,7,45s. Reensaio integral de manutenção
+NÃO iniciado após correção. Escritores próprios devem permanecer parados e DDL
+externo ausente; o opt-in não foi habilitado no backup concorrente.
+
+Novo scripts/hml_accounts.py cria massa por API/captura local com intenções
+privadas, cinco perfis/dois clientes, guards de runtime/hash/OIDs e read-back.
+NÃO executado em hml: depende do bootstrap inicial, ainda ausente. Duas revisões
+independentes; achados corrigidos com dois vermelhos comportamentais e seis
+testes focados verdes. Suíte Python final exit0; total posterior ao novo teste
+de inventário não recontado após aviso. Contagem anterior conferida105.
+
+Próximo: revisar/publicar diff local após checks; criar fonte imutável corrigida
+e reexecutar somente manutenção no JAR3cd4eeb já aprovado (sem repetir build/E2E).
+Se aprovada, instalar candidato, executar bootstrap inicial e novo seed, validar
+matriz hml/SaaS/promotor. Nenhum worker novo foi lançado neste ciclo.
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-12.md).
+
+## Encerramento — retomada ciclo 11, 2026-11-04
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta de21:53:33Z;
+depois, somente gravações obrigatórias de handoff. Missão NÃO concluída.
+
+Build durável3cd4eeb terminou21:53:28Z, exit0/release_gate=true, hash
+1697a473d968c0246a0b83b23bbd192b7e7fddbc282f061d66cf5f08a6c9d744.
+Log informa Maven16:42, BUILD SUCCESS e auditoria94pacotes sem achados. Não foi
+recontado XML completo após o aviso;173backend é o resultado CI conferido antes,
+não uma nova contagem local. NÃO reconstruir o artefato para mudanças de scripts/docs.
+
+Worker finito11 continua independente e não foi interrompido. Última fase
+observada21:47Z era aguardando-build; possível avanço após o término NÃO foi
+conferido. Nenhum resultado E2E/manutenção/seed novo aprovado neste encerramento.
+Antes de agir, recolher manifests/resultados/unidade/PIDs e conferir hml real.
+O worker pode instalar candidato hml somente após seus gates e retorna em falha;
+não presumir que a fundação ainda esteja servida nem que o seed já tenha ocorrido.
+
+Último hml verificado21:47Z:449ce3c UP/PID380082, banco original restaurado.
+Head publicado2c5acd24a8c9c8ad912bfb3a873ed17d1f47a95f, remoto e PR3 OPEN/draft/
+base main/corpo relidos. CI80c446a aprovada nos dois checks; CIhead documental
+ainda não consolidada. Sem merge/CONCLUSAO.json. Registros finais locais posteriores
+ao push; preservar. Relatório privado permanece snapshot21:47Z, anterior ao resultado
+do build; STATUS distingue essa atualização. Sprint01 aberta,02–05 não iniciadas.
+
 ## Retomada ciclo 11 — incremento de manutenção
 
 Estado consolidado às 21:44Z: retorno corrigido REAL aprovado, original hml

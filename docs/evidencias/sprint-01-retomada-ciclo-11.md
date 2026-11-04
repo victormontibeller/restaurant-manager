@@ -75,6 +75,14 @@ Reexecução corrigida permanece pendente neste registro.
 
 ## Continuidade e limites
 
+Atualização final observada às21:53:33Z: build3cd4eeb terminou21:53:28Z,
+exit0/release_gate=true, hash
+`1697a473d968c0246a0b83b23bbd192b7e7fddbc282f061d66cf5f08a6c9d744`.
+Log confirmou BUILD SUCCESS, Maven16:42 e auditoria de94pacotes sem achados.
+XML completo não recontado depois do aviso de orçamento; a contagem173 acima
+refere-se à CI. Worker11 não foi interrompido; avanço/E2E/manutenção/seed depois
+do build ainda não conferidos. Relatório privado é snapshot anterior,21:47Z.
+
 Build durável de `3cd4eeb` iniciado após recolher o worker anterior e restaurar hml.
 Clone imutável, PID/unidade/log/gate próprios; não será repetido para incorporar a
 correção posterior somente de scripts. Worker finito com fonte `80c446a` aguarda

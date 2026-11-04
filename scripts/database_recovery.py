@@ -118,7 +118,7 @@ def snapshot_inventory(command, env, log, snapshot):
         reader.close()
 
 
-def inventory(session, require_identity=True):
+def inventory(session, require_identity=True, release_table_locks=False):
     tables = session.query("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace "
                            "where c.relkind='r' and (n.nspname='public' or n.nspname like 't\\_%' escape '\\') order by 1")
     result = {}
@@ -126,8 +126,18 @@ def inventory(session, require_identity=True):
         schema, name = table.split('.')
         qualified = identifier(schema) + '.' + identifier(name)
         # Somente hashes saem da consulta: nenhuma senha, token ou e-mail no relatório.
-        rows = session.query("select encode(sha256(convert_to(row_to_json(t)::text,'UTF8')),'hex') from "
-                             + qualified + " t order by 1")
+        # Modo de manutenção: escritores próprios parados e transação RR ativa.
+        # Rollback do savepoint libera locks da leitura sem trocar snapshot MVCC.
+        # Não habilitar implicitamente em sessões fora de uma transação.
+        if release_table_locks:
+            session.query('savepoint inventory_table')
+        try:
+            rows = session.query("select encode(sha256(convert_to(row_to_json(t)::text,'UTF8')),'hex') from "
+                                 + qualified + " t order by 1")
+        finally:
+            if release_table_locks:
+                session.query('rollback to savepoint inventory_table')
+                session.query('release savepoint inventory_table')
         if any(not re.fullmatch('[0-9a-f]{64}', row) for row in rows):
             raise ValueError('Hash de linha inválido.')
         result[table] = dict(rows=len(rows), sha256=hashlib.sha256('\n'.join(rows).encode()).hexdigest())
