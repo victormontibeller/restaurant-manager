@@ -8,16 +8,18 @@ import { CadastroComponent } from './cadastro.component';
 import { AceitarConviteComponent } from './aceitar-convite.component';
 import { ConvitesComponent } from '../acessos/convites.component';
 import { ConvitePendenteService } from '../acessos/convite-pendente.service';
+import { VerificacaoComponent } from './verificacao.component';
 
 @Component({
   selector:'app-identidade',
-  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent,AceitarConviteComponent,ConvitesComponent],
+  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent,AceitarConviteComponent,ConvitesComponent,VerificacaoComponent],
   template:`
-    <section [attr.aria-labelledby]="!sessao.identidade()&&convite()?'aceitar-convite-titulo':!sessao.identidade()&&cadastro()?'cadastro-titulo':recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
+    <section [attr.aria-labelledby]="!sessao.identidade()&&verificacao()?'verificacao-titulo':!sessao.identidade()&&convite()?'aceitar-convite-titulo':!sessao.identidade()&&cadastro()?'cadastro-titulo':recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
         <h2 id="conta-titulo">Minha conta</h2>
         <p>Perfil: {{ pessoa.perfil }}</p>
         <p>{{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</p>
+        @if(!pessoa.emailVerificado){<p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p>}
         <p>Acesso empresarial autenticado. As jornadas operacionais ainda estão em desenvolvimento.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
         @if(pessoa.perfil==='ADMINISTRADOR'){
@@ -28,6 +30,8 @@ import { ConvitePendenteService } from '../acessos/convite-pendente.service';
           </nav>
           @if(configuracao()==='acessos'){<app-acessos (bloqueio)="configuracaoBloqueada.set($event)" />} @else if(configuracao()==='convites'){<app-convites (bloqueio)="configuracaoBloqueada.set($event)" />} @else {<app-unidades (bloqueio)="configuracaoBloqueada.set($event)" />}
         }
+      } @else if(verificacao()) {
+        <app-verificacao (voltar)="voltarAoLogin()" />
       } @else if(convite()) {
         <app-aceitar-convite (voltar)="voltarAoLogin()" />
       } @else if(cadastro()) {
@@ -47,6 +51,7 @@ import { ConvitePendenteService } from '../acessos/convite-pendente.service';
         <button type="button" (click)="recuperacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Recuperar senha</button>
         <button type="button" (click)="cadastro.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Criar conta de cliente</button>
         <button type="button" (click)="convite.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Aceitar convite de funcionário</button>
+        <button type="button" (click)="verificacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Verificar e-mail existente</button>
       }
       @if (erro()) { <p #alerta class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
       @if (encerramentoPendente()) { <button type="button" (click)="sair()" [disabled]="ocupado()">Tentar encerrar novamente</button> }
@@ -66,6 +71,7 @@ export class IdentidadeComponent {
   readonly recuperacao = signal(false);
   readonly cadastro = signal(false);
   readonly convite = signal(false);
+  readonly verificacao = signal(false);
   readonly configuracao = signal<'acessos'|'unidades'|'convites'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
@@ -100,6 +106,7 @@ export class IdentidadeComponent {
     this.recuperacao.set(false);
     this.cadastro.set(false);
     this.convite.set(false);
+    this.verificacao.set(false);
     setTimeout(()=>document.getElementById('email-conta')?.focus());
   }
   private falha(error: unknown): void {

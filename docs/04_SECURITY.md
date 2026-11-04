@@ -96,6 +96,29 @@ Código aleatório de 256 bits, hash SHA-256 exclusivo e validade de quinze minu
 
 Revogação administrativa é idempotente e não recolhe capturas já preparadas. Convite aceito exige gerenciar o funcionário. Expurgo limpa até cem hashes expirados há mais de 24 horas, preservando a intenção/payload para retries. UI conserva intenção incerta em memória por origem/conta, inclusive ao sair/entrar na mesma página; não grava códigos, senhas ou tokens em storage/URL. Recarregar/fechar perde o rascunho e emite aviso: consulta exata por UUID permite reconciliar manualmente. [Contrato](api/convites.yaml). Testes efetivamente executados ficam no checkpoint; não implantado em homologação. Verificação de funcionários preexistentes permanece pendente.
 
+## Verificação de contas existentes — retomada de 2026-11-04
+
+Novo candidato em validação, ainda não implantado em homologação. Solicitação
+pública recebe somente e-mail e responde `202` neutro. Conta inexistente, inativa
+ou já verificada é ignorada pelo worker, não consultada no caminho síncrono.
+Limites próprios de três solicitações por endereço e trinta por origem a cada
+quinze minutos; ambas as rotas exigem CSRF mesmo com Bearer.
+
+Código de 256 bits com validade de quinze minutos desde a solicitação, hash na
+tabela própria V11 e mensagem cifrada no transporte de captura existente. Vincula
+usuário e endereço original no tenant. Confirmação contabiliza quota separada de
+trinta por origem antes da política empresarial; após locks revalida prazo,
+consumo, conta ativa, e-mail inalterado e verificação ainda pendente. Consome todos
+os códigos do usuário, marca verificação e audita na mesma transação. Não altera
+senha, perfil ou unidades, não cria conta/sessão nem verifica por recuperação de
+senha. Sessões existentes leem o indicador atual na próxima consulta.
+
+UI pública informa captura fictícia, código único, erro/foco e resultado incerto;
+após perda da resposta orienta conferir o indicador ao entrar, sem afirmar sucesso.
+Não armazena código no navegador nem o coloca na URL. Expurgo limitado remove
+códigos cuja expiração passou há mais de 24 horas. [OpenAPI](api/verificacao.yaml).
+Este incremento não entrega identidade SaaS ou homologação externa de e-mail.
+
 ## Documentos relacionados
 
 - [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)

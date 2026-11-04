@@ -1,0 +1,70 @@
+openapi: 3.1.0
+info:
+  title: Verificação de e-mail de conta empresarial existente
+  version: 0.1.0
+  description: >-
+    Contrato da Sprint 01 em implementação. Captura privada fictícia, sem envio externo.
+    Não cria conta, não altera senha/perfil/unidades nem autentica automaticamente.
+paths:
+  /api/v1/auth/verificacao:
+    post:
+      summary: Solicitar verificação sem enumerar contas
+      description: >-
+        CSRF obrigatório mesmo com Bearer. Três solicitações por endereço e trinta
+        por origem em quinze minutos. Normaliza e-mail para minúsculas; rejeita
+        espaços e controles. Worker ignora conta inexistente, inativa ou já verificada.
+      security: [{csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: {type: string, format: email, maxLength: 254, pattern: '^[^\s\p{Cc}]+$'}
+      responses:
+        '202': {description: 'Solicitação persistida. Resposta neutra: Se a conta estiver elegível, enviaremos instruções para verificar o e-mail.'}
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '429': {description: Quota persistida excedida}
+        '503': {description: Captura ou chave de comunicação não configurada}
+  /api/v1/auth/verificacao/confirmar:
+    post:
+      summary: Confirmar e-mail existente com código de uso único
+      description: >-
+        Código de 256 bits válido por quinze minutos desde a solicitação, vinculado
+        a usuário, endereço e tenant. Hash na tabela; outbox cifrada. Depois dos locks,
+        revalida prazo, conta ativa, endereço inalterado e verificação ainda pendente.
+        Consome todos os códigos do usuário e audita atomicamente. Não reutiliza
+        códigos de recuperação, cadastro ou convite. Trinta confirmações por origem
+        em quinze minutos; rejeições consomem quota antes de disputar a política.
+        Resposta perdida/5xx exige conferir o estado no login, sem pressupor sucesso.
+      security: [{csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [codigo]
+              properties:
+                codigo: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', writeOnly: true}
+      responses:
+        '204': {description: E-mail verificado sem alterar credenciais ou perfil}
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '422': {description: Código inválido/expirado/consumido ou conta não elegível}
+        '429': {description: Quota persistida excedida}
+        '503': {description: Comunicação não configurada}
+components:
+  securitySchemes:
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: Token mascarado de /api/v1/auth/csrf com cookie __Host-RM_CSRF

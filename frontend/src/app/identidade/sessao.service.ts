@@ -56,6 +56,10 @@ export class SessaoService {
     const response=await this.comando(action,body);
     if(!response.ok)throw await this.erroComando(response);
   }
+  async verificarEmail(action:'verificacao'|'verificacao/confirmar',body:object):Promise<void> {
+    const response=await this.comando(action,body);
+    if(!response.ok)throw await this.erroComando(response);
+  }
   async recuperar(action:'recuperacao'|'recuperacao/confirmar',body:object):Promise<void> {
     const response=await this.comando(action,body);
     if(!response.ok)throw await this.erroComando(response);

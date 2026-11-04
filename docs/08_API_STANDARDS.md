@@ -39,6 +39,10 @@ Contratos parciais: [configuração administrativa de unidades](api/unidades.yam
 
 Contrato adicional do ciclo 11: [convites de funcionários](api/convites.yaml), com intenção durável, consulta por UUID, revogação e aceite público protegido por CSRF. Candidato em validação, sem publicação em homologação.
 
+Contrato da retomada: [verificação de conta existente](api/verificacao.yaml),
+sem alteração de senha/perfil nem criação de sessão. Implementação em validação;
+resultados e artefatos aprovados são registrados no checkpoint.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

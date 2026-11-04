@@ -15,8 +15,13 @@ async function entrar(page:Page,email=auth.email,senha=auth.senha):Promise<void>
 }
 async function admin(page:Page):Promise<void>{
   await entrar(page);await page.getByRole('button',{name:'Gerenciar convites',exact:true}).click();
+  await confirmarIdentidade(page);
+}
+async function confirmarIdentidade(page:Page):Promise<void>{
   await page.getByLabel('Confirme sua senha para convidar',{exact:true}).fill(auth.senha);
+  const resposta=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar')&&r.request().method()==='POST');
   await page.getByRole('button',{name:'Confirmar identidade para convites',exact:true}).click();
+  expect((await resposta).status()).toBe(204);
   await expect(page.getByRole('status').filter({hasText:'Identidade confirmada'})).toBeVisible();
 }
 async function capturar(email:string):Promise<string>{
@@ -69,8 +74,7 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   // Mantém a mesma página: pendência é memória segregada por conta, não storage.
   await page.getByLabel('E-mail',{exact:true}).fill(auth.email);await page.getByLabel('Senha',{exact:true}).fill(auth.senha);await page.getByRole('button',{name:'Entrar',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Convites de funcionários',exact:true})).toBeVisible();await expect(page.getByRole('status').filter({hasText:'Convite com resultado pendente'})).toContainText(id);
-  await page.getByLabel('Confirme sua senha para convidar').fill(auth.senha);await page.getByRole('button',{name:'Confirmar identidade para convites',exact:true}).click();
-  await expect(page.getByRole('status').filter({hasText:'Identidade confirmada'})).toBeVisible();
+  await confirmarIdentidade(page);
   const retry=page.waitForResponse(r=>r.url().endsWith('/equipe/convites')&&r.request().method()==='POST');await page.getByRole('button',{name:'Reenviar mesma intenção',exact:true}).click();const response=await retry;
   expect(response.status()).toBe(200);expect((await response.json()).id).toBe(id);await expect(page.getByRole('button',{name:'Reenviar mesma intenção',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Recarregar convites',exact:true}).click();await expect(page.getByRole('heading',{name:email,exact:true})).toHaveCount(1);

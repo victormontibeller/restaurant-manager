@@ -13,6 +13,21 @@ identificou ausência de validação de privacidade do scratch, também corrigid
 Build real e E2E ainda pendentes neste registro. Homologação conferida saudável no
 SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, sem deploy/reinício.
 
+Atualização do incremento: build systemd de `d3763addb3a121728113bcec2f794a270966c240`
+aprovado, 119 backend e 26 Python; hash
+`11adb0784f12a0222a5e4e812b147d86cb73cdddabc37f10ccb5d57b745cf505`.
+Recusa concorrente e ambiente efetivo do worker conferidos. PR #3 draft/head e
+dois checks CI desse SHA verificados. E2E convites no candidato HTTPS V10: treze
+aprovações/duas falhas de sincronização da reautenticação; teste corrigido para
+aguardar resposta real 204, reexecução pendente. Candidato encerrado antes de V11.
+
+Implementada verificação de e-mail de conta preexistente, com API/Angular/V11,
+captura cifrada e finalidade distinta. Vermelho real 403 versus 202. Dez testes
+novos e quatro de proteção/captura aprovados; typecheck passou. Build/E2E desse
+incremento pendentes. Revisão independente solicitada, mas bloqueada pelo limite
+de subagentes desta chamada; revisão local não encerra esse gate. Não mesclar PR.
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-1.md).
+
 ## Encerramento do ciclo 12 — 2026-11-04
 
 Missão NÃO concluída. Implementado runner de build independente da sessão em
