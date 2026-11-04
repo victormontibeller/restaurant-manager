@@ -64,6 +64,18 @@ Agendamento interno: primeira execução após um minuto, depois dez minutos ap�
 
 `rm.auth.retencao-agendada=false` desliga apenas o agendamento, utilizado pela suíte que chama o serviço diretamente. A migration V6 concede DELETE somente nas três tabelas técnicas e adiciona índices de seleção; runtime continua sem DDL. Implantação em homologação depende do gate de manutenção/backup das migrations, ainda pendente. Testes de concorrência reais e testes unitários de coordenação estão separados nas [evidências do ciclo 8](evidencias/sprint-01-ciclo-8.md).
 
+## Recuperação de senha — candidato do ciclo 9
+
+Incremento em validação, não implantado em homologação. A solicitação persiste uma mensagem cifrada e responde `202` com texto neutro, sem consultar a existência da conta no caminho síncrono. O worker consulta a conta dentro do tenant; desconhecida/inativa é ignorada sem envio. Limites persistidos: três solicitações por e-mail e trinta por origem em quinze minutos, aplicáveis também a contas inexistentes. A confirmação tem limite próprio de trinta por origem. Ambas as rotas exigem o CSRF real, inclusive quando recebem Bearer.
+
+Código aleatório de 256 bits, representado por 43 caracteres base64url, expira quinze minutos após a solicitação. A tabela de verificação contém somente SHA-256. Consumo serializado com a política empresarial altera BCrypt, invalida os demais códigos do usuário, revoga todas as sessões e registra auditoria/aviso na mesma transação. Não altera perfil/unidades, não verifica e-mail implicitamente nem autentica automaticamente. O horário de validade deve ser conferido depois dos locks; concorrência e regressões ficam nas evidências, não são presumidas por este contrato.
+
+A nova senha exige pelo menos doze caracteres e no máximo 72 bytes UTF-8. Código não aparece em URL, query string, logs ou armazenamento do navegador. A UI limpa campos de senha e informa resultado incerto quando perde a resposta; orienta conferir login com a senha nova. Reutilização de código consumido é rejeitada, não produz outro reset.
+
+Conteúdo recuperável da outbox usa AES-256-GCM, nonce aleatório de 96 bits e autenticação adicional pelo tenant/id da mensagem. `RM_EMAIL_SECRET` é uma chave independente da assinatura JWT, com 32 bytes aleatórios codificados em base64; deve ficar fora do Git/banco. Sem chave ou captura configurada, a API retorna indisponibilidade, não sucesso fictício. Substituir a chave com mensagens pendentes as torna ilegíveis: esvaziar a fila sob controle antes de trocar ou permitir nova solicitação; não há rotação transparente dessa chave nesta entrega.
+
+Somente transporte de captura local fictícia, descrito em [Integrações](21_INTEGRATIONS.md). Contrato [OpenAPI de recuperação](api/recuperacao.yaml). Cadastro, verificação de e-mail, convites e identidade SaaS continuam pendentes. A existência de recuperação não encerra a família T06 nem E05.
+
 ## Documentos relacionados
 
 - [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)

@@ -3,12 +3,13 @@ import { SessaoService } from './sessao.service';
 import { AcessosComponent } from '../acessos/acessos.component';
 import { UnidadesComponent } from '../unidades/unidades.component';
 import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
+import { RecuperacaoComponent } from './recuperacao.component';
 
 @Component({
   selector:'app-identidade',
-  imports:[AcessosComponent,UnidadesComponent],
+  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent],
   template:`
-    <section aria-labelledby="conta-titulo" [attr.aria-busy]="ocupado()">
+    <section [attr.aria-labelledby]="recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
         <h2 id="conta-titulo">Minha conta</h2>
         <p>Perfil: {{ pessoa.perfil }}</p>
@@ -21,9 +22,11 @@ import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
           </nav>
           @if(configuracao()==='acessos'){<app-acessos (bloqueio)="configuracaoBloqueada.set($event)" />} @else {<app-unidades (bloqueio)="configuracaoBloqueada.set($event)" />}
         }
+      } @else if(recuperacao()) {
+        <app-recuperacao (voltar)="voltarAoLogin()" />
       } @else {
         <h2 id="conta-titulo">Acessar minha conta</h2>
-        <p>Use somente uma conta fictícia provisionada nesta empresa. Cadastro e recuperação ainda não estão disponíveis.</p>
+        <p>Use somente uma conta fictícia provisionada nesta empresa. Cadastro ainda não está disponível.</p>
         <form (submit)="entrar($event, email.value, senha)">
           <label for="email-conta">E-mail</label>
           <input #email id="email-conta" name="email" type="email" autocomplete="username" required maxlength="254" [disabled]="ocupado()">
@@ -31,6 +34,7 @@ import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
           <input #senha id="senha-conta" name="senha" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
           <button type="submit" [disabled]="ocupado()||encerramentoPendente()">{{ ocupado() ? 'Aguarde…' : 'Entrar' }}</button>
         </form>
+        <button type="button" (click)="recuperacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Recuperar senha</button>
       }
       @if (erro()) { <p #alerta class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
       @if (encerramentoPendente()) { <button type="button" (click)="sair()" [disabled]="ocupado()">Tentar encerrar novamente</button> }
@@ -46,6 +50,7 @@ export class IdentidadeComponent {
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly encerramentoPendente = signal(false);
+  readonly recuperacao = signal(false);
   readonly configuracao = signal<'acessos'|'unidades'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
@@ -74,6 +79,10 @@ export class IdentidadeComponent {
     const pessoa=this.sessao.identidade();
     const pendente=!!(pessoa&&this.pendencias.daConta(pessoa.usuarioId)());
     this.configuracaoBloqueada.set(pendente);this.configuracao.set(pendente?'unidades':'acessos');
+  }
+  voltarAoLogin():void {
+    this.recuperacao.set(false);
+    setTimeout(()=>document.getElementById('email-conta')?.focus());
   }
   private falha(error: unknown): void {
     this.erro.set(error instanceof Error && error.name !== 'TypeError' && error.name !== 'TimeoutError' ? error.message : 'Sem conexão com o sistema. Nenhuma operação foi confirmada.');

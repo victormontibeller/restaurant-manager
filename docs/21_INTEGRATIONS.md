@@ -35,6 +35,16 @@ Provedor de e-mail é dependência externa. Preferir SDK oficial adequado; separ
 
 SSE é proposta para notificações da cozinha/aceite/mesas. A implementação precisa transportar autenticação de forma segura: usar streaming compatível com header Bearer ou mecanismo de sessão especificamente projetado; não colocar JWT em query string para contornar limitações de `EventSource`. Definir replay/cursor e alternativa por polling; a consulta de estado persistido continua sendo fonte de verdade. Reautenticar e revisar permissões em conexão longa e revogação.
 
+## Captura de identidade — candidato do ciclo 9
+
+Recuperação e aviso de alteração de senha usam outbox empresarial durável; não usam provedor externo nem envio real. `RM_EMAIL_CAPTURE_DIRECTORY` aponta para diretório absoluto privado fora do checkout. Capturas são segregadas por schema interno e UUID da mensagem, com diretórios 0700 e arquivos 0600. Ambiente fora de dev/test/hml é recusado. O conteúdo do código nunca é retornado pela API.
+
+Worker pagina empresas registradas, processa até vinte mensagens por empresa/ciclo e não mantém transação durante escrita do arquivo. Claim com lock/SKIP LOCKED, lease de dois minutos e identidade da tentativa impedem conclusão por worker atrasado. A captura usa arquivo temporário, sincronização e rename atômico; reexecução com mesmo UUID/conteúdo reutiliza a captura. Falha tem backoff de trinta segundos multiplicados pela tentativa, no máximo cinco tentativas. Reinício recupera leases vencidos; captura realizada antes da confirmação no banco não exige outro código.
+
+O estado `CAPTURADO` significa somente persistência local, nunca entrega/lida por destinatário real. A interface informa essa fronteira. Provedor real, domínio/remetente e homologação externa permanecem E05; contratos futuros devem conservar intenção/retry e deduplicação sem prometer envio exatamente uma vez. Resultados efetivamente executados ficam no checkpoint.
+
+Falha terminal/corrupção elimina imediatamente conteúdo cifrado recuperável, conservando estado técnico até o expurgo. A cada ciclo, expurgo limitado remove até cem tokens e cem mensagens por tenant cuja expiração passou há mais de 24 horas. Capturas e temporários próprios com mais de 24 horas são removidos em lotes de até cem arquivos; não segue links simbólicos. Essa retenção técnica de dados fictícios não substitui política jurídica nem backup externo. Ausência de worker impede o expurgo agendado e exige manutenção explícita.
+
 ## Documentos relacionados
 
 - [Regras financeiras e comunicação do produto](20_BUSINESS_RULES.md)

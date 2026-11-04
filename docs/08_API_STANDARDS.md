@@ -33,7 +33,7 @@ A API não deve depender de DOM, cookie exclusivo do Angular ou chamadas locais 
 
 ## Consistência dos contratos
 
-Contrato implementado parcial: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros. Não representa OpenAPI completo das demais famílias.
+Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), no candidato do ciclo 9, com CSRF, resposta neutra, consumo único e limites. Não representam OpenAPI completo das demais famílias.
 
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
 

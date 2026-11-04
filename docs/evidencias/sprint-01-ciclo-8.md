@@ -23,7 +23,11 @@ Retenção expurga famílias de sessões apenas um dia após expiração absolut
 
 ## Estado do candidato
 
-Build identificado e suíte E2E completa serão registrados após execução, não inferidos dos testes anteriores. Não há homologação da rotação operacional, teste de carga da retenção, teste físico mobile ou aprovação da Sprint 01. A revisão sugeriu ampliar paginação real com mais de 50 empresas e negativos de claims na chave anterior; cobertura atual não equivale a essas ampliações.
+Commit `589ea43551727a95626cfe35bd8686da92a6ffcb` publicado; SHA remoto e head/base/state do PR #3 foram lidos de volta. PR continua OPEN/draft, base main. CI dos dois runs 41806918815 e 41806926438 aprovado. Corpo do PR atualizado e relido.
+
+`scripts/build-release.sh` terminou exit 0 no processo próprio, após build Angular, testes e auditorias previstos no script. Esse término foi confirmado pela ferramenta de processos. Imediatamente depois, o executor emitiu aviso de orçamento efetivo quase esgotado e determinou interromper novas verificações: contagem final de XML e hash/gate não foram relidos nem consolidados. Não atribuir ao build a contagem de uma execução anterior.
+
+Suítes completas de 45 casos de identidade e 20 de fundação NÃO iniciadas neste ciclo. Runners privados preparados não são evidência de execução. Candidato HTTPS não iniciado; nenhum JAR foi copiado/promovido como release desse ciclo. Não há homologação da rotação operacional, teste de carga da retenção, teste físico mobile ou aprovação da Sprint 01. A revisão sugeriu ampliar paginação real com mais de 50 empresas e negativos de claims na chave anterior; cobertura atual não equivale a essas ampliações.
 
 ## Pendências do produto
 

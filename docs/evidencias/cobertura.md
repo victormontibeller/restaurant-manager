@@ -2,7 +2,7 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, ciclo 6. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, ciclo 9. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
 
 ## Fundação entregue
 
@@ -25,7 +25,7 @@ Estado em 2026-11-04, ciclo 6. Os IDs preservam o escopo integral; não são apr
 | T03 | Não implementado/não executado | Sprint 02 |
 | T04 | Não implementado/não executado | Sprint 02 |
 | T05 | Não implementado/não executado | Sprint 02 |
-| T06 | Parcial, família não aprovada | Login/refresh/logout testados; cadastro/verificação/recuperação pendentes |
+| T06 | Parcial, família não aprovada | Login/refresh/logout testados; recuperação com captura em validação no ciclo 9; cadastro/verificação pendentes |
 | T07 | Não implementado/não executado | Sprints 01–04 |
 | T08 | Não implementado/não executado | Sprint 04; provedor externo separado |
 | T09 | Não implementado/não executado | Sprints 03–04 |
@@ -81,7 +81,9 @@ Administrador tem jornadas de login, matriz e equipe; unidades em validação. G
 | S01-UI02 | Senha inválida, foco e CSRF ausente | Público/Administrador | Cinco projetos aprovados contra b631403 |
 | S01-UI03 | Abas concorrentes, perda de rede e retry de logout | Administrador | Cinco projetos aprovados contra b631403 |
 | S01-UI04 | Matriz, confirmação de senha, persistência e último Administrador | Administrador | Cinco projetos aprovados contra b631403 |
-| S01-UI05 | Criar/editar/inativar unidade, fuso inválido e conflito | Administrador | Teste escrito; vermelho por tela ausente no candidato anterior; execução final pendente |
+| S01-UI05 | Criar/editar/inativar unidade, fuso inválido e conflito | Administrador | Cinco projetos aprovados contra 589ea43 no ciclo 9 |
+| S01-UI06–09 | Resultado incerto, logout/reautenticação, navegação e paginação | Administrador | Cinco projetos aprovados contra 589ea43 no ciclo 9 |
+| S01-UI10–12 | Recuperação capturada, código único, erros e resposta perdida | Público/Cliente fictício | Testes escritos; execução do candidato novo pendente |
 | S01-API01 | Matriz/equipe, revogação com JWT válido, vínculos e concorrência | Seis funcionários e Cliente | AcessosTest; detalhes por incremento no checkpoint |
 | S01-API02 | Unidade administrativa, idempotência e concorrência | Administrador; negativos dos outros perfis | Quatro testes novos; validação final em curso |
 

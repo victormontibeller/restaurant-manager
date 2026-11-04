@@ -49,6 +49,14 @@ export class SessaoService {
     return response.status===204?undefined as T:await response.json() as T;
   }
   async atualizarIdentidade(): Promise<void> { this.identidade.set(await this.api<Identidade>('/api/v1/auth/me')); }
+  async recuperar(action:'recuperacao'|'recuperacao/confirmar',body:object):Promise<void> {
+    const response=await this.comando(action,body);
+    if(!response.ok){
+      const error=await response.json() as {mensagem?:string};
+      throw new ApiFailure(response.status,error.mensagem??'Não foi possível recuperar a conta.');
+    }
+    if(action==='recuperacao/confirmar'){this.limpar();this.channel.postMessage('saiu');}
+  }
   private limpar(): void { clearTimeout(this.renewalTimer); this.access = null; this.identidade.set(null); }
   private async receber(response: Response): Promise<void> {
     if (!response.ok) {
