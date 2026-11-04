@@ -1,5 +1,23 @@
 # Checkpoint de execução
 
+## Incremento — retomada ciclo 13, 2026-11-04
+
+Manutenção corrigida REAL aprovada22:42:59Z:2061tabelas/19146linhas, clone/migração,
+três startups, contas/negativos e retorno por OID. Fonte1c8402b/JAR3cd4eeb;
+build e UI04/UI05 não repetidos.106Python e dois checksCI aprovados; revisão
+independente sem novo bloqueador no incremento herdado, publicado no PR3 draft.
+
+Hml agora serve3cd4eeb/HTTPS/UP, PID399982. Original fundação preservado/bloqueado;
+healthy.json continua449ce3c. Bootstrap real: dois administradores em A/B, A1/A2;
+seed API/captura: cinco perfis/dois clientes; operador SaaS owner com senha distinta.
+Read-back/negativos/logout API passaram, mas NÃO aprovam UI/matriz/Sprint.
+
+Smoke hml de dez identidades/cinco projetos implementado; execução ainda pendente.
+Revisão encontrou PID duplicado/fixture aceitando cliente repetido; reproduzidos
+e corrigidos. Não promove baseline. [Evidência](evidencias/sprint-01-retomada-ciclo-13.md).
+Próximo: executar smoke, revisar capturas/corrigir, completar matriz/promotor.
+Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
+
 ## Encerramento — retomada ciclo 12, 2026-11-04
 
 Aviso efetivo de orçamento quase esgotado após gravar a evidência deste ciclo;

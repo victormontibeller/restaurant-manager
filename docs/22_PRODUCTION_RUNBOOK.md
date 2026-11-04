@@ -250,6 +250,22 @@ ao runtime HTTP nem ao timer dev/test. Esse opt-in não promove candidato,
 não substitui ensaio nem aprova a fila de homologação. Conferir o SHA servido:
 o JAR anterior não contém essa opção.
 
+## Smoke de identidades no candidato hml — ciclo 13
+
+`hml_identity_smoke.py --job <JOB> --fixture <MASSA_PRIVADA> --report <DIRETORIO_NOVO>`
+executa dez identidades distintas (dois administradores, cinco perfis operacionais,
+dois clientes e operador SaaS) nos cinco projetos de navegador. A massa é externa,
+privada, fictícia e vinculada ao SHA/hash; origens são explicitamente locais.
+Confere banco/role/HTTPS/PID/hash, locks e fonte limpa antes de executar; o relatório
+registra fonte dos testes separada do artefato. Exige cinquenta combinações exatas,
+sem retry/skip/flaky e sem mudança de runtime/fixture/baseline durante a execução.
+
+Não escreve dados de negócio, mas cria/renova/revoga sessões reais. Capturas/traces
+e fixture nunca pertencem ao Git. A revisão visual permanece separada. Este smoke
+NÃO substitui testes mutantes/concorrentes, recuperação ou matriz integral e NÃO
+promove `healthy.json`; os wrappers de fundação continuam recusando identidade.
+Resultado efetivamente observado fica no checkpoint, não é presumido pelo script.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 
