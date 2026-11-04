@@ -57,7 +57,7 @@ test('S01-UI21: código inválido, erro de rede, teclado e layout',async({page,c
   await context.setOffline(true);await page.getByLabel('E-mail da conta existente').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código de verificação',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
   await context.setOffline(false);await page.getByLabel('Código de verificação',{exact:true}).fill('');
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.screenshot({path:test.info().outputPath('verificacao-mobile.png'),fullPage:true});
   await page.getByRole('button',{name:'Voltar ao login',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Acessar minha conta',exact:true})).toBeVisible();

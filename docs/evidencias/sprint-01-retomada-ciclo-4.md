@@ -43,6 +43,26 @@ contagem de POSTs usa observador independente do interceptor de resposta perdida
 - S01-UI29–31 escritos; build identificado e execução E2E novos ainda pendentes
   nesta gravação. Não atribuir os resultados herdados ao novo artefato.
 
+## Defeito visual descoberto após o primeiro commit
+
+A inspeção da captura mobile herdada de convites encontrou botão de revogação
+com e-mail ultrapassando o cartão e a largura configurada de 360 px. A imagem
+tinha 401 px apesar da assertiva verde: comparar `scrollWidth` com `innerWidth`
+não era um limite independente suficiente no layout mobile. Portanto as quinze
+aprovações funcionais dessa suíte não aprovam sua responsividade.
+
+Probe isolado de renderização Chromium, com CSS real e texto fictício longo,
+reproduziu documento de 1687 px. Adicionados limite de largura e quebra de palavra
+no botão de convites: documento passou a 360 px. As doze assertivas de overflow
+das suítes passaram a comparar com `page.viewportSize().width`, configurado pelo
+teste. Typecheck passou; não foi uma reexecução integrada dessas jornadas.
+
+Esta correção é posterior ao candidato `31cda03`: seu build independente em
+andamento foi preservado, sem reinício. O artefato desse job NÃO inclui a correção
+visual. Rebuild e regressões integradas corrigidas continuam pendentes. Revisão
+local do diff realizada; tentativa de terceira revisão independente foi bloqueada
+pelo limite de dois subagentes da chamada, sem alegar aprovação substituta.
+
 Sprint 01 continua aberta: agendamento operacional, eventos/projeções, matriz de
 perfis e manutenção/backup/restore, além da regressão integrada. Sprints 02–05 não
 iniciadas. Sem merge/deploy neste registro, sem conclusão técnica artificial.

@@ -57,7 +57,7 @@ test('S01-UI26: suspensão e reativação exigem confirmação sem bloquear cons
     const business=new URL(page.url());business.hostname='c4.localhost';business.pathname='/api/v1/unidades';business.search='';
     expect((await page.request.get(business.toString())).status()).toBe(200);
     await alterar(page);await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
     await page.screenshot({path:test.info().outputPath('estado-comercial-mobile.png'),fullPage:true});
   }finally{await restaurar(page,token);}
 });

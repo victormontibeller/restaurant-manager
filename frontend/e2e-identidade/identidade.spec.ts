@@ -55,7 +55,7 @@ test('S01-UI01: login, recarga com refresh e logout revogam acesso real', async 
   await page.reload();
   await expect(page.getByRole('button', {name:'Entrar',exact:true})).toBeEnabled();
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toHaveCount(0);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.screenshot({path:test.info().outputPath('login.png'),fullPage:true});
 });
 

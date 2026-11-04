@@ -80,7 +80,7 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   const retry=page.waitForResponse(r=>r.url().endsWith('/equipe/convites')&&r.request().method()==='POST');await page.getByRole('button',{name:'Reenviar mesma intenção',exact:true}).click();const response=await retry;
   expect(response.status()).toBe(200);expect((await response.json()).id).toBe(id);await expect(page.getByRole('button',{name:'Reenviar mesma intenção',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Recarregar convites',exact:true}).click();await expect(page.getByRole('heading',{name:email,exact:true})).toHaveCount(1);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:test.info().outputPath('convites.png'),fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.screenshot({path:test.info().outputPath('convites.png'),fullPage:true});
   await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
 });
 test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',async({page})=>{
@@ -91,6 +91,6 @@ test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',as
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
   await preencher(page,codigo,crypto.randomUUID());const r=page.waitForResponse(r=>r.url().endsWith('/convites/aceitar'));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();expect((await r).status()).toBe(422);
   await expect(page.getByRole('alert')).toContainText('Convite inválido, expirado, revogado ou já utilizado.');await expect(page.getByRole('alert')).toBeFocused();
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.getByLabel('Código do convite').fill('');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.getByLabel('Código do convite').fill('');
   await page.screenshot({path:test.info().outputPath('aceite-negado.png'),fullPage:true});await page.getByRole('button',{name:'Voltar ao login',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByLabel('E-mail',{exact:true})).toBeFocused();
 });

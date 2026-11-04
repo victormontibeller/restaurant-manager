@@ -28,7 +28,7 @@ test('S01-UI24: credencial negada, foco, teclado e consulta offline sem dados in
   await page.getByRole('button',{name:'Entrar na plataforma',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Credencial inválida');await expect(page.getByRole('alert')).toBeFocused();await expect(page.getByLabel('Senha do operador')).toHaveValue('');
   await entrar(page);const quantidade=await page.getByRole('article').count();await context.setOffline(true);
   await page.getByRole('button',{name:'Atualizar empresas',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByRole('alert')).toContainText('Sem conexão');await expect(page.getByRole('alert')).toBeFocused();await expect(page.getByRole('article')).toHaveCount(quantidade);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:test.info().outputPath('saas-mobile.png'),fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.screenshot({path:test.info().outputPath('saas-mobile.png'),fullPage:true});
   await context.setOffline(false);await page.getByRole('button',{name:'Atualizar empresas',exact:true}).click();await expect(page.getByRole('alert')).toHaveCount(0);
   await page.getByRole('button',{name:'Sair da plataforma',exact:true}).click();await expect(page.getByRole('button',{name:'Entrar na plataforma',exact:true})).toBeEnabled();
 });

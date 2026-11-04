@@ -38,7 +38,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await employee.getByRole('button',{name:'Salvar funcionário'}).click();
   await expect(page.getByRole('alert')).toHaveText('Mantenha pelo menos um Administrador ativo.');
   await employee.getByLabel('Ativo').check();
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.screenshot({path:test.info().outputPath('acessos.png'),fullPage:true});
   await page.getByRole('button',{name:'Sair da conta'}).click();
   await expect(page.getByRole('heading',{name:'Configurações de acessos'})).toHaveCount(0);

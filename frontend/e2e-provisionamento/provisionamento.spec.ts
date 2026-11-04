@@ -50,7 +50,7 @@ test('S01-UI29: operador solicita e worker real ativa empresa sem impersonação
   const destino=new URL(page.url());destino.hostname=p.host;destino.search='';destino.pathname='/api/v1/unidades';
   const unidades=await page.request.get(destino.toString());expect(unidades.status()).toBe(200);expect(await unidades.text()).toContain('Unidade UI inicial');
   destino.pathname='/api/v1/auth/me';expect((await page.request.get(destino.toString())).status()).toBe(401);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.getByTestId('provisionamento-detalhe').screenshot({path:test.info().outputPath('provisionamento-concluido.png')});
 });
 test('S01-UI30: resposta perdida conserva UUID entre logout e consulta sem duplicar',async({page})=>{

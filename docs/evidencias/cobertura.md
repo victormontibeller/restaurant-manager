@@ -74,7 +74,9 @@ Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são ap
 S01-UI17–19, S01-UI23–25 e S01-UI26–28: quinze combinações por suíte
 aprovadas no artefato e039dc2, com PostgreSQL real e cinco projetos, sem
 skip/retry/flaky; resultado do worker herdado recolhido nesta rodada. Isso não
-aprova a matriz integrada do código novo.
+aprova a matriz integrada do código novo. Inspeção posterior encontrou overflow
+no botão de convites apesar das assertivas antigas: responsividade de S01-UI18
+permanece reprovada até reexecução com CSS e comparação de viewport corrigidos.
 
 | Cenário | Superfície/ação | Ator | Estado |
 | --- | --- | --- | --- |

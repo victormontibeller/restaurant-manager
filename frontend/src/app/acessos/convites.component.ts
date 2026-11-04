@@ -43,7 +43,7 @@ interface Convite {id:string;email:string;perfil:string;unidades:string[];estado
       <nav aria-label="Páginas de convites"><button (click)="carregar(pagina()-1)" [disabled]="ocupado()||pagina()===0">Convites anteriores</button><span>Página {{pagina()+1}}</span><button (click)="carregar(pagina()+1)" [disabled]="ocupado()||lista().length<50">Próximos convites</button></nav>
     </section>
   `,
-  styles:`form{display:grid;gap:.5rem;max-width:30rem;margin:1rem 0}input:not([type=checkbox]),select{width:100%;min-height:48px;font:inherit;padding:.6rem}input[type=checkbox]{width:22px;height:22px;margin:.7rem;vertical-align:middle}label{display:block}fieldset{min-width:0}article{border:1px solid #6b7a70;border-radius:.5rem;padding:1rem;margin:1rem 0}p,h3{overflow-wrap:anywhere}.erro{color:#9d2424}nav{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}`,
+  styles:`form{display:grid;gap:.5rem;max-width:30rem;margin:1rem 0}input:not([type=checkbox]),select{width:100%;min-height:48px;font:inherit;padding:.6rem}input[type=checkbox]{width:22px;height:22px;margin:.7rem;vertical-align:middle}label{display:block}fieldset{min-width:0}article{border:1px solid #6b7a70;border-radius:.5rem;padding:1rem;margin:1rem 0}button{max-width:100%;overflow-wrap:anywhere}p,h3{overflow-wrap:anywhere}.erro{color:#9d2424}nav{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}`,
 })
 export class ConvitesComponent implements OnInit {
   private readonly sessao=inject(SessaoService);

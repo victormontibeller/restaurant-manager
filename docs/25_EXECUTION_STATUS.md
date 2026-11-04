@@ -21,6 +21,20 @@ E2E S01-UI29–31 com worker real, depois regressões afetadas. Não usar JAR e0
 contra public V6. Continuar eventos/projeções e gate de manutenção/backup/restore.
 Sprint01 aberta;02–05 não iniciadas. Sem CONCLUSAO.json.
 
+### Publicação e descoberta visual — ciclo 4
+
+Incremento `31cda03cee98829384a467511fc9cf5c241a6e83` publicado; remoto e PR #3
+OPEN/draft/base main relidos. Build independente preservado em andamento; E2E
+durável aguarda seu resultado antes de adquirir lock e iniciar candidato. CI
+ainda estava queued na consulta de 16:15Z, sem aprovação presumida.
+
+Inspeção visual encontrou overflow no botão de convites da captura herdada.
+Correção CSS e doze assertivas de largura são posteriores ao 31cda03 e NÃO estão
+em seu artefato. Probe de layout isolado reproduziu 1687px e passou a360px;
+typecheck passou. Não chamar isso de reexecução E2E. Registros anteriores de
+sucesso funcional não aprovam a responsividade falha. Não repetir/interromper o
+build atual para incorporar essa correção; consolidar primeiro seus resultados.
+
 ## Encerramento — retomada ciclo 3, 2026-11-04
 
 Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido depois
