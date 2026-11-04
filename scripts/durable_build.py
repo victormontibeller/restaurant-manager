@@ -79,6 +79,10 @@ def start(repo, root):
         subprocess.run(['git', 'clone', '--quiet', '--no-hardlinks', '--no-checkout',
                         str(repo), str(job / 'checkout')], check=True)
         subprocess.run(['git', 'checkout', '--quiet', '--detach', sha], cwd=job / 'checkout', check=True)
+        # O wrapper Windows foi versionado com CRLF e text/eol=crlf; um clone
+        # novo o considera modificado pela normalização, mesmo com bytes iguais.
+        # Desabilita só essa conversão local, sem ignorar alterações de conteúdo.
+        (job / 'checkout/.git/info/attributes').write_text('backend/mvnw.cmd -text\n')
         clean_sha(job / 'checkout', sha)
         atomic_json(job / 'request.json', {'git_sha': sha, 'created_at': now(), 'unit': UNIT})
         subprocess.run(['systemctl', '--user', 'reset-failed', UNIT], stdout=subprocess.DEVNULL,
