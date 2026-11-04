@@ -24,6 +24,14 @@ inspecionada em recorte na resolução original. Botões longos contidos/quebrad
 sem o overflow anterior; captura completa tem lista longa e não é teste de
 aparelho físico. Identidade/plataforma ainda em execução neste registro.
 
+Na regressão de identidade, S01-UI04 Firefox falhou aguardando confirmação de
+senha por cinco segundos. Trace real registrou HTTP 204 em aproximadamente dois
+segundos; snapshot da asserção ainda estava ocupado, mas screenshot final mostra
+confirmação e controles habilitados. O teste agora aguarda/verifica cada resposta
+de reautenticação/gravação antes das assertivas de UI, sem retirar negativos nem
+aumentar o timeout das assertivas. Reexecução desse caso pendente; a rodada com
+falha não foi transformada em aprovação. Não se conclui desempenho aprovado.
+
 ## Despacho da fila SaaS
 
 Novo `scripts/provisioning_queue.py` consulta intenções pendentes e executa o CLI

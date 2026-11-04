@@ -1,8 +1,13 @@
-import {test,expect} from '@playwright/test';
+import {test,expect,Page} from '@playwright/test';
 import fs from 'node:fs';
 const file=process.env['RM_AUTH_FIXTURE'];
 if(!file) throw new Error('Massa privada obrigatória.');
 const fixture=JSON.parse(fs.readFileSync(file,'utf8')) as {email:string;senha:string};
+
+async function confirmarResposta(page:Page,rota:string,metodo:string,status:number,acao:()=>Promise<void>):Promise<void>{
+  const resposta=page.waitForResponse(r=>r.url().endsWith(rota)&&r.request().method()===metodo,{timeout:15000});
+  await acao();expect((await resposta).status()).toBe(status);
+}
 
 test('S01-UI04: matriz, reautenticação, persistência e último administrador',async({page})=>{
   await page.goto('/');
@@ -17,21 +22,22 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   const kitchen=page.getByLabel('Iniciar preparo',{exact:true});
   await expect(kitchen).toBeChecked();
   await kitchen.uncheck();
-  await page.getByRole('button',{name:'Salvar permissões'}).click();
+  await confirmarResposta(page,'/configuracoes/acessos','PUT',403,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByRole('alert')).toHaveText('Confirme sua senha antes de alterar acessos.');
   await page.getByLabel('Confirme sua senha').fill('senha-incorreta');
-  await page.getByRole('button',{name:'Confirmar identidade'}).click();
+  await confirmarResposta(page,'/auth/reautenticar','POST',422,()=>page.getByRole('button',{name:'Confirmar identidade'}).click());
   await expect(page.getByRole('alert')).toHaveText('Senha de confirmação inválida.');
   await expect(kitchen).not.toBeChecked();
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
-  await page.getByRole('button',{name:'Confirmar identidade'}).click();
+  await confirmarResposta(page,'/auth/reautenticar','POST',204,()=>page.getByRole('button',{name:'Confirmar identidade'}).click());
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
-  await page.getByRole('button',{name:'Salvar permissões'}).click();
+  await confirmarResposta(page,'/configuracoes/acessos','PUT',200,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   await page.getByRole('button',{name:'Recarregar acessos'}).click();
+  await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   await expect(kitchen).not.toBeChecked();
   await kitchen.check();
-  await page.getByRole('button',{name:'Salvar permissões'}).click();
+  await confirmarResposta(page,'/configuracoes/acessos','PUT',200,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   const employee=page.getByRole('article').filter({hasText:fixture.email});
   await employee.getByLabel('Ativo').uncheck();
