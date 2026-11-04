@@ -15,6 +15,20 @@ sem equivaler à execução dos quinze cenários. Homologação 449ce3c saudáve
 preservada; PR #3 OPEN/draft, sem merge. Próximo: reexecutar E2E no JAR já aprovado
 com fonte de testes identificada, implementar fila operacional e critérios restantes.
 
+Incremento do ciclo 6: despacho limitado da fila por CLI real, com guardas de
+artefato/migrations, read-back, resultados privados, pausa técnica e tratamento
+de término. Revisão independente encontrou três falhas operacionais corrigidas;
+43 testes Python e typecheck passaram. Segunda revisão das correções não pôde
+ser delegada por limite operacional de subagentes; diff/retestes locais não
+foram apresentados como nova revisão independente. Ensaio nativo da fila ainda
+pendente. [Evidências e limites](evidencias/sprint-01-retomada-ciclo-6.md).
+
+E2E no JAR herdado: convites passou quinze combinações, viewport real e captura
+mobile revisados. Eventos teve dez aprovações/cinco falhas por seletor de label
+ambíguo; correção exata mantém assertivas, reexecução pendente. Identidade/SaaS
+continuam em worker próprio; não duplicar suíte. Nenhum build novo necessário
+para scripts/testes sem mudança na fonte principal do JAR.
+
 ## Encerramento — retomada ciclo 5, 2026-11-04
 
 Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido após

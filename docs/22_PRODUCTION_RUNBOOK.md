@@ -73,6 +73,50 @@ retomada versionada pela UI e executar o mesmo UUID. Não usar o CLI legado para
 tomar uma reserva da fila. Ainda não há timer/worker contínuo instalado nem
 aprovação de homologação para esta jornada.
 
+<a id="fila-operacional"></a>
+
+## Despacho operacional da fila — incremento do ciclo 6
+
+Executar de checkout privado limpo/imutável, usando um job de build aprovado:
+
+```bash
+bash scripts/with-env.sh dev python3 scripts/provisioning_queue.py \
+  <DIRETORIO_PRIVADO_DO_JOB> --limit 3
+```
+
+Aceita somente dev/test; confirma banco/role/loopback, SHA/hash/gate, suporte ao
+CLI, igualdade da fonte Java/recursos/dependências com o runner e checksums das
+migrations de public/template. Scripts/documentos/testes podem mudar sem novo
+JAR se a fonte da aplicação continuar idêntica. Checksums seguem o calculador
+CRC32 da versão Flyway 11.14.1 fixada no artefato; formatos não suportados falham
+fechado. Essa guarda não substitui o gate de migrations de um deploy.
+
+Um lote tem uma a dez solicitações, padrão três; cada processo Java usa 128 MiB,
+duas CPUs lógicas e timeout de noventa segundos. `deploy.lock` impede concorrência
+com suítes/builds; o descritor é herdado pelo filho e SIGTERM recolhe o processo.
+Timers devem usar `KillMode=control-group`, sem processos desacoplados. Processo
+abruptamente morto pode deixar resultado ausente: reconciliar PID/cgroup e banco,
+nunca concluir sucesso por ausência de erro. Não instalar timer em checkout mutável.
+
+Resultados privados ficam em `provisioning/<ambiente>/<tentativa>/`, com SHA do
+JAR e runner, PID/início, progresso por intenção e saída. `latest.json` só muda
+sob lock; tentativa recusada registra `OCUPADO`/exit 75 sem substituir execução
+ativa. Resultado zero significa lote executado/confirmado, não fila toda vazia
+nem sprint aprovada. Backlog registra quantidade/idade de pendentes e falhas.
+
+`FALHOU` exige retomada versionada pela UI após corrigir a causa. Se a tentativa
+continua `SOLICITADO` depois de timeout/contenção, `paused.json` bloqueia novos
+despachos; diagnosticar e executar uma vez com `--resume`, preservando o aviso
+reconhecido na tentativa. Não colocar `--resume` em timer. Registros são locais,
+sem garantia contra perda do disco; supervisão/alerta externo segue pendente.
+
+O timer nativo de desenvolvimento deve usar intervalo de sessenta segundos
+após término, limites de recursos e caminhos privados explícitos. Não programar
+timer mutante permanente em `rm_test`, pois disputaria a massa das suítes. Antes
+de ativar, verificar migrations, identidade e conta fictícia; após ativar, conferir
+unidade, resultado e efeito real no banco. Hml continua bloqueada pelo gate de
+manutenção/backup/restore. Nenhuma instalação é presumida por este procedimento.
+
 ## Build independente da sessão
 
 `python3 scripts/durable_build.py start` exige checkout limpo e cria clone privado

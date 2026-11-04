@@ -24,9 +24,9 @@ async function criar(request:APIRequestContext,token:string,nome:string):Promise
 }
 async function acompanhar(page:Page,id:string):Promise<void>{
   await page.getByRole('button',{name:'Acompanhar atualizações da unidade'}).click();
-  await expect(page.getByLabel('Unidade acompanhada')).toContainText('Selecione uma unidade');
-  await expect(page.getByLabel('Unidade acompanhada').locator('option[value="'+id+'"]')).toHaveCount(1);
-  await page.getByLabel('Unidade acompanhada').selectOption(id);
+  await expect(page.getByLabel('Unidade acompanhada',{exact:true})).toContainText('Selecione uma unidade');
+  await expect(page.getByLabel('Unidade acompanhada',{exact:true}).locator('option[value="'+id+'"]')).toHaveCount(1);
+  await page.getByLabel('Unidade acompanhada',{exact:true}).selectOption(id);
   await expect(page.getByText('Acompanhamento conectado.',{exact:true})).toBeVisible();
 }
 test('S01-UI32: atualização durável, reconexão e leitura acessível sem duplicação',async({page,request,context})=>{
@@ -40,7 +40,7 @@ test('S01-UI32: atualização durável, reconexão e leitura acessível sem dupl
   await expect(page.getByTestId('unidade-atual')).toHaveCount(0);
   await context.setOffline(false);await expect(page.getByTestId('unidade-atual')).toContainText(nome,{timeout:20000});
   await expect(page.getByRole('list',{name:'Alterações cadastrais recebidas'}).getByRole('listitem')).toHaveCount(2);
-  await page.getByLabel('Unidade acompanhada').focus();await expect(page.getByLabel('Unidade acompanhada')).toBeFocused();
+  await page.getByLabel('Unidade acompanhada',{exact:true}).focus();await expect(page.getByLabel('Unidade acompanhada',{exact:true})).toBeFocused();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   expect(await page.evaluate(()=>[localStorage.length,sessionStorage.length])).toEqual([0,0]);
   await page.screenshot({path:test.info().outputPath('eventos-unidade.png'),fullPage:true});
@@ -51,7 +51,7 @@ test('S01-UI33: Cozinha perde evento por ação e vínculo com o mesmo JWT',asyn
   expect((await request.put('/api/v1/equipe/'+funcionario.id,{headers,data:{versao:funcionario.versao,perfil:'COZINHA',ativo:true,unidades:[id]}})).status()).toBe(200);
   const token=await entrar(page,massa().cozinha);await acompanhar(page,id);
   expect((await request.get('/api/v1/operacao/unidades/'+outra+'/eventos',{headers:{Authorization:'Bearer '+token}})).status()).toBe(404);
-  await expect(page.getByLabel('Unidade acompanhada')).not.toContainText('Filial proibida');
+  await expect(page.getByLabel('Unidade acompanhada',{exact:true})).not.toContainText('Filial proibida');
   const matriz=await (await request.get('/api/v1/configuracoes/acessos',{headers})).json();
   const negadas=matriz.perfis.COZINHA.filter((a:string)=>a!=='unidade.acompanhar');
   expect((await request.put('/api/v1/configuracoes/acessos',{headers,data:{versao:matriz.versao,perfil:'COZINHA',acoes:negadas}})).status()).toBe(200);
@@ -59,8 +59,8 @@ test('S01-UI33: Cozinha perde evento por ação e vínculo com o mesmo JWT',asyn
   await expect(page.getByTestId('unidade-atual')).toHaveCount(0);
   expect((await request.get('/api/v1/operacao/unidades/'+id+'/eventos',{headers:{Authorization:'Bearer '+token}})).status()).toBe(403);
   expect((await request.put('/api/v1/configuracoes/acessos',{headers,data:{versao:matriz.versao+1,perfil:'COZINHA',acoes:matriz.perfis.COZINHA}})).status()).toBe(200);
-  await page.getByRole('button',{name:'Recarregar unidades permitidas'}).click();await expect(page.getByLabel('Unidade acompanhada').locator('option[value="'+id+'"]')).toHaveCount(1);
-  await page.getByLabel('Unidade acompanhada').selectOption(id);await expect(page.getByTestId('unidade-atual')).toBeVisible();
+  await page.getByRole('button',{name:'Recarregar unidades permitidas'}).click();await expect(page.getByLabel('Unidade acompanhada',{exact:true}).locator('option[value="'+id+'"]')).toHaveCount(1);
+  await page.getByLabel('Unidade acompanhada',{exact:true}).selectOption(id);await expect(page.getByTestId('unidade-atual')).toBeVisible();
   expect((await request.put('/api/v1/equipe/'+funcionario.id,{headers,data:{versao:funcionario.versao+1,perfil:'COZINHA',ativo:true,unidades:[]}})).status()).toBe(200);
   await expect(page.getByText('Acompanhamento encerrado.',{exact:true})).toBeVisible({timeout:15000});
   expect((await request.get('/api/v1/operacao/unidades/'+id+'/eventos',{headers:{Authorization:'Bearer '+token}})).status()).toBe(404);

@@ -98,6 +98,18 @@ instalado. O provisionamento continua limitado a dev/test; homologação e execu
 automática da fila dependem do gate operacional de manutenção/backup. Não
 confundir a jornada E2E que chama o CLI real com um worker de homologação ativo.
 
+Na retomada ciclo 6, `scripts/provisioning_queue.py` acrescenta despacho por lote
+fora do HTTP. Consulta os UUIDs `SOLICITADO` mais antigos, chama o mesmo CLI e
+confere solicitação, empresa e domínio após cada execução. Não reimplementa a
+reserva/ativação em Python e não retoma `FALHOU` automaticamente. O lock local
+serializa com build/deploy/E2E; o advisory lock Java continua protegendo contra
+outros migradores/provisionadores. Uma intenção ainda pendente após tentativa
+interrompe o lote e pausa novas tentativas até diagnóstico/`--resume` técnico.
+O banco mantém a intenção e o CLI reconcilia sua reexecução; o despacho não
+adiciona estado de negócio em memória. Não é promessa de execução exatamente uma
+vez. Homologação permanece recusada. Instalação/ensaio efetivo e limites ficam
+no checkpoint; [operação da fila](22_PRODUCTION_RUNBOOK.md#fila-operacional).
+
 UI conserva somente o UUID de resultado incerto em memória por operador/origem,
 inclusive entre logout/login na mesma página. Campos/senha precisam ser
 reinformados para replay; fechar/recarregar perde esse rascunho, com aviso. Consulta
