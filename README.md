@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** planejamento documentado. Ainda não existem aplicação executável, banco provisionado, integrações homologadas ou ambiente publicado. O nome comercial será definido posteriormente.
+**Estado atual:** Sprint 00 em andamento. Backend Spring, shell Angular e testes PostgreSQL existem; contas, catálogo, pedidos e pagamentos ainda não estão implementados. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -49,8 +49,26 @@ Decisões confirmadas, premissas propostas e dependências externas permanecem i
 
 ## Desenvolvimento
 
-A próxima etapa de implementação é a [Sprint 0 — Fundação](docs/14_SPRINT_00.md). Ela criará a estrutura executável, configuração local, migrações e verificações automatizadas. Os comandos de instalação, execução e testes serão documentados quando existirem e tiverem sido verificados.
+A [Sprint 0 — Fundação](docs/14_SPRINT_00.md) está em andamento. Versões e limites estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md).
 
-Hermes chama o Codex autenticado na conta do usuário e avança autonomamente pelo roadmap: implementa, testa, corrige, cria branches/commits, faz push e publica em homologação após as verificações necessárias. Produção permanece separada. A entrega técnica final exige testes de todas as telas/jornadas por perfil e unidade, com relatório de evidências. Guia e checkpoint permitem continuar em outra sessão sem depender do histórico de conversa.
+Com Java 21/Maven e Node 26 no PATH, e as variáveis de banco configuradas em ambiente privado:
+
+```bash
+npm --prefix frontend ci --ignore-scripts
+npm --prefix frontend run typecheck
+npm --prefix frontend run build
+bash backend/mvnw -B -ntp -f backend/pom.xml verify
+python3 scripts/check-repository.py
+```
+
+Os testes recusam qualquer alvo diferente de `rm_test`, roles `rm_test_owner`/`rm_test_app`, em loopback :55432. Não usam H2. Para o ambiente privado provisionado, `bash scripts/with-env.sh test <comando>` carrega a configuração sem imprimi-la. `scripts/bootstrap-database.py` cria/verifica o cluster exclusivo com binários previamente extraídos; não instala dependências globais.
+
+`scripts/build-release.sh` exige checkout limpo e gera gate vinculado ao SHA/hash. `scripts/deploy-hml.py` publica candidato no serviço nativo e não o promove antes de E2E. O migrador separado (`java -jar app.jar --migrate-only`) recebe a credencial owner e valida o destino efetivo; o processo HTTP só recebe runtime. Em desenvolvimento, execute o migrador antes de iniciar o servidor. `scripts/verify-release.py [SHA]` verifica health, PID, manifesto, hash e ausência de credencial de migração no runtime. Migrations diferentes das do serviço anterior são recusadas até existir procedimento de manutenção/backup comprovado. Scripts novos só contam como validados após resultados no checkpoint.
+
+Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL`; execute `npm --prefix frontend run e2e`. Instale browsers com o CLI Playwright; no Linux sem sudo, `scripts/install-browser-libs.py` extrai pacotes Ubuntu em prefixo privado. Relatórios e credenciais nunca vão ao Git.
+
+`python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
+
+Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap autorizado. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
 
 Não versionar credenciais, arquivos de ambiente reais, dados de clientes, dumps ou mídias privadas. Exemplos de configuração devem usar somente placeholders. Não reutilizar os bancos dos projetos de referência.

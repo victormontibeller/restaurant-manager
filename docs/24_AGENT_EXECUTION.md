@@ -1,16 +1,16 @@
 # Execução pelo Hermes e Codex
 
 > **Escopo:** desenvolvimento autônomo, branches/commits, publicação em homologação e continuidade entre execuções.
-> **Situação:** fluxo definido em 2026-11-02; instalação e primeira execução no Linux ainda não verificadas. Este documento não inicia uma sprint nem publica a aplicação.
+> **Situação:** execução Linux iniciada em 2026-11-04; fundação e retomadas verificadas no checkpoint. Este documento não inicia outro coordenador.
 
 [Índice da documentação](README.md)
 
 ## Fluxo e responsabilidades
 
-O Hermes chama o Codex CLI autenticado na conta do usuário. O desenvolvimento e os testes acontecem no Linux do Hermes, em checkout próprio e bancos exclusivos do projeto. O Mac pode continuar como ambiente adicional, mas a execução Linux não depende de ele estar ligado.
+Na execução noturna autorizada em 2026-11-03, o Hermes executa diretamente com o provedor `openai-codex` e autenticação atual, sem instalar o Codex CLI. O desenvolvimento e os testes acontecem no Linux, em checkout e bancos exclusivos. O Mac continua ambiente adicional, sem ser dependência da execução.
 
 - **Hermes:** inicia o fluxo solicitado, fornece diretório/contexto, acompanha término e retoma o próximo incremento até concluir o escopo técnico, sem nova aprovação a cada tarefa ou sprint.
-- **Codex coordenador:** consulta a documentação, implementa, distribui subtarefas quando útil, integra alterações, verifica critérios e atualiza o checkpoint.
+- **Hermes coordenador com openai-codex:** consulta documentação, implementa, distribui subtarefas, integra e verifica critérios/checkpoint.
 - **Subagentes:** recebem escopo e resultado esperado explícitos. Não precisam de nomes ou configurações permanentes para iniciar o projeto.
 - **Usuário:** define escopo de produto, fornece dependências realmente ausentes e decide produção/piloto real. Desenvolvimento, testes, push e deploy de homologação já estão autorizados dentro deste fluxo.
 
@@ -26,13 +26,14 @@ A autorização abaixo cobre a execução contínua do roadmap, quando o fluxo f
 | Ler, implementar, corrigir, testar e avançar no roadmap | Autorizado no checkout e ambientes de desenvolvimento/testes/homologação do projeto; respeitar dependências e critérios |
 | Definir detalhes técnicos compatíveis com as decisões | Autorizado, com justificativa e versões registradas; mudanças de produto/escopo permanecem explícitas |
 | Criar branches, commits e fazer push | Autorizado por incremento/commit principal, após revisão de diff, segredos e verificações pertinentes |
-| Abrir PR, fazer merge ou atualizar diretamente `main` | Fora da autorização automática; depende de pedido do usuário |
+| Abrir PR | Autorizado, um por Sprint na missão vigente |
+| Fazer merge ou atualizar diretamente `main` | Pedido específico de merge após gates registrado na missão; respeitar também restrições efetivas do executor. Commit direto e auto-merge não fazem parte do fluxo |
 | Force push, apagar histórico ou descartar trabalho alheio | Fora da autorização automática |
 | Deploy, serviço e migrations de homologação | Autorizado automaticamente no ambiente exclusivo de homologação, com testes, verificação do alvo e recuperação conforme este guia |
 | Deploy, reinício/alteração de serviços de produção, migração de produção | Fora do fluxo automático; somente quando o usuário pedir a operação correspondente |
 | Pagamentos reais, envio real de comunicações e uso de dados de clientes | Somente no escopo de homologação/operação autorizado; não usar como teste implícito |
 
-Convenção: uma branch por incremento/commit principal, como `codex/s00-i001-fundacao`, `codex/s00-i002-testes` e `codex/s01-i001-acessos`. Correções necessárias do mesmo incremento podem gerar commits adicionais nessa branch, sem reescrever histórico. Registrar branch, base e SHA publicado no checkpoint; não trocar uma branch com trabalho preexistente sem reconciliar o estado.
+Convenção desta missão: uma branch `hermes/sprint-NN-tema` e um PR por Sprint. Correções da mesma sprint geram commits adicionais, sem reescrever histórico. O proprietário solicitou também merges após os gates; nunca confundir essa solicitação com critério aprovado, nem fazer commit direto em main. Restrições efetivas do executor e gates pendentes devem ser preservados no checkpoint. Produção permanece fora do escopo.
 
 Cada nova branch parte do último SHA integrado e verificado da anterior, inclusive ao trocar de sprint. Assim, acumula o trabalho completo sem depender de merge automático em `main`. Subagentes com trabalho isolado são integrados pelo coordenador antes dessa passagem; não iniciar uma branch nova de uma `main` desatualizada e perder as entregas anteriores.
 
@@ -46,7 +47,7 @@ Antes da primeira execução:
 2. Conferir repositório, branch, base e alterações locais. A preparação da primeira sprint deve incluir o versionamento inicial dos documentos; não pressupor que já existe um commit em `main`.
 3. Registrar distribuição Linux, CPU, memória disponível, disco, versões das ferramentas e serviços existentes. Não substituir instalações globais por conveniência.
 4. Definir caminho do checkout e diretório privado de execução/logs no Linux. São valores locais, não caminhos pessoais fixados no código ou no repositório público.
-5. Verificar o Codex instalado nesse host, sua autenticação e os parâmetros suportados. A versão encontrada no Mac não valida a instalação Linux.
+5. Verificar o executor autorizado no host e autenticação atual. Nesta missão é Hermes/openai-codex, não Codex CLI; não instalar nem trocar autenticação.
 6. Preparar acesso somente aos bancos e recursos de desenvolvimento/testes/homologação. Não disponibilizar credenciais de produção ao processo de desenvolvimento.
 
 Se o remoto ainda estiver vazio, preparar o primeiro commit documental na primeira branch de incremento, no ambiente que já possui os arquivos, como parte da preparação do fluxo. Depois do push, obter essa branch no Linux e conferir a base; não depender de uma branch `main` ainda inexistente no remoto nem tentar iniciar um executor que não recebeu os documentos.
@@ -76,7 +77,7 @@ O diretório de resultado deve existir e ser gravável pelo operador. A captura 
 
 A autenticação permanece no host privado do operador. Não transferir a sessão da conta para CI público ou para execução de contribuições não revisadas. A escolha de modelo usa a configuração disponível e autorizada; não inventar disponibilidade de modelos nem mudar para uma modalidade de cobrança diferente silenciosamente.
 
-Até a Sprint 0 criar a base, não existem comandos de build/teste do projeto. Primeiro verificar arquivos e ferramentas disponíveis; depois implementar e documentar os comandos realmente executados. Não apresentar `make test`, wrappers Maven ou scripts de deploy como existentes antes disso.
+Os comandos reais criados na Sprint 0 estão no README. O exemplo histórico de Codex CLI acima não é o mecanismo usado nesta execução e não exige instalação/autenticação adicional. O supervisor externo já existe: não iniciar outro coordenador.
 
 ## Base técnica e bancos
 

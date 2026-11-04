@@ -1,0 +1,2 @@
+# Wrapper Windows oficial usa CRLF.
+*.cmd text eol=crlf whitespace=cr-at-eol

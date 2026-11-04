@@ -42,7 +42,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 
 | Plano | Situação |
 | --- | --- |
-| [Sprint 0 — Fundação](14_SPRINT_00.md) | Não iniciada |
+| [Sprint 0 — Fundação](14_SPRINT_00.md) | Fundação validada; integração do PR pendente |
 | [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | Não iniciada |
 | [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Não iniciada |
 | [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Não iniciada |

@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "restaurant-manager": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/restaurant-manager",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "styles": ["src/styles.css"]
+          },
+          "configurations": {
+            "production": {
+              "optimization": {"scripts":true,"styles":{"minify":true,"inlineCritical":false},"fonts":false},
+              "outputHashing": "all",
+              "budgets": [{"type":"initial","maximumWarning":"450kB","maximumError":"600kB"}]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {"buildTarget":"restaurant-manager:build", "proxyConfig":"proxy.conf.json"}
+        }
+      }
+    }
+  },
+  "cli": {"analytics":false}
+}

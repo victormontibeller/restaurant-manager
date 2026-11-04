@@ -1,66 +1,37 @@
 # Checkpoint de execução
 
-> **Escopo:** estado vigente para retomada. As regras de preenchimento estão no [guia Hermes/Codex](24_AGENT_EXECUTION.md#checkpoint).
+[Índice](README.md) · [Ciclo 3](evidencias/sprint-00-ciclo-3.md) · [Inventário integral](evidencias/cobertura.md)
 
-[Índice da documentação](README.md)
+## Estado — 2026-11-04, ciclo 3
 
-## Estado atual
+Sprint 00: fundação técnica validada; PR #2 aberto para revisão, integração em main pendente. Sprints 01–05 ainda não concluídas. Não existe CONCLUSAO.json nem produto pronto.
 
-| Campo | Registro |
-| --- | --- |
-| Atualização | 2026-11-02 — versionamento documental |
-| Etapa | Documentação inicial preparada para revisão por PR |
-| Sprint | Sprint 0 não iniciada; demais sprints não iniciadas |
-| Escopo de execução autorizado | Roadmap técnico completo, testes necessários, branches/commits/push e deploy automático em homologação; esta entrega versiona a documentação, sem disparar a execução Linux |
-| Host de execução futuro | Linux do Hermes, ainda sem inventário realizado neste projeto |
-| Checkout Linux | A preparar; caminho real será mantido no registro privado do operador |
-| Branch/base atuais verificadas | `codex/docs-planejamento-inicial`, criada sobre o commit vazio `95dccdc` de `main` para permitir revisão da documentação por PR |
-| Publicação documental | Branch destinada ao PR para `main`; conferir SHA, refs remotas e estado do PR no GitHub ao retomar |
-| Branch de implementação prevista | `codex/s00-i001-fundacao`, ainda não criada; partir da versão documental verificada, com próximas branches encadeadas por incremento |
-| Publicação autorizada | Homologação automática após gates; produção permanece separada |
-| Tip de aplicação / candidato / artefato | Ainda inexistentes; a base documental é a versão deste arquivo no Git, sem build produzido |
-| SHA observado em homologação | Ainda inexistente; aplicação não publicada |
-| Último release validado / alvo de retorno | Ainda inexistentes |
-| Estado de homologação | Não publicado; sem migrations ou testes da aplicação executados |
+Branch atual na gravação: `hermes/sprint-00-fundacao`. Último commit publicado e observado: `449ce3ccf941c73b34ac15a4754183c147f91aaa`; alterações documentais posteriores não exigem novo deploy. Executor Hermes/openai-codex autenticado; supervisor único externo, não iniciar outro.
 
-## Definições consolidadas
+Pedido vigente de merges após gates registrado na missão, mas restrição efetiva deste executor impede merge em main; PRs permanecerão abertos. Para não perder o trabalho da fundação, Sprint 01 pode partir do tip validado da Sprint 00, com PR dependente explícito. Não usar main documental como base que exclua a implementação. Nenhum merge/commit direto em main foi realizado.
 
-- Execução pelo Hermes chamando Codex autenticado na conta do usuário.
-- Desenvolvimento/testes/homologação no Linux, com checkout e bancos exclusivos do projeto.
-- Autonomia para avançar entre tarefas/sprints, implementar, testar, corrigir, criar branches/commits, fazer push e deploy em homologação, sem novas confirmações por etapa. Produção permanece separada.
-- Combos personalizáveis, preço base mais acréscimos, cancelamento por unidades comerciais completas. Regras detalhadas em [Regras de negócio](20_BUSINESS_RULES.md#combos-personalizaveis).
-- Guia de execução e checkpoint estabelecidos para retomar sem depender do histórico do chat.
-- Teste final completo das telas/jornadas e níveis de acesso, com relatório vinculado ao release real em homologação, conforme [estratégia](26_TEST_STRATEGY.md).
+## Último release saudável
 
-## Verificações desta etapa
+- SHA servido/validado: `449ce3ccf941c73b34ac15a4754183c147f91aaa`.
+- SHA-256 JAR: `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`.
+- Homologação nativa exclusiva loopback :8088, banco/roles hml segregados; runtime sem credencial DDL.
+- Último PID após drill: 41392; verificar novamente ao retomar. Marcador healthy aprova somente fundação.
+- E2E 20/20, zero falhas/skip/flaky nos cinco projetos; cinco screenshots inspecionados. API/PostgreSQL reais, mobile/tablet emulados.
+- Startup falho e retorno real ao mesmo SHA/hash em 59,918 s; sem restore de banco ou mudança em rede/serviços alheios.
 
-Somente verificações documentais: coerência entre decisões, regras, dados, sprints e guia de execução; conferência de links locais, exemplos e referências. A consulta de ajuda do Codex no ambiente de edição não valida a instalação no Linux.
+## Gates e correções do ciclo
 
-Nesta revisão foram conferidos 32 documentos Markdown, 318 links locais, IDs dos registros/cenários, tabelas, blocos de código e marcadores de dados privados. As seis sprints permanecem não iniciadas. A revisão também separou ensaios técnicos de homologação das validações operacionais do piloto.
+- 15 testes backend PostgreSQL, 19 testes Python de travas, build/typecheck Angular, npm audit e OSV do artefato aprovados.
+- CI `449ce3c`: runs 41776045898/41776040928 SUCCESS; branch remota conferida por ls-remote.
+- Revisão independente corrigida: marcador SHA nulo/JAR corrompido falham fechado, health vinculado ao inode do socket do PID, inventário E2E obrigatório/relatório com hash, checkout limpo/SHA inicial-final e lock de build/deploy.
+- Primeiro build do ciclo falhou na auditoria Java por toolchain ausente na etapa; script corrigido e gate integral reexecutado. Logs originais preservados no registro privado `overnight`.
+- Migrations separadas, checksums/pending validados no runtime, rollback SQL/lock concorrente e isolamento A/B comprovados na fundação.
+- Atualização de frase histórica em AGENTS foi bloqueada pela proteção do executor; arquivo preservado, sem contornar proteção. Estado vigente está neste checkpoint e nas fontes da Sprint.
 
-Esta entrega trata de documentação, branch, commit e PR. Não foram executados build/testes da aplicação, provisionamento de bancos, autenticação no servidor, pagamento, envio real ou deploy. A base vazia em `main` existe somente para viabilizar a comparação do PR; não contém implementação. O estado de push e PR deve ser conferido no remoto, sem confundir versionamento com preparação do Linux.
+## Próximo incremento
 
-## Pendências para iniciar a execução
-
-1. Preparar a entrada do fluxo no Linux e registrar a primeira tarefa, sem exigir nova aprovação por sprint.
-2. Obter a versão documental publicada no checkout Linux e conferir seu SHA; enquanto o PR estiver aberto, usar a branch documental para carregar o contexto. Não repetir o bootstrap do repositório nem iniciar pela base vazia de `main`.
-3. Verificar ferramentas, autenticação local do Codex, recursos do host e acesso aos bancos de desenvolvimento/testes.
-4. Registrar as escolhas técnicas da fundação conforme P01/P02 e critérios da [Sprint 0](14_SPRINT_00.md).
-
-As demais premissas e dependências mantêm seus prazos nos [registros D/P](00_PROJECT_VISION.md) e [E](23_PILOT_IMPLEMENTATION.md#registro-externo). Não são homologações concluídas.
-
-## Próximo passo
-
-Realizar o preflight da Sprint 0 descrito no [guia de execução](24_AGENT_EXECUTION.md), antes de gerar a base executável. O fluxo avança autonomamente pelo roadmap e publica incrementos executáveis em homologação após os gates; não autoriza produção. A instalação/supervisão no Linux ainda precisa ser preparada e verificada.
-
-## Registro a atualizar durante a implementação
-
-- Tarefa/critério em andamento: ainda não atribuído.
-- Commit de implementação verificado: ainda inexistente.
-- Alterações sem commit: conferir `git status` ao retomar; esta entrega não contém código de aplicação.
-- Comandos e resultados da aplicação: ainda não executados.
-- Migrations e evidências pós-deploy por tenant: ainda não executadas.
-- Matriz de telas/perfis e relatório final: especificados, ainda sem resultados de execução.
-- Processos/recursos temporários da aplicação: nenhum iniciado nesta entrega.
-- Impedimento de execução: inventário e ambiente Linux ainda não verificados; não há relato de falha de implementação.
-- Próxima ação após interrupção: conferir estado real antes de prosseguir; não usar este registro inicial como evidência de uma execução futura.
+1. Publicar evidências/checklist da fundação e verificar PR/CI do tip documental.
+2. Iniciar `hermes/sprint-01-identidade-acessos`, preservando a fundação como base, e implementar provisionamento retomável/identidades/sessões/permissões com PostgreSQL real. Registrar dependência do PR anterior.
+3. Antes de implantar migrations diferentes em hml, implementar manutenção/backup/retorno compatível. Deploy atual as recusa deliberadamente; desenvolver/testar em rm_test sem alterar último release saudável.
+4. Contas fictícias de todos os perfis e ACESSO completo ainda não existem. Sem login, catálogo, pedidos, dinheiro, PWA ou integração externa homologada.
+5. Sprints 02–05, matriz T01–T28/X01–X15, backup/restore completo, carga e E01–E12/piloto continuam pendentes. Não criar conclusão artificial.

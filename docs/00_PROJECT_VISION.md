@@ -7,7 +7,7 @@
 
 Restaurant Manager é uma plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos de delivery, retirada e mesa. O nome comercial será definido posteriormente.
 
-Versão inicial da especificação: 2026-11-02. A aplicação ainda não foi implementada.
+Versão inicial da especificação: 2026-11-02. Fundação iniciada em 2026-11-04; o [checkpoint](25_EXECUTION_STATUS.md) distingue código/testes das jornadas ainda não implementadas.
 
 <a id="interpretacao"></a>
 ## Como interpretar o documento
@@ -37,7 +37,7 @@ Regras detalhadas sem uma decisão anterior explícita são especificações pro
 | D12 | Desenvolvimento, testes e homologação pelo Hermes no Linux, com checkout e bancos PostgreSQL exclusivos do projeto, separados entre si e de produção. O Mac permanece ambiente adicional possível. Servidor Linux próprio, 8 GB de RAM e serviços nativos. |
 | D13 | Regras, validações e segurança no backend; frontend oferece usabilidade e portabilidade. SDKs têm preferência quando existem e atendem à necessidade. |
 | D14 | Entregar a documentação antes da aplicação. Repositório público, sem credenciais ou dados reais nos exemplos. |
-| D15 | Hermes chama o Codex autenticado na conta do usuário. A execução usa os documentos e checkpoint do repositório, sem depender do histórico deste chat. |
+| D15 | Nesta execução autorizada em 2026-11-03, Hermes usa diretamente o provedor `openai-codex` com autenticação atual, sem instalar Codex CLI nem alterar credenciais. Documentos e checkpoint permitem retomada sem depender do chat. |
 | D16 | Hermes avança autonomamente pelo roadmap, implementa, testa, corrige, cria branches por incremento/commit principal, faz push e deploy automático em homologação após os checks necessários. Produção e merge em `main` permanecem separados; não pedir confirmação a cada tarefa/sprint ou deploy de homologação. |
 | D17 | Combos permitem personalização de componentes. Preço base mais acréscimos das escolhas e adicionais; cada combo completo é uma unidade comercial para cancelamento, sem cancelamento isolado de componentes. |
 | D18 | Ao final, executar validação completa de todas as telas/jornadas do escopo e níveis de acesso, com positivos/negativos, isolamento, concorrência, recuperação e mobile; corrigir falhas e entregar relatório por cenário ligado ao release real de homologação. |
