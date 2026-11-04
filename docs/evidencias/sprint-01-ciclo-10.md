@@ -29,3 +29,11 @@ TDD e revisão realizados até este registro:
 ## Pendências
 
 Não declarar Sprint 01 concluída. Cadastro ainda depende de build identificado e E2E do novo SHA. Convites/verificação de funcionários preexistentes, SaaS/suspensão/eventos/projeções, matriz completa por ação e OpenAPI restante continuam pendentes. Manutenção/backup/restore precedem promoção das migrations em hml. Sprints 02–05 não iniciadas. Nenhum envio externo, produção ou CONCLUSAO.json.
+
+## Encerramento efetivo
+
+Commit `29441cf86106b4817db365f3a037bf247b73e9ea` publicado; SHA remoto, head/base/state/draft e corpo do PR #3 relidos. Dois runs CI (`41818215855`, `41818223314`) aprovados no SHA exato: 107 testes backend por execução, zero falhas/erros/skip, build Angular/backend e auditorias. São duas execuções do mesmo conjunto, não testes distintos somáveis.
+
+O aviso de orçamento efetivo do executor interrompeu a rodada local. Build próprio encerrado explicitamente pela ferramenta de processos, status `killed`; não aprovado e sem hash/gate novo confirmado. Nenhum candidato novo foi copiado ou iniciado; S01-UI13–16 e regressões do 29441cf não executados. Candidato herdado já havia sido encerrado antes de V9. Homologação permanece preservada, sem publicação do incremento.
+
+Relatório privado navegável criado a partir dos JSON/XML reais, com links locais verificados; distingue candidato herdado, trinta testes focados, CI, vermelhos e gates pendentes. Estes registros finais são locais posteriores ao commit, preservados para retomada; nenhum novo commit/push após o aviso.

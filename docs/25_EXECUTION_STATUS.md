@@ -2,7 +2,19 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Ciclo 10 — incremento em validação, 2026-11-04
+## Encerramento do ciclo 10 — 2026-11-04
+
+Missão NÃO concluída. O executor emitiu aviso de orçamento efetivo quase esgotado durante o build local novo. Depois do aviso, somente encerramento seguro e gravação de handoff. Build próprio encerrado explicitamente pela ferramenta (`killed`); não é gate aprovado. Nenhum candidato do ciclo 10 foi copiado/iniciado, nem E2E positivo do cadastro executado.
+
+Incremento publicado e remoto/PR relidos: `29441cf86106b4817db365f3a037bf247b73e9ea`, branch `hermes/sprint-01-identidade-acessos`, PR #3 OPEN/draft, base main. Dois runs CI `41818215855` e `41818223314` concluíram SUCCESS no SHA exato: cada um executou 107 testes backend, zero falhas/erros/skip, build Angular/backend e auditorias. Não somar conjuntos repetidos. Trinta testes focados locais e typecheck também aprovados antes do commit.
+
+Build local novo interrompido; nenhum hash/gate novo confirmado. Recuperação quinze + fundação vinte combinações de navegador foram aprovadas neste ciclo somente no SHA herdado `76eeffa`, com artefato `d6efed247099ca8770958c3f27ec93f9a070087e1ad1d0884800486ee224282c`. S01-UI13–16 e regressões integradas do 29441cf permanecem pendentes. O vermelho de UI sobre o candidato antigo não é aprovação da UI nova.
+
+Última verificação de hml antes do aviso: SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, hash `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`, PID 41392, health UP. Sem deploy/reinício/migração de hml. V9 somente em rm_test. Relatório privado navegável produzido com resultados reais e links locais verificados; sem conclusão técnica artificial.
+
+Retomada: conferir Git/processos/bancos e preservar estes registros finais locais; publicar documentação após checks, repetir build identificado completo de checkout limpo, verificar gate/hash e iniciar candidato HTTPS pelo runner privado do ciclo 10. Executar cadastro e regressões por projeto se necessário, sem chamar parcela de matriz completa. Não usar JAR V8 contra banco V9. Depois continuar convites/verificação de funcionários, SaaS/suspensão/eventos e demais critérios. Sprint 01 aberta; 02–05 não iniciadas; nenhum CONCLUSAO.json. Corpo do PR foi atualizado/relido antes da confirmação final da CI e ainda descreve CI/build em execução; atualizar na retomada.
+
+## Registro intermediário do ciclo 10
 
 Missão não concluída. Retomada conferiu Git, bancos/processos, PR #3 OPEN/draft e homologação. Documentos locais herdados preservados/publicados em `76eeffa5f9768bc667eeaec976c83bb00a78708d`. completion-rejected.json ausente. Build identificado desse SHA aprovado: 93 backend, 19 Python, frontend e auditorias; hash `d6efed247099ca8770958c3f27ec93f9a070087e1ad1d0884800486ee224282c`.
 
