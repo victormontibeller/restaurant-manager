@@ -9,10 +9,46 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from durable_build import execute_job, exclusive_lock
+from durable_build import execute_job, exclusive_lock, start
 
 
 class DurableBuildTest(unittest.TestCase):
+    def test_scratch_invalido_recusado_antes_de_criar_job(self):
+        with tempfile.TemporaryDirectory() as directory:
+            shared = Path(directory) / 'compartilhado'
+            shared.mkdir(mode=0o777)
+            shared.chmod(0o777)
+            for value in ('', 'relativo', '/tmp', str(shared), str(shared / 'ausente')):
+                with self.subTest(value=value), patch.dict(os.environ, {'TMPDIR': value}):
+                    with self.assertRaises(ValueError):
+                        start(Path(directory), Path(directory) / 'builds')
+            self.assertFalse((Path(directory) / 'builds').exists())
+
+    def test_servico_recebe_scratch_e_path_sem_herdar_segredos(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / 'repo'
+            subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+            subprocess.run(['git', '-c', 'user.name=Teste', '-c', 'user.email=teste@example.invalid',
+                            'commit', '--allow-empty', '-qm', 'fixture'], cwd=repo, check=True)
+            commands = []
+            real_run = subprocess.run
+
+            def launch_only(command, **kwargs):
+                if command[0] in ('systemctl', 'systemd-run'):
+                    commands.append(command)
+                    return SimpleNamespace(returncode=0, stdout='inactive\n')
+                return real_run(command, **kwargs)
+
+            with patch.dict(os.environ, {'TMPDIR': directory, 'RM_PRIVATE_SENTINEL': 'nao-propagar'}), \
+                    patch('durable_build.subprocess.run', side_effect=launch_only):
+                start(repo, Path(directory) / 'builds')
+            command = next(c for c in commands if c[0] == 'systemd-run')
+            environment = [v for v in command if v.startswith('--setenv=')]
+            self.assertIn('--setenv=TMPDIR=' + directory, environment)
+            self.assertIn('--setenv=PATH=' + os.environ['PATH'], environment)
+            self.assertEqual({v.split('=', 2)[1] for v in environment}, {'TMPDIR', 'PATH', 'RM_HOME'})
+            self.assertNotIn('nao-propagar', ' '.join(command))
+
     def test_gate_confere_sha_hash_e_checks(self):
         for invalid in (None, 'git_sha', 'artifact_sha256', 'checks'):
             with self.subTest(invalid=invalid), tempfile.TemporaryDirectory() as directory:

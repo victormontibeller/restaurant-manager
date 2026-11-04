@@ -67,6 +67,12 @@ O próximo ciclo consulta `builds/latest.json` no diretório privado do projeto,
 o resultado do job e `systemctl --user show restaurant-manager-build.service`;
 não reinicia um build ativo. Resultado ausente ou falho nunca aprova release.
 
+O lançamento propaga explicitamente somente `PATH`, `RM_HOME` e `TMPDIR` do
+chamador; o scratch deve existir, ser gravável e ficar fora de `/tmp`. Não exporta
+todo o ambiente da sessão nem credenciais do Hermes. `with-env.sh test` carrega
+configuração privada do banco de teste e seleciona Java/Maven; Node/npm vêm do
+`PATH` explícito. O ambiente do supervisor não é automaticamente o do serviço.
+
 Este mecanismo não faz deploy nem substitui E2E. O deploy atual ainda consome
 o gate/JAR do checkout original: não copiar somente o gate de um job para ele.
 A integração de promoção do artefato privado continua pendente. Encerramento

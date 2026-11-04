@@ -67,6 +67,13 @@ def execute_job(job):
 
 
 def start(repo, root):
+    scratch_value = os.environ.get('TMPDIR', '')
+    scratch = Path(scratch_value)
+    if (not scratch_value or not scratch.is_absolute() or not scratch.is_dir()
+            or scratch.resolve().is_relative_to('/tmp')
+            or scratch.stat().st_uid != os.getuid() or scratch.stat().st_mode & 0o077
+            or not os.access(scratch, os.W_OK | os.X_OK)):
+        raise ValueError('TMPDIR deve apontar para scratch privado existente e gravável, fora de /tmp.')
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     with exclusive_lock(root / 'launch.lock'):
         state = subprocess.check_output(['systemctl', '--user', 'show', UNIT,
@@ -90,6 +97,7 @@ def start(repo, root):
         command = ['systemd-run', '--user', '--unit=' + UNIT, '--collect',
                    '--property=Type=exec', '--property=UMask=0077',
                    '--setenv=PATH=' + os.environ['PATH'],
+                   '--setenv=TMPDIR=' + str(scratch),
                    '--setenv=RM_HOME=' + os.environ.get('RM_HOME', str(Path.home() / '.local/share/restaurant-manager')),
                    sys.executable, str(job / 'checkout/scripts/durable_build.py'), 'worker', str(job)]
         subprocess.run(command, check=True)

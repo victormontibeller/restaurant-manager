@@ -2,6 +2,56 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Retomada autorizada — ciclo 1 reiniciado, 2026-11-04
+
+Missão não concluída. Git/PR #3 draft e os dois checks CI do `c3233db` conferidos;
+checkpoint herdado preservado abaixo. O build privado desse SHA falhou por
+`KeyError: TMPDIR`; não existe aprovação local desse job. Corrigida propagação
+explícita de scratch/PATH/RM_HOME ao systemd, sem repassar ambiente completo.
+Teste reproduziu a ausência do argumento antes da correção. Revisão independente
+identificou ausência de validação de privacidade do scratch, também corrigida.
+Build real e E2E ainda pendentes neste registro. Homologação conferida saudável no
+SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, sem deploy/reinício.
+
+## Encerramento do ciclo 12 — 2026-11-04
+
+Missão NÃO concluída. Implementado runner de build independente da sessão em
+`scripts/durable_build.py`: clone privado destacado, unidade systemd exclusiva,
+locks, identidade PID/início/SHA, log, resultado e verificação do gate/hash. Revisão
+independente somente leitura realizada. Limitações registradas no runbook:
+promoção pelo deploy atual não integrada; interrupção abrupta pode deixar resultado
+ausente e requer reconciliação; nenhuma garantia contra queda de energia.
+
+Testes Python: 24 aprovados, incluindo cinco métodos novos do runner e subcasos
+de SHA/hash/checks divergentes. Fixtures unitárias não são releases. Sintaxe Bash,
+scanner de 197 arquivos e diff aprovados. Primeira tentativa de clone recusou
+wrapper Windows por normalização CRLF; corrigida preservação dos bytes no clone
+privado, sem ignorar mudanças de conteúdo. Commits `618e029` e `c3233db` criados;
+push da branch existente retornou sucesso. Após aviso de orçamento, SHA remoto,
+metadados do PR e CI do novo SHA NÃO foram relidos. PR #3 era OPEN/draft na retomada;
+CI do incremento anterior `51cd2d0` estava aprovada nos dois runs consultados.
+
+Runner real iniciado pelo systemd para `c3233db99acf8cf9ada9dd926924690cea7274dd`.
+Última consulta imediata retornou unidade inactive/MainPID=0; resultado/log do job
+NÃO consolidados antes do aviso de orçamento. Não afirmar build aprovado nem
+continuidade comprovada por esse lançamento. Próximo ciclo DEVE ler
+`builds/latest.json`, request/running/result/log privados e reconciliar a unidade
+antes de iniciar outro build. A primeira tentativa deixou clone privado sem job
+iniciado; não confundir com a segunda. Nenhum E2E novo, candidato ou deploy.
+
+XML herdados conferidos: ConvitesTest 12, CadastroClienteTest 14 e RecuperacaoTest
+12, sem falhas/erros/skip, relativos à rodada focada anterior. Não constituem gate
+integrado deste SHA. SQL dev/test/hml confirmou identidades separadas e loopback.
+Homologação verificada na retomada: `449ce3ccf941c73b34ac15a4754183c147f91aaa`,
+health UP/PID 41392; sem reinício/migração/deploy neste ciclo. Não houve nova
+verificação final após o aviso. completion-rejected.json ausente; sem CONCLUSAO.json.
+
+Próximo trabalho: recolher/corrigir o build durável, comprovar recusa concorrente
+real e continuidade; executar convites e regressão integrada no candidato V10;
+seguir critérios pendentes de verificação/SaaS/suspensão/eventos/projeções e
+manutenção/backup/restore. Sprint 01 aberta; 02–05 não iniciadas. Checkpoint final
+permanece local posterior ao push e deve ser preservado.
+
 ## Encerramento do ciclo 11 — 2026-11-04
 
 Missão NÃO concluída. O executor avisou orçamento efetivo quase esgotado após preparar o script privado de empacotamento do candidato de teste. Depois disso, somente encerramento seguro e handoff. Nenhum empacotamento/candidato novo ou E2E de convites foi iniciado.
