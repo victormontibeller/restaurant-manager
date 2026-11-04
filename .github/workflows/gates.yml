@@ -41,3 +41,5 @@ jobs:
           npm --prefix frontend audit --audit-level=moderate
       - name: Backend e PostgreSQL
         run: bash backend/mvnw -B -ntp -f backend/pom.xml clean verify
+      - name: Vulnerabilidades Java no artefato
+        run: python3 scripts/audit-java.py

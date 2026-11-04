@@ -8,6 +8,8 @@ test('S00-UI01: shell conecta à API e PostgreSQL reais', async ({ page }) => {
   await expect(page.getByRole('status')).toHaveText('Sistema conectado. Banco de dados disponível.');
   await expect(page.getByText('Nenhum pedido ou pagamento é aceito nesta versão.', {exact:false})).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.getByRole('button', {name:'Verificar conexão'}).evaluate(e => e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+  expect(await page.locator('main').evaluate(e => getComputedStyle(e).paddingLeft)).not.toBe('0px');
   expect(errors).toEqual([]);
   await page.screenshot({ path: test.info().outputPath('shell.png'), fullPage: true });
 });

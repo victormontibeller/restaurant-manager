@@ -8,4 +8,6 @@ export WEBKIT_EXEC_PATH="$webkit/bin"
 export WEBKIT_INJECTED_BUNDLE_PATH="$webkit/lib"
 export WEBKIT_INSPECTOR_RESOURCES_PATH="$webkit/share"
 export WEBKIT_FORCE_COMPLEX_TEXT=1
+export __EGL_VENDOR_LIBRARY_FILENAMES="$home/toolchains/browser-libs/usr/share/glvnd/egl_vendor.d/50_mesa.json"
+export LIBGL_ALWAYS_SOFTWARE=1
 exec "$webkit/bin/MiniBrowser" "$@"

@@ -20,7 +20,11 @@ Executor: Hermes com provedor openai-codex e autenticação atual, conforme adap
 
 ## Release
 
-Até este registro: nenhum release publicado/validado. Nenhum SHA servido. Nenhum alvo anterior de retorno. A próxima fase é commit revisado, build identificado, deploy candidato e E2E.
+Primeiro candidato servido: `3e50131cb8df90e82f3bad9511c8792f4d6a0dd7`, hash `166f067414b949a6e73826aabfe8edd4f0778769e135eb2ade1833b15da9785a`, loopback :8088. PR #2 aberto em draft; CI 41768442461 aprovado. Build identificado e verificador do PID/hash/health executados.
+
+Os 15 testes iniciais Playwright passaram nos cinco projetos, mas a revisão visual posterior encontrou CSS incompleto por CSP versus inlining crítico do Angular. Foi acrescentada asserção de alvo de toque >=48px; falhou (21px) antes da correção. O candidato inicial NÃO está aprovado visualmente. Correção em andamento desativa inlineCritical, sem afrouxar CSP.
+
+Auditoria OSV inicial identificou avisos em Jackson 2.21.4 e Log4j API 2.24.3. Overrides compatíveis para Jackson 2.21.8 e Log4j 2.25.5 verificados no Maven Central; regressão e nova consulta obrigatórias. Gate OSV agora cruza todos os JARs empacotados com a árvore Maven e recusa coordenadas ausentes. Não chamar o candidato antigo de aprovado em segurança.
 
 ## Pendências reais da Sprint 00
 
