@@ -36,7 +36,7 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
         </fieldset>
         <button type="button" (click)="salvarMatriz()" [disabled]="ocupado()">Salvar permissões</button>
         <h3>Funcionários existentes</h3>
-        <p>Convites e criação de funcionários ainda não estão disponíveis. Clientes não aparecem nesta lista.</p>
+        <p>Para cadastrar um funcionário novo, use Gerenciar convites. Clientes não aparecem nesta lista.</p>
         @for(f of equipe();track f.id){
           <article>
             <h4>{{f.email}}</h4>

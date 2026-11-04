@@ -37,6 +37,8 @@ Contratos parciais: [configuração administrativa de unidades](api/unidades.yam
 
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
 
+Contrato adicional do ciclo 11: [convites de funcionários](api/convites.yaml), com intenção durável, consulta por UUID, revogação e aceite público protegido por CSRF. Candidato em validação, sem publicação em homologação.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

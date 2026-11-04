@@ -2,6 +2,16 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Ciclo 11 — incremento em validação, 2026-11-04
+
+Missão NÃO concluída. Retomada reconciliou Git/PR, serviços e identidades SQL dev/test/hml. completion-rejected.json ausente. Registros herdados preservados em `8e4b1d328f02f96bf5b27033e6cad4979dc27a78`. Build identificado desse SHA passou: 107 testes backend sem falha/erro/skip, 19 Python, Angular/auditorias. Hash `b94cde1f9804263b434d516b8e140e8c2b2aa877974735fc3695ad787dff75cb`.
+
+No candidato HTTPS/rm_test herdado, cadastro resultou em dezenove aprovações e uma falha WebKit S01-UI15; recuperação passou quinze combinações. A falha de cadastro verificava o alerta antes da conclusão da perda de resposta injetada. Snapshot ainda ocupado e screenshot posterior com alerta correto foram inspecionados. Correção sincroniza com `requestfailed`/resposta 502, sem afrouxar assertivas. Reexecução dos quatro cenários de cadastro em WebKit passou sem retry/skip/flaky. Não chamar essa parcela de matriz completa corrigida. Identidade herdada foi interrompida para priorizar incremento real; fundação desta rodada não executada. Candidato encerrado antes de V10.
+
+Incremento em desenvolvimento: convites administrativos idempotentes, aceite verificado com código único, revogação, consulta exata, captura cifrada, UI e OpenAPI. Vermelho HTTP real 403 versus 200 reproduzido antes da implementação; primeira tentativa do probe teve timeout no login e não é evidência comportamental. Duas revisões independentes somente leitura; achado de corrida revogação/expurgo em reprodução. Testes novos/build/CI/E2E ainda não aprovados neste registro. Sem deploy/migração de hml: último release saudável continua `449ce3ccf941c73b34ac15a4754183c147f91aaa`.
+
+Próximo passo: concluir testes de convites/expurgo e correções, typecheck e regressões; publicar incremento revisado no PR #3 draft, build identificado e E2E novo. Verificação de funcionários preexistentes, SaaS/suspensão/eventos/projeções, demais critérios e manutenção/backup/restore seguem pendentes. Sprint 01 aberta; 02–05 não iniciadas. Nenhum CONCLUSAO.json.
+
 ## Encerramento do ciclo 10 — 2026-11-04
 
 Missão NÃO concluída. O executor emitiu aviso de orçamento efetivo quase esgotado durante o build local novo. Depois do aviso, somente encerramento seguro e gravação de handoff. Build próprio encerrado explicitamente pela ferramenta (`killed`); não é gate aprovado. Nenhum candidato do ciclo 10 foi copiado/iniciado, nem E2E positivo do cadastro executado.

@@ -2,7 +2,7 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, ciclo 10. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
 
 ## Fundação entregue
 
@@ -43,7 +43,7 @@ Estado em 2026-11-04, ciclo 10. Os IDs preservam o escopo integral; não são ap
 | T21 | Não implementado/não executado | Sprint 02 |
 | T22 | Não implementado/não executado | Sprints 01/04 |
 | T23 | Parcial, família não aprovada | CRUD lógico de unidades em validação; horários/regiões/parâmetros pendentes |
-| T24 | Parcial, família não aprovada | Equipe existente/vínculos testados; convites/criação pendentes |
+| T24 | Parcial, família não aprovada | Equipe existente/vínculos testados; convites/criação em validação no ciclo 11 |
 | T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Não implementado/não executado | Sprints 03–04 |
@@ -85,6 +85,8 @@ Administrador tem jornadas de login, matriz e equipe; unidades em validação. G
 | S01-UI06–09 | Resultado incerto, logout/reautenticação, navegação e paginação | Administrador | Cinco projetos aprovados contra 589ea43 no ciclo 9 |
 | S01-UI10–12 | Recuperação capturada, código único, erros e resposta perdida | Público/Cliente fictício | Cinco projetos aprovados sobre 76eeffa no ciclo 10; regressão do incremento novo pendente |
 | S01-UI13–16 | Cadastro verificado, login restrito, código consumido, erros/offline e resposta perdida/502 após commit | Público/Cliente fictício | Testes escritos; execução positiva do candidato novo pendente |
+| S01-UI17–19 | Criar/aceitar/revogar convite, login de funcionário, resultado incerto/replay após logout e validações/foco | Administrador e funcionário convidado | Testes escritos no ciclo 11; resultados no checkpoint, não presumir execução |
+| S01-API03 | Convites, autorização, intenção concorrente, aceite único, rollback, expiração após lock e expurgo | Administrador, demais perfis e público | ConvitesTest; resultados efetivos no checkpoint |
 | S01-API01 | Matriz/equipe, revogação com JWT válido, vínculos e concorrência | Seis funcionários e Cliente | AcessosTest; detalhes por incremento no checkpoint |
 | S01-API02 | Unidade administrativa, idempotência e concorrência | Administrador; negativos dos outros perfis | Quatro testes novos; validação final em curso |
 

@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Convites empresariais de funcionários
+  version: 0.1.0
+  description: Candidato da Sprint 01; captura privada fictícia, sem envio externo. Não altera contas existentes.
+paths:
+  /api/v1/equipe/convites:
+    get:
+      summary: Lista até cinquenta convites, somente Administrador
+      security: [{bearer: []}]
+      parameters:
+        - {in: query, name: pagina, schema: {type: integer, minimum: 0, maximum: 10000, default: 0}}
+      responses:
+        '200':
+          description: Página em ordem decrescente de criação
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/Convite'}}
+        '400': {description: Página inválida}
+        '401': {description: Sessão inválida}
+        '403': {description: Acesso negado}
+    post:
+      summary: Cria intenção durável; Administrador com reautenticação de até cinco minutos
+      security: [{bearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id, email, perfil, unidades]
+              properties:
+                id: {type: string, format: uuid}
+                email: {type: string, format: email, maxLength: 254}
+                perfil: {$ref: '#/components/schemas/Perfil'}
+                unidades: {type: array, maxItems: 100, uniqueItems: true, items: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Intenção criada ou resultado atual de replay idêntico; nunca retorna código. Administrador sem vínculos, demais perfis aceitam conjunto vazio sem acesso operacional. Limite de trinta novas intenções por autor em quinze minutos.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Convite'}
+        '400': {description: Campos/perfil/vínculos inválidos}
+        '401': {description: Sessão inválida}
+        '403': {description: Administrador ou reautenticação ausentes}
+        '404': {description: Unidade não encontrada ou inativa}
+        '409': {description: Intenção divergente ou conta já existente}
+        '429': {description: Limite de novas intenções atingido}
+        '503': {description: Captura ou chave não configuradas}
+  /api/v1/equipe/convites/{id}:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+    get:
+      summary: Consulta exata para reconciliar resultado incerto
+      security: [{bearer: []}]
+      responses:
+        '200':
+          description: Convite encontrado no tenant atual
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Convite'}
+        '401': {description: Sessão inválida}
+        '403': {description: Acesso negado}
+        '404': {description: Convite não encontrado}
+  /api/v1/equipe/convites/{id}/revogar:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+    post:
+      summary: Revoga idempotentemente; exige Administrador reautenticado
+      security: [{bearer: []}]
+      responses:
+        '200':
+          description: Revogado. Captura já preparada pode permanecer; aceite será negado.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Convite'}
+        '401': {description: Sessão inválida}
+        '403': {description: Acesso ou reautenticação ausentes}
+        '404': {description: Convite não encontrado}
+        '409': {description: Já aceito; gerenciar funcionário em vez de revogar convite}
+  /api/v1/auth/convites/aceitar:
+    post:
+      summary: Aceita código de uso único e cria funcionário verificado sem sessão automática
+      description: Exige cookie CSRF e header mascarado obtidos em GET /api/v1/auth/csrf. Código somente no corpo, nunca URL. Expira quinze minutos após criação. Autor original precisa continuar Administrador ativo; unidades precisam continuar ativas. Campos de papel/unidade não são aceitos. Resposta perdida ou 5xx exige conferir login, não presumir falha definitiva.
+      security: [{csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [codigo, senha]
+              properties:
+                codigo: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', writeOnly: true}
+                senha: {type: string, minLength: 12, maxLength: 72, writeOnly: true, description: Também limitada a 72 bytes UTF-8}
+      responses:
+        '204': {description: Conta criada e convite consumido atomicamente}
+        '400': {description: Estrutura inválida}
+        '403': {description: CSRF inválido}
+        '404': {description: Domínio desconhecido}
+        '422': {description: Convite inválido ou senha fora do limite em bytes}
+        '429': {description: Mais de trinta confirmações por origem em quinze minutos}
+components:
+  securitySchemes:
+    bearer: {type: http, scheme: bearer, bearerFormat: JWT}
+    csrf: {type: apiKey, in: header, name: X-XSRF-TOKEN}
+  schemas:
+    Perfil: {type: string, enum: [ADMINISTRADOR, GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]}
+    Convite:
+      type: object
+      required: [id, email, perfil, unidades, estado, expiraEm]
+      properties:
+        id: {type: string, format: uuid}
+        email: {type: string, format: email}
+        perfil: {$ref: '#/components/schemas/Perfil'}
+        unidades: {type: array, items: {type: string, format: uuid}}
+        estado: {type: string, enum: [PENDENTE, ACEITO, REVOGADO, EXPIRADO]}
+        expiraEm: {type: string, format: date-time}

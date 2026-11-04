@@ -5,25 +5,31 @@ import { UnidadesComponent } from '../unidades/unidades.component';
 import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
 import { RecuperacaoComponent } from './recuperacao.component';
 import { CadastroComponent } from './cadastro.component';
+import { AceitarConviteComponent } from './aceitar-convite.component';
+import { ConvitesComponent } from '../acessos/convites.component';
+import { ConvitePendenteService } from '../acessos/convite-pendente.service';
 
 @Component({
   selector:'app-identidade',
-  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent],
+  imports:[AcessosComponent,UnidadesComponent,RecuperacaoComponent,CadastroComponent,AceitarConviteComponent,ConvitesComponent],
   template:`
-    <section [attr.aria-labelledby]="!sessao.identidade()&&cadastro()?'cadastro-titulo':recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
+    <section [attr.aria-labelledby]="!sessao.identidade()&&convite()?'aceitar-convite-titulo':!sessao.identidade()&&cadastro()?'cadastro-titulo':recuperacao()&&!sessao.identidade()?'recuperacao-titulo':'conta-titulo'" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
         <h2 id="conta-titulo">Minha conta</h2>
         <p>Perfil: {{ pessoa.perfil }}</p>
         <p>{{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</p>
-        <p>Acesso empresarial autenticado. Operação e convites ainda estão em desenvolvimento.</p>
+        <p>Acesso empresarial autenticado. As jornadas operacionais ainda estão em desenvolvimento.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
         @if(pessoa.perfil==='ADMINISTRADOR'){
           <nav aria-label="Configurações da empresa">
             <button type="button" (click)="configuracao.set('acessos')" [disabled]="configuracaoBloqueada()" [attr.aria-pressed]="configuracao()==='acessos'">Gerenciar acessos</button>
             <button type="button" (click)="configuracao.set('unidades')" [disabled]="configuracaoBloqueada()" [attr.aria-pressed]="configuracao()==='unidades'">Gerenciar unidades</button>
+            <button type="button" (click)="configuracao.set('convites')" [disabled]="configuracaoBloqueada()" [attr.aria-pressed]="configuracao()==='convites'">Gerenciar convites</button>
           </nav>
-          @if(configuracao()==='acessos'){<app-acessos (bloqueio)="configuracaoBloqueada.set($event)" />} @else {<app-unidades (bloqueio)="configuracaoBloqueada.set($event)" />}
+          @if(configuracao()==='acessos'){<app-acessos (bloqueio)="configuracaoBloqueada.set($event)" />} @else if(configuracao()==='convites'){<app-convites (bloqueio)="configuracaoBloqueada.set($event)" />} @else {<app-unidades (bloqueio)="configuracaoBloqueada.set($event)" />}
         }
+      } @else if(convite()) {
+        <app-aceitar-convite (voltar)="voltarAoLogin()" />
       } @else if(cadastro()) {
         <app-cadastro (voltar)="voltarAoLogin()" />
       } @else if(recuperacao()) {
@@ -40,6 +46,7 @@ import { CadastroComponent } from './cadastro.component';
         </form>
         <button type="button" (click)="recuperacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Recuperar senha</button>
         <button type="button" (click)="cadastro.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Criar conta de cliente</button>
+        <button type="button" (click)="convite.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Aceitar convite de funcionário</button>
       }
       @if (erro()) { <p #alerta class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
       @if (encerramentoPendente()) { <button type="button" (click)="sair()" [disabled]="ocupado()">Tentar encerrar novamente</button> }
@@ -51,13 +58,15 @@ import { CadastroComponent } from './cadastro.component';
 export class IdentidadeComponent {
   readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(CriacaoPendenteService);
+  private readonly convitesPendentes = inject(ConvitePendenteService);
   readonly ocupado = signal(true);
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly encerramentoPendente = signal(false);
   readonly recuperacao = signal(false);
   readonly cadastro = signal(false);
-  readonly configuracao = signal<'acessos'|'unidades'>('acessos');
+  readonly convite = signal(false);
+  readonly configuracao = signal<'acessos'|'unidades'|'convites'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
   constructor() { void this.restaurar(); }
@@ -84,11 +93,13 @@ export class IdentidadeComponent {
   private prepararConta():void {
     const pessoa=this.sessao.identidade();
     const pendente=!!(pessoa&&this.pendencias.daConta(pessoa.usuarioId)());
-    this.configuracaoBloqueada.set(pendente);this.configuracao.set(pendente?'unidades':'acessos');
+    const convite=!!(pessoa&&this.convitesPendentes.daConta(pessoa.usuarioId)());
+    this.configuracaoBloqueada.set(pendente||convite);this.configuracao.set(pendente?'unidades':convite?'convites':'acessos');
   }
   voltarAoLogin():void {
     this.recuperacao.set(false);
     this.cadastro.set(false);
+    this.convite.set(false);
     setTimeout(()=>document.getElementById('email-conta')?.focus());
   }
   private falha(error: unknown): void {

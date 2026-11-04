@@ -43,12 +43,15 @@ export class SessaoService {
     } catch { throw new Error('Conexão interrompida. Recarregue para conferir o resultado antes de tentar novamente.'); }
     if (!response.ok) {
       if (response.status===401) this.limpar();
-      const error=await response.json() as {mensagem?:string};
-      throw new ApiFailure(response.status,error.mensagem??'Não foi possível concluir a operação.');
+      throw await this.erroComando(response);
     }
     return response.status===204?undefined as T:await response.json() as T;
   }
   async atualizarIdentidade(): Promise<void> { this.identidade.set(await this.api<Identidade>('/api/v1/auth/me')); }
+  async aceitarConvite(body:object):Promise<void> {
+    const response=await this.comando('convites/aceitar',body);
+    if(!response.ok)throw await this.erroComando(response);
+  }
   async cadastrar(action:'cadastro'|'cadastro/confirmar',body:object):Promise<void> {
     const response=await this.comando(action,body);
     if(!response.ok)throw await this.erroComando(response);

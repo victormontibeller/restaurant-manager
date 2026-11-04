@@ -88,6 +88,14 @@ O navegador não armazena código/senha nem coloca código na URL. Perda de resp
 
 V9 acrescenta a tabela de códigos de cadastro com hash, e-mail, expiração e consumo, mais tipos próprios da outbox. Expurgo remove até cem códigos por ciclo/tenant cuja expiração passou há mais de 24 horas; o transporte conserva os limites de captura existentes. [OpenAPI de cadastro](api/cadastro.yaml). Implementação em validação, não implantada em homologação; evidências e limitações ficam no checkpoint.
 
+## Convites de funcionários — candidato do ciclo 11
+
+Administrador com sessão e reautenticação atuais cria uma intenção UUID com e-mail, perfil fixo e unidades. O backend normaliza o e-mail e ordena os vínculos; replay com mesmo autor/payload retorna o estado atual, sem renovar prazo ou reenviar mensagem. Intenção divergente e conta já existente conflitam. Administrador não recebe vínculos individuais; conjunto vazio nos outros perfis não concede acesso operacional. Limite de trinta intenções novas por autor em quinze minutos.
+
+Código aleatório de 256 bits, hash SHA-256 exclusivo e validade de quinze minutos desde a criação; mensagem cifrada na mesma transação, somente captura fictícia. Aceite público exige CSRF e quota própria por origem antes da política empresarial, como cadastro/recuperação. Após os locks, revalida prazo, consumo, revogação, autor original ainda Administrador ativo, unidades ativas e ausência de conta. Cria o funcionário verificado com senha definida pelo destinatário, vínculos exatos e auditoria; revoga outros convites para o endereço. Não converte clientes, reativa usuários nem cria sessão automática. Logout do autor não revoga seu convite; rebaixamento/inativação impedem o aceite enquanto vigentes.
+
+Revogação administrativa é idempotente e não recolhe capturas já preparadas. Convite aceito exige gerenciar o funcionário. Expurgo limpa até cem hashes expirados há mais de 24 horas, preservando a intenção/payload para retries. UI conserva intenção incerta em memória por origem/conta, inclusive ao sair/entrar na mesma página; não grava códigos, senhas ou tokens em storage/URL. Recarregar/fechar perde o rascunho e emite aviso: consulta exata por UUID permite reconciliar manualmente. [Contrato](api/convites.yaml). Testes efetivamente executados ficam no checkpoint; não implantado em homologação. Verificação de funcionários preexistentes permanece pendente.
+
 ## Documentos relacionados
 
 - [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)

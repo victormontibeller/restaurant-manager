@@ -47,6 +47,8 @@ O estado `CAPTURADO` significa somente persistência local, nunca entrega/lida p
 
 Falha terminal/corrupção elimina imediatamente conteúdo cifrado recuperável, conservando estado técnico até o expurgo. A cada ciclo, expurgo limitado remove até cem tokens e cem mensagens por tenant cuja expiração passou há mais de 24 horas. Capturas e temporários próprios com mais de 24 horas são removidos em lotes de até cem arquivos; não segue links simbólicos. Essa retenção técnica de dados fictícios não substitui política jurídica nem backup externo. Ausência de worker impede o expurgo agendado e exige manutenção explícita.
 
+O ciclo 11 acrescenta mensagens `CONVITE` preparadas na transação administrativa, com código único já cifrado. O mesmo lease/retry reutiliza o conteúdo; revogação impede aceite, mas não promete recolher captura em andamento. Captura continua local e fictícia; E05 não está encerrado.
+
 ## Documentos relacionados
 
 - [Regras financeiras e comunicação do produto](20_BUSINESS_RULES.md)

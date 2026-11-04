@@ -30,10 +30,10 @@ public class SecurityConfiguration {
         csrf.setCookieName("__Host-RM_CSRF");
         csrf.setCookieCustomizer(c -> c.secure(true).httpOnly(true).path("/").sameSite("Strict"));
         return common(http, mapper, tenants)
-                .securityMatcher("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/csrf", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar")
+                .securityMatcher("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/csrf", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar", "/api/v1/auth/convites/aceitar")
                 .csrf(c -> c.csrfTokenRepository(csrf))
                 .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar").permitAll().anyRequest().denyAll())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar", "/api/v1/auth/convites/aceitar").permitAll().anyRequest().denyAll())
                 .build();
     }
     @Bean @Order(2)
@@ -42,9 +42,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/", "/index.html", "/*.js", "/*.css", "/favicon.ico", "/api/v1/status", "/api/v1/unidades", "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/configuracoes/acessos", "/api/v1/equipe", "/api/v1/acessos/efetivos", "/api/v1/operacao/unidades", "/api/v1/operacao/unidades/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/acessos", "/api/v1/equipe/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/configuracoes/unidades", "/api/v1/configuracoes/unidades/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/configuracoes/unidades", "/api/v1/configuracoes/unidades/*", "/api/v1/equipe/convites", "/api/v1/equipe/convites/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/unidades/*").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reautenticar", "/api/v1/configuracoes/unidades").authenticated().anyRequest().denyAll())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reautenticar", "/api/v1/configuracoes/unidades", "/api/v1/equipe/convites", "/api/v1/equipe/convites/*/revogar").authenticated().anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
                     try {
                         if (br.com.restaurantmanager.tenancy.TenantScope.current().equals("__none__")) throw AuthFailure.invalid();

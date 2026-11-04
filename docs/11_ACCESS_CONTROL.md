@@ -93,6 +93,10 @@ Rotas: `GET/POST /api/v1/configuracoes/unidades`, `GET/PUT /api/v1/configuracoes
 
 No candidato do ciclo 7, a criação incerta conserva UUID/payload em memória, segregados por conta e origem, inclusive após logout e novo login na mesma página. Rejeição de um retry não apaga intenção anterior: consulta por UUID reconcilia o resultado. Navegação entre seções aguarda operações; página/lista só mudam juntas após resposta válida. Logout continua permitido por segurança e login fica bloqueado enquanto o encerramento anterior não for confirmado. Nenhum token ou payload é gravado em armazenamento do navegador; fechar/recarregar a página ainda perde o rascunho, com aviso de saída enquanto houver pendência. Não afirmar recuperação durável de navegador encerrado. Os testes e o SHA efetivamente validado estão no checkpoint.
 
+## Convites — incremento do ciclo 11
+
+O candidato acrescenta criação idempotente, listagem paginada, consulta exata e revogação de convites exclusivamente pelo Administrador; escrita exige reautenticação. Aceite cria somente conta nova com os vínculos persistidos e prova de e-mail. Condições, concorrência e retenção estão na [fonte de segurança](04_SECURITY.md); [OpenAPI](api/convites.yaml). A UI Gerenciar convites é separada de equipe/matriz. Não equivale à verificação de funcionários já existentes nem à jornada SaaS. Resultado e limitações no checkpoint.
+
 ## Referências relacionadas
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)

@@ -13,9 +13,11 @@ public class EmailIdentidadeService {
     private final IdentidadeRepository identidades;
     private final ProtecaoEmail protecao;
     private final CadastroClienteRepository cadastros;
+    private final ConviteRepository convites;
     private final SecureRandom random=new SecureRandom();
-    public EmailIdentidadeService(RecuperacaoRepository repository,IdentidadeRepository identidades,ProtecaoEmail protecao,CadastroClienteRepository cadastros) {
+    public EmailIdentidadeService(RecuperacaoRepository repository,IdentidadeRepository identidades,ProtecaoEmail protecao,CadastroClienteRepository cadastros,ConviteRepository convites) {
         this.repository=repository; this.identidades=identidades; this.protecao=protecao; this.cadastros=cadastros;
+        this.convites=convites;
     }
     public record Entrega(UUID id,UUID lease,String conteudo) {
         @Override public String toString() { return "Entrega[protegida]"; }
@@ -59,7 +61,7 @@ public class EmailIdentidadeService {
                     +"\nNa mesma página da empresa, escolha Recuperar senha e cole o código abaixo. Não compartilhe este código.\nCódigo: "+raw
                     +"\nVálido até: "+email.expiraEm+"\nSe não solicitou, ignore esta mensagem.\n");
         }
-        if(!java.util.Set.of("RECUPERACAO","AVISO","CADASTRO").contains(email.tipo)) {
+        if(!java.util.Set.of("RECUPERACAO","AVISO","CADASTRO","CONVITE").contains(email.tipo)) {
             finalizar(email,"FALHOU"); return new Entrega(email.id,null,null);
         }
         email.estado="PROCESSANDO"; email.tentativas++; email.lease=UUID.randomUUID(); email.proximaEm=agora.plusSeconds(120);
@@ -78,7 +80,7 @@ public class EmailIdentidadeService {
     @Transactional(timeout=10)
     public void expurgar() {
         Instant limite=Instant.now().minusSeconds(86400);
-        repository.expurgar(limite);cadastros.expurgar(limite);
+        repository.expurgar(limite);cadastros.expurgar(limite);convites.expurgar(limite);
     }
     private void finalizar(EmailIdentidade email,String estado) {
         email.estado=estado; email.conteudoCifrado=null; email.lease=null;

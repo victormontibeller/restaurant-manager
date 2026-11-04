@@ -74,7 +74,9 @@ test('S01-UI15: resposta perdida no cadastro é reconciliada pelo login',async({
   await page.route('**/api/v1/auth/cadastro/confirmar',async route=>{
     const real=await route.fetch();expect(real.status()).toBe(204);await route.abort('failed');
   },{times:1});
+  const perda=page.waitForEvent('requestfailed',r=>r.url().endsWith('/auth/cadastro/confirmar'));
   await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
+  await perda;
   await expect(page.getByRole('alert')).toContainText('A resposta não chegou. A conta pode ter sido criada.');
   await expect(page.getByText('Conta criada com e-mail verificado. Volte ao login para entrar.',{exact:true})).toHaveCount(0);
   await login(page,email,senha);await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
@@ -86,7 +88,9 @@ test('S01-UI16: erro HTML do intermediário após commit mantém resultado incer
     const real=await route.fetch();expect(real.status()).toBe(204);
     await route.fulfill({status:502,contentType:'text/html',body:'<html>Falha do intermediário fictício</html>'});
   },{times:1});
+  const falha=page.waitForResponse(r=>r.url().endsWith('/auth/cadastro/confirmar')&&r.status()===502);
   await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
+  await falha;
   await expect(page.getByRole('alert')).toContainText('A resposta não chegou. A conta pode ter sido criada.');
   await expect(page.getByRole('alert')).not.toContainText('JSON');
   await login(page,email,senha);await page.getByRole('button',{name:'Sair da conta',exact:true}).click();

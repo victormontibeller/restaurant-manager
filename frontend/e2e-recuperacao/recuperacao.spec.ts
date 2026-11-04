@@ -71,7 +71,9 @@ test('S01-UI12: resposta perdida não confirma alteração e login reconcilia',a
   await page.route('**/api/v1/auth/recuperacao/confirmar',async route=>{
     const real=await route.fetch();expect(real.status()).toBe(204);await route.abort('failed');
   },{times:1});
+  const perda=page.waitForEvent('requestfailed',r=>r.url().endsWith('/auth/recuperacao/confirmar'));
   await page.getByRole('button',{name:'Alterar senha',exact:true}).click();
+  await perda;
   await expect(page.getByRole('alert')).toContainText('A resposta não chegou. A senha pode ter sido alterada.');
   await expect(page.getByText('Senha alterada e sessões anteriores encerradas. Volte ao login para entrar com a nova senha.',{exact:true})).toHaveCount(0);
   await login(page,email,senha);await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
