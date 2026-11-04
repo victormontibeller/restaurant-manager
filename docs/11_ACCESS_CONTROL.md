@@ -67,7 +67,7 @@ CRUD não cobre automaticamente ações de negócio. `pedido.editar` não permit
 
 ## Incremento da Sprint 01 — ciclo 5
 
-Implementados no candidato de desenvolvimento: catálogo explícito `Acao`, seeds aditivos por migration, matriz dos cinco perfis com dependências de consulta, versão/conflito e auditoria antes/depois; listagem paginada e edição dos funcionários existentes; perfil, unidades e inativação com revogação durável. Convites/criação de funcionários e cadastro de unidades ainda não estão entregues.
+Implementados no candidato de desenvolvimento: catálogo explícito `Acao`, seeds aditivos por migration, matriz dos cinco perfis com dependências de consulta, versão/conflito e auditoria antes/depois; listagem paginada e edição dos funcionários existentes; perfil, unidades e inativação com revogação durável. Convites/criação de funcionários ainda não estão entregues. O ciclo 6 acrescenta a configuração de unidades descrita abaixo; resultados e release efetivamente servido ficam no checkpoint.
 
 Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`, revalidam ator/sessão e protegem o último Administrador. A política central adquire lock compartilhado dentro da transação do caso de uso e consulta vínculos/permissões atuais. Consumidores futuros precisam chamar essa política e validar recurso/estado/projeções; enumerar uma ação NÃO implementa pedido, catálogo ou finanças. Eventos ainda não existem e sua revogação permanece pendente.
 
@@ -81,7 +81,17 @@ UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizo
 - `GET /api/v1/acessos/efetivos` e `GET /api/v1/operacao/unidades[/{id}]`: identidade atual, ações e unidades permitidas. A lista pública `/unidades` permanece somente dados públicos, não é lista operacional.
 - `POST /api/v1/auth/reautenticar`: Bearer e `senha`; falha de confirmação não deve invalidar a sessão existente. Limite por usuário e prazo conferidos no backend.
 
-## Documentos relacionados
+## Configuração de unidades — incremento do ciclo 6
+
+Somente o Administrador consulta o cadastro administrativo completo e cria/edita/inativa unidades; mutações exigem a mesma reautenticação de cinco minutos. Listagem de até 50 registros por página inclui inativas. O servidor valida nome não vazio, tamanho, ausência de caracteres de controle e fuso IANA reconhecido. A lista pública continua retornando apenas dados públicos de unidades ativas.
+
+Criação recebe um UUID de intenção gerado pelo cliente. Sob o mesmo lock empresarial da equipe, persiste ator/payload normalizado original; reenvio idêntico retorna o estado atual sem duplicar unidade/auditoria, mesmo após uma edição. Mesmo ID com dados/ator divergentes conflita. A intenção permanece enquanto o cadastro existir. PUT exige versão; edições concorrentes não sobrescrevem silenciosamente. Auditoria acompanha a transação e usa `INEXISTENTE` como estado anterior da criação, não SQL NULL.
+
+Inativação é lógica: preserva cadastro e vínculos, mas remove imediatamente a elegibilidade nas consultas e ações operacionais atuais. Reativação restaura essa elegibilidade para vínculos ainda existentes. Não confundir inativação de unidade com suspensão comercial da empresa. Antes de introduzir pedidos/comandas, a Sprint 03 precisa proteger a conclusão de operações existentes também nesse fluxo; não há pedidos nesta entrega.
+
+Rotas: `GET/POST /api/v1/configuracoes/unidades`, `GET/PUT /api/v1/configuracoes/unidades/{id}`. [Contrato OpenAPI parcial](api/unidades.yaml). UI separa unidades e acessos em navegação interna, mostra conflitos e conserva o UUID durante reenvios no formulário aberto. Horários, canais, regiões e parâmetros ainda dependem das sprints seguintes.
+
+## Referências relacionadas
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)
 - [Jornadas por perfil](01_PRD.md)

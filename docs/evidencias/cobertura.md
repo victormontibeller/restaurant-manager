@@ -2,7 +2,7 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, ciclo 3. Os IDs abaixo preservam o escopo integral; não são aprovação das famílias ainda não implementadas. Atores completos, unidades atribuídas e políticas serão exercitados nas sprints correspondentes. Público é o único ator disponível no shell atual; o provisionamento local de teste não habilita login/UI.
+Estado em 2026-11-04, ciclo 6. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
 
 ## Fundação entregue
 
@@ -18,14 +18,14 @@ Estado em 2026-11-04, ciclo 3. Os IDs abaixo preservam o escopo integral; não s
 
 ## Famílias de telas
 
-| ID | Estado no ciclo 2 | Dependência/evidência parcial |
+| ID | Estado atual | Dependência/evidência parcial |
 | --- | --- | --- |
 | T01 | Parcial, não aprovado como família | Resolução do domínio/listagem testadas; escolha/horários pendentes |
 | T02 | Não implementado/não executado | Sprint 02 |
 | T03 | Não implementado/não executado | Sprint 02 |
 | T04 | Não implementado/não executado | Sprint 02 |
 | T05 | Não implementado/não executado | Sprint 02 |
-| T06 | Não implementado/não executado | Sprint 01 |
+| T06 | Parcial, família não aprovada | Login/refresh/logout testados; cadastro/verificação/recuperação pendentes |
 | T07 | Não implementado/não executado | Sprints 01–04 |
 | T08 | Não implementado/não executado | Sprint 04; provedor externo separado |
 | T09 | Não implementado/não executado | Sprints 03–04 |
@@ -42,16 +42,16 @@ Estado em 2026-11-04, ciclo 3. Os IDs abaixo preservam o escopo integral; não s
 | T20 | Não implementado/não executado | Sprint 02 |
 | T21 | Não implementado/não executado | Sprint 02 |
 | T22 | Não implementado/não executado | Sprints 01/04 |
-| T23 | Não implementado/não executado | Sprints 01–04 |
-| T24 | Não implementado/não executado | Sprint 01 |
-| T25 | Não implementado/não executado | Sprint 01 |
+| T23 | Parcial, família não aprovada | CRUD lógico de unidades em validação; horários/regiões/parâmetros pendentes |
+| T24 | Parcial, família não aprovada | Equipe existente/vínculos testados; convites/criação pendentes |
+| T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Não implementado/não executado | Sprints 03–04 |
 | T28 | Parcial, família não aprovada | Provisionamento CLI/reserva/ativação/retomada testados; API/UI/operador SaaS/suspensão pendentes |
 
 ## Cenários transversais
 
-| ID | Estado no ciclo 2 | Dependência/evidência parcial |
+| ID | Estado atual | Dependência/evidência parcial |
 | --- | --- | --- |
 | X01 | Não implementado/não executado | Sprint 03 |
 | X02 | Não implementado/não executado | Sprint 03 |
@@ -71,6 +71,18 @@ Estado em 2026-11-04, ciclo 3. Os IDs abaixo preservam o escopo integral; não s
 
 ## Atores ainda pendentes
 
-Cliente, participante de mesa, Administrador, Gerente, Atendimento, Caixa, Cozinha, Expedição e operador SaaS: ainda sem contas/jornadas implementadas. Negativos de permissão/unidade/propriedade desses atores não foram executados. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
+Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa e operador SaaS ainda sem identidade/jornada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
+
+## Identidade e acessos — cobertura incremental
+
+| Cenário | Superfície/ação | Ator | Evidência |
+| --- | --- | --- | --- |
+| S01-UI01 | Login, recarga/refresh, cookies, armazenamento e logout | Administrador fictício | Cinco projetos aprovados contra b631403 no ciclo 6 |
+| S01-UI02 | Senha inválida, foco e CSRF ausente | Público/Administrador | Cinco projetos aprovados contra b631403 |
+| S01-UI03 | Abas concorrentes, perda de rede e retry de logout | Administrador | Cinco projetos aprovados contra b631403 |
+| S01-UI04 | Matriz, confirmação de senha, persistência e último Administrador | Administrador | Cinco projetos aprovados contra b631403 |
+| S01-UI05 | Criar/editar/inativar unidade, fuso inválido e conflito | Administrador | Teste escrito; vermelho por tela ausente no candidato anterior; execução final pendente |
+| S01-API01 | Matriz/equipe, revogação com JWT válido, vínculos e concorrência | Seis funcionários e Cliente | AcessosTest; detalhes por incremento no checkpoint |
+| S01-API02 | Unidade administrativa, idempotência e concorrência | Administrador; negativos dos outros perfis | Quatro testes novos; validação final em curso |
 
 Resultados da fundação: [ciclo 3](sprint-00-ciclo-3.md). Incremento de provisionamento: [Sprint 01](sprint-01-ciclo-3.md), somente rm_test, não implantado. A matriz inteira deverá ser reexecutada sobre o release final; somar relatórios de versões distintas não substitui esse gate.

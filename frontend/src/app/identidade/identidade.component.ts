@@ -1,10 +1,11 @@
 import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { SessaoService } from './sessao.service';
 import { AcessosComponent } from '../acessos/acessos.component';
+import { UnidadesComponent } from '../unidades/unidades.component';
 
 @Component({
   selector:'app-identidade',
-  imports:[AcessosComponent],
+  imports:[AcessosComponent,UnidadesComponent],
   template:`
     <section aria-labelledby="conta-titulo" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
@@ -12,7 +13,13 @@ import { AcessosComponent } from '../acessos/acessos.component';
         <p>Perfil: {{ pessoa.perfil }}</p>
         <p>Acesso empresarial autenticado. Operação e convites ainda estão em desenvolvimento.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
-        @if(pessoa.perfil==='ADMINISTRADOR'){<app-acessos />}
+        @if(pessoa.perfil==='ADMINISTRADOR'){
+          <nav aria-label="Configurações da empresa">
+            <button type="button" (click)="configuracao.set('acessos')" [attr.aria-pressed]="configuracao()==='acessos'">Gerenciar acessos</button>
+            <button type="button" (click)="configuracao.set('unidades')" [attr.aria-pressed]="configuracao()==='unidades'">Gerenciar unidades</button>
+          </nav>
+          @if(configuracao()==='acessos'){<app-acessos />} @else {<app-unidades />}
+        }
       } @else {
         <h2 id="conta-titulo">Acessar minha conta</h2>
         <p>Use somente uma conta fictícia provisionada nesta empresa. Cadastro e recuperação ainda não estão disponíveis.</p>
@@ -37,6 +44,7 @@ export class IdentidadeComponent {
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly encerramentoPendente = signal(false);
+  readonly configuracao = signal<'acessos'|'unidades'>('acessos');
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
   constructor() { void this.restaurar(); }
   private async restaurar(): Promise<void> {

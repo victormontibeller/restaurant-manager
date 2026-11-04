@@ -1,0 +1,136 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — configuração de unidades
+  version: 0.1.0
+  description: >-
+    Contrato parcial da Sprint 01. Tenant resolvido pelo domínio cadastrado.
+    Exige sessão empresarial de Administrador atual. POST/PUT exigem senha
+    confirmada nos últimos cinco minutos por POST /api/v1/auth/reautenticar.
+    Não implementa horários, canais, regiões nem suspensão comercial.
+security:
+  - empresarial: []
+paths:
+  /api/v1/configuracoes/unidades:
+    get:
+      operationId: listarUnidadesAdministrativas
+      summary: Lista até 50 unidades, incluindo inativas, ordenadas por nome e UUID
+      parameters:
+        - in: query
+          name: pagina
+          schema: {type: integer, minimum: 0, maximum: 10000, default: 0}
+      responses:
+        '200':
+          description: Página de unidades da empresa atual
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 50
+                items: {$ref: '#/components/schemas/Unidade'}
+        default: {$ref: '#/components/responses/Erro'}
+    post:
+      operationId: criarUnidade
+      summary: Cria uma unidade com intenção idempotente
+      description: >-
+        O cliente gera UUID e o conserva nos reenvios. Mesmo UUID, ator e
+        payload normalizado devolvem o estado atual sem nova criação/auditoria,
+        inclusive depois de editar. Payload ou ator divergente retorna 409.
+        Intenção original retida enquanto o cadastro existir. Não exclui fisicamente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Criar'}
+      responses:
+        '200':
+          description: Unidade criada ou resultado atual de uma intenção repetida
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Unidade'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/configuracoes/unidades/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: consultarUnidadeAdministrativa
+      summary: Consulta unidade ativa ou inativa da empresa atual
+      responses:
+        '200':
+          description: Unidade administrativa
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Unidade'}
+        default: {$ref: '#/components/responses/Erro'}
+    put:
+      operationId: alterarUnidade
+      summary: Edita ou inativa sem apagar o cadastro
+      description: >-
+        Versão divergente retorna 409. Inativação remove consultas públicas e
+        acesso operacional na próxima operação, mesmo com JWT válido.
+        Vínculos são preservados; reativar restaura a elegibilidade desses vínculos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Alterar'}
+      responses:
+        '200':
+          description: Estado atualizado com versão atual
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Unidade'}
+        default: {$ref: '#/components/responses/Erro'}
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Criar:
+      type: object
+      additionalProperties: false
+      required: [id, nome, fuso, ativa]
+      properties:
+        id: {type: string, format: uuid}
+        nome: {type: string, minLength: 1, maxLength: 120, description: Nome não vazio e sem caracteres de controle; espaços externos removidos}
+        fuso: {type: string, minLength: 1, maxLength: 60, description: Fuso IANA reconhecido pelo Java; por exemplo America/Sao_Paulo}
+        ativa: {type: boolean}
+    Alterar:
+      type: object
+      additionalProperties: false
+      required: [versao, nome, fuso, ativa]
+      properties:
+        versao: {type: integer, format: int64, minimum: 0}
+        nome: {type: string, minLength: 1, maxLength: 120}
+        fuso: {type: string, minLength: 1, maxLength: 60}
+        ativa: {type: boolean}
+    Unidade:
+      type: object
+      additionalProperties: false
+      required: [id, nome, fuso, ativa, versao]
+      properties:
+        id: {type: string, format: uuid}
+        nome: {type: string}
+        fuso: {type: string}
+        ativa: {type: boolean}
+        versao: {type: integer, format: int64}
+    Erro:
+      type: object
+      required: [codigo, mensagem, correlacao]
+      properties:
+        codigo: {type: string}
+        mensagem: {type: string}
+        correlacao: {type: string, format: uuid}
+  responses:
+    Erro:
+      description: >-
+        400 estrutura/página inválida; 401 sessão/tenant inválido; 403 falta de
+        perfil ou reautenticação; 404 recurso inexistente/alheio; 409 conflito
+        de versão ou intenção; 422 fuso inválido; 500 falha interna inesperada.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}

@@ -92,6 +92,66 @@ class AcessosTest {
             s.execute("drop schema if exists "+schema+" cascade");
         }
     }
+    private MvcResult criarUnidade(String access,UUID id,String nome,String fuso,boolean ativa) throws Exception {
+        return mvc.perform(post("/api/v1/configuracoes/unidades").header("Host",host).header("Authorization","Bearer "+access)
+                .contentType("application/json").content(mapper.writeValueAsString(Map.of("id",id,"nome",nome,"fuso",fuso,"ativa",ativa)))).andReturn();
+    }
+    @Test void unidadesExigemAdminReautenticacaoEValidacaoSemElevarPrivilegios() throws Exception {
+        UUID id=UUID.randomUUID();
+        assertThat(criarUnidade(token,id,"Nova unidade","America/Sao_Paulo",true).getResponse().getStatus()).isEqualTo(403);
+        reautenticar(token);
+        assertThat(criarUnidade(token,id,"   ","America/Sao_Paulo",true).getResponse().getStatus()).isEqualTo(400);
+        assertThat(criarUnidade(token,id,"Nova unidade","Fuso/Inexistente",true).getResponse().getStatus()).isEqualTo(422);
+        for(String perfil:List.of("GERENTE","ATENDIMENTO","CAIXA","COZINHA","EXPEDICAO","CLIENTE")) {
+            String other=login(criar(perfil));
+            assertThat(consultar(other,"/api/v1/configuracoes/unidades").getResponse().getStatus()).isEqualTo(403);
+            assertThat(criarUnidade(other,id,"Nova unidade","America/Sao_Paulo",true).getResponse().getStatus()).isEqualTo(403);
+            assertThat(alterar(other,"/api/v1/configuracoes/unidades/"+U1,Map.of("versao",0,"nome","Mudada","fuso","UTC","ativa",true)).getResponse().getStatus()).isEqualTo(403);
+        }
+        assertThat(criarUnidade(token,id,"Nova unidade","America/Sao_Paulo",true).getResponse().getStatus()).isEqualTo(200);
+        assertThat(mvc.perform(get("/api/v1/configuracoes/unidades/"+id).header("Host","b.localhost").header("Authorization","Bearer "+token)).andReturn().getResponse().getStatus()).isEqualTo(401);
+        assertThat(consultar(token,"/api/v1/configuracoes/unidades/"+UUID.randomUUID()).getResponse().getStatus()).isEqualTo(404);
+        assertThat(consultar(token,"/api/v1/configuracoes/unidades?pagina=-1").getResponse().getStatus()).isEqualTo(400);
+    }
+    @Test void criacaoUnidadeIdempotenteMesmoAposEdicaoENaoDuplicaAuditoria() throws Exception {
+        reautenticar(token); UUID id=UUID.randomUUID();
+        assertThat(criarUnidade(token,id,"Nova","UTC",true).getResponse().getStatus()).isEqualTo(200);
+        assertThat(criarUnidade(token,id,"Nova","UTC",true).getResponse().getStatus()).isEqualTo(200);
+        assertThat(criarUnidade(token,id,"Outra","UTC",true).getResponse().getStatus()).isEqualTo(409);
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Editada","fuso","America/Manaus","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        var replay=criarUnidade(token,id,"Nova","UTC",true);
+        assertThat(replay.getResponse().getStatus()).isEqualTo(200);
+        assertThat(replay.getResponse().getContentAsString()).contains("Editada").doesNotContain("criacao","hash");
+        try(var c=banco();var s=c.prepareStatement("select count(*) from "+schema+".auditoria_acesso where recurso_id=?")) {
+            s.setObject(1,id);try(var r=s.executeQuery()){r.next();assertThat(r.getInt(1)).isEqualTo(2);}
+        }
+    }
+    @Test void inativarUnidadeRetiraAcessoComMesmoJwtEPreservaCadastro() throws Exception {
+        UUID worker=criar("COZINHA");String access=login(worker);reautenticar(token);
+        assertThat(alterar(token,"/api/v1/equipe/"+worker,vinculo("COZINHA",true,0,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(access,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(200);
+        var edit=alterar(token,"/api/v1/configuracoes/unidades/"+U1,Map.of("versao",0,"nome","A1","fuso","America/Sao_Paulo","ativa",false));
+        assertThat(edit.getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(access,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(404);
+        assertThat(mvc.perform(get("/api/v1/unidades").header("Host",host)).andReturn().getResponse().getContentAsString()).doesNotContain(U1.toString());
+        assertThat(consultar(token,"/api/v1/configuracoes/unidades/"+U1).getResponse().getContentAsString()).contains("\"ativa\":false");
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+U1,Map.of("versao",1,"nome","A1","fuso","America/Sao_Paulo","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(access,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(200);
+    }
+    @Test void unidadesCriacaoEEdicaoConcorrentesTemResultadoUnico() throws Exception {
+        reautenticar(token);UUID id=UUID.randomUUID();var start=new CyclicBarrier(2);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> create=()->{start.await(10,TimeUnit.SECONDS);return criarUnidade(token,id,"Concorrente","UTC",true).getResponse().getStatus();};
+            var a=pool.submit(create);var b=pool.submit(create);
+            assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactly(200,200);
+            java.util.concurrent.Callable<Integer> edit=()->{start.await(10,TimeUnit.SECONDS);return alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Alterada","fuso","UTC","ativa",false)).getResponse().getStatus();};
+            var c=pool.submit(edit);var d=pool.submit(edit);
+            assertThat(List.of(c.get(30,TimeUnit.SECONDS),d.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,409);
+        }
+        try(var c=banco();var s=c.prepareStatement("select count(*) from "+schema+".auditoria_acesso where recurso_id=?")) {
+            s.setObject(1,id);try(var r=s.executeQuery()){r.next();assertThat(r.getInt(1)).isEqualTo(2);}
+        }
+    }
     @Test void matrizExclusivaAdminSemVazarSegredosOuOutroTenant() throws Exception {
         var response=consultar(token,"/api/v1/configuracoes/acessos");
         assertThat(response.getResponse().getStatus()).isEqualTo(200);

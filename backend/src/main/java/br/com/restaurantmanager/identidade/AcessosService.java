@@ -82,6 +82,15 @@ public class AcessosService {
 
     /** Chamado dentro da transação do caso de uso: lock compartilhado impede revogação no meio da escrita. */
     @Transactional(propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void autorizarAdministrador(IdentidadeAtual ator,boolean escrita) {
+        repository.politica(escrita); administrador(ator,escrita);
+    }
+    @Transactional(propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void auditarConfiguracao(IdentidadeAtual ator,UUID recurso,String evento,String antes,String depois) {
+        autorizarAdministrador(ator,true);
+        repository.auditar(ator.usuarioId(),recurso,evento,antes,depois);
+    }
+    @Transactional(propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
     public void autorizar(IdentidadeAtual ator,Acao acao,UUID unidade) {
         repository.politica(false); Usuario user=funcionario(ator);
         if(!user.perfil.equals("ADMINISTRADOR")&&!repository.permissoes(user.perfil).contains(acao.codigo())) throw negado();

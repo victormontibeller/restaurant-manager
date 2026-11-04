@@ -42,7 +42,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/", "/index.html", "/*.js", "/*.css", "/favicon.ico", "/api/v1/status", "/api/v1/unidades", "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/configuracoes/acessos", "/api/v1/equipe", "/api/v1/acessos/efetivos", "/api/v1/operacao/unidades", "/api/v1/operacao/unidades/*").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/acessos", "/api/v1/equipe/*").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reautenticar").authenticated().anyRequest().denyAll())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/configuracoes/unidades", "/api/v1/configuracoes/unidades/*").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/unidades/*").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reautenticar", "/api/v1/configuracoes/unidades").authenticated().anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
                     try {
                         if (br.com.restaurantmanager.tenancy.TenantScope.current().equals("__none__")) throw AuthFailure.invalid();
