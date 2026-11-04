@@ -56,5 +56,24 @@ CI a939142 aprovada nos dois checks; isso não encerra gate de release.
 
 ## Pendências
 
+Worker9 terminou exit1: S01-UI35 passou quatro combinações e falhou WebKit;
+S01-UI41 passou cinco, sem skip/retry/flaky. TLS/contrato runtime do candidato
+foram verificados nativamente. Falha UI35 ocorreu após login200 enquanto a view
+de acessos ainda carregava; trace registra me/matriz/equipe/unidades200 e
+snapshot ocupado. Teste agora aguarda essas respostas/corpos antes de iniciar
+a assertiva de DOM, mantendo os cinco segundos de assertiva, sem retry ou
+relaxar o resultado. Typecheck E2E passou; reexecução corrigida ainda pendente.
+A tentativa anterior de typecheck completo excedeu90s; não foi aprovada.
+
+Primeiro preflight de manutenção recusou chaves da fixture de restore distintas
+do runtime, antes de criar tentativa ou tocar banco/serviço. Preparada outra
+fixture privada com AS MESMAS contas e chaves/certificado do runtime sob ensaio,
+sem alterar validação nem banco. Segunda execução nativa está em andamento,
+com fonte imutável242c4a3 e artefatoe847fee. Não é aprovação antecipada.
+
+Recorte mobile do cartão UI35 inspecionado: COZINHA visível e texto quebrado sem
+overflow no topo; o cartão completo tem lista muito longa da massa acumulada.
+Não apresentar essa inspeção de recorte como revisão integral da tela.
+
 Manutenção/migrations com recuperação, gate integrado e publicação Sprint01;
 Sprints02–05 não iniciadas. Sem merge ou conclusão técnica antecipada.

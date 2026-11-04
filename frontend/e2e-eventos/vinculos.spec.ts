@@ -24,7 +24,10 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   await page.goto('/');await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeEnabled();
   await page.getByLabel('E-mail',{exact:true}).fill(fixture.admin.email);await page.getByLabel('Senha',{exact:true}).fill(fixture.admin.senha);
   const response=page.waitForResponse(r=>r.url().endsWith('/auth/login')&&r.request().method()==='POST');
+  const loaded=Promise.all(['/auth/me','/configuracoes/acessos','/equipe?pagina=0','/operacao/unidades'].map(path=>
+    page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='GET')));
   await page.getByRole('button',{name:'Entrar',exact:true}).click();expect((await response).status()).toBe(200);
+  for(const result of await loaded){expect(result.status()).toBe(200);await result.finished();}
   await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   await page.getByLabel('Confirme sua senha').fill(fixture.admin.senha);
   const reauth=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar'));
