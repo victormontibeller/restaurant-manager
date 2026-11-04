@@ -24,6 +24,18 @@ JWT de mesa só tem a capacidade do atendimento/participante ativo. Código temp
 
 ## Diretrizes de implementação
 
+### Incremento empresarial da Sprint 01
+
+Implementado no ciclo 4, ainda não implantado em homologação: access JWT HS256 de 5 minutos, emissor `restaurant-manager`, audiência exclusiva `restaurant-manager-empresa`, IDs imutáveis de usuário/empresa/sessão. A chave privada `RM_JWT_SECRET` exige pelo menos 64 bytes, gerados aleatoriamente fora do Git. Testes usam chave efêmera própria; runtime falha sem chave. Trocar a chave invalida os access tokens; rotação com múltiplas chaves/kid permanece pendente.
+
+Sessão tem prazo absoluto de 12 horas. Refresh aleatório de 256 bits fica em cookie HttpOnly/Secure/SameSite Strict, host-only, path `/api/v1/auth`; banco guarda apenas SHA-256, histórico de consumo e vínculo à sessão. Refresh é serializado por lock da sessão e relê consumo após adquirir o lock. Reutilização revoga a família em transação confirmada, inclusive se o access JWT ainda for válido. Logout e inativação são conferidos no servidor em cada autenticação.
+
+Login/refresh/logout têm chain separada com CSRF obrigatório mesmo quando recebem Bearer. `GET /api/v1/auth/csrf` fornece token mascarado, associado ao cookie host-only `__Host-RM_CSRF` Secure/HttpOnly/Strict. A aplicação exige HTTPS para esta jornada, inclusive no ensaio local com certificado privado. Não reduzir Secure para contornar navegador. Respostas não permitem cache; Angular guarda access apenas em memória, coordena refresh entre abas via Web Locks e comunica logout sem transmitir tokens por BroadcastChannel.
+
+Tentativas persistem no PostgreSQL: por empresa, 5 por e-mail e 100 por endereço de origem em janela de 15 minutos. Origem bloqueada é rejeitada antes de consumir limite de qualquer conta. Endereço vem da conexão, sem confiar em Forwarded; proxy futuro precisa de política explícita antes de ativar confiança. BCrypt custo 12, resposta inválida genérica, limite de 72 bytes. Retenção/expurgo dos registros de sessão e limitadores ainda pendente.
+
+Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Isso ainda não implementa identidade SaaS, cadastro/verificação/recuperação, reautenticação sensível, equipe/matriz ou eventos.
+
 - JWT deve ser validado quanto a assinatura, algoritmo permitido, emissor, audiência, expiração e sessão ativa. Permissões atuais são verificadas no servidor; não dependem de um JWT antigo expirar.
 - Para a proposta web, mantenha access token em memória e refresh token em cookie HttpOnly/Secure, com rotação, revogação e proteção CSRF nos endpoints que usam cookies. Não grave tokens em localStorage/sessionStorage.
 - Código de mesa e QR estático não substituem a autorização de um atendimento. Encerramento revoga a sessão temporária e impede acesso ao próximo grupo.

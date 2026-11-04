@@ -1,35 +1,28 @@
 # Checkpoint de execução
 
-[Índice](README.md) · [Fundação ciclo 3](evidencias/sprint-00-ciclo-3.md) · [Provisionamento ciclo 3](evidencias/sprint-01-ciclo-3.md) · [Cobertura](evidencias/cobertura.md)
+[Índice](README.md) · [Fundação ciclo 3](evidencias/sprint-00-ciclo-3.md) · [Provisionamento](evidencias/sprint-01-ciclo-3.md) · [Cobertura](evidencias/cobertura.md)
 
-## Estado — 2026-11-04, encerramento do ciclo 3
+## Ciclo 4 — incremento em validação
 
-Sprint 00: fundação técnica validada, PR #2 OPEN/ready, tip documental `f354eb858382fd00a51a94ce06597e78e82e2f79`; CI aprovado nos runs 41777118963/41777111407. Integração em main pendente. Sprint 01 em andamento, provisionamento local testado; não concluída. Sprints 02–05 não iniciadas. Não existe CONCLUSAO.json.
+Branch `hermes/sprint-01-identidade-acessos`, base publicada anterior `997a78e8889d442387b1643fc4680b0710f3e723`. PR #3 OPEN/draft, base `hermes/sprint-00-fundacao`; PR #2 OPEN/ready, base main. Nenhum merge/commit direto em main. Sprint 01 não concluída; 02–05 não iniciadas. Não existe CONCLUSAO.json.
 
-Branch atual: `hermes/sprint-01-identidade-acessos`, criada de f354eb8 para preservar toda a fundação. Pedido específico de merge registrado na missão, mas restrição efetiva do executor impede merges; nenhum merge/commit direto em main ocorreu. PR da Sprint 01 deve ficar draft e explicitar dependência de #2. Confira HEAD/remoto/PR antes de retomar; não presumir commit por este texto.
+Preservado checkpoint local do ciclo 3. Git/refs/PRs/serviços conferidos. CI anterior 41779407969 falhou antes dos jobs: anotação GitHub apontou `runner.temp` inválido no env do job. Workflow corrigido para definir TMPDIR pelo RUNNER_TEMP em step/GITHUB_ENV; execução remota da correção ainda pendente.
 
-Executor Hermes/openai-codex autenticado; supervisor externo único. Não iniciar outro coordenador. AGENTS contém frase histórica de somente documentação; atualização foi bloqueada pela proteção do executor e não foi contornada. Estado vigente está nas evidências/checkpoint.
+## Implementação e validação local
+
+- JWT empresarial HS256/5min, sessão PostgreSQL/12h, refresh rotativo hash-only, lock/releitura, revogação por reuso/logout/inativação, CSRF real separado de Bearer, domínio antes de autenticação, limite durável, entrada estrita e respostas PT-BR. Chave privada obrigatória; regras em Segurança.
+- Revisão independente achou origem bloqueada consumindo limite de contas; teste vermelho confirmou 1 linha indevida e correção passou na suíte de identidade. Primeiro ensaio de CSRF real isolado passou; helper de teste `with(csrf())` contaminava repositório compartilhado. Substituído por GET/cookie/header reais, sem afrouxar proteção.
+- Regressão inicial 43/43. Regressão ampliada: 44, com 43 aprovados e falha de inventário fixo após provisionar tenant E2E. Teste corrigido compara inventário completo do registro SQL (incluindo A/B), não omite schemas. Reexecução MigrationBoundaryTest 5/5; próxima execução integral ainda pendente.
+- Angular login/restore/logout implementado, access em memória, coordenação entre abas e retry de logout não confirmado. Revisão independente realizada; jornada/browser ainda em validação. Red UI real constatou formulário ausente no artefato anterior, depois de resolver pré-requisitos de browser e aguardar startup.
+- Massa fictícia exclusiva em rm_test, host c4.localhost, certificado privado para HTTPS loopback :8089. Não é homologação. Processo temporário inicial encerrado antes de reconstruir JAR. Configuração/credenciais/relatórios somente privados.
 
 ## Último release saudável preservado
 
-- SHA servido/validado `449ce3ccf941c73b34ac15a4754183c147f91aaa`.
-- SHA-256 JAR `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`.
-- Serviço nativo exclusivo, loopback :8088; PostgreSQL nativo :55432/rm_hml com roles segregadas, runtime sem DDL. Último PID verificado 41392.
-- E2E20/20, zero falhas/skip/flaky, cinco projetos e screenshots revisados; mobile/tablet emulados. Startup falho/retorno real ao mesmo SHA/hash em59,918s, sem restoreDB/rede/serviços alheios.
-- healthy.json aprova somente fundação. Sprint01/V2 NÃO implantada. Não confundir JAR do checkout com processo servido.
+SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`; JAR SHA256 `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`. Serviço hml :8088, PostgreSQL :55432/rm_hml, migrations V1. Nenhuma migration V2/V3 aplicada a hml. Gates de deploy continuam recusando fingerprint diferente sem manutenção/backup. healthy.json aprova somente fundação. Não confundir target/JAR de teste com release servido.
 
-## Trabalho deste ciclo
+## Pendências e próximo passo
 
-Fundação: travas de retorno corrompido, listener ligado ao PID, inventário E2E obrigatório/hash, SHA inicial-final/checkout limpo e lock de build/deploy corrigidos após revisão independente e testes vermelhos. Build inicial falhou por JAVA_HOME na auditoria; correção/reexecução integral aprovadas.19testesPython+15backend na fundação, Angular/npm/OSV/CI aprovados.
-
-Sprint01: migrations V2 public/tenant; serviço/repository/CLI privilegiados fora do runtime HTTP. Reserva durável, domínio único, BCrypt12, idempotência, migração do schema reservado, ativação atômica, auditoria e retomada. Runtime ignora schemas incompletos na validação global sem habilitar domínio incompleto. Provisionador só aceita dev/test, hml bloqueado até manutenção/backup.
-
-Revisão independente encontrou migration global implícita no CLI antes da validação; teste vermelho demonstrou efeito indevido e correção removeu a migration global. Lock real exigido; diagnóstico sanitizado e causa preservada. Suíte final verify Maven em05:25:44UTC:34testes,0falhas/erros/skip, incluindo15provisionamento+4parser+15regressões; processo Java novo, concorrência e rollback PostgreSQL reais. Build-release identificado/OSV/CI do novo incremento ainda não executados/conferidos. Logs privados `overnight` listados na evidência.
-
-## Próximo passo concreto
-
-1. Conferir Git/refs/PRs e preservar qualquer alteração documental local. Verificar publicação do incremento Sprint01 e CI; corrigir antes de declarar PR pronta. Executar build-release completo identificado e auditoria.
-2. Continuar Sprint01: sessões JWT/refresh/CSRF/revogação, identidade SaaS separada, convites/recuperação capturados, equipe/unidades/matriz e último Administrador concorrente; UI/API e negativos. Todas essas jornadas permanecem pendentes.
-3. Implementar manutenção/backup/retorno compatível ANTES de deploy com migrations diferentes. Hml continua V1/449ce3c; rm_test foi migrado aV2. Não aplicar migrations V2 a hml para contornar trava.
-4. Ampliar massa fictícia/perfis e ACESSO privado quando login real existir. Não inventar credenciais utilizáveis nem dizer que há produto completo.
-5. Catálogo,pedidos,dinheiro,PWA,integrações externas,backup/restore completo,carga e matriz final T01–T28/X01–X15 pendentes. E01–E12/piloto separados. Não criar technical_complete=true.
+1. Finalizar build identificado, auditoria, suíte integral e E2E login nos cinco projetos; corrigir falhas reais, não marcar skipped/flaky como aprovado. Publicar incremento WIP no PR3 e verificar CI/head remoto.
+2. Sprint01: identidade SaaS, cadastro/verificação/recuperação/convites, reautenticação sensível, equipe/unidades/matriz, revogação de política/vínculos/eventos, último Admin concorrente e suspensão preservando operação. Contratos OpenAPI, retenção e rotação de chaves também pendentes.
+3. Manutenção/backup/restore compatíveis ANTES de deploy com novas migrations. Homologação continua na fundação; ACESSO não deve anunciar login implantado.
+4. Sprints02–05 e matriz T01–T28/X01–X15 integrais pendentes, sem redução de escopo. Integrações externas/piloto E01–E12 separados. Próximo ciclo deve conferir estado real, não confiar em build-gate antigo.

@@ -87,7 +87,7 @@ class FundacaoTest {
     }
 
     @Test void errosERotasPrivadasNegadosSemVazarDetalhes() throws Exception {
-        mvc.perform(get("/api/v1/equipe")).andExpect(status().isUnauthorized())
+        mvc.perform(get("/api/v1/equipe").header("Host", "a.localhost")).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.codigo").value("AUTENTICACAO_NECESSARIA"))
                 .andExpect(jsonPath("$.mensagem").value("Autenticação necessária."))
                 .andExpect(jsonPath("$.correlacao").isNotEmpty())

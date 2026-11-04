@@ -14,11 +14,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      TMPDIR: ${{ runner.temp }}
+
       MAVEN_OPTS: -Xmx384m -XX:ActiveProcessorCount=2
       NODE_OPTIONS: --max-old-space-size=768
       NG_BUILD_MAX_WORKERS: 2
     steps:
+      - name: Diretorio temporario privado do runner
+        run: printf 'TMPDIR=%s\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:

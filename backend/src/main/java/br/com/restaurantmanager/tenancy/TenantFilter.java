@@ -17,7 +17,9 @@ public class TenantFilter extends OncePerRequestFilter {
     private final ObjectMapper mapper;
     public TenantFilter(TenantRepository tenants, ObjectMapper mapper) { this.tenants = tenants; this.mapper = mapper; }
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().equals("/api/v1/unidades");
+        String path = request.getRequestURI();
+        return !path.startsWith("/api/v1/") || path.equals("/api/v1/status")
+                || path.startsWith("/api/v1/plataforma/") || path.startsWith("/api/v1/webhooks/");
     }
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

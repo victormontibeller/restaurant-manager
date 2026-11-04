@@ -26,9 +26,17 @@ class MigrationBoundaryTest {
 
     @Test void migradorReaplicaSemDuplicarERegistraTodosOsSchemas() throws Exception {
         TestDatabase.prepare();
+        var expected = new java.util.ArrayList<String>(java.util.List.of("public", "t_template"));
+        try (var connection = DriverManager.getConnection(System.getenv("RM_DB_URL"),
+                System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"));
+             var statement = connection.createStatement();
+             var rows = statement.executeQuery("select schema_name from public.empresa order by schema_name")) {
+            while (rows.next()) expected.add(rows.getString(1));
+        }
+        assertThat(expected).contains(FundacaoTest.A, FundacaoTest.B);
         var first = Migrations.run(System.getenv());
         var second = Migrations.run(System.getenv());
-        assertThat(first).containsExactly("public", "t_template", FundacaoTest.A, FundacaoTest.B);
+        assertThat(first).containsExactlyElementsOf(expected);
         assertThat(second).isEqualTo(first);
     }
 

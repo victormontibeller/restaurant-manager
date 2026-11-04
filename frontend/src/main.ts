@@ -1,20 +1,23 @@
 import { Component, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { IdentidadeComponent } from './app/identidade/identidade.component';
 
 @Component({
   selector: 'app-root',
+  imports: [IdentidadeComponent],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
     <header><span class="marca">Restaurant Manager</span><span class="selo">Homologação · dados fictícios</span></header>
     <main id="conteudo">
       <p class="eyebrow">AMBIENTE EM CONSTRUÇÃO</p>
       <h1>Uma base segura para a operação do restaurante.</h1>
-      <p>Fundação técnica em desenvolvimento. Catálogo, contas e pedidos ainda não estão disponíveis.</p>
+      <p>Identidade empresarial em desenvolvimento. Catálogo e pedidos ainda não estão disponíveis.</p>
       <section aria-labelledby="saude">
         <h2 id="saude">Conexão com o sistema</h2>
         <p role="status" aria-live="polite">{{ mensagem() }}</p>
         <button (click)="verificar()" [disabled]="carregando()">Verificar conexão</button>
       </section>
+      <app-identidade />
       <section aria-labelledby="escopo"><h2 id="escopo">O que você pode testar agora</h2>
         <p>Abertura da interface, navegação por teclado e conexão real com a API e o PostgreSQL.</p>
         <p>Nenhum pedido ou pagamento é aceito nesta versão. Não utilize dados pessoais reais.</p>

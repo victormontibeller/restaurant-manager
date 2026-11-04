@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação técnica validada; Sprint 01 em andamento com provisionamento local testado. Login, equipe/matriz, catálogo, pedidos e pagamentos ainda não estão disponíveis. Homologação preserva o shell validado da fundação. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação técnica validada; Sprint 01 em andamento com provisionamento e autenticação empresarial testados localmente. Login Angular em validação; equipe/matriz, catálogo, pedidos e pagamentos ainda não estão disponíveis. Homologação preserva o shell validado da fundação. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -76,5 +76,7 @@ Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap au
 Após o build e a migration explícita do banco `dev`/`test`, o JAR aceita `--provisionar <ARQUIVO_PRIVADO_0600>` ou `--retomar-provisionamento <UUID>`. O arquivo UTF-8 no formato properties contém exatamente `id`, `nome`, `host`, `unidade`, `email`, `senha`; deve ficar fora do checkout, com senha aleatória de 12 caracteres a 72 bytes e host local explicitamente cadastrado (ex.: `ficticia.localhost`). Não passe senha na linha de comando nem publique o arquivo. Respostas imprimem somente UUID/estado; nenhuma conta pode fazer login ainda. Repetição com o mesmo identificador/dados é idempotente; payload divergente conflita.
 
 O comando não executa migration global implicitamente. Homologação está bloqueada para esse incremento até manutenção/backup compatíveis; não contornar a recusa do deploy. Testes reproduzíveis: `bash scripts/with-env.sh test bash backend/mvnw -B -ntp -f backend/pom.xml verify`, com `TMPDIR` privado definido. A suíte exerce processo Java novo para retomada, reserva/ativação PostgreSQL, concorrência e falhas reais de SQL.
+
+Autenticação local requer `RM_JWT_SECRET` privado aleatório de pelo menos 64 bytes e HTTPS para os cookies Secure; contrato e limites em [Segurança](docs/04_SECURITY.md). A suíte mutante de navegador é separada da verificação não destrutiva da fundação: `npm --prefix frontend run e2e -- --config=playwright.identidade.config.ts`. Exige `RM_BASE_URL=https://c4.localhost:<PORTA>`, massa provisionada em `rm_test`, `RM_AUTH_FIXTURE` apontando para JSON privado com `email`/`senha`, `RM_REPORT_DIR` privado novo, browsers instalados e certificado local. Nunca executar contra banco hml nem chamar esse ensaio de release homologado.
 
 Não versionar credenciais, arquivos de ambiente reais, dados de clientes, dumps ou mídias privadas. Exemplos de configuração devem usar somente placeholders. Não reutilizar os bancos dos projetos de referência.
