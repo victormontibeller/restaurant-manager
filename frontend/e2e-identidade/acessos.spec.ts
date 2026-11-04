@@ -45,7 +45,11 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await expect(page.getByRole('alert')).toHaveText('Mantenha pelo menos um Administrador ativo.');
   await employee.getByLabel('Ativo').check();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
-  await page.screenshot({path:test.info().outputPath('acessos.png'),fullPage:true});
+  // Massa persistente pode gerar página acima do limite de bitmap do WebKit.
+  // Registrar viewport e cartão protegido, sem omitir as assertivas de negócio.
+  await page.getByRole('heading',{name:'Configurações de acessos'}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:test.info().outputPath('acessos.png'),fullPage:false});
+  await employee.screenshot({path:test.info().outputPath('administrador-protegido.png')});
   await page.getByRole('button',{name:'Sair da conta'}).click();
   await expect(page.getByRole('heading',{name:'Configurações de acessos'})).toHaveCount(0);
 });

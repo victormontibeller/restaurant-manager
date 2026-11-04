@@ -32,6 +32,12 @@ de reautenticação/gravação antes das assertivas de UI, sem retirar negativos
 aumentar o timeout das assertivas. Reexecução desse caso pendente; a rodada com
 falha não foi transformada em aprovação. Não se conclui desempenho aprovado.
 
+Regressão de identidade terminou com 43 aprovações/duas falhas. A segunda foi
+S01-UI04 WebKit: captura integral excedeu o limite de 32767 pixels de altura do
+bitmap, depois das assertivas de último Administrador. Captura passou a registrar
+viewport e cartão protegido separadamente; nenhuma assertiva foi removida.
+Ambas as correções precisam de reexecução; não aprovar a suíte pela contagem parcial.
+
 ## Despacho da fila SaaS
 
 Novo `scripts/provisioning_queue.py` consulta intenções pendentes e executa o CLI
