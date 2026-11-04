@@ -5,7 +5,7 @@
 
 [Índice da documentação](README.md)
 
-**Status:** em andamento desde 2026-11-04. Provisionamento, autenticação empresarial, equipe existente e matriz têm implementação e testes em banco exclusivo. Ciclo 6 validou os quatro cenários de identidade/acessos nos cinco projetos de navegador e acrescenta gestão de unidades em validação. APIs/telas SaaS, cadastro/verificação/recuperação/convites, eventos e demais critérios continuam pendentes. Não concluída; não implantada em homologação.
+**Status:** em andamento desde 2026-11-04. Provisionamento, autenticação empresarial, equipe existente, matriz e unidades têm implementação e testes em banco exclusivo. Recuperação de senha foi validada nos cinco projetos de navegador no ciclo 10, sobre o candidato herdado. Cadastro/verificação de cliente está em validação no incremento novo. APIs/telas SaaS, convites/verificação de funcionários preexistentes, eventos e demais critérios continuam pendentes. Não concluída; não implantada em homologação. Resultados e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
 
 Itens compostos permanecem abertos. O primeiro incremento implementa reserva durável, domínio único, migração de schema reservado, administrador/unidade e ativação atômica, com retomada por novo processo. Não é provisionamento pela UI nem homologação de login. [Evidências](evidencias/sprint-01-ciclo-3.md).
 

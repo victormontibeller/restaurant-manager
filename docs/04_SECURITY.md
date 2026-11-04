@@ -34,7 +34,7 @@ Login/refresh/logout têm chain separada com CSRF obrigatório mesmo quando rece
 
 Tentativas persistem no PostgreSQL: por empresa, 5 por e-mail e 100 por endereço de origem em janela de 15 minutos. Origem bloqueada é rejeitada antes de consumir limite de qualquer conta. Endereço vem da conexão, sem confiar em Forwarded; proxy futuro precisa de política explícita antes de ativar confiança. BCrypt custo 12, resposta inválida genérica, limite de 72 bytes. A retenção técnica de sessões/limitadores do ciclo 8 está descrita abaixo; não é uma política jurídica de retenção de dados.
 
-Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Reautenticação sensível, equipe existente/matriz e unidades foram acrescentadas nos ciclos 5–6 conforme [Acessos](11_ACCESS_CONTROL.md); identidade SaaS, cadastro/verificação/recuperação/convites e eventos continuam pendentes.
+Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Reautenticação sensível, equipe existente/matriz e unidades foram acrescentadas nos ciclos 5–6 conforme [Acessos](11_ACCESS_CONTROL.md); recuperação e cadastro de cliente estão descritos abaixo. Identidade SaaS, convites e eventos continuam pendentes.
 
 - JWT deve ser validado quanto a assinatura, algoritmo permitido, emissor, audiência, expiração e sessão ativa. Permissões atuais são verificadas no servidor; não dependem de um JWT antigo expirar.
 - Para a proposta web, mantenha access token em memória e refresh token em cookie HttpOnly/Secure, com rotação, revogação e proteção CSRF nos endpoints que usam cookies. Não grave tokens em localStorage/sessionStorage.
@@ -74,7 +74,19 @@ A nova senha exige pelo menos doze caracteres e no máximo 72 bytes UTF-8. Códi
 
 Conteúdo recuperável da outbox usa AES-256-GCM, nonce aleatório de 96 bits e autenticação adicional pelo tenant/id da mensagem. `RM_EMAIL_SECRET` é uma chave independente da assinatura JWT, com 32 bytes aleatórios codificados em base64; deve ficar fora do Git/banco. Sem chave ou captura configurada, a API retorna indisponibilidade, não sucesso fictício. Substituir a chave com mensagens pendentes as torna ilegíveis: esvaziar a fila sob controle antes de trocar ou permitir nova solicitação; não há rotação transparente dessa chave nesta entrega.
 
-Somente transporte de captura local fictícia, descrito em [Integrações](21_INTEGRATIONS.md). Contrato [OpenAPI de recuperação](api/recuperacao.yaml). Cadastro, verificação de e-mail, convites e identidade SaaS continuam pendentes. A existência de recuperação não encerra a família T06 nem E05.
+Somente transporte de captura local fictícia, descrito em [Integrações](21_INTEGRATIONS.md). Contrato [OpenAPI de recuperação](api/recuperacao.yaml). A existência de recuperação não encerra a família T06 nem E05.
+
+## Cadastro verificado de cliente — candidato do ciclo 10
+
+O cadastro começa somente com o e-mail; não recebe senha, perfil, unidades ou indicador de verificação. Normaliza letras para minúsculas e rejeita espaços/caracteres de controle. A resposta `202` é neutra e a existência da conta só é consultada no worker. Limites próprios: três solicitações por endereço e trinta por origem em quinze minutos. O worker ignora qualquer conta já existente, inclusive funcionário/inativo, sem mudar seu cadastro.
+
+Somente após apresentar o código aleatório de 256 bits, válido por quinze minutos desde a solicitação, o destinatário define a senha. A confirmação cria `CLIENTE` ativo com e-mail verificado, sem sessão automática nem vínculos de unidade, consome todos os códigos daquele endereço e audita na mesma transação. E-mail único e política empresarial serializam a criação; códigos de recuperação e de outro tenant não servem para cadastro. Não há conta nem senha pré-cadastrada que um terceiro possa reservar antes da prova de posse. Credenciais seguem BCrypt custo 12 e limite de 12 caracteres/72 bytes UTF-8.
+
+Cadastro e recuperação confirmam o limitador por origem em transação curta separada, antes de adquirir a política empresarial. Mesmo uma confirmação rejeitada consome a quota; origem bloqueada não espera o lock empresarial. Só depois, em outra transação limitada a dez segundos, política/código/estado são revalidados. Não manter uma conexão de transação externa enquanto essas fases executam. Erro na mutação reverte usuário, código e auditoria, não a quota já contabilizada.
+
+O navegador não armazena código/senha nem coloca código na URL. Perda de resposta, timeout ou HTTP 5xx após confirmação são resultado incerto: conferir login antes de nova solicitação. Corpo HTML de intermediário não expõe erro de parsing. Código consumido não concede segunda criação; confirmação não reativa nem converte conta existente. Verificação de contas preexistentes de funcionários e convites permanecem pendentes.
+
+V9 acrescenta a tabela de códigos de cadastro com hash, e-mail, expiração e consumo, mais tipos próprios da outbox. Expurgo remove até cem códigos por ciclo/tenant cuja expiração passou há mais de 24 horas; o transporte conserva os limites de captura existentes. [OpenAPI de cadastro](api/cadastro.yaml). Implementação em validação, não implantada em homologação; evidências e limitações ficam no checkpoint.
 
 ## Documentos relacionados
 

@@ -30,10 +30,10 @@ public class SecurityConfiguration {
         csrf.setCookieName("__Host-RM_CSRF");
         csrf.setCookieCustomizer(c -> c.secure(true).httpOnly(true).path("/").sameSite("Strict"));
         return common(http, mapper, tenants)
-                .securityMatcher("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/csrf", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar")
+                .securityMatcher("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/csrf", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar")
                 .csrf(c -> c.csrfTokenRepository(csrf))
                 .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar").permitAll().anyRequest().denyAll())
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/recuperacao", "/api/v1/auth/recuperacao/confirmar", "/api/v1/auth/cadastro", "/api/v1/auth/cadastro/confirmar").permitAll().anyRequest().denyAll())
                 .build();
     }
     @Bean @Order(2)

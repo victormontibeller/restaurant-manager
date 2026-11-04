@@ -39,6 +39,8 @@ SSE é proposta para notificações da cozinha/aceite/mesas. A implementação p
 
 Recuperação e aviso de alteração de senha usam outbox empresarial durável; não usam provedor externo nem envio real. `RM_EMAIL_CAPTURE_DIRECTORY` aponta para diretório absoluto privado fora do checkout. Capturas são segregadas por schema interno e UUID da mensagem, com diretórios 0700 e arquivos 0600. Ambiente fora de dev/test/hml é recusado. O conteúdo do código nunca é retornado pela API.
 
+O candidato do ciclo 10 reutiliza esse transporte para cadastro/verificação de cliente, com finalidade e tabela de códigos separadas da recuperação. Repetir entrega após lease mantém o mesmo código; conta já existente é ignorada antes da preparação. Não equivale a verificação de entrega externa nem à implementação de convites de funcionários.
+
 Worker pagina empresas registradas, processa até vinte mensagens por empresa/ciclo e não mantém transação durante escrita do arquivo. Claim com lock/SKIP LOCKED, lease de dois minutos e identidade da tentativa impedem conclusão por worker atrasado. A captura usa arquivo temporário, sincronização e rename atômico; reexecução com mesmo UUID/conteúdo reutiliza a captura. Falha tem backoff de trinta segundos multiplicados pela tentativa, no máximo cinco tentativas. Reinício recupera leases vencidos; captura realizada antes da confirmação no banco não exige outro código.
 
 O estado `CAPTURADO` significa somente persistência local, nunca entrega/lida por destinatário real. A interface informa essa fronteira. Provedor real, domínio/remetente e homologação externa permanecem E05; contratos futuros devem conservar intenção/retry e deduplicação sem prometer envio exatamente uma vez. Resultados efetivamente executados ficam no checkpoint.

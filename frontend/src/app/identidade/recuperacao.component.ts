@@ -1,5 +1,5 @@
 import {Component,ElementRef,ViewChild,inject,output,signal} from '@angular/core';
-import {SessaoService} from './sessao.service';
+import {ApiFailure,SessaoService} from './sessao.service';
 
 @Component({
   selector:'app-recuperacao',
@@ -58,7 +58,7 @@ export class RecuperacaoComponent {
   private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');}
   private sucesso(texto:string):void{this.aviso.set(texto);setTimeout(()=>this.resultado?.nativeElement.focus());}
   private falha(error:unknown,confirmacao:boolean):void {
-    const rede=error instanceof TypeError||(error instanceof Error&&['TimeoutError','AbortError'].includes(error.name));
+    const rede=error instanceof TypeError||(error instanceof ApiFailure&&error.status>=500)||(error instanceof Error&&['TimeoutError','AbortError'].includes(error.name));
     this.erro.set(rede?(confirmacao?'A resposta não chegou. A senha pode ter sido alterada. Volte ao login e confira antes de solicitar outro código.':'Sem conexão. A solicitação não foi confirmada; confira a captura antes de repetir.'):(error instanceof Error?error.message:'Não foi possível concluir a operação.'));
     setTimeout(()=>this.alerta?.nativeElement.focus());
   }

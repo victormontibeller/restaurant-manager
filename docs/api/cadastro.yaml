@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: Cadastro e verificação de cliente empresarial
+  version: 0.1.0
+  description: >-
+    Candidato da Sprint 01, somente dados fictícios e captura privada local.
+    Domínio resolve a empresa. Cadastro não recebe perfil, unidades ou senha antes
+    da prova de posse do e-mail; não substitui funcionário ou cliente existente.
+paths:
+  /api/v1/auth/cadastro:
+    post:
+      summary: Solicitar código de cadastro sem enumerar contas
+      description: >-
+        Obter antes GET /api/v1/auth/csrf e devolver o token mascarado junto do cookie
+        seguro. Bearer não dispensa CSRF. E-mail é normalizado para minúsculas;
+        espaços e caracteres de controle são rejeitados. Limites persistidos de
+        três solicitações por endereço e trinta por origem em quinze minutos.
+        A existência da conta só é consultada no worker. Não há envio externo.
+      security: [{csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: {type: string, format: email, maxLength: 254, pattern: '^[^\s\p{Cc}]+$'}
+      responses:
+        '202':
+          description: Solicitação persistida; não afirma entrega nem criação de conta
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mensagem]
+                properties:
+                  mensagem:
+                    type: string
+                    const: Se o endereço estiver elegível, enviaremos instruções para criar a conta.
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '429': {description: Limite persistido excedido}
+        '503': {description: Captura ou chave de comunicação não configurada}
+  /api/v1/auth/cadastro/confirmar:
+    post:
+      summary: Verificar e-mail e criar cliente atomicamente
+      description: >-
+        Código aleatório de 256 bits válido por quinze minutos após a solicitação.
+        Tabela de verificação guarda somente SHA-256; outbox recuperável é cifrada.
+        Cria CLIENTE ativo e verificado, sem vínculos de unidade nem sessão automática.
+        A transação consome todos os códigos daquele endereço e audita a criação.
+        Conta existente, inclusive inativa ou de funcionário, não é alterada.
+        Código de recuperação ou de outra empresa é inválido. Limite de trinta
+        confirmações por origem em quinze minutos. Resposta perdida ou 5xx exige
+        conferir login com a senha escolhida; não pressupor sucesso nem falha definitiva.
+      security: [{csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [codigo, senha]
+              properties:
+                codigo: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', writeOnly: true}
+                senha:
+                  type: string
+                  minLength: 12
+                  maxLength: 72
+                  writeOnly: true
+                  description: Também limitada a 72 bytes UTF-8 pelo backend
+      responses:
+        '204': {description: Conta criada; é necessário efetuar login separadamente}
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '422': {description: Código inválido/expirado/consumido, conta existente ou senha excedente}
+        '429': {description: Limite de confirmações por origem excedido}
+        '503': {description: Comunicação não configurada}
+components:
+  securitySchemes:
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: Token mascarado de /api/v1/auth/csrf, acompanhado do cookie __Host-RM_CSRF

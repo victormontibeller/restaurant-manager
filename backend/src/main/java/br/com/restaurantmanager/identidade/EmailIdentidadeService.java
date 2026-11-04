@@ -12,9 +12,10 @@ public class EmailIdentidadeService {
     private final RecuperacaoRepository repository;
     private final IdentidadeRepository identidades;
     private final ProtecaoEmail protecao;
+    private final CadastroClienteRepository cadastros;
     private final SecureRandom random=new SecureRandom();
-    public EmailIdentidadeService(RecuperacaoRepository repository,IdentidadeRepository identidades,ProtecaoEmail protecao) {
-        this.repository=repository; this.identidades=identidades; this.protecao=protecao;
+    public EmailIdentidadeService(RecuperacaoRepository repository,IdentidadeRepository identidades,ProtecaoEmail protecao,CadastroClienteRepository cadastros) {
+        this.repository=repository; this.identidades=identidades; this.protecao=protecao; this.cadastros=cadastros;
     }
     public record Entrega(UUID id,UUID lease,String conteudo) {
         @Override public String toString() { return "Entrega[protegida]"; }
@@ -35,6 +36,17 @@ public class EmailIdentidadeService {
         }
     }
     private Entrega prepararConteudo(EmailIdentidade email,Instant agora) {
+        if(email.tipo.equals("CADASTRO_SOLICITADO")) {
+            String address=protecao.decifrar(email.id,email.conteudoCifrado);
+            if(identidades.porEmail(address).isPresent()) { finalizar(email,"IGNORADO"); return new Entrega(email.id,null,null); }
+            byte[] bytes=new byte[32]; random.nextBytes(bytes);
+            String raw=Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+            cadastros.salvar(new CadastroCliente(IdentidadeService.hash(raw),address,email.expiraEm));
+            email.tipo="CADASTRO";
+            email.conteudoCifrado=protecao.cifrar(email.id,"Para: "+address+"\nAssunto: Criar conta de cliente\nEmpresa: "+IdentidadeService.empresaAtual()
+                    +"\nNa mesma página da empresa, escolha Criar conta de cliente, cole o código e defina sua senha. Não compartilhe este código.\nCódigo: "+raw
+                    +"\nVálido até: "+email.expiraEm+"\nSe não solicitou, ignore esta mensagem.\n");
+        }
         if(email.tipo.equals("SOLICITACAO")) {
             String address=protecao.decifrar(email.id,email.conteudoCifrado);
             Usuario usuario=identidades.porEmail(address).orElse(null);
@@ -46,6 +58,9 @@ public class EmailIdentidadeService {
             email.conteudoCifrado=protecao.cifrar(email.id,"Para: "+usuario.email+"\nAssunto: Recuperar senha\nEmpresa: "+IdentidadeService.empresaAtual()
                     +"\nNa mesma página da empresa, escolha Recuperar senha e cole o código abaixo. Não compartilhe este código.\nCódigo: "+raw
                     +"\nVálido até: "+email.expiraEm+"\nSe não solicitou, ignore esta mensagem.\n");
+        }
+        if(!java.util.Set.of("RECUPERACAO","AVISO","CADASTRO").contains(email.tipo)) {
+            finalizar(email,"FALHOU"); return new Entrega(email.id,null,null);
         }
         email.estado="PROCESSANDO"; email.tentativas++; email.lease=UUID.randomUUID(); email.proximaEm=agora.plusSeconds(120);
         return new Entrega(email.id,email.lease,protecao.decifrar(email.id,email.conteudoCifrado));
@@ -61,7 +76,10 @@ public class EmailIdentidadeService {
         }
     }
     @Transactional(timeout=10)
-    public void expurgar() { repository.expurgar(Instant.now().minusSeconds(86400)); }
+    public void expurgar() {
+        Instant limite=Instant.now().minusSeconds(86400);
+        repository.expurgar(limite);cadastros.expurgar(limite);
+    }
     private void finalizar(EmailIdentidade email,String estado) {
         email.estado=estado; email.conteudoCifrado=null; email.lease=null;
     }

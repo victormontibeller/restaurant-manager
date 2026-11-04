@@ -1,6 +1,16 @@
 # Checkpoint de execução
 
-[Índice](README.md) · [Ciclo 9](evidencias/sprint-01-ciclo-9.md) · [Cobertura](evidencias/cobertura.md)
+[Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
+
+## Ciclo 10 — incremento em validação, 2026-11-04
+
+Missão não concluída. Retomada conferiu Git, bancos/processos, PR #3 OPEN/draft e homologação. Documentos locais herdados preservados/publicados em `76eeffa5f9768bc667eeaec976c83bb00a78708d`. completion-rejected.json ausente. Build identificado desse SHA aprovado: 93 backend, 19 Python, frontend e auditorias; hash `d6efed247099ca8770958c3f27ec93f9a070087e1ad1d0884800486ee224282c`.
+
+Candidato herdado HTTPS/rm_test validou quinze cenários de recuperação e vinte de fundação nos cinco projetos; agregação exata sem retry/skip/flaky. Captura mobile de recuperação revisada. Candidato encerrado antes de V9. Não atribuir esses resultados ao código novo. Hml permanece no SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, health UP, sem deploy/reinício/migração.
+
+Incremento atual: cadastro de cliente com prova de e-mail antes da criação/senha, outbox privada cifrada, códigos de finalidade própria, proteção transacional, UI e OpenAPI. Duas revisões independentes somente leitura; achados de limite depois do lock e erro HTTP 5xx/HTML tratados também na recuperação. Vermelhos de API/UI e contenção do limitador registrados. Rodada corrigida aprovada: 14 cadastro + 12 recuperação + 4 proteção/captura, trinta testes sem falhas/erros/skip. Typecheck aplicação/E2E, diff e scanner de 183 arquivos aprovados. [Evidência](evidencias/sprint-01-ciclo-10.md).
+
+Próximo passo: publicar incremento revisado no PR draft; build identificado de checkout limpo; executar cadastro e regressões sobre novo candidato imutável. Runners privados do ciclo 10 preparados, não executados. Cadastro ainda não está em hml. Convites/verificação de funcionários, SaaS/suspensão/eventos, demais critérios de identidade e manutenção/backup/restore continuam pendentes. Sprint 01 aberta; 02–05 não iniciadas. Sem CONCLUSAO.json.
 
 ## Encerramento do ciclo 9 — 2026-11-04
 

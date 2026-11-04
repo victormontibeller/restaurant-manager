@@ -33,7 +33,7 @@ A API não deve depender de DOM, cookie exclusivo do Angular ou chamadas locais 
 
 ## Consistência dos contratos
 
-Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), no candidato do ciclo 9, com CSRF, resposta neutra, consumo único e limites. Não representam OpenAPI completo das demais famílias.
+Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), com CSRF, resposta neutra, consumo único e limites; [cadastro verificado de cliente](api/cadastro.yaml), no candidato do ciclo 10, sem atribuição pública de perfil/unidades nem senha anterior à prova de e-mail. Não representam OpenAPI completo das demais famílias.
 
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
 

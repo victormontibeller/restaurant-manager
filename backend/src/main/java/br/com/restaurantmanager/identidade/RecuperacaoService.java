@@ -15,9 +15,11 @@ public class RecuperacaoService {
     private final RecuperacaoRepository repository;
     private final ProtecaoEmail protecao;
     private final CapturaEmail captura;
+    private final ConfirmacaoLimitadaService confirmacoes;
     private final BCryptPasswordEncoder passwords=new BCryptPasswordEncoder(12);
-    public RecuperacaoService(IdentidadeRepository identidades,AcessosRepository acessos,RecuperacaoRepository repository,ProtecaoEmail protecao,CapturaEmail captura) {
+    public RecuperacaoService(IdentidadeRepository identidades,AcessosRepository acessos,RecuperacaoRepository repository,ProtecaoEmail protecao,CapturaEmail captura,ConfirmacaoLimitadaService confirmacoes) {
         this.identidades=identidades; this.acessos=acessos; this.repository=repository; this.protecao=protecao; this.captura=captura;
+        this.confirmacoes=confirmacoes;
     }
     @Transactional(noRollbackFor=AuthFailure.class)
     public void solicitar(String email,String origem) {
@@ -30,18 +32,18 @@ public class RecuperacaoService {
         UUID id=UUID.randomUUID();
         repository.salvar(new EmailIdentidade(id,"SOLICITACAO",protecao.cifrar(id,normalized),agora.plusSeconds(900)));
     }
-    @Transactional(noRollbackFor=AuthFailure.class)
     public void confirmar(String raw,String senha,String origem) {
         protecao.exigirConfiguracao(); captura.exigirConfiguracao();
         if(senha.getBytes(StandardCharsets.UTF_8).length>72 || senha.length()<12) {
             throw new AuthFailure(422,"SENHA_INVALIDA","Use pelo menos 12 caracteres e no máximo 72 bytes na senha.");
         }
-        Instant agora=Instant.now();
-        // Política antes de limite/token/sessão, como login e administração.
+        confirmacoes.executar("recuperacao-confirmar:"+origem,()->confirmarTransacao(raw,senha));
+    }
+    private void confirmarTransacao(String raw,String senha) {
+        // A quota foi confirmada e liberada antes da política/token/sessão.
         acessos.politica(true);
-        limitar("recuperacao-confirmar:"+origem,30,agora);
         RecuperacaoSenha token=repository.token(IdentidadeService.hash(raw));
-        agora=Instant.now(); // Esperar política/token não prorroga validade.
+        Instant agora=Instant.now(); // Esperar política/token não prorroga validade.
         if(token==null || token.consumidoEm!=null || !token.expiraEm.isAfter(agora)) throw invalido();
         Usuario usuario=identidades.usuario(token.usuarioId);
         if(usuario==null || !usuario.ativo) throw invalido();

@@ -49,13 +49,24 @@ export class SessaoService {
     return response.status===204?undefined as T:await response.json() as T;
   }
   async atualizarIdentidade(): Promise<void> { this.identidade.set(await this.api<Identidade>('/api/v1/auth/me')); }
+  async cadastrar(action:'cadastro'|'cadastro/confirmar',body:object):Promise<void> {
+    const response=await this.comando(action,body);
+    if(!response.ok)throw await this.erroComando(response);
+  }
   async recuperar(action:'recuperacao'|'recuperacao/confirmar',body:object):Promise<void> {
     const response=await this.comando(action,body);
-    if(!response.ok){
-      const error=await response.json() as {mensagem?:string};
-      throw new ApiFailure(response.status,error.mensagem??'Não foi possível recuperar a conta.');
-    }
+    if(!response.ok)throw await this.erroComando(response);
     if(action==='recuperacao/confirmar'){this.limpar();this.channel.postMessage('saiu');}
+  }
+  private async erroComando(response:Response):Promise<ApiFailure> {
+    let mensagem='Não foi possível confirmar o resultado da operação.';
+    if(response.status<500){
+      try {
+        const body=await response.json() as {mensagem?:unknown};
+        if(typeof body.mensagem==='string')mensagem=body.mensagem;
+      } catch { /* Intermediário pode devolver HTML; não expor erro técnico de parsing. */ }
+    }
+    return new ApiFailure(response.status,mensagem);
   }
   private limpar(): void { clearTimeout(this.renewalTimer); this.access = null; this.identidade.set(null); }
   private async receber(response: Response): Promise<void> {
