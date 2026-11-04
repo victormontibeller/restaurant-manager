@@ -5,22 +5,22 @@
 
 [Índice da documentação](README.md)
 
-**Status:** em andamento desde 2026-11-04. Não concluída; gates pendentes no checkpoint.
+**Status:** fundação técnica validada em 2026-11-04; PR #2 aberto, integração em main pendente. [Evidência dos critérios](evidencias/sprint-00-ciclo-3.md). Não representa conclusão do produto.
 
 Os resultados verificáveis estão no checkpoint e nas evidências. Itens compostos permanecem abertos enquanto qualquer requisito estiver pendente.
 
 ## Entregáveis
 
-- [ ] Preflight do Linux do Hermes: checkout/base, autenticação local do Codex, recursos disponíveis, ferramentas e política de branch; registrar resultados no checkpoint.
-- [ ] Estrutura backend/frontend conforme P01, versões fixadas, wrappers/lockfiles e comandos reais no README.
-- [ ] Configuração por ambiente, placeholders, `.gitignore`, health mínimo, logs sem segredos e tratamento padronizado de erros.
-- [ ] PostgreSQL dedicado para desenvolvimento/testes, primeiro ciclo Flyway separado para `public`/tenant e Hibernate em validação de schema.
-- [ ] Base de CI: build, verificações de código/segredos/dependências e execução de testes pertinentes em PostgreSQL real. A forma de obter PostgreSQL no CI não obriga Docker local.
-- [ ] Desenho comprovado de pool/tenant, política de transações, idempotência, inbox/outbox e eventos operacionais; implementar apenas infraestrutura necessária para os incrementos seguintes.
-- [ ] Investigar viabilidade do SDK Mercado Pago, OAuth, produto de checkout, e-mail, domínio/ingresso e runtime Linux; registrar limitações sem ativar serviços reais.
-- [ ] Rotina de execução e retomada com checkpoint sanitizado, registro privado de logs/processos e comandos efetivamente disponíveis; sem dependência deste histórico de conversa.
-- [ ] Base Playwright e inventário rastreável de telas/ações, com dados fictícios, resultados estruturados e artefatos privados; ampliar cobertura em cada sprint conforme a [estratégia de testes](26_TEST_STRATEGY.md).
-- [ ] Ambiente de homologação exclusivo e pipeline nativo de build/deploy/health com identificação de artefato, lock de publicação e retorno compatível; executar apenas quando houver incremento executável e recursos verificados.
+- [x] Preflight Linux, checkout/base, Hermes com `openai-codex` autenticado (adaptação vigente), recursos, ferramentas e branch registrados.
+- [x] Estrutura backend/frontend conforme P01, versões fixadas, wrappers/lockfiles e comandos reais no README.
+- [x] Configuração por ambiente, placeholders, `.gitignore`, health mínimo, logs sem segredos e tratamento padronizado de erros.
+- [x] PostgreSQL dedicado, Flyway separado public/tenant e Hibernate validate.
+- [x] CI: build, verificações de código/segredos/dependências e testes PostgreSQL reais.
+- [x] Pool/tenant comprovado; desenho de transações, idempotência, inbox/outbox e eventos no ADR, sem abstrações vazias.
+- [x] Viabilidade SDK Mercado Pago/OAuth/checkout/e-mail/ingresso investigada; limitações registradas, sem serviços reais.
+- [x] Retomada pelos ciclos 2 e 3, com checkpoint sanitizado e registros privados.
+- [x] Base Playwright e inventário rastreável; ampliar conforme a [estratégia](26_TEST_STRATEGY.md).
+- [x] Homologação exclusiva e pipeline nativo com hash/SHA, lock, health e ensaio real de retorno compatível.
 
 ## Dependências
 
@@ -28,14 +28,14 @@ Validar P01/P02/P03 e desenho de P08/P09/P10; disponibilizar os documentos no ch
 
 ## Critérios de aceite
 
-- [ ] Checkout limpo com instruções reproduzíveis compila backend/frontend; nenhum comando depende de caminho pessoal ou segredo versionado.
-- [ ] Testes usam banco exclusivo e recusam executar limpeza sobre banco não autorizado; nenhuma alteração nos bancos de referência.
-- [ ] Migração inicial pode ser reaplicada sem duplicar dados; falha interrompe com diagnóstico e sem indicar prontidão falsa.
-- [ ] Esqueleto de erro/saúde não vaza stack trace, credenciais ou dados pessoais.
-- [ ] Shell Angular abre em celular/tablet/desktop; navegação básica por teclado e estados de carregamento/erro são demonstrados.
-- [ ] Registrar modelo de recuperação de jobs e conflitos; não chamar testes vazios ou contexto Spring iniciado de prova de isolamento/pagamento.
-- [ ] Sessão nova consegue retomar uma tarefa pelo checkpoint após conferir Git e ambiente, sem repetir mutações já concluídas ou depender do histórico do chat. Branch/commit e deploy de homologação são identificados separadamente; nenhuma ação alcança `main` ou produção.
-- [ ] Falha de health/migration em homologação é registrada sem promover o candidato a validado. A rotina de retomada conserva a base de desenvolvimento e o último release validado como estados distintos.
+- [x] Checkout limpo compila backend/frontend; nenhum caminho pessoal ou segredo versionado necessário.
+- [x] Testes verificam banco/role/host/porta exclusivos antes de mutações; bancos de referência preservados.
+- [x] Migration reaplicada sem duplicação; falhas SQL/checksum interrompem sem prontidão falsa.
+- [x] Erro/health mínimos testados, sem stack trace/credenciais/dados pessoais na resposta.
+- [x] Shell em celular/tablet/desktop, teclado, carregamento e erro/reconexão demonstrados.
+- [x] Modelo de jobs/conflitos registrado no ADR; nenhum teste de pagamento alegado.
+- [x] Retomada real pelo checkpoint e estado observado, com desenvolvimento e runtime distintos; main/produção preservadas.
+- [x] Health falho não promove candidato; retorno nativo conserva último validado. Migration diferente recusada sem manutenção comprovada.
 
 ## Documentos relacionados
 
