@@ -110,6 +110,11 @@ despachos; diagnosticar e executar uma vez com `--resume`, preservando o aviso
 reconhecido na tentativa. Não colocar `--resume` em timer. Registros são locais,
 sem garantia contra perda do disco; supervisão/alerta externo segue pendente.
 
+Na retomada ciclo 7, a pausa é gravada ANTES de iniciar cada filho. Só é removida
+após estado terminal confirmado e progresso salvo. Interrupção ou falha de
+read-back conserva pausa mesmo se o Java já concluiu; diagnosticar o UUID no
+banco antes de reconhecer. Não presumir nova execução por ausência de resultado.
+
 O timer nativo de desenvolvimento deve usar intervalo de sessenta segundos
 após término, limites de recursos e caminhos privados explícitos. Não programar
 timer mutante permanente em `rm_test`, pois disputaria a massa das suítes. Antes
@@ -143,6 +148,28 @@ inferência, nem garantia de persistência contra queda de energia.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
+
+### Ensaio disponível de banco — retomada ciclo 7
+
+`bash scripts/with-env.sh test python3 scripts/database_recovery.py` valida
+conexão efetiva rm_test e adquire o lock de build/deploy. Exporta snapshot de
+transação somente leitura; inventário e pg_dump usam o mesmo ponto. Restaura
+em cluster novo, privado, sem TCP, com papéis sem login, sem alterar bancos
+dev/test/hml. Compara todas as linhas por hash, proprietários, privilégios,
+constraints, índices, funções e triggers, exigindo ao menos duas empresas com
+schema, unidade e identidade. Normaliza somente a representação equivalente
+de casts literais varchar/text e ACL padrão do PostgreSQL; não ignora diferenças.
+
+Resultado, inventários, dump e logs ficam privados em `recovery/<tentativa>`.
+O cluster isolado é parado no encerramento; falha de cleanup impede aprovação
+e fica registrada. Queda abrupta exige conferir `cluster/postmaster.pid` e
+recolher somente esse processo. O ensaio não remove arquivos anteriores.
+Medições são técnicas, não metas RPO/RTO; snapshot anterior à conclusão pode
+omitir transações posteriores, que precisam ser reconciliadas em recuperação.
+
+Esta prova é somente de banco: NÃO cobre mídia, recuperação de chaves,
+login da aplicação restaurada, backup externo, manutenção/migration de hml
+nem habilita o deploy ou provisionamento hml. Esses gates permanecem abertos.
 
 Backup deve abranger banco, mídias necessárias e recuperação de configuração/chaves por processo seguro separado. Banco e mídias precisam formar um ponto recuperável consistente: adotar snapshot coordenado/quiescência ou mídia imutável/versionada com retenção e inventário compatíveis com o backup do banco. Uma cópia posterior dos arquivos, sem controle de alterações concorrentes, não atende a esse requisito. Registrar o ponto de recuperação e verificar referências de mídia no restore. Agendamento, criptografia, destino externo, retenção, RPO, RTO e responsável são pendências. Backup no mesmo disco não basta como único mecanismo de recuperação.
 

@@ -2,6 +2,20 @@
 
 Missão em andamento, sem conclusão da sprint ou promoção de homologação.
 
+## Handoff final
+
+Aviso efetivo de orçamento recebido após consulta de 17:57:16Z; depois somente
+gravações obrigatórias. Head publicado `02e694d`, PR #3 draft, sem merge/deploy.
+CI do 5f15836 confirmou 163 backend e 43 Python aprovados; head posterior ainda
+não consolidado. Worker inicial terminou exit 1 às 17:56:15Z: SaaS também passou
+quinze combinações, mas eventos/identidade mantêm falhas descritas abaixo.
+
+Reexecução de eventos/ensaio nativo da fila e reexecução focada de S01-UI04
+continuam em workers serializados. Nenhum resultado novo observado antes do
+aviso. Não houve encerramento deliberado desses workers nem reconstrução do
+JAR. Conferir processos/resultados antes de nova suíte; não aprovar antecipadamente.
+Última homologação observada segue 449ce3c saudável. Registro final local após push.
+
 ## Artefato herdado e correções E2E
 
 Build de `dee85d3cd9455622ba35e8ee5d147c60e1858fe8` recolhido sem repetir:

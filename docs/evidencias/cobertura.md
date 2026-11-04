@@ -2,7 +2,25 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, ciclo 11. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos validado em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, retomada ciclo 6. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos em validação em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+
+Atualização vigente: no JAR dee85d3, convites e SaaS passaram quinze combinações
+cada; responsividade corrigida dos convites foi reexecutada e captura mobile
+revisada. Eventos teve dez aprovações/cinco falhas e identidade 43 aprovações/duas
+falhas. Correções publicadas; reexecuções continuam sem resultado observado no
+encerramento. Registros históricos abaixo não substituem esse estado nem aprovam
+a matriz integrada. Fila operacional implementada, com teste nativo ainda não
+consolidado. [Evidência do ciclo 6](sprint-01-retomada-ciclo-6.md).
+
+## Atualização — retomada ciclo 7
+
+Eventos S01-UI32–34 passaram quinze combinações no JAR dee85d3. Reexecução
+S01-UI04 teve duas aprovações/três falhas; correções posteriores aguardam E2E.
+S01-UI35 acrescenta revogação/remoção de vínculo inativo pela UI (Administração,
+negativo da sessão Cozinha), ainda não executado neste registro. Quatro regressões
+PostgreSQL aprovadas para vínculo inativo, sessões e login simultâneo.
+X15 permanece parcial: ensaio novo de banco recuperou conteúdo/metadados em
+cluster isolado; mídia/chaves/manutenção e aplicação restaurada não cobertas.
 
 ## Fundação entregue
 

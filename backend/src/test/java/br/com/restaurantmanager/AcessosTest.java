@@ -263,6 +263,42 @@ class AcessosTest {
         assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+U1,Map.of("versao",1,"nome","A1","fuso","America/Sao_Paulo","ativa",true)).getResponse().getStatus()).isEqualTo(200);
         assertThat(consultar(access,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(200);
     }
+    @Test void vinculoInativoPodeSerPreservadoOuRemovidoSemNovasConcessoes() throws Exception {
+        UUID worker=criar("COZINHA");String access=login(worker);reautenticar(token);
+        String path="/api/v1/equipe/"+worker;
+        assertThat(alterar(token,path,vinculo("COZINHA",true,0,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
+        for(UUID unidade:List.of(U1,U2)) {
+            assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+unidade,Map.of("versao",0,"nome","Inativa","fuso","UTC","ativa",false)).getResponse().getStatus()).isEqualTo(200);
+        }
+        assertThat(alterar(token,path,vinculo("COZINHA",false,1,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(access,"/api/v1/auth/me").getResponse().getStatus()).isEqualTo(401);
+        assertThat(alterar(token,path,vinculo("COZINHA",true,2,Set.of(U1,U2))).getResponse().getStatus()).isEqualTo(404);
+        assertThat(alterar(token,path,vinculo("COZINHA",true,2,Set.of(U1,UUID.randomUUID()))).getResponse().getStatus()).isEqualTo(404);
+        assertThat(alterar(token,path,vinculo("COZINHA",true,2,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(access,"/api/v1/auth/me").getResponse().getStatus()).isEqualTo(401);
+        String novo=login(worker);
+        assertThat(consultar(novo,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(404);
+        assertThat(alterar(token,path,vinculo("COZINHA",true,3,Set.of())).getResponse().getStatus()).isEqualTo(200);
+        assertThat(alterar(token,path,vinculo("COZINHA",true,4,Set.of(U1))).getResponse().getStatus()).isEqualTo(404);
+        assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+U1,Map.of("versao",1,"nome","Reativada","fuso","UTC","ativa",true)).getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultar(novo,"/api/v1/operacao/unidades/"+U1).getResponse().getStatus()).isEqualTo(404);
+    }
+    @Test void loginsSimultaneosMantemSessoesIndependentes() throws Exception {
+        UUID worker=criar("COZINHA");var start=new CyclicBarrier(2);
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<String> task=()->{start.await(10,TimeUnit.SECONDS);return login(worker);};
+            var a=pool.submit(task);var b=pool.submit(task);
+            String primeiro=a.get(30,TimeUnit.SECONDS),segundo=b.get(30,TimeUnit.SECONDS);
+            assertThat(primeiro).isNotEqualTo(segundo);
+            var meA=mapper.readTree(consultar(primeiro,"/api/v1/auth/me").getResponse().getContentAsString());
+            var meB=mapper.readTree(consultar(segundo,"/api/v1/auth/me").getResponse().getContentAsString());
+            assertThat(meA.get("sessaoId").asText()).isNotEqualTo(meB.get("sessaoId").asText());
+            reautenticar(token);
+            assertThat(alterar(token,"/api/v1/equipe/"+worker,vinculo("COZINHA",false,0,Set.of())).getResponse().getStatus()).isEqualTo(200);
+            assertThat(consultar(primeiro,"/api/v1/auth/me").getResponse().getStatus()).isEqualTo(401);
+            assertThat(consultar(segundo,"/api/v1/auth/me").getResponse().getStatus()).isEqualTo(401);
+        }
+    }
     @Test void unidadesCriacaoEEdicaoConcorrentesTemResultadoUnico() throws Exception {
         reautenticar(token);UUID id=UUID.randomUUID();var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)) {

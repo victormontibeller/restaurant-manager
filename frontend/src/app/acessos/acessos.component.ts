@@ -49,6 +49,8 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
             @if(f.perfil!=='ADMINISTRADOR'){
               <fieldset [disabled]="ocupado()"><legend>Unidades atribuídas</legend>
                 @for(u of unidades();track u.id){<label><input type="checkbox" [checked]="f.unidades.includes(u.id)" (change)="vincular(f,u.id,$any($event.target).checked)">{{u.nome}}</label>}
+                @for(id of unidadesInativas(f);track id){<label><input type="checkbox" [checked]="f.unidades.includes(id)" (change)="vincular(f,id,$any($event.target).checked)">Vínculo em unidade inativa · <span style="overflow-wrap:anywhere">{{id}}</span></label>}
+                @if(unidadesInativas(f).length){<p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>}
               </fieldset>
             } @else {<p>Cobertura integral da empresa.</p>}
             <button type="button" (click)="salvarFuncionario(f)" [disabled]="ocupado()">Salvar funcionário</button>
@@ -69,6 +71,7 @@ export class AcessosComponent implements OnInit {
   readonly perfis=['GERENTE','ATENDIMENTO','CAIXA','COZINHA','EXPEDICAO'];
   readonly matriz=signal<Matriz|null>(null);
   readonly equipe=signal<Funcionario[]>([]);
+  readonly vinculosOriginais=signal<Record<string,string[]>>({});
   readonly unidades=signal<Unidade[]>([]);
   readonly perfil=signal('GERENTE');
   readonly escolhidas=signal(new Set<string>());
@@ -85,7 +88,7 @@ export class AcessosComponent implements OnInit {
       const m=await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
       const e=await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina='+pagina);
       const u=await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
-      this.matriz.set(m);this.equipe.set(e);this.unidades.set(u);this.pagina.set(pagina);this.selecionar(this.perfil());
+      this.matriz.set(m);this.equipe.set(e);this.vinculosOriginais.set(Object.fromEntries(e.map(f=>[f.id,[...f.unidades]])));this.unidades.set(u);this.pagina.set(pagina);this.selecionar(this.perfil());
     });
   }
   selecionar(perfil:string):void {this.perfil.set(perfil);this.escolhidas.set(new Set(this.matriz()?.perfis[perfil]??[]));}
@@ -95,8 +98,9 @@ export class AcessosComponent implements OnInit {
   async confirmar(event:Event,input:HTMLInputElement):Promise<void>{event.preventDefault();const senha=input.value;input.value='';await this.executar(async()=>{await this.sessao.api('/api/v1/auth/reautenticar','POST',{senha});this.aviso.set('Identidade confirmada por cinco minutos.');});}
   async salvarMatriz():Promise<void>{await this.executar(async()=>{const m=await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos','PUT',{versao:this.matriz()?.versao,perfil:this.perfil(),acoes:[...this.escolhidas()]});this.matriz.set(m);this.selecionar(this.perfil());this.aviso.set('Permissões salvas no servidor.');});}
   mudarPerfil(f:Funcionario,perfil:string):void{f.perfil=perfil;if(perfil==='ADMINISTRADOR')f.unidades=[];}
+  unidadesInativas(f:Funcionario):string[]{return (this.vinculosOriginais()[f.id]??[]).filter(id=>!this.unidades().some(u=>u.id===id));}
   vincular(f:Funcionario,id:string,marcado:boolean):void{f.unidades=marcado?[...new Set([...f.unidades,id])]:f.unidades.filter(u=>u!==id);}
-  async salvarFuncionario(f:Funcionario):Promise<void>{await this.executar(async()=>{const result=await this.sessao.api<Funcionario>('/api/v1/equipe/'+f.id,'PUT',{versao:f.versao,perfil:f.perfil,ativo:f.ativo,unidades:f.unidades});this.equipe.update(rows=>rows.map(row=>row.id===result.id?result:row));this.aviso.set('Funcionário atualizado no servidor.');await this.sessao.atualizarIdentidade();});}
+  async salvarFuncionario(f:Funcionario):Promise<void>{await this.executar(async()=>{const result=await this.sessao.api<Funcionario>('/api/v1/equipe/'+f.id,'PUT',{versao:f.versao,perfil:f.perfil,ativo:f.ativo,unidades:f.unidades});this.equipe.update(rows=>rows.map(row=>row.id===result.id?result:row));this.vinculosOriginais.update(rows=>({...rows,[result.id]:[...result.unidades]}));this.aviso.set('Funcionário atualizado no servidor.');await this.sessao.atualizarIdentidade();});}
   paginaAnterior():void{void this.carregar(Math.max(0,this.pagina()-1));}
   proximaPagina():void{void this.carregar(this.pagina()+1);}
   private async executar(action:()=>Promise<void>):Promise<void>{

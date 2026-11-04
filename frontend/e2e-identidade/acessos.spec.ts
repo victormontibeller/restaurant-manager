@@ -10,6 +10,9 @@ async function confirmarResposta(page:Page,rota:string,metodo:string,status:numb
 }
 
 test('S01-UI04: matriz, reautenticação, persistência e último administrador',async({page})=>{
+  // Trace medido: Firefox gasta 16s no setup e WebKit chega ao último
+  // comando após 60s. Prazo da jornada, não retry nem relaxamento de assertivas.
+  test.setTimeout(120000);
   await page.goto('/');
   await page.getByLabel('E-mail',{exact:true}).fill(fixture.email);
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
@@ -41,7 +44,9 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   const employee=page.getByRole('article').filter({hasText:fixture.email});
   await employee.getByLabel('Ativo').uncheck();
+  const protectedResponse=page.waitForResponse(r=>r.url().includes('/api/v1/equipe/')&&r.request().method()==='PUT',{timeout:15000});
   await employee.getByRole('button',{name:'Salvar funcionário'}).click();
+  expect((await protectedResponse).status()).toBe(409);
   await expect(page.getByRole('alert')).toHaveText('Mantenha pelo menos um Administrador ativo.');
   await employee.getByLabel('Ativo').check();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

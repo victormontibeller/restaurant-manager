@@ -30,10 +30,11 @@ def validate_limit(limit):
         raise ValueError('Lote deve conter de uma a dez solicitações.')
 
 
-def process_batch(queue, limit, on_result=lambda result: None):
+def process_batch(queue, limit, on_result=lambda result: None, on_start=lambda identity: None):
     validate_limit(limit)
     results = []
     for identity in queue.pending(limit):
+        on_start(identity)
         code = queue.execute(identity)
         state = queue.state(identity)
         result = dict(id=identity, exit_code=code, state=state,
@@ -41,7 +42,7 @@ def process_batch(queue, limit, on_result=lambda result: None):
         results.append(result)
         on_result(result)
         # Lock ocupado, timeout ou interrupção: não avançar cegamente no lote.
-        # A mesma intenção permanece elegível para o próximo processo.
+        # A intenção permanece no banco, mas o runner exige diagnóstico para retomá-la.
         if state == 'SOLICITADO':
             break
     return results
@@ -238,13 +239,18 @@ def main():
                     raise RuntimeError('Fila pausada; exige diagnóstico e retomada técnica explícita.')
                 pause.rename(attempt / 'acknowledged-pause.json')
 
+            def started(identity):
+                # Gravar ANTES do filho: SIGTERM, SIGKILL ou read-back indisponível
+                # deixam uma pausa conservadora, inclusive se o efeito já confirmou.
+                atomic_json(pause, dict(id=identity, attempt=str(attempt), created_at=now()))
+
             def persist(result):
                 progress.append(result)
                 atomic_json(attempt / 'progress.json', record)
-                if result['state'] == 'SOLICITADO':
-                    atomic_json(pause, dict(id=result['id'], attempt=str(attempt), created_at=now()))
+                if result['state'] != 'SOLICITADO':
+                    pause.unlink()
 
-            results = process_batch(queue, args.limit, persist)
+            results = process_batch(queue, args.limit, persist, started)
             record['backlog'] = queue.backlog()
             code = 0 if all(r['approved'] for r in results) else 1
     except BlockingIOError:

@@ -2,6 +2,70 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
+## Incremento vigente — retomada ciclo 7, 2026-11-04
+
+Missão não concluída. Workers herdados recolhidos: eventos aprovou quinze
+combinações; S01-UI04 aprovou duas/falhou três. Trace confirma resposta sem espera
+e prazo total esgotado; corrigidos sincronização HTTP e orçamento da jornada,
+sem retry ou remoção de assertivas. Reexecução ainda pendente neste registro.
+
+Revisão independente detectou revogação de funcionário bloqueada por vínculo
+inativo e pausa ausente na interrupção da fila. Vermelhos reproduzidos;
+backend corrigido passou quatro regressões PostgreSQL, incluindo login simultâneo
+e revogação de ambas as sessões. UI mostra, remove e restaura vínculos inativos;
+S01-UI35 escrito, E2E novo ainda pendente. Pausa prévia cobre execução/read-back
+incertos e SIGTERM; testes Python e lógica frontend executados.
+
+Novo ensaio de banco executado de verdade: snapshot exportado, pg_dump e restore
+em cluster separado sem TCP, 1197 tabelas/11922 linhas, 71 empresas ativas ou
+suspensas (70 com usuários/unidades), conteúdo e metadados equivalentes.
+Tempo total 36,346s; restore/verificação 24,321s. Falhas anteriores preservadas:
+limite de locks privado, parsing JSON e representação de constraints/ACL.
+Não cobre mídia/chaves/aplicação restaurada nem libera deploy/migration hml.
+
+Fila herdada despachou três UUIDs via timer/Java: dois concluídos e falha injetada
+no segundo, conforme esperado. Runner falhou ao parar timer transitório já
+removido; constraint foi limpa. Retomada do UUID falho ainda pendente; não
+confundir lote observado com aprovação integral. Hml fundação preservada.
+
+Build identificado/CI/E2E deste incremento ainda pendentes; PR #3 draft, sem
+merge. Próximo: publicar alterações revisadas, build durável, S01-UI35/UI04 e
+retomada operacional; depois manutenção e demais critérios. 02–05 não iniciadas.
+
+## Registro herdado — encerramento ciclo 6
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido depois
+da consulta de 17:57:16Z; após o aviso, somente gravações obrigatórias de handoff.
+Não foi iniciado outro coordenador, nem repetido/interrompido o build herdado.
+
+Publicado e remoto/PR relidos: `02e694d9dbdb7fc3bf2078126305d77e8de07372`.
+PR #3 OPEN/draft/base main, corpo atualizado e relido. CI do `5f15836` aprovada
+nos dois runs; log confirma 163 backend e 43 Python, sem falha/erro/skip. CI do
+head posterior ainda não consolidada; não transferir aprovação entre SHAs.
+
+Worker E2E inicial terminou às 17:56:15Z, exit 1: eventos dez aprovações/cinco
+falhas, convites quinze aprovadas, identidade 43 aprovadas/duas falhas e SaaS
+quinze aprovadas. Nenhum retry/skip/flaky; falhas não foram apagadas. Correções
+de seletores/sincronização/captura publicadas. Captura mobile de convites revisada.
+
+Workers predeterminados seguem independentes: reexecução de eventos e ensaio
+real da fila; depois S01-UI04 nos cinco projetos. Às 17:57:16Z, o primeiro estava
+em readiness e o segundo aguardava; nenhum resultado novo consolidado. Não
+interromper nem duplicar: conferir unidades/PIDs/manifests/resultados antes de
+outra suíte, build ou migration. STATUS privado contém caminhos e limpeza de
+constraint exclusiva de teste, caso o ensaio precise de recuperação.
+
+Fila implementada e testes/guardas verificadas, mas despacho Java/timer ainda
+sem resultado observado neste encerramento. Não chamar fixture unitária ou
+recusa de lock de aprovação operacional. Hml preservada em 449ce3c, health UP
+na última verificação; sem deploy/reinício/migration. Sem merge/CONCLUSAO.json.
+
+Relatório privado navegável gerado antes da consolidação SaaS; handoff distingue
+esse snapshot dos resultados posteriores. Estes registros finais são locais,
+posteriores ao push. Próximo: recolher workers sem repetir, corrigir falhas,
+completar manutenção/backup/restore e critérios restantes. Sprint01 aberta;
+02–05 não iniciadas. Nenhum critério pendente convertido em aprovação.
+
 ## Retomada ciclo 6 — 2026-11-04
 
 Build herdado de `dee85d3` recolhido sem repetição: exit 0/gate true, hash

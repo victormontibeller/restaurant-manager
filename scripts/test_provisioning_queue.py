@@ -35,6 +35,12 @@ class FakeQueue:
     def state(self, identity):
         return self.states[identity]
 
+    def verify_migrations(self):
+        pass
+
+    def backlog(self):
+        return {}
+
 
 class ProvisioningQueueTest(unittest.TestCase):
     def test_lote_limitado_confirma_cada_resultado(self):
@@ -194,6 +200,60 @@ class ProvisioningQueueTest(unittest.TestCase):
             self.assertEqual(len(results), 1)
             self.assertEqual(results[0]['error_type'], 'OCUPADO')
 
+    def test_resultado_incerto_preserva_pausa_antes_de_executar(self):
+        for failure in ('execute', 'state', 'progress'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
+                root = Path(folder)
+                queue = FakeQueue(['CONCLUIDO'])
+                identity = queue.ids[0]
+                pause = root / 'provisioning/test/paused.json'
+                original = queue.execute
+                def execute(identity):
+                    self.assertEqual(json.loads(pause.read_text())['id'], identity)
+                    if failure == 'execute':
+                        raise InterruptedError('Interrupção controlada')
+                    return original(identity)
+                queue.execute = execute
+                queue.verify_migrations = lambda: None
+                queue.backlog = lambda: {}
+                if failure == 'state':
+                    queue.state = lambda identity: (_ for _ in ()).throw(OSError('Leitura indisponível'))
+                env = dict(RM_HOME=folder, RM_STAGE='test', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_test',
+                           RM_DB_USER='rm_test_app', RM_MIGRATION_USER='rm_test_owner')
+                from release_support import atomic_json as save
+                def persist(path, value):
+                    if failure == 'progress' and path.name == 'progress.json':
+                        raise OSError('Gravação indisponível')
+                    save(path, value)
+                with patch.dict(os.environ, env), patch.object(sys, 'argv', ['queue', str(root / 'builds/job')]), \
+                        patch('provisioning_queue.validate_artifact', return_value=dict(git_sha='a'*40, artifact_sha256='b'*64)), \
+                        patch('provisioning_queue.clean_sha', return_value='c'*40), \
+                        patch('provisioning_queue.Queue', return_value=queue), patch('provisioning_queue.atomic_json', side_effect=persist):
+                    self.assertEqual(main(), 1)
+                    self.assertEqual(json.loads(pause.read_text())['id'], identity)
+                    calls = list(queue.called)
+                    self.assertEqual(main(), 1)
+                    self.assertEqual(queue.called, calls)
+
+    def test_retomada_explicita_remove_pausa_so_apos_confirmacao(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
+            root = Path(folder); attempts = root / 'provisioning/test'; attempts.mkdir(parents=True)
+            pause = attempts / 'paused.json'; original = {'id': str(uuid.uuid4()), 'attempt': 'anterior'}
+            pause.write_text(json.dumps(original))
+            queue = FakeQueue(['CONCLUIDO', 'FALHOU']); queue.verify_migrations = lambda: None; queue.backlog = lambda: {}
+            queue.exits[queue.ids[1]] = 1
+            env = dict(RM_HOME=folder, RM_STAGE='test', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_test',
+                       RM_DB_USER='rm_test_app', RM_MIGRATION_USER='rm_test_owner')
+            with patch.dict(os.environ, env), patch.object(sys, 'argv', ['queue', str(root / 'builds/job'), '--resume']), \
+                    patch('provisioning_queue.validate_artifact', return_value=dict(git_sha='a'*40, artifact_sha256='b'*64)), \
+                    patch('provisioning_queue.clean_sha', return_value='c'*40), patch('provisioning_queue.Queue', return_value=queue):
+                self.assertEqual(main(), 1)  # FALHOU confirmado não vira aprovação.
+            self.assertFalse(pause.exists())
+            self.assertEqual(queue.called, queue.ids)
+            saved = list(attempts.glob('*/acknowledged-pause.json'))
+            self.assertEqual(len(saved), 1)
+            self.assertEqual(json.loads(saved[0].read_text()), original)
+
     def test_sigterm_recolhe_filho_e_libera_lock(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
             root = Path(folder); pidfile = root / 'child.pid'; executable = root / 'java-ficticio'
@@ -201,11 +261,12 @@ class ProvisioningQueueTest(unittest.TestCase):
             executable.chmod(0o700)
             scripts = str(Path(__file__).resolve().parent)
             code = ('import sys,signal,pathlib,fcntl;sys.path.insert(0,'+repr(scripts)+');'
-                    'from provisioning_queue import Queue,interrupt;signal.signal(signal.SIGTERM,interrupt);'
+                    'from provisioning_queue import Queue,interrupt,process_batch;from release_support import atomic_json;signal.signal(signal.SIGTERM,interrupt);'
                     'q=object.__new__(Queue);q.java=pathlib.Path('+repr(str(executable))+');'
                     'q.job=q.attempt=pathlib.Path('+repr(folder)+');q.env={};'
                     'f=(q.attempt/"lock").open("w");fcntl.flock(f,fcntl.LOCK_EX);q.lock_fd=f.fileno();'
-                    'q.execute('+repr(str(uuid.uuid4()))+')')
+                    'q.pending=lambda limit:['+repr(str(uuid.uuid4()))+'];'
+                    'process_batch(q,1,on_start=lambda identity:atomic_json(q.attempt/"paused.json",dict(id=identity)))')
             child = subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             try:
                 deadline = time.monotonic() + 10
@@ -214,6 +275,7 @@ class ProvisioningQueueTest(unittest.TestCase):
                 self.assertTrue(pidfile.exists())
                 pid = int(pidfile.read_text())
                 child.terminate(); child.wait(timeout=10)
+                self.assertTrue((root / 'paused.json').exists())
                 with self.assertRaises(ProcessLookupError):
                     os.kill(pid, 0)
                 with (root / 'lock').open('a') as lock:

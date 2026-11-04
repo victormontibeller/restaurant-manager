@@ -1,0 +1,48 @@
+import {test,expect} from '@playwright/test';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+interface Conta {id:string;email:string;senha:string;}
+const file=process.env['RM_EVENT_FIXTURE'];
+if(!file)throw new Error('Massa privada obrigatória.');
+const fixtures=JSON.parse(fs.readFileSync(file,'utf8')) as Record<string,{admin:Conta;cozinha:Conta}>;
+
+test('S01-UI35: vínculo inativo visível, reversível e revogação real do funcionário',async({page,request})=>{
+  const fixture=fixtures[test.info().project.name];
+  async function login(conta:Conta):Promise<string>{
+    const csrf=await (await request.get('/api/v1/auth/csrf')).json();
+    const response=await request.post('/api/v1/auth/login',{headers:{[csrf.headerName]:csrf.token},data:{email:conta.email,senha:conta.senha}});
+    expect(response.status()).toBe(200);return (await response.json()).accessToken;
+  }
+  const admin=await login(fixture.admin);const worker=await login(fixture.cozinha);const headers={Authorization:'Bearer '+admin};
+  expect((await request.post('/api/v1/auth/reautenticar',{headers,data:{senha:fixture.admin.senha}})).status()).toBe(204);
+  const id=crypto.randomUUID();
+  expect((await request.post('/api/v1/configuracoes/unidades',{headers,data:{id,nome:'Vínculo inativo '+id,fuso:'UTC',ativa:true}})).status()).toBe(200);
+  const team=await (await request.get('/api/v1/equipe',{headers})).json();
+  const original=team.find((f:{id:string})=>f.id===fixture.cozinha.id);expect(original).toBeTruthy();
+  expect((await request.put('/api/v1/equipe/'+fixture.cozinha.id,{headers,data:{versao:original.versao,perfil:'COZINHA',ativo:true,unidades:[id]}})).status()).toBe(200);
+  expect((await request.put('/api/v1/configuracoes/unidades/'+id,{headers,data:{versao:0,nome:'Vínculo inativo '+id,fuso:'UTC',ativa:false}})).status()).toBe(200);
+  await page.goto('/');await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeEnabled();
+  await page.getByLabel('E-mail',{exact:true}).fill(fixture.admin.email);await page.getByLabel('Senha',{exact:true}).fill(fixture.admin.senha);
+  const response=page.waitForResponse(r=>r.url().endsWith('/auth/login')&&r.request().method()==='POST');
+  await page.getByRole('button',{name:'Entrar',exact:true}).click();expect((await response).status()).toBe(200);
+  await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
+  await page.getByLabel('Confirme sua senha').fill(fixture.admin.senha);
+  const reauth=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar'));
+  await page.getByRole('button',{name:'Confirmar identidade'}).click();expect((await reauth).status()).toBe(204);
+  const card=page.getByRole('article').filter({hasText:fixture.cozinha.email});
+  const link=card.getByLabel('Vínculo em unidade inativa · '+id);
+  await expect(link).toBeChecked();await link.focus();await link.uncheck();await expect(link).toBeFocused();await link.check();
+  await card.getByLabel('Ativo',{exact:true}).uncheck();
+  const save=()=>page.waitForResponse(r=>r.url().endsWith('/equipe/'+fixture.cozinha.id)&&r.request().method()==='PUT');
+  let saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
+  await expect(page.getByText('Funcionário atualizado no servidor.')).toBeVisible();
+  expect((await request.get('/api/v1/auth/me',{headers:{Authorization:'Bearer '+worker}})).status()).toBe(401);
+  await expect(link).toBeChecked();await card.getByLabel('Ativo',{exact:true}).check();await link.uncheck();
+  saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
+  await expect(link).toHaveCount(0);
+  const updated=(await (await request.get('/api/v1/equipe',{headers})).json()).find((f:{id:string})=>f.id===fixture.cozinha.id);
+  expect(updated.ativo).toBe(true);expect(updated.unidades).toEqual([]);
+  expect((await request.get('/api/v1/auth/me',{headers:{Authorization:'Bearer '+worker}})).status()).toBe(401);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await card.screenshot({path:test.info().outputPath('vinculo-inativo-revogado.png')});
+});

@@ -57,6 +57,9 @@ public class AcessosService {
         if(alvo.versao!=versao) throw conflito("O funcionário foi alterado. Recarregue antes de salvar.");
         if(perfil.equals("ADMINISTRADOR")&&!unidades.isEmpty()) throw invalido("Administrador cobre todas as unidades; não informe vínculos individuais.");
         Set<UUID> validas=new java.util.HashSet<>(repository.unidadesAtivas().stream().map(Unidade::getId).toList());
+        // Inativar unidade não pode impedir revogar o funcionário. Vínculos já
+        // existentes podem permanecer/remover-se, sem novas concessões inativas.
+        validas.addAll(repository.unidades(id));
         if(!validas.containsAll(unidades)) throw inexistente();
         if(alvo.ativo&&alvo.perfil.equals("ADMINISTRADOR")&&(!ativo||!perfil.equals("ADMINISTRADOR"))&&repository.administradores()<=1) {
             throw conflito("Mantenha pelo menos um Administrador ativo.");
