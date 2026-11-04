@@ -8,7 +8,7 @@ Monólito Java/Spring + Angular, 8 GiB compartilhados, sem sudo no host e sem mu
 
 ## Decisão
 
-- Java Temurin 21.0.13+9, Maven 3.9.16 (wrapper 3.3.4), Spring Boot 3.5.16: linha disponível no Maven Central, escolhida para reduzir alterações de APIs durante a fundação, não por ser a versão principal mais nova.
+- Java Temurin 21.0.13+9, Maven 3.9.16 (wrapper 3.3.4), Spring Boot 4.0.9. A tentativa inicial com 3.5.16 foi bloqueada pelo gate OSV: Spring MVC 6.2.19 sem correção pública nessa linha para os avisos encontrados. O BOM 4.0.9 publicado no Maven Central fornece Spring 7.0.10, Tomcat 11.0.27 e PostgreSQL JDBC 42.7.14; não foram usados snapshots nem supressões. Imports de autoconfiguração e Jackson migrados; regressão PostgreSQL e auditoria do artefato aprovadas no ciclo 2.
 - Angular 22.2.4, CLI/build 22.2.5, TypeScript 6.0.2, Node 26.7.0 existente, Playwright 1.64.1; lock npm versionado. Compatibilidade consultada no registro oficial e na tabela Angular.
 - PostgreSQL 16.15 dos pacotes Ubuntu assinados, extraídos em prefixo privado; cluster nativo, somente loopback, porta 55432. Bancos dev/test/hml e roles owner/app distintos. Runtime não recebe DDL. Dados e segredos fora do Git.
 - JPA/Hibernate valida entidades contra schema estrutural `t_template`. Requisições empresariais usam somente schema resolvido pelo cadastro; ausência de contexto é erro, nunca fallback para template/public. Pool retorna a `pg_catalog`; falha de reset aborta a conexão.

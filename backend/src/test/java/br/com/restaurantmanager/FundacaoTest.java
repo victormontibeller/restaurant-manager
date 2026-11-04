@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -86,7 +86,11 @@ class FundacaoTest {
     }
 
     @Test void errosERotasPrivadasNegadosSemVazarDetalhes() throws Exception {
-        mvc.perform(get("/api/v1/equipe")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/equipe")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.codigo").value("AUTENTICACAO_NECESSARIA"))
+                .andExpect(jsonPath("$.mensagem").value("Autenticação necessária."))
+                .andExpect(jsonPath("$.correlacao").isNotEmpty())
+                .andExpect(jsonPath("$.stackTrace").doesNotExist());
         mvc.perform(get("/actuator/env")).andExpect(status().isUnauthorized());
     }
 }

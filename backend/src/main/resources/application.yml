@@ -2,10 +2,11 @@ server:
   address: 127.0.0.1
   port: ${RM_PORT:8089}
   forward-headers-strategy: none
-  error:
-    include-message: never
-    include-stacktrace: never
 spring:
+  web:
+    error:
+      include-message: never
+      include-stacktrace: never
   application:
     name: restaurant-manager
   datasource:
