@@ -2,7 +2,55 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Em execução — retomada ciclo 9, 2026-11-04
+## Retomada ciclo 10 — 2026-11-04
+
+Build/worker9 de e847fee ativos na retomada, preservados sem repetição. Git,
+PR3 OPEN/draft, CI e hml449ce3c UP/PID41392 conferidos. CI f1e58de possui um check
+aprovado e outro falho: corrida entre recarga do modelo e reconciliação do @for
+no probe, identificada por revisão independente. Barreira ApplicationRef.whenStable
+aplicada após operações; três motores passaram localmente com API fictícia.
+Não é aprovação E2E nem liberação da Sprint. Revisão de snapshot/preparação JVM
+sem regressão bloqueante identificada. [Evidência](evidencias/sprint-01-retomada-ciclo-10.md).
+Próximo: recolher execução herdada e avançar manutenção/recuperação, preservando
+hml. Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
+
+## Encerramento — retomada ciclo 9, 2026-11-04
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta20:18:37Z;
+depois somente gravações obrigatórias de handoff. Missão NÃO concluída.
+Publicado e remoto/PR relidos: f1e58ded3ff477bb0c40b07846edf5ee8b2e27c6,
+PR3 OPEN/draft/base main. CI desse head tem um check FALHO e outro PENDENTE na
+última consulta; causa da nova falha NÃO investigada após o aviso. Não mesclar.
+
+Worker8 terminou exit1 por restore falho, mas E2E S01-UI36–40 aprovou exatamente
+25 combinações, zero skip/retry/flaky; inventário recontado independentemente.
+Build herdado e9d23d9 tem167 backend sem falha/erro/skip. Recortes de cartão
+Cozinha mobile e Atendimento tablet revisados; não são revisão de tela inteira.
+
+Restore corrigido REAL aprovado às20:18:10Z:1645 tabelas,100 empresas,15684 linhas,
+snapshot consistente e dump com hash. Banco e aplicação em cluster isolado:
+login das três contas, negativos tenant/unidade/administração, restart, sessões,
+outbox cifrada criada após restore, reset/reuso e outras contas preservadas.
+Processos próprios recolhidos. Limites: não cobre mídia, tokens/outbox anteriores
+ao backup, backup externo, manutenção/migrations/deploy hml nem encerraX15.
+
+Worker9 finito permanece ativo, SHA fixoe847fee91fa683fcb09315ea2b0bd8fc66e0be92;
+após restore iniciou build durável próprio. Job/PID/scripts no STATUS privado.
+Não interromper/repetir. Esse clone NÃO contém f1e58de de sincronização do probe;
+novo build/gate/E2E/native-runtime ainda não consolidados. Próximo: recolher
+worker/job e diagnosticar CI f1e58de; se build falhar, preservar causa antes de
+novo lançamento. Depois finalizar seleção/E2E e manutenção/promoção Sprint01.
+
+69 Python, três unitários Java de preparação e probes de templates nos três
+motores passaram. Tentativa adicional de revisão independente de snapshot e
+otimização da fixture recusada pelo limite2/2; não há aprovação substituta.
+Fonte/evidências em [ciclo9](evidencias/sprint-01-retomada-ciclo-9.md).
+Relatório privado snapshot20:18:28Z; STATUS distingue consulta posterior.
+Hml449ce3c UP/PID41392 verificada, sem restart/migration/deploy. Sem merge,
+semCONCLUSAO.json. Sprint01 aberta;02–05 não iniciadas. Registros finais locais
+posteriores ao push; preservar na retomada. Corpo do PR ainda não atualizado.
+
+## Registro intermediário — retomada ciclo 9
 
 Missão não concluída. Build herdado e9d23d9 terminou às19:54:37Z, exit0/gate true,
 hashfc5cea0401ced562d6375dc142f3fd8364f8fb0272774635f18bc0f80eb442ad.
