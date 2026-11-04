@@ -2,6 +2,21 @@
 
 ## Retomada ciclo 11 — incremento de manutenção
 
+Atualização: transição REAL serviu identidade e847fee por HTTPS no banco hml
+clonado, migrador Java0 e deploy comum recusado durante manutenção pendente.
+Retorno inicial falhou antes de mutar o banco: OID PostgreSQL foi serializado
+como string, enquanto resume exigia inteiro. Original segue bloqueado/preservado;
+candidate health não promoveu baseline. Vermelho da representação reproduzido
+e correção preserva OIDs exatamente, sem editar ledger. Retorno corrigido pendente
+neste registro. Não iniciar build concorrente antes de reconciliar a tentativa.
+
+Worker10 consolidado: vínculos5 aprovados; identidade42 aprovados/3falhas,
+sem skip/retry/flaky. UI04 carregamento incompleto; UI05 não encontrava unidade
+após recarregar lista ordenada com mais de50 registros. Testes corrigidos para
+aguardar cargas e percorrer paginação real, mantendo assertivas. Typecheck passou;
+reexecução ainda pendente. Segunda revisão independente do deploy e opt-in Java
+não encontrou bloqueador novo antes da descoberta nativa de OID textual.
+
 Missão não concluída. Git/PR3 OPEN draft e CI0eb0a70 conferidos; hml449ce3c
 saudável/PID41392 preservada. Bancos dev/test/hml e original rm_test OID conferidos;
 nenhuma tentativa de conclusão rejeitada encontrada. Worker10 terminou com falha

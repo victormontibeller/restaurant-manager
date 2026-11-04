@@ -17,8 +17,11 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await page.getByLabel('E-mail',{exact:true}).fill(fixture.email);
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
   const login=page.waitForResponse(r=>r.url().endsWith('/auth/login')&&r.request().method()==='POST',{timeout:12000});
+  const loaded=Promise.all(['/auth/me','/configuracoes/acessos','/equipe?pagina=0','/operacao/unidades'].map(path=>
+    page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='GET')));
   await page.getByRole('button',{name:'Entrar',exact:true}).click();
   expect((await login).status()).toBe(200);
+  for(const response of await loaded){expect(response.status()).toBe(200);await response.finished();}
   await expect(page.getByRole('heading',{name:'Configurações de acessos'})).toBeVisible();
   await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   await page.getByLabel('Perfil operacional').selectOption('COZINHA');
@@ -36,7 +39,10 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
   await confirmarResposta(page,'/configuracoes/acessos','PUT',200,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
+  const reload=Promise.all(['/configuracoes/acessos','/equipe?pagina=0','/operacao/unidades'].map(path=>
+    page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='GET')));
   await page.getByRole('button',{name:'Recarregar acessos'}).click();
+  for(const response of await reload){expect(response.status()).toBe(200);await response.finished();}
   await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   await expect(kitchen).not.toBeChecked();
   await kitchen.check();

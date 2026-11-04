@@ -17,13 +17,7 @@ final class ProvisionamentoRepository {
 
     Connection abrirComLock() throws SQLException {
         String stage = env.get("RM_STAGE");
-        // Homologação continua bloqueada até manutenção/backup de migrations comprovados.
-        if (!java.util.List.of("dev", "test").contains(stage == null ? "" : stage)
-                || !("jdbc:postgresql://127.0.0.1:55432/rm_" + stage).equals(env.get("RM_DB_URL"))
-                || !("rm_" + stage + "_owner").equals(env.get("RM_MIGRATION_USER"))
-                || !("rm_" + stage + "_app").equals(env.get("RM_DB_USER"))) {
-            throw new IllegalArgumentException("Destino de provisionamento recusado.");
-        }
+        validarDestino(env);
         var c = DriverManager.getConnection(env.get("RM_DB_URL"), env.get("RM_MIGRATION_USER"), env.get("RM_MIGRATION_PASSWORD"));
         try {
             Migrations.verifyIdentity(c, "rm_" + stage, "rm_" + stage + "_owner");
@@ -35,6 +29,18 @@ final class ProvisionamentoRepository {
         } catch (SQLException | RuntimeException failure) {
             c.close();
             throw failure;
+        }
+    }
+
+    static void validarDestino(Map<String, String> env) {
+        String stage = env.get("RM_STAGE");
+        // Opt-in técnico local após manutenção; não exportado ao runtime HTTP.
+        boolean homologacao = "hml".equals(stage) && "true".equals(env.get("RM_HML_PROVISIONING_ENABLED"));
+        if ((!java.util.List.of("dev", "test").contains(stage == null ? "" : stage) && !homologacao)
+                || !("jdbc:postgresql://127.0.0.1:55432/rm_" + stage).equals(env.get("RM_DB_URL"))
+                || !("rm_" + stage + "_owner").equals(env.get("RM_MIGRATION_USER"))
+                || !("rm_" + stage + "_app").equals(env.get("RM_DB_USER"))) {
+            throw new IllegalArgumentException("Destino de provisionamento recusado.");
         }
     }
 

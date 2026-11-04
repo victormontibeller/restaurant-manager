@@ -148,12 +148,17 @@ class DatabaseSwap:
             raise ValueError('Ledger deve ser privado e sem redirecionamento.')
         record = json.loads(path.read_text())
         backup, failed = record.get('backup', ''), record.get('failed', '')
+        def valid_oid(value):
+            # O tipo oid do PostgreSQL é JSON textual; manter representação exata
+            # para comparar ao read-back. Fakes/ledgers numéricos também são aceitos.
+            return ((type(value) is int and value > 0)
+                    or (isinstance(value, str) and re.fullmatch('[1-9][0-9]*', value) is not None))
         if (record.get('stage') != stage or record.get('database') != database
                 or not re.fullmatch(database + '_before_[0-9a-f]{32}', backup)
                 or failed != backup.replace('_before_', '_failed_')
-                or type(record.get('original_oid')) is not int or record['original_oid'] <= 0
-                or (record.get('candidate_oid') is not None and (type(record['candidate_oid']) is not int
-                    or record['candidate_oid'] <= 0 or record['candidate_oid'] == record['original_oid']))):
+                or not valid_oid(record.get('original_oid'))
+                or (record.get('candidate_oid') is not None and (not valid_oid(record['candidate_oid'])
+                    or record['candidate_oid'] == record['original_oid']))):
             raise ValueError('Ledger/OIDs não pertencem ao ambiente solicitado.')
         instance = cls.__new__(cls)
         instance.database, instance.stage, instance.admin, instance.attempt = database, stage, admin, attempt

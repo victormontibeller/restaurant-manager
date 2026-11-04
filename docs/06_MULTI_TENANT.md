@@ -117,6 +117,16 @@ exata permite reconciliar um UUID guardado privadamente. Respostas de sessões
 anteriores/instâncias destruídas não podem limpar intenção nem encerrar login novo.
 [Contrato](api/provisionamento.yaml); [evidência](evidencias/sprint-01-retomada-ciclo-4.md).
 
+## Opt-in técnico de homologação — ciclo 11
+
+Atualização de execução do ciclo 11: o CLI privilegiado passa a admitir hml
+fictícia SOMENTE com `RM_HML_PROVISIONING_ENABLED=true` explícito do operador,
+depois dos gates de manutenção. Continua exigindo URL/porta/banco/roles exatos,
+conexão efetiva e advisory lock; produção permanece recusada. O opt-in não é
+exportado ao HTTP e não é uma prova de gate aprovado. O despachante automático
+`provisioning_queue.py` permanece limitado a dev/test. A disponibilidade efetiva
+do novo binário e o provisionamento real hml devem ser conferidos no checkpoint.
+
 ## Documentos relacionados
 
 - [Modelo de dados](05_DATABASE.md)

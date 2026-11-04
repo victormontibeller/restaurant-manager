@@ -184,6 +184,18 @@ class MaintenanceDatabaseTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             DatabaseSwap.resume(self.admin, 'hml', self.root)
 
+    def test_retomada_preserva_oid_textual_retornado_por_postgresql(self):
+        swap = self.swap()
+        swap.clone()
+        # json_build_object serializa o tipo PostgreSQL oid como string decimal.
+        for item in self.admin.databases.values():
+            item['oid'] = str(item['oid'])
+        swap.record.update(original_oid='41', candidate_oid='42')
+        swap.save('clone-pronto')
+        resumed = DatabaseSwap.resume(self.admin, 'test', self.root)
+        resumed.rollback()
+        self.assertEqual(self.admin.databases['rm_test']['oid'], '41')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,23 @@ if(!file) throw new Error('Massa privada obrigatória.');
 const fixture=JSON.parse(fs.readFileSync(file,'utf8')) as {email:string;senha:string};
 
 test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito',async({page})=>{
+  // A massa persistente ultrapassa uma página; recarregar ordena no servidor.
+  async function recarregarELocalizar(nome:string):Promise<void>{
+    const heading=page.getByRole('heading',{name:nome,exact:true});
+    const section=page.getByRole('region',{name:'Configurações de unidades'});
+    async function carregar(acao:()=>Promise<void>):Promise<void>{
+      const response=page.waitForResponse(r=>r.url().includes('/configuracoes/unidades?pagina=')&&r.request().method()==='GET');
+      await acao();const result=await response;expect(result.status()).toBe(200);await result.finished();
+      await expect(section).toHaveAttribute('aria-busy','false');
+    }
+    await carregar(()=>page.getByRole('button',{name:'Recarregar unidades',exact:true}).click());
+    // Voltar ao início também cobre mudança de posição após edição do nome.
+    const previous=page.getByRole('button',{name:'Página anterior de unidades',exact:true});
+    while(await previous.isEnabled())await carregar(()=>previous.click());
+    const next=page.getByRole('button',{name:'Próxima página de unidades',exact:true});
+    while(await heading.count()===0&&await next.isEnabled())await carregar(()=>next.click());
+    await expect(heading).toBeVisible();
+  }
   await page.goto('/');
   await page.getByLabel('E-mail',{exact:true}).fill(fixture.email);
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
@@ -38,19 +55,21 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito',async(
   expect(concorrente.status()).toBe(200);
   await row.getByRole('button',{name:'Salvar unidade'}).click();
   await expect(page.getByRole('alert')).toHaveText('A unidade foi alterada. Recarregue antes de salvar.');
-  await page.getByRole('button',{name:'Recarregar unidades'}).click();
+  await recarregarELocalizar(nome);
   await expect(row.getByLabel('Fuso da unidade')).toHaveValue('UTC');
   await row.getByLabel('Nome da unidade',{exact:true}).fill(nome+' editada');
   await row.getByLabel('Unidade ativa').uncheck();
   await row.getByRole('button',{name:'Salvar unidade'}).click();
   await expect(page.getByText('Unidade atualizada no servidor.')).toBeVisible();
-  await page.getByRole('button',{name:'Recarregar unidades'}).click();
+  await recarregarELocalizar(nome+' editada');
   const editada=page.getByRole('article').filter({has:page.getByRole('heading',{name:nome+' editada',exact:true})});
   await expect(editada.getByLabel('Unidade ativa')).not.toBeChecked();
   const publico=await page.request.get('/api/v1/unidades');
   expect((await publico.json()).map((u:{id:string})=>u.id)).not.toContain(unidade.id);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
-  await page.screenshot({path:test.info().outputPath('unidades.png'),fullPage:true});
+  await editada.screenshot({path:test.info().outputPath('unidade-editada.png')});
+  await page.getByRole('heading',{name:'Configurações de unidades'}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:test.info().outputPath('unidades.png'),fullPage:false});
   await page.getByRole('button',{name:'Sair da conta'}).click();
   await expect(page.getByRole('heading',{name:'Configurações de unidades'})).toHaveCount(0);
 });

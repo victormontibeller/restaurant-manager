@@ -242,6 +242,14 @@ resposta perdida de CREATE sem OID confirmado não autoriza adoção pelo nome.
 Resultados reais, quando executados, ficam no checkpoint. Código e testes
 unitários de coordenação não constituem deploy ou homologação da aplicação.
 
+O CLI de provisionamento do incremento seguinte admite opt-in local exato
+`RM_HML_PROVISIONING_ENABLED=true`, mantendo guardas de destino/conexão/lock.
+Usá-lo somente após transição e validação operacional, com arquivo de pedido
+fictício 0600 e read-back de empresa/domínio/administrador. Não adicionar a flag
+ao runtime HTTP nem ao timer dev/test. Esse opt-in não promove candidato,
+não substitui ensaio nem aprova a fila de homologação. Conferir o SHA servido:
+o JAR anterior não contém essa opção.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 
