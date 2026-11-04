@@ -23,4 +23,16 @@ Paginação só confirma conjunto/página após sucesso. Teste de reautenticaç�
 
 ## Limites
 
+## Resultado ao interromper
+
+Commit `740d1edf5c63e2f59479a9821cd4f9436e900087` publicado e lido de volta no PR #3 draft, base main. CI runs 41798438867 e 41798432411 aprovados. Build identificado exit 0: 56 testes backend sem falhas/erros/skip, 19 testes Python, typechecks aplicação/E2E, build e auditorias aprovados.
+
+Candidato 740d1ed: nove cenários S01-UI01–UI09 em Chromium desktop aprovados, zero falhas/ignorados/instáveis. A suíte de 45 casos nos cinco projetos foi INTERROMPIDA por aviso efetivo de orçamento; resultados finais não agregados e suíte NÃO aprovada. Fundação sobre esse candidato não foi reexecutada. Capturas desktop/mobile e recortes legíveis de unidades/matriz foram inspecionados, sem sobreposição observada; isso não é auditoria WCAG completa.
+
+Após o build, começou incremento local de rotação JWT. Seis testes contra implementação anterior produziram três falhas e um erro pertinente; dois passaram. Implementação posterior e oito testes finais foram escritos, mas não compilados/executados. Revisão independente adicional recusada pelo limite efetivo de subagentes; código JWT não publicado e não pertence ao JAR testado no navegador. Detalhes e próxima ação no checkpoint.
+
+Servidor candidato e suíte próprios encerrados após o aviso; hml/PostgreSQL/supervisor preservados. Nenhuma verificação adicional do serviço foi feita após o aviso final.
+
+## Pendências
+
 Não é encerramento da Sprint 01. SaaS separado, cadastro/verificação/recuperação/convites, suspensão, eventos, demais projeções/ações e manutenção/restore continuam pendentes. Sprints 02–05 não iniciadas. Nenhum cenário obrigatório ausente é aprovado por estes testes.

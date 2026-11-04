@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação técnica validada; Sprint 01 em andamento com provisionamento e autenticação empresarial testados localmente. Login Angular em validação; equipe/matriz, catálogo, pedidos e pagamentos ainda não estão disponíveis. Homologação preserva o shell validado da fundação. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação técnica integrada; Sprint 01 em andamento com provisionamento, autenticação empresarial, equipe/matriz e unidades administrativas implementados no candidato de desenvolvimento. As evidências distinguem versões e execuções; cadastro/recuperação/convites, SaaS e eventos ainda têm critérios pendentes. Catálogo, pedidos e pagamentos não estão disponíveis. Homologação preserva o shell validado da fundação, não o candidato de identidade. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -49,7 +49,7 @@ Decisões confirmadas, premissas propostas e dependências externas permanecem i
 
 ## Desenvolvimento
 
-A [Sprint 0 — Fundação](docs/14_SPRINT_00.md) tem gates técnicos aprovados; integração do PR ainda pendente. Versões e limites estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md).
+A [Sprint 0 — Fundação](docs/14_SPRINT_00.md) tem gates técnicos aprovados e PR #2 integrado. Versões e limites estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md).
 
 Com Java 21/Maven e Node 26 no PATH, e as variáveis de banco configuradas em ambiente privado:
 
@@ -73,7 +73,7 @@ Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap au
 
 ### Provisionamento local em desenvolvimento/testes
 
-Após o build e a migration explícita do banco `dev`/`test`, o JAR aceita `--provisionar <ARQUIVO_PRIVADO_0600>` ou `--retomar-provisionamento <UUID>`. O arquivo UTF-8 no formato properties contém exatamente `id`, `nome`, `host`, `unidade`, `email`, `senha`; deve ficar fora do checkout, com senha aleatória de 12 caracteres a 72 bytes e host local explicitamente cadastrado (ex.: `ficticia.localhost`). Não passe senha na linha de comando nem publique o arquivo. Respostas imprimem somente UUID/estado; nenhuma conta pode fazer login ainda. Repetição com o mesmo identificador/dados é idempotente; payload divergente conflita.
+Após o build e a migration explícita do banco `dev`/`test`, o JAR aceita `--provisionar <ARQUIVO_PRIVADO_0600>` ou `--retomar-provisionamento <UUID>`. O arquivo UTF-8 no formato properties contém exatamente `id`, `nome`, `host`, `unidade`, `email`, `senha`; deve ficar fora do checkout, com senha aleatória de 12 caracteres a 72 bytes e host local explicitamente cadastrado (ex.: `ficticia.localhost`). Não passe senha na linha de comando nem publique o arquivo. Respostas imprimem somente UUID/estado; login exige a empresa ativada e runtime HTTPS configurado conforme abaixo. Repetição com o mesmo identificador/dados é idempotente; payload divergente conflita.
 
 O comando não executa migration global implicitamente. Homologação está bloqueada para esse incremento até manutenção/backup compatíveis; não contornar a recusa do deploy. Testes reproduzíveis: `bash scripts/with-env.sh test bash backend/mvnw -B -ntp -f backend/pom.xml verify`, com `TMPDIR` privado definido. A suíte exerce processo Java novo para retomada, reserva/ativação PostgreSQL, concorrência e falhas reais de SQL.
 

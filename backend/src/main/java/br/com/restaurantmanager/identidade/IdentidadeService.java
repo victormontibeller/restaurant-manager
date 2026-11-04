@@ -55,6 +55,7 @@ public class IdentidadeService {
     public Tokens refresh(String raw) {
         RefreshToken refresh = localizar(raw);
         Sessao session = repository.sessao(refresh.sessaoId, true);
+        if (session == null) throw AuthFailure.invalid(); // Expurgo pode ter concluído após localizar o hash.
         repository.atualizar(refresh); // reler depois do lock: outro refresh pode ter consumido o token.
         Instant agora = Instant.now();
         if (refresh.usadoEm != null) { session.revogadaEm = agora; throw AuthFailure.invalid(); }
@@ -66,7 +67,9 @@ public class IdentidadeService {
     @Transactional
     public void logout(String raw) {
         RefreshToken refresh = localizar(raw);
-        repository.sessao(refresh.sessaoId, true).revogadaEm = Instant.now();
+        Sessao session = repository.sessao(refresh.sessaoId, true);
+        if (session == null) throw AuthFailure.invalid();
+        session.revogadaEm = Instant.now();
     }
     @Transactional(noRollbackFor = AuthFailure.class)
     public void reautenticar(IdentidadeAtual ator, String senha) {

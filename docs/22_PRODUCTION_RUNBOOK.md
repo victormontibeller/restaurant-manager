@@ -39,7 +39,7 @@ Registrar tip integrado, release candidato, SHA observado no serviço e último 
 
 ## Publicação Linux com serviços nativos
 
-Ambiente confirmado: Linux, 8 GB de RAM, sem Docker e sem domínio configurado. Distribuição, CPU, armazenamento, serviços existentes e conectividade ainda precisam ser inventariados. A memória disponível não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
+O ambiente de homologação desta execução usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. Inventário e versões efetivamente observados ficam no checkpoint e registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
 
 Topologia proposta: Caddy entrega build Angular e encaminha API HTTPS para Spring em loopback; PostgreSQL acessível somente por canais autorizados; serviços systemd com usuário dedicado, restart controlado e limites; mídia em diretório persistente fora dos releases. Hermes executa procedimentos documentados, mas a aplicação não depende de conversa/sessão do agente para funcionar.
 
@@ -53,7 +53,7 @@ Procedimento futuro de release:
 4. Instalar release, reiniciar serviço e verificar saúde técnica e jornadas críticas.
 5. Em falha, executar retorno compatível: trocar binário não desfaz migração de banco. Mudança incompatível exige estratégia própria de recuperação, sem perder transações reais. O runbook deve cobrir eventos externos durante manutenção, comportamento de retry do provedor e reconciliação ao retomar.
 
-Scripts de implantação/diagnóstico serão versionados sem credenciais. Homologação está autorizada dentro do fluxo autônomo e exige ambiente preparado/verificado; produção requer pedido específico. Build, deploy e restore ainda não existem nem foram executados neste repositório.
+Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. Autenticação e unidades da Sprint 01 ainda não foram promovidas ao serviço de homologação. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
