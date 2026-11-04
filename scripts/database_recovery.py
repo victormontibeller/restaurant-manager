@@ -105,6 +105,19 @@ class Session:
         self.process.stdout.close()
 
 
+def snapshot_inventory(command, env, log, snapshot):
+    # Exportador mantém o ponto MVCC, não os locks de todas as tabelas/índices.
+    # Encerrar o leitor antes do pg_dump evita duplicar entradas de locks por PID.
+    validate_snapshot(snapshot)
+    reader = Session(command, env, log)
+    try:
+        reader.query('begin isolation level repeatable read read only')
+        reader.query("set transaction snapshot '" + snapshot + "'")
+        return inventory(reader)
+    finally:
+        reader.close()
+
+
 def inventory(session):
     tables = session.query("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace "
                            "where c.relkind='r' and (n.nspname='public' or n.nspname like 't\\_%' escape '\\') order by 1")
@@ -207,7 +220,7 @@ def main():
             snapshot = validate_snapshot(session.query('select pg_export_snapshot()')[0])
             record['snapshot'] = snapshot
             record['snapshot_at'] = session.query('select transaction_timestamp()')[0]
-            before = inventory(session)
+            before = snapshot_inventory(source, source_env, log, snapshot)
             atomic_json(attempt / 'source-inventory.json', before)
             archive = attempt / 'database.dump'
             subprocess.run([str(binary / 'pg_dump'), '-h', '127.0.0.1', '-p', '55432', '-U', 'rm_test_owner',

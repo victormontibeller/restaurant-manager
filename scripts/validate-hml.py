@@ -5,7 +5,7 @@ import fcntl
 import json
 import os
 from pathlib import Path
-from release_support import UNIT, atomic_json, verify, clean_sha, verify_e2e_coverage, artifact_hash
+from release_support import UNIT, atomic_json, verify, clean_sha, verify_e2e_coverage, artifact_hash, require_foundation_artifact
 
 os.umask(0o077)
 parser = argparse.ArgumentParser()
@@ -31,6 +31,7 @@ with (root / 'deploy.lock').open('a') as lock:
     if observed['artifact_sha256'] != evidence['artifact_sha256']:
         raise SystemExit('Artefato divergente do E2E.')
     release = root / 'releases' / observed['served_sha']
+    require_foundation_artifact(release / 'app.jar')
     (release / 'validated.service').write_text((Path.home() / '.config/systemd/user' / UNIT).read_text())
     evidence['visual_review'] = 'aprovada-pelo-revisor'
     atomic_json(report / 'release-evidence.json', evidence)

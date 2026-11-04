@@ -2,7 +2,62 @@
 
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Retomada ciclo 8 — em execução, 2026-11-04
+## Em execução — retomada ciclo 9, 2026-11-04
+
+Missão não concluída. Build herdado e9d23d9 terminou às19:54:37Z, exit0/gate true,
+hashfc5cea0401ced562d6375dc142f3fd8364f8fb0272774635f18bc0f80eb442ad.
+Worker8 preservado; restore falhou no pg_dump por locks e prosseguiu em E2E dos
+cinco perfis. Resultado final ainda não observado. Não repetir worker/build.
+CI8fd748c aprovada nos dois runs; hml449ce3c UP/PID41392, sem deploy/migration.
+
+Incremento: contrato runtime de identidade/TLS, consumo de job durável mantendo
+SHA original e guardas de fonte compilável, recusa de downgradeHTTP e de gate
+S00 para identidade. Revisão independente apontou ancestrais inseguros e recarga
+UI sem resposta conferida; corrigidos. Wrappers de promoção Sprint01 e manutenção
+continuam pendentes; a guarda de migrations NÃO foi removida.
+
+Probe Angular real nos três motores agora verifica payloads e leitura posterior
+de equipe/matriz/convite, com API fictícia explicitamente rotulada; incluído nos
+gates. S01-UI35 ampliado e S01-UI41 escrito; E2E corrigido ainda pendente.
+68 testes Python passaram, incluindo novas guardas e leitor de snapshot separado
+(mais um teste de grupo foi acrescentado depois; consolidação pendente).
+Preparação da fixture passa a migrar uma vez por JVM, mantendo validação real
+de alvo em cada chamada. Vermelho comportamental e três unitários verdes; houve
+uma falha intermediária de compilação por classes transitórias ausentes no target,
+reexecutada com sucesso. Ganho e regressão PostgreSQL integrados ainda pendentes.
+Falha de locks não exige restart: inventário agora usa sessão leitora encerrada
+antes do dump, mantendo snapshot exportado; reexecução real pendente. Sem merge,
+sem Sprint01 concluída,02–05 não iniciadas, semCONCLUSAO.json.
+
+## Encerramento — retomada ciclo 8, 2026-11-04
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido após
+snapshot19:31:15Z; depois somente gravações obrigatórias de handoff. Nenhum
+build/worker ativo foi interrompido para encerrar a chamada. Sem merge/deploy.
+
+Head8fd748c59d2595a43191e8e9826649f38668d27a publicado; remoto e PR3
+OPEN/draft/base main/head relidos. CI desse head ainda IN_PROGRESS na última
+consulta; não transferir aprovação doe9d23d9. Correção visual tem vermelho/verde
+Angular real nos três motores, com API fictícia; E2E corrigido e revisão independente
+adicional pendentes. Corpo atualizado do PR foi preparado privadamente, ainda
+não enviado; o corpo remoto continua anterior e deve ser atualizado na retomada.
+
+Build durável e9d23d9 ativo, MainPID312464; worker8 MainPID308589 aguarda gate,
+depois massa exclusiva/restore/aplicação e25combinações dos cinco perfis. Nenhum
+resultado novo consolidado observado. NÃO contém seletor corrigido8fd748c.
+STATUS privado registra job, scripts, logs e limites. Não iniciar outra suíte
+pesada, migration ou build antes de recolher essa execução finita.
+
+Relatório privado e checkpoint estruturado gerados às19:30:47Z, agregando XML e
+25combinações herdadas com contagem exata e reprovação visual explícita. SQL
+dev/test/hml confirmou rolesapp separadas emloopback55432; hml449ce3c UP/PID41392,
+hashd9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77.
+Não houve verificação posterior ao aviso. Próximo: recolher worker8, corrigir
+falhas, incorporar seletor corrigido em candidato identificado e reexecutar
+jornadas afetadas, depois manutenção/promoção e critérios restantes. Sprint01
+aberta;02–05 não iniciadas; semCONCLUSAO.json. Handoff final local após o push.
+
+## Registro do incremento — retomada ciclo 8
 
 Atualização: build herdado dfe496c terminou exit0/gate true, hash778dd027c11007d0abab93030cfa4e9dba4ed576d6ef8f7f094dec67bf427635.
 Worker7 encerrou candidato e confirmou cinco vínculos, cinco acessos e quinze

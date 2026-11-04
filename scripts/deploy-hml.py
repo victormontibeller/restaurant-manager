@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Publica candidato limpo em homologação loopback; não promove aprovação E2E."""
 import fcntl
+import argparse
 import json
 import os
 from pathlib import Path
@@ -8,18 +9,27 @@ from pathlib import Path
 import subprocess
 from release_support import (UNIT, artifact_hash, atomic_json, migration_fingerprint,
                              private_config, runtime_config, systemctl, wait_for_release,
-                             install_artifact, previous_artifact, restore_healthy)
+                             install_artifact, previous_artifact, restore_healthy,
+                             durable_artifact, artifact_has_identity)
 
 os.umask(0o077)
 repo = Path(__file__).resolve().parents[1]
 root = Path(os.environ.get('RM_HOME', Path.home() / '.local/share/restaurant-manager')).resolve()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--job', type=Path, help='Job durável aprovado; não reconstrói nem transfere SHA.')
+args = parser.parse_args()
 lockfile = (root / 'deploy.lock').open('a')
 fcntl.flock(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
 if subprocess.check_output(['git', 'status', '--porcelain'], cwd=repo, text=True).strip():
     raise SystemExit('Checkout sujo: recuse publicar código sem commit.')
-sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()
-jar = repo / 'backend/target/restaurant-manager-0.1.0-SNAPSHOT.jar'
-gate = json.loads((root / 'build-gate.json').read_text())
+runner_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()
+if args.job:
+    jar, gate = durable_artifact(args.job, root, repo)
+    sha = gate['git_sha']
+else:
+    sha = runner_sha
+    jar = repo / 'backend/target/restaurant-manager-0.1.0-SNAPSHOT.jar'
+    gate = json.loads((root / 'build-gate.json').read_text())
 digest = artifact_hash(jar)
 if gate != {'git_sha': sha, 'artifact_sha256': digest, 'checks': 'backend+frontend'}:
     raise SystemExit('Build/testes não correspondem ao candidato.')
@@ -31,6 +41,8 @@ fingerprint = migration_fingerprint(target)
 atomic_json(release / 'manifest.json', {'git_sha': sha, 'artifact_sha256': digest, 'migrations_sha256': fingerprint})
 config = root / 'hml.env'
 values = private_config(config)
+# Falha antes da migration/parada se o artefato exige identidade/TLS ausentes.
+runtime_text = runtime_config(values, identity=artifact_has_identity(target))
 unit = Path.home() / '.config/systemd/user' / UNIT
 previous = unit.read_text() if unit.exists() else None
 if previous and migration_fingerprint(previous_artifact(root, previous)) != fingerprint:
@@ -51,7 +63,7 @@ if migration.returncode:
     atomic_json(root / 'candidate.json', {'git_sha': sha, 'state': 'falhou-migration-servico-preservado'})
     raise SystemExit('Migração falhou; serviço anterior preservado. Consulte o registro privado.')
 runtime = release / 'runtime.env'
-runtime.write_text(runtime_config(values))
+runtime.write_text(runtime_text)
 runtime.chmod(0o600)
 content = f'''[Unit]
 Description=Restaurant Manager homologacao ficticia
@@ -59,6 +71,7 @@ After=restaurant-manager-postgres.service
 Requires=restaurant-manager-postgres.service
 [Service]
 ExecStart={java} -Xmx384m -XX:ActiveProcessorCount=2 -jar {target}
+WorkingDirectory={release}
 EnvironmentFile={runtime}
 Environment=RM_PORT=8088
 Environment=RM_RELEASE_SHA={sha}

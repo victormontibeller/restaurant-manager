@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from release_support import atomic_json, verify, clean_sha, verify_e2e_coverage, artifact_hash
+from release_support import atomic_json, verify, clean_sha, verify_e2e_coverage, artifact_hash, require_foundation_artifact
 
 os.umask(0o077)
 repo = Path(__file__).resolve().parents[1]
@@ -17,6 +17,7 @@ if report.is_relative_to(repo) or (report / 'results.json').exists():
 report.mkdir(parents=True, exist_ok=True)
 sha = clean_sha(repo)
 before = verify(root, sha)
+require_foundation_artifact(root / 'releases' / sha / 'app.jar')
 env = dict(os.environ, RM_BASE_URL='http://127.0.0.1:8088', RM_REPORT_DIR=str(report))
 started = datetime.datetime.now(datetime.timezone.utc).isoformat()
 result = subprocess.run(['npm', '--prefix', 'frontend', 'run', 'e2e'], cwd=repo, env=env)

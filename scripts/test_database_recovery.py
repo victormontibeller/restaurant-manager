@@ -2,11 +2,29 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch, MagicMock
+import database_recovery
 
 from database_recovery import canonical_constraint, safe_cleanup, validate_source, validate_snapshot, verify_inventory
 
 
 class DatabaseRecoveryTest(unittest.TestCase):
+    def test_inventario_importa_snapshot_e_libera_locks_antes_do_dump(self):
+        session = MagicMock()
+        with patch('database_recovery.Session', return_value=session), patch('database_recovery.inventory', return_value={'fixture': True}):
+            result = database_recovery.snapshot_inventory(['psql'], {}, None, '00000003-0000001B-1')
+        self.assertEqual(result, {'fixture': True})
+        self.assertEqual([c.args[0] for c in session.query.call_args_list], [
+            'begin isolation level repeatable read read only', "set transaction snapshot '00000003-0000001B-1'"])
+        session.close.assert_called_once()
+
+    def test_inventario_com_falha_tambem_libera_locks(self):
+        session = MagicMock()
+        with patch('database_recovery.Session', return_value=session), patch('database_recovery.inventory', side_effect=RuntimeError):
+            with self.assertRaises(RuntimeError):
+                database_recovery.snapshot_inventory(['psql'], {}, None, '00000003-0000001B-1')
+        session.close.assert_called_once()
+
     def test_reparse_de_array_preserva_valores_e_casts(self):
         source = "CHECK (x = ANY ((ARRAY['ATIVO'::character varying, 'SUSPENSO'::character varying])::text[]))"
         restored = "CHECK (x = ANY (ARRAY[('ATIVO'::character varying)::text, ('SUSPENSO'::character varying)::text]))"

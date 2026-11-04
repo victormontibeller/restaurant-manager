@@ -45,6 +45,8 @@ jobs:
           node scripts/test_platform_session.cjs
           node scripts/test_unit_events.cjs
           node scripts/test_inactive_memberships.cjs
+          node frontend/node_modules/playwright/cli.js install --with-deps chromium firefox webkit
+          bash scripts/test-profile-templates.sh
           npm --prefix frontend run build
           npm --prefix frontend audit --audit-level=moderate
       - name: Backend e PostgreSQL

@@ -140,11 +140,39 @@ todo o ambiente da sessão nem credenciais do Hermes. `with-env.sh test` carrega
 configuração privada do banco de teste e seleciona Java/Maven; Node/npm vêm do
 `PATH` explícito. O ambiente do supervisor não é automaticamente o do serviço.
 
-Este mecanismo não faz deploy nem substitui E2E. O deploy atual ainda consome
-o gate/JAR do checkout original: não copiar somente o gate de um job para ele.
-A integração de promoção do artefato privado continua pendente. Encerramento
+Este mecanismo não faz deploy nem substitui E2E. `deploy-hml.py --job <JOB>`
+consome resultado/gate/hash e o JAR privados, exigindo checkout do job limpo e
+igualdade de Java, recursos, Angular e manifests de dependências com o runner.
+Documentação/scripts/testes posteriores não mudam o SHA original do artefato.
+Não copiar somente o gate para outro JAR. A guarda de migrations diferentes
+continua recusando a promoção sem procedimento de manutenção. Encerramento
 abrupto sem resultado exige reconciliar unidade/log/PID; não há aprovação por
 inferência, nem garantia de persistência contra queda de energia.
+
+A preparação da massa de testes passa a migrar/semear uma vez por JVM após
+sucesso, mantendo verificação da conexão efetiva em TODA chamada. Falha não
+marca preparação concluída; chamadas concorrentes são serializadas. Migrations
+explícitas dos testes de fronteira e validações do runtime não são puladas.
+Isso evita repetir o migrador global para todos os tenants a cada classe; o
+ganho no build completo precisa ser medido. Nenhum tenant/registro é apagado
+para acelerar a suíte. Esse estado é exclusivo da fixture de testes, não produto.
+
+Para artefatos de identidade, o contrato privado inclui explicitamente chave/id
+JWT (e par anterior opcional), chave/diretório de captura e PKCS12 local com senha,
+tipo `PKCS12` e `RM_TLS_TRUST_CERTIFICATE` apontando ao PEM de confiança. Todos
+ficam fora do checkout, privados, com ancestrais não graváveis por terceiros;
+grupo privado contendo somente proprietário/root não constitui terceiro.
+Valores desconhecidos, overrides Spring e credenciais de migration não são
+exportados ao runtime. Configuração ausente/inválida falha antes de migrar.
+Não houve geração/substituição de chaves hml por essa alteração de código.
+
+O verificador exige HTTPS para JAR de identidade, valida CA e hostname/IP; não
+regride silenciosamente para HTTP. A fundação existente continua HTTP loopback.
+Os wrappers `e2e-hml.py`/`validate-hml.py` são SOMENTE da fundação e agora recusam
+explicitamente artefato de identidade: ainda falta integrar a matriz Sprint01
+de homologação. Health/configuração corretos não promovem esse candidato a
+último release validado. O contrato de configuração não comprova por si que um
+PKCS12 contenha a chave/certificado corretos nem substitui startup/health real.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
@@ -166,6 +194,12 @@ e fica registrada. Queda abrupta exige conferir `cluster/postmaster.pid` e
 recolher somente esse processo. O ensaio não remove arquivos anteriores.
 Medições são técnicas, não metas RPO/RTO; snapshot anterior à conclusão pode
 omitir transações posteriores, que precisam ser reconciliadas em recuperação.
+
+Na retomada ciclo9, pg_dump falhou por esgotamento de locks enquanto o exportador
+também mantinha o inventário inteiro. O leitor de inventário agora importa o
+mesmo snapshot em sessão separada e encerra antes do pg_dump; o exportador mantém
+somente o ponto MVCC. Não aumenta limites globais nem reinicia PostgreSQL. A
+reexecução real deve confirmar o resultado; testes unitários não aprovam restore.
 
 Esta prova é somente de banco: NÃO cobre mídia, recuperação de chaves,
 login da aplicação restaurada, backup externo, manutenção/migration de hml

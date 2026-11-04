@@ -24,6 +24,13 @@ cluster isolado; mídia/chaves/manutenção e aplicação restaurada não cobert
 
 ## Fundação entregue
 
+Retomada ciclo9: S01-UI35 passa a alterar/salvar/recarregar perfil pela UI com
+payload/resposta/GET real; S01-UI41 cobre perfil de convite escolhido, consulta,
+aceite e login. Novos testes ainda não executados neste registro. O probe de
+template real cobre payloads/recarga com API fictícia nos três motores e integra
+os gates de build/CI; não substitui E2E. Os gates de fundação agora recusam JAR
+de identidade para impedir aprovação parcial como baseline da Sprint01.
+
 | Cenário | Superfície/ação real | Ator | Evidência |
 | --- | --- | --- | --- |
 | S00-UI01 | `/`: shell, health, CSS, alvo de toque, ausência de overflow | Público | Playwright nos cinco projetos; screenshots revisados |

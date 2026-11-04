@@ -45,6 +45,24 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   const updated=(await (await request.get('/api/v1/equipe',{headers})).json()).find((f:{id:string})=>f.id===fixture.cozinha.id);
   expect(updated.ativo).toBe(true);expect(updated.unidades).toEqual([]);
   expect((await request.get('/api/v1/auth/me',{headers:{Authorization:'Bearer '+worker}})).status()).toBe(401);
+  // Alterar e persistir, não apenas comparar o valor inicial do select.
+  await card.getByLabel('Perfil do funcionário').selectOption('EXPEDICAO');
+  saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();
+  const changed=await saved;expect(changed.status()).toBe(200);
+  expect(changed.request().postDataJSON().perfil).toBe('EXPEDICAO');
+  expect((await changed.json()).perfil).toBe('EXPEDICAO');
+  const reload=Promise.all(['/configuracoes/acessos','/equipe?pagina=0','/operacao/unidades'].map(path=>
+    page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='GET')));
+  await page.getByRole('button',{name:'Recarregar acessos'}).click();
+  for(const response of await reload)expect(response.status()).toBe(200);
+  await expect(card.getByLabel('Perfil do funcionário')).toBeEnabled();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('EXPEDICAO');
+  expect((await (await request.get('/api/v1/equipe',{headers})).json()).find((f:{id:string})=>f.id===fixture.cozinha.id).perfil).toBe('EXPEDICAO');
+  // Restaura o perfil da fixture por UI para as jornadas seguintes.
+  await card.getByLabel('Perfil do funcionário').selectOption('COZINHA');
+  saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
+  await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await card.screenshot({path:test.info().outputPath('vinculo-inativo-revogado.png')});
 });

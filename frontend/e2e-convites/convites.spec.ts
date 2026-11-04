@@ -60,6 +60,24 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
   expect(await page.evaluate(()=>[localStorage.length,sessionStorage.length])).toEqual([0,0]);expect(page.url()).not.toContain(codigo);
   await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
 });
+test('S01-UI41: seleção do perfil de convite persiste até aceite e login',async({page})=>{
+  await admin(page);
+  await expect(page.getByLabel('Perfil do convite')).toHaveValue('COZINHA');
+  await page.getByLabel('Perfil do convite').selectOption('EXPEDICAO');
+  const email=crypto.randomUUID()+'@example.invalid',senha=crypto.randomUUID();const {id,codigo}=await criar(page,email);
+  await page.getByLabel('Identificador do convite').fill(id);
+  const consultation=page.waitForResponse(r=>r.url().endsWith('/equipe/convites/'+id)&&r.request().method()==='GET');
+  await page.getByRole('button',{name:'Consultar convite',exact:true}).click();
+  const consulted=await consultation;expect(consulted.status()).toBe(200);expect((await consulted.json()).perfil).toBe('EXPEDICAO');
+  await page.getByRole('button',{name:'Sair da conta',exact:true}).click();await abrirAceite(page);await preencher(page,codigo,senha);
+  const r=page.waitForResponse(r=>r.url().endsWith('/convites/aceitar'));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();expect((await r).status()).toBe(204);
+  await expect(page.getByRole('status').filter({hasText:'Convite aceito e e-mail verificado'})).toBeVisible();await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveValue('');
+  await page.getByRole('button',{name:'Voltar ao login',exact:true}).click();await entrar(page,email,senha);
+  await expect(page.getByText('Perfil: EXPEDICAO',{exact:true})).toBeVisible();await expect(page.getByText('E-mail verificado.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Gerenciar convites',exact:true})).toHaveCount(0);
+  expect(await page.evaluate(()=>[localStorage.length,sessionStorage.length])).toEqual([0,0]);expect(page.url()).not.toContain(codigo);
+  await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
+});
 test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem duplicação',async({page})=>{
   await admin(page);const email=crypto.randomUUID()+'@example.invalid';await page.getByLabel('E-mail do funcionário convidado').fill(email);
   let id='';await page.route('**/api/v1/equipe/convites',async route=>{
