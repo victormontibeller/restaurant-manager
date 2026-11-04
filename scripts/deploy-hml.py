@@ -10,7 +10,7 @@ import subprocess
 from release_support import (UNIT, artifact_hash, atomic_json, migration_fingerprint,
                              private_config, runtime_config, systemctl, wait_for_release,
                              install_artifact, previous_artifact, restore_healthy,
-                             durable_artifact, artifact_has_identity)
+                             durable_artifact, artifact_has_identity, assert_no_hml_maintenance)
 
 os.umask(0o077)
 repo = Path(__file__).resolve().parents[1]
@@ -19,7 +19,12 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--job', type=Path, help='Job durável aprovado; não reconstrói nem transfere SHA.')
 args = parser.parse_args()
 lockfile = (root / 'deploy.lock').open('a')
-fcntl.flock(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+try:
+    fcntl.flock(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    assert_no_hml_maintenance(root)
+except Exception:
+    lockfile.close()
+    raise
 if subprocess.check_output(['git', 'status', '--porcelain'], cwd=repo, text=True).strip():
     raise SystemExit('Checkout sujo: recuse publicar código sem commit.')
 runner_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()

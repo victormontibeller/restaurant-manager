@@ -211,6 +211,37 @@ externo nem substituto do ensaio pg_dump/restore. Não cobre mídia ou reconcili
 de efeitos externos; não encerra X15. Artefatos preservados exigem limpeza futura
 explicitamente revisada, não exclusão automática.
 
+## Primeira transição de homologação para identidade — ciclo 11
+
+`scripts/hml_maintenance.py install --job <JOB> --runtime-config <CONFIG_PRIVADA>
+--rehearsal <RESULTADO_PRIVADO>` implementa exclusivamente a transição do baseline
+de fundação validado para identidade. Exige ensaio de manutenção encerrado do
+mesmo SHA/hash, configuração hml/TLS privada, código identificado e lock exclusivo.
+Não remove a guarda de migrations do deploy comum. Este último também recusa
+qualquer manutenção pendente, mesmo depois que o lock da tentativa foi liberado.
+
+Para o serviço próprio, confirma ausência de conexões, inventaria o banco,
+preserva o original por OID e cria clone canônico. Compara conteúdo/metadados
+antes de migrar com o Java real; instala runtime sem owner e verifica HTTPS,
+SHA, hash e processo. Fundação sem identidades pode ser inventariada explicitamente;
+o ensaio de restore de identidade continua exigindo contas de duas empresas.
+
+Health aprovado deixa estado `health-aprovado-e2e-pendente`, NÃO altera
+`healthy.json` e NÃO encerra a Sprint. O original bloqueado continua disponível
+para retorno. Esta versão não implementa aceitação definitiva desse candidato:
+matriz integrada e promotor Sprint01 continuam necessários antes de novo deploy.
+
+`scripts/hml_maintenance.py rollback <TENTATIVA_PRIVADA>` confirma arquivos do
+baseline, para apenas processo reconhecido, retorna o banco por OID, compara
+inventário e reinicia/verifica a unidade anterior. Preserva o candidato abandonado
+sem conexões; não apaga banco nem aplica down migration. JAR candidato corrompido
+não impede retornar ao original íntegro. Retorno não verificado deixa serviço
+parado e pendência explícita. Kill abrupto exige reconciliar ledger, OIDs e processos;
+resposta perdida de CREATE sem OID confirmado não autoriza adoção pelo nome.
+
+Resultados reais, quando executados, ficam no checkpoint. Código e testes
+unitários de coordenação não constituem deploy ou homologação da aplicação.
+
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade
 

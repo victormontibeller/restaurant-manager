@@ -9,6 +9,16 @@ from database_recovery import canonical_constraint, safe_cleanup, validate_sourc
 
 
 class DatabaseRecoveryTest(unittest.TestCase):
+    def test_inventario_fundacao_nao_inventa_identidade(self):
+        session = MagicMock()
+        session.query.side_effect = [[], ['{"constraints":[]}'], ['t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa']]
+        with self.assertRaises(ValueError):
+            database_recovery.inventory(session)
+        session.query.side_effect = [[], ['{"constraints":[]}'], ['t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa']]
+        result = database_recovery.inventory(session, require_identity=False)
+        self.assertEqual(result['tenants'], 1)
+        self.assertEqual(result['tenants_with_identity'], 0)
+
     def test_inventario_importa_snapshot_e_libera_locks_antes_do_dump(self):
         session = MagicMock()
         with patch('database_recovery.Session', return_value=session), patch('database_recovery.inventory', return_value={'fixture': True}):

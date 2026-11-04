@@ -1,8 +1,40 @@
 # Checkpoint de execução
 
+## Retomada ciclo 11 — incremento de manutenção
+
+Missão não concluída. Git/PR3 OPEN draft e CI0eb0a70 conferidos; hml449ce3c
+saudável/PID41392 preservada. Bancos dev/test/hml e original rm_test OID conferidos;
+nenhuma tentativa de conclusão rejeitada encontrada. Worker10 terminou com falha
+global, resultado detalhado ainda em consolidação; não repetir build herdado.
+
+Implementado caminho explícito da primeira transição hml para identidade e
+retorno por OID, sem promoção de healthy.json. Revisão independente encontrou
+contorno por deploy comum, serviço não verificado após retorno e dependência
+indevida do JAR candidato para recuperar; reproduzidos e corrigidos. 97 testes
+Python passaram. Ensaio real do novo caminho ainda pendente neste registro.
+Alteração Java de opt-in técnico para provisionamento hml está local e separada;
+três unitários passaram após vermelho pertinente. Não implantada nem gate completo.
+Próximo: executar transição/retorno com artefato existente identificado; validar
+novo build para provisionamento e continuar matrizes hml. Sprint01 aberta,02–05
+não iniciadas. Guardas e últimos dados/release saudáveis permanecem preservados.
+
 [Índice](README.md) · [Ciclo 10](evidencias/sprint-01-ciclo-10.md) · [Cobertura](evidencias/cobertura.md)
 
-## Retomada ciclo 10 — 2026-11-04
+## Encerramento — retomada ciclo 10, 2026-11-04
+
+Aviso efetivo de orçamento quase esgotado recebido após gravar STATUS privado;
+última verificação consolidada21:05:00Z, consultaCI/data21:05:05Z. Depois do aviso,
+somente gravações obrigatórias de handoff. Missão NÃO concluída.
+Head publicado0eb0a70b11071148db9550991a6434bb87413dd4, PR3 OPEN/draft/base main,
+remoto/corpo relidos e ambos checksCI desse head SUCCESS. Documentos de cobertura,
+evidência e checkpoint atualizados após o push permanecem locais; preservar.
+Não houve merge/deploy. Worker E2E10 permanece independente, sem interrupção
+deliberada; resultado ainda não consolidado no último snapshot. Recolher antes
+de iniciar outra suíte/build/migration. STATUS privado detalha processos e bancos.
+Relatório privado ciclo10 e checkpointJSON gerados; SQL dev/test/hml e retorno
+do OID original conferidos. Hml449ce3c UP/PID41392 preservada. SemCONCLUSAO.json.
+
+## Registro do incremento — retomada ciclo 10
 
 Build/worker9 de e847fee ativos na retomada, preservados sem repetição. Git,
 PR3 OPEN/draft, CI e hml449ce3c UP/PID41392 conferidos. CI f1e58de possui um check
@@ -13,12 +45,25 @@ Não é aprovação E2E nem liberação da Sprint. Revisão de snapshot/prepara�
 sem regressão bloqueante identificada. [Evidência](evidencias/sprint-01-retomada-ciclo-10.md).
 Atualização: build e847fee terminou exit0/gate true,170backend sem falha/erro/skip,
 hash7bd1db646ab2ddabe4a92facb133fb41cc2af85e85429b813223e3df3caa19dd.
-CI a939142 aprovada nos dois checks; worker9 E2E ainda ativo neste registro.
-Ensaio de manutenção rm_test implementado/revisado; achados de reconciliação,
-journal e redirects corrigidos.83Python aprovados, mas ensaio nativo novo ainda
-pendente: não atribuir aprovação operacional a fixtures. Próximo: recolher
-worker9 e executar manutenção real sem concorrência; depois integrar promoção
-Sprint01. Hml preservada. Sprint01 aberta,02–05 não iniciadas; sem merge/CONCLUSAO.json.
+CI a939142 aprovada nos dois checks. Worker9 terminou exit1: UI35 quatro aprovadas/
+uma falha WebKit; UI41 cinco aprovadas, zero skip/retry/flaky. Sincronização UI35
+corrigida em0eb0a70 e typecheck E2E passou; não apagar falha anterior.
+
+Ensaio de manutenção REAL aprovado21:02:13Z, fonte242c4a3/JARe847fee:
+1853tabelas/17301linhas iguais no original, clone e retorno; originalOID16389
+preservado, candidatoOID125314 bloqueado após retorno. Migrador Java0, DDL de
+teste confirmado seguido de falha SQL injetada, três startups systemd e três
+contas/negativos por fase. Unidade do ensaio encerrada; hml449ce3c/PID41392
+preservada.83Python aprovados; dois revisores independentes, achados corrigidos.
+Primeiro preflight recusou fixture de chaves diferente antes de mutação; corrigida
+somente configuração privada, mantendo as contas e a guarda.
+
+Worker E2E10 finito iniciou após manutenção, fonte0eb0a70/JAR e847fee, para UI35
+nos cinco projetos e45combinações de identidade. Ainda sem resultado consolidado
+neste registro. Não repetir build nem lançar suíte/migration concorrente. STATUS
+privado contém unidade, manifests e caminhos. Próximo: recolher/corrigir E2E,
+integrar manutenção/promotor e matriz hml Sprint01; guardas atuais continuam.
+Sprint01 aberta,02–05 não iniciadas; sem merge/deploy/CONCLUSAO.json.
 
 ## Encerramento — retomada ciclo 9, 2026-11-04
 

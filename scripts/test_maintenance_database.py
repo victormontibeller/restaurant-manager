@@ -170,5 +170,20 @@ class MaintenanceDatabaseTest(unittest.TestCase):
         self.assertFalse(self.admin.databases['rm_test']['allowed'])
 
 
+    def test_retomada_carrega_oids_sem_repetir_clone(self):
+        swap = self.swap()
+        swap.clone()
+        resumed = DatabaseSwap.resume(self.admin, 'test', self.root)
+        self.assertEqual(resumed.record, swap.record)
+        resumed.rollback()
+        self.assertEqual(self.admin.databases['rm_test']['oid'], 41)
+        self.assertEqual(len([e for e in self.admin.events if e[0] == 'copy']), 1)
+
+    def test_retomada_recusa_ledger_de_outro_ambiente(self):
+        self.swap().clone()
+        with self.assertRaises(ValueError):
+            DatabaseSwap.resume(self.admin, 'hml', self.root)
+
+
 if __name__ == '__main__':
     unittest.main()

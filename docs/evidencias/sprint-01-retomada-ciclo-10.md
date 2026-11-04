@@ -54,7 +54,19 @@ Recontados 22 XML/170 testes backend, zero falhas/erros/skip. Build inteiro entr
 são scripts/testes/docs, sem mudança na fonte compilável. Worker9 prossegue E2E.
 CI a939142 aprovada nos dois checks; isso não encerra gate de release.
 
-## Pendências
+## Manutenção nativa efetivamente executada
+
+Segunda execução terminou21:02:13Z, exit0/aprovada, fonte242c4a3 e JAR e847fee.
+Comparou1853tabelas/17301linhas antes, no clone e após retorno. Original conservou
+OID16389; candidato125314 foi preservado bloqueado, não apagado. Migrador Java
+real retornou0. DDL exclusivo de teste confirmou e a instrução posterior falhou
+intencionalmente; o retorno recuperou o original sem aquele DDL, sem down migration.
+Três inicializações/paradas systemd reais, TLS e banco/credencial runtime
+verificados; três contas de duas empresas, negativos de tenant/unidade e Cozinha
+sem administração conferidos em cada fase. Serviço próprio de ensaio encerrado;
+hml com mesmo SHA/hash/PID antes e depois. Não encerra X15 nem promove hml.
+
+## Reexecuções e pendências
 
 Worker9 terminou exit1: S01-UI35 passou quatro combinações e falhou WebKit;
 S01-UI41 passou cinco, sem skip/retry/flaky. TLS/contrato runtime do candidato
@@ -77,3 +89,13 @@ Não apresentar essa inspeção de recorte como revisão integral da tela.
 
 Manutenção/migrations com recuperação, gate integrado e publicação Sprint01;
 Sprints02–05 não iniciadas. Sem merge ou conclusão técnica antecipada.
+
+## Handoff
+
+Aviso efetivo de orçamento quase esgotado após gravação do STATUS privado.
+Último snapshot verificável21:05:00Z; CI/data consultadas21:05:05Z. Ambos os
+checks do head0eb0a70 passaram. E2E10 ainda em andamento, sem resultado novo
+consolidado; nenhum worker foi interrompido para encerrar a chamada. Documentos
+finais locais posteriores ao push. Hml preservada; não houve verificação nova
+após o aviso. Próxima execução deve recolher o worker existente, não repetir
+build ou afirmar matriz integrada aprovada.

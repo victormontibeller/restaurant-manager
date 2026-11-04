@@ -2,7 +2,25 @@
 
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
-Estado em 2026-11-04, retomada ciclo 6. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos em validação em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+Estado em 2026-11-04, retomada ciclo 10. Os IDs preservam o escopo integral; não são aprovação de famílias incompletas. Candidato de identidade/acessos em validação em rm_test, não implantado em homologação. O último release servido continua sendo a fundação; consulte o checkpoint para os SHAs.
+
+## Atualização vigente — retomada ciclo 10
+
+No artefato e847fee, S01-UI41 passou cinco combinações. S01-UI35 teve quatro
+aprovações/uma falha WebKit de sincronização de carregamento; correção publicada,
+reexecução ainda em andamento. Sem retries/skip/flaky convertidos em aprovação.
+S01-UI36–40 passaram25 combinações no e9d23d9; evidência não transferida ao novo
+artefato. Matriz integrada de identidade/hml continua pendente.
+
+Ensaio nativo de manutenção em rm_test passou: parada própria, original por OID,
+clone/inventário integral, migrador Java, DDL de teste confirmado seguido de erro
+SQL injetado, retorno do original e três contas com negativos nas três fases.
+1853 tabelas/17301 linhas no ponto comparado. Hml preservada no mesmo SHA/PID.
+Não é falha real de uma migration de produto nem deploy hml; não cobre mídia,
+backup externo ou reconciliação financeira. X15 permanece parcial.
+[Evidência do ciclo10](sprint-01-retomada-ciclo-10.md).
+
+## Histórico — retomada ciclo 6
 
 Atualização vigente: no JAR dee85d3, convites e SaaS passaram quinze combinações
 cada; responsividade corrigida dos convites foi reexecutada e captura mobile
@@ -50,7 +68,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | T03 | Não implementado/não executado | Sprint 02 |
 | T04 | Não implementado/não executado | Sprint 02 |
 | T05 | Não implementado/não executado | Sprint 02 |
-| T06 | Parcial, família não aprovada | Login/refresh/logout e recuperação testados; cadastro/verificação de cliente em validação no ciclo 10; verificação de funcionários preexistentes pendente |
+| T06 | Parcial, família não aprovada | Login, cadastro, recuperação, verificação e convites implementados/testados por artefato; regressão integrada/hml pendente |
 | T07 | Não implementado/não executado | Sprints 01–04 |
 | T08 | Não implementado/não executado | Sprint 04; provedor externo separado |
 | T09 | Não implementado/não executado | Sprints 03–04 |
@@ -68,8 +86,8 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | T21 | Não implementado/não executado | Sprint 02 |
 | T22 | Não implementado/não executado | Sprints 01/04 |
 | T23 | Parcial, família não aprovada | CRUD lógico de unidades em validação; horários/regiões/parâmetros pendentes |
-| T24 | Parcial, família não aprovada | Equipe existente/vínculos testados; convites/criação em validação no ciclo 11 |
-| T25 | Parcial, família não aprovada | Matriz/UI e concorrência testadas; catálogo completo de ações por perfil e eventos pendentes |
+| T24 | Parcial, família não aprovada | Equipe, vínculos e convites implementados/testados; reexecução UI35 e integração hml pendentes |
+| T25 | Parcial, família não aprovada | Matriz, concorrência e eventos cadastrais testados por artefato; gate integrado e ações operacionais futuras pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Parcial, família não aprovada | Acompanhamento cadastral da unidade em validação; eventos operacionais nas Sprints 03–04 |
 | T28 | Parcial, família não aprovada | HTTP/UI/CLI/fila, identidade SaaS e suspensão implementados; retomada operacional, gate integrado/hml e integração futura com pedidos pendentes |
@@ -92,7 +110,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | X12 | Não implementado/não executado | Sprints 02–04 |
 | X13 | Parcial, não aprovado como cenário completo | Pool/thread comprovados; jobs/mídia futuros |
 | X14 | Parcial, não aprovado como cenário completo | Shell informa offline; PWA/sessão/transações futuras |
-| X15 | Parcial, não aprovado como cenário completo | SHA/hash, migrador, retorno nativo e restore isolado de banco comprovados; mídia/chaves, aplicação restaurada e manutenção incompatível pendentes |
+| X15 | Parcial, não aprovado como cenário completo | SHA/hash, restore isolado com aplicação e retorno nativo de banco após DDL/erro injetados comprovados; promoção/migration incompatível hml, mídia e recuperação integral pendentes |
 
 ## Incremento de provisionamento — retomada ciclo 4
 

@@ -28,10 +28,21 @@ class ReleaseGuardsTest(unittest.TestCase):
 
     def test_runtime_nao_recebe_migracao_nem_chaves_arbitrarias(self):
         self.values['SPRING_APPLICATION_JSON'] = 'qualquer'
+        self.values['RM_HML_PROVISIONING_ENABLED'] = 'true'
         result = runtime_config(self.values)
         self.assertNotIn('MIGRATION', result)
         self.assertNotIn('SPRING', result)
+        self.assertNotIn('RM_HML_PROVISIONING_ENABLED', result)
         self.assertIn('RM_DB_USER=rm_hml_app\n', result)
+
+    def test_deploy_comum_recusa_manutencao_pendente_antes_de_ler_build(self):
+        import runpy
+        attempt = self.root / 'maintenance-releases' / ('a' * 32)
+        attempt.mkdir(parents=True)
+        (attempt / 'state.json').write_text(json.dumps({'stage': 'hml', 'state': 'health-aprovado-e2e-pendente'}))
+        with patch.dict(os.environ, RM_HOME=str(self.root)), patch('sys.argv', ['deploy-hml.py']), patch('subprocess.check_output', return_value=''):
+            with self.assertRaisesRegex(ValueError, 'Manutenção'):
+                runpy.run_path(str(Path(__file__).parent / 'deploy-hml.py'), run_name='__main__')
 
     def test_config_publica_recusada(self):
         self.save()

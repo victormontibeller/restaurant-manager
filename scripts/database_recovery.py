@@ -118,7 +118,7 @@ def snapshot_inventory(command, env, log, snapshot):
         reader.close()
 
 
-def inventory(session):
+def inventory(session, require_identity=True):
     tables = session.query("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace "
                            "where c.relkind='r' and (n.nspname='public' or n.nspname like 't\\_%' escape '\\') order by 1")
     result = {}
@@ -154,7 +154,9 @@ def inventory(session):
     for schema in tenants:
         identifier(schema)
         if schema + '.usuario' not in result or schema + '.unidade' not in result:
-            raise ValueError('Empresa ativa sem schema recuperável.')
+            if require_identity:
+                raise ValueError('Empresa ativa sem schema recuperável.')
+            continue  # Fundação anterior à identidade; não inventar contas recuperadas.
         if result[schema + '.usuario']['rows'] > 0 and result[schema + '.unidade']['rows'] > 0:
             with_identity += 1
     definitions = json.loads('\n'.join(metadata))

@@ -200,6 +200,15 @@ def systemctl(*args):
     subprocess.run(['systemctl', '--user', *args], check=True)
 
 
+def assert_no_hml_maintenance(root):
+    """Lock evita simultaneidade; ledger impede outro deploy entre os ciclos."""
+    for name in ('state.json', 'database-swap.json'):
+        for path in (root / 'maintenance-releases').glob('*/' + name):
+            record = json.loads(path.read_text())
+            if record.get('stage') != 'hml' or record.get('state') != 'original-restaurado':
+                raise ValueError('Manutenção de homologação pendente; validar/retornar antes de outro deploy.')
+
+
 def verify_listener(pid, port=8088):
     """Liga health ao inode TCP do PID real, inclusive IPv4 mapeado em IPv6."""
     sockets = set()

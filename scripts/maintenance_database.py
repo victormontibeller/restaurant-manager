@@ -140,6 +140,27 @@ class Admin:
 
 
 class DatabaseSwap:
+    @classmethod
+    def resume(cls, admin, stage, attempt):
+        database = validate_stage(stage)
+        path = attempt / 'database-swap.json'
+        if path.is_symlink() or path.stat().st_mode & 0o077:
+            raise ValueError('Ledger deve ser privado e sem redirecionamento.')
+        record = json.loads(path.read_text())
+        backup, failed = record.get('backup', ''), record.get('failed', '')
+        if (record.get('stage') != stage or record.get('database') != database
+                or not re.fullmatch(database + '_before_[0-9a-f]{32}', backup)
+                or failed != backup.replace('_before_', '_failed_')
+                or type(record.get('original_oid')) is not int or record['original_oid'] <= 0
+                or (record.get('candidate_oid') is not None and (type(record['candidate_oid']) is not int
+                    or record['candidate_oid'] <= 0 or record['candidate_oid'] == record['original_oid']))):
+            raise ValueError('Ledger/OIDs não pertencem ao ambiente solicitado.')
+        instance = cls.__new__(cls)
+        instance.database, instance.stage, instance.admin, instance.attempt = database, stage, admin, attempt
+        instance.backup, instance.failed, instance.record = backup, failed, record
+        # rollback confirma OID/proprietário antes de CADA alteração; não adota por nome.
+        return instance
+
     def __init__(self, admin, stage, attempt):
         self.database = validate_stage(stage)
         self.stage, self.admin, self.attempt = stage, admin, attempt
