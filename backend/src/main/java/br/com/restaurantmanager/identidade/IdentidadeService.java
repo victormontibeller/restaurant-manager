@@ -34,6 +34,9 @@ public class IdentidadeService {
     }
     @Transactional(noRollbackFor = AuthFailure.class)
     public Tokens login(String email, String senha, String origem) {
+        // Mesma ordem da administração: política antes de usuário/sessão.
+        // Inativação posterior espera o INSERT e revoga também esta sessão.
+        repository.bloquearAlteracoesDeAcesso();
         String normalized = email.strip().toLowerCase(Locale.ROOT);
         Instant agora = Instant.now();
         int ipAttempts = repository.tentativa(hash("origem:" + origem), agora);
@@ -64,6 +67,21 @@ public class IdentidadeService {
     public void logout(String raw) {
         RefreshToken refresh = localizar(raw);
         repository.sessao(refresh.sessaoId, true).revogadaEm = Instant.now();
+    }
+    @Transactional(noRollbackFor = AuthFailure.class)
+    public void reautenticar(IdentidadeAtual ator, String senha) {
+        if (!empresaAtual().equals(ator.empresaId())) throw AuthFailure.invalid();
+        Instant agora = Instant.now();
+        String chave = hash("reautenticar:" + ator.usuarioId());
+        if (repository.tentativa(chave, agora) > 5) throw new AuthFailure(429, "LIMITE_TENTATIVAS", "Muitas tentativas. Aguarde quinze minutos.");
+        Sessao sessao = repository.sessao(ator.sessaoId(), true);
+        Usuario usuario = repository.usuario(ator.usuarioId());
+        if (sessao == null || !sessao.usuarioId.equals(ator.usuarioId()) || !sessao.valida(agora) || usuario == null || !usuario.ativo) throw AuthFailure.invalid();
+        if (senha.getBytes(StandardCharsets.UTF_8).length > 72 || !passwords.matches(senha, usuario.senhaHash)) {
+            throw new AuthFailure(422, "CONFIRMACAO_INVALIDA", "Senha de confirmação inválida.");
+        }
+        sessao.reautenticadaEm = agora;
+        repository.limparTentativas(chave);
     }
     @Transactional(readOnly = true)
     public IdentidadeAtual validar(Jwt jwt) {

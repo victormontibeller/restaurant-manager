@@ -1,28 +1,29 @@
 # Checkpoint de execução
 
-[Índice](README.md) · [Fundação ciclo 3](evidencias/sprint-00-ciclo-3.md) · [Provisionamento](evidencias/sprint-01-ciclo-3.md) · [Cobertura](evidencias/cobertura.md)
+[Índice](README.md) · [Fundação](evidencias/sprint-00-ciclo-3.md) · [Identidade ciclo 4](evidencias/sprint-01-ciclo-4.md) · [Cobertura](evidencias/cobertura.md)
 
-## Ciclo 4 — incremento em validação
+## Ciclo 5 — incremento em validação, 2026-11-04
 
-Branch `hermes/sprint-01-identidade-acessos`, base publicada anterior `997a78e8889d442387b1643fc4680b0710f3e723`. PR #3 OPEN/draft, base `hermes/sprint-00-fundacao`; PR #2 OPEN/ready, base main. Nenhum merge/commit direto em main. Sprint 01 não concluída; 02–05 não iniciadas. Não existe CONCLUSAO.json.
+Coordenador único. Branch `hermes/sprint-01-identidade-acessos`, base anterior `d7cd97a21d09505f99be0043f4efde39bcbdb595`. Documentação local pós-ciclo 4 preservada. PR #2 mesclado após CI/revisão independente; merge remoto `fa9e595bd3bb3f1d768a279ac25ee03243c12fb9`, árvore conferida igual ao head aprovado. PR #3 OPEN/draft redirecionado e conferido com base `main`. Sprint 01 não concluída; 02–05 não iniciadas.
 
-Preservado checkpoint local do ciclo 3. Git/refs/PRs/serviços conferidos. CI anterior 41779407969 falhou antes dos jobs: anotação GitHub apontou `runner.temp` inválido no env do job. Workflow corrigido para definir TMPDIR pelo RUNNER_TEMP em step/GITHUB_ENV; execução remota da correção ainda pendente.
+## Código e verificações desta etapa
 
-## Implementação e validação local
+Matriz versionada, catálogo de ações com dependências, auditoria transacional, listagem/edição da equipe existente, vínculos por unidade, política central e último Administrador protegido por lock. Reautenticação explícita com validade de cinco minutos e limite persistente. UI Angular responsiva para matriz/equipe. Enum de ações futuras não implementa pedidos/finanças.
 
-- JWT empresarial HS256/5min, sessão PostgreSQL/12h, refresh rotativo hash-only, lock/releitura, revogação por reuso/logout/inativação, CSRF real separado de Bearer, domínio antes de autenticação, limite durável, entrada estrita e respostas PT-BR. Chave privada obrigatória; regras em Segurança.
-- Revisão independente achou origem bloqueada consumindo limite de contas; teste vermelho confirmou 1 linha indevida e correção passou na suíte de identidade. Primeiro ensaio de CSRF real isolado passou; helper de teste `with(csrf())` contaminava repositório compartilhado. Substituído por GET/cookie/header reais, sem afrouxar proteção.
-- Regressão inicial 43/43. Regressão ampliada: 44, com 43 aprovados e falha de inventário fixo após provisionar tenant E2E. Teste corrigido compara inventário completo do registro SQL (incluindo A/B), não omite schemas. Reexecução MigrationBoundaryTest 5/5; próxima execução integral ainda pendente.
-- Angular login/restore/logout implementado, access em memória, coordenação entre abas e retry de logout não confirmado. Revisão independente realizada; jornada/browser ainda em validação. Red UI real constatou formulário ausente no artefato anterior, depois de resolver pré-requisitos de browser e aguardar startup.
-- Massa fictícia exclusiva em rm_test, host c4.localhost, certificado privado para HTTPS loopback :8089. Não é homologação. Processo temporário inicial encerrado antes de reconstruir JAR. Configuração/credenciais/relatórios somente privados.
+TDD: cinco testes API inicialmente falharam por rotas ausentes; depois passaram. Suíte de acesso usa schema aleatório exclusivo por teste, após encontrar administradores preexistentes na massa compartilhada. Regressão anterior às duas últimas correções passou: 51 testes backend, zero falhas/erros/skip, Angular typecheck/build.
 
-## Último release saudável preservado
+Revisão independente identificou corrida entre login/inativação e UI descartando formulário por senha de confirmação errada. Duas regressões vermelhas reproduzidas; correções passaram em execução direcionada. Login agora participa do lock compartilhado da política; senha de confirmação incorreta retorna 422 sem invalidar sessão. Build identificado/regressão integral e E2E do código final ainda pendentes neste checkpoint intermediário.
 
-SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`; JAR SHA256 `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`. Serviço hml :8088, PostgreSQL :55432/rm_hml, migrations V1. Nenhuma migration V2/V3 aplicada a hml. Gates de deploy continuam recusando fingerprint diferente sem manutenção/backup. healthy.json aprova somente fundação. Não confundir target/JAR de teste com release servido.
+E2E inicial do artefato d7cd97a: 14/15 passaram; Chromium desktop foi interrompido pela asserção de 5s com login ainda em curso. Trace inspecionado somente por metadados; teste agora aguarda e valida resposta real antes do DOM, dentro de limite finito. Não contar a execução original como aprovada. Teste de matriz demonstrou vermelho real por tela ausente. UI final ainda não aprovada.
 
-## Pendências e próximo passo
+## Homologação preservada
 
-1. Finalizar build identificado, auditoria, suíte integral e E2E login nos cinco projetos; corrigir falhas reais, não marcar skipped/flaky como aprovado. Publicar incremento WIP no PR3 e verificar CI/head remoto.
-2. Sprint01: identidade SaaS, cadastro/verificação/recuperação/convites, reautenticação sensível, equipe/unidades/matriz, revogação de política/vínculos/eventos, último Admin concorrente e suspensão preservando operação. Contratos OpenAPI, retenção e rotação de chaves também pendentes.
-3. Manutenção/backup/restore compatíveis ANTES de deploy com novas migrations. Homologação continua na fundação; ACESSO não deve anunciar login implantado.
-4. Sprints02–05 e matriz T01–T28/X01–X15 integrais pendentes, sem redução de escopo. Integrações externas/piloto E01–E12 separados. Próximo ciclo deve conferir estado real, não confiar em build-gate antigo.
+SHA `449ce3ccf941c73b34ac15a4754183c147f91aaa`, JAR SHA256 `d9b95b1e46b0a5f0baf8fc13a640a51b751fd1e04b3654e77295ad29f5980e77`, health UP e PID/socket conferidos neste ciclo. PostgreSQL loopback :55432, hml :8088, migrations V1 somente em hml. Sem deploy com migrations novas. Ensaio temporário HTTPS :8089 em rm_test encerrado antes de reconstruir o candidato.
+
+## Continuidade
+
+1. Executar build identificado completo e publicar incremento no PR #3 draft; ler CI de volta.
+2. Iniciar candidato HTTPS em rm_test, executar identidade/matriz nos cinco projetos e regressão da fundação; revisar screenshots. Não promover com falhas/skip/flaky.
+3. Continuar Sprint01: identidade SaaS separada, cadastro/verificação/recuperação/convites, CRUD de unidades, política de suspensão preservando operação, eventos/projeções, OpenAPI, retenção/expurgo e rotação de chaves. Matriz inteira de perfis/ações ainda exige expansão de testes.
+4. Implementar/ensaiar manutenção/backup/restore antes de migration em hml. Não contornar fingerprint.
+5. Sprints02–05/T01–T28/X01–X15 e E01–E12 continuam pendentes. Nenhum CONCLUSAO.json. Tentativa de atualizar AGENTS.md foi bloqueada pela proteção do executor; não contornada. Autorizações vigentes registradas nas fontes canônicas editáveis.

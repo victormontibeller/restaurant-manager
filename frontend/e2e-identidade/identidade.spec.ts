@@ -1,5 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
+
+async function enviarLogin(page: Page, status = 200): Promise<void> {
+  const response = page.waitForResponse(r => r.url().endsWith('/api/v1/auth/login') && r.request().method()==='POST', {timeout:12000});
+  await page.getByRole('button',{name:'Entrar',exact:true}).click();
+  expect((await response).status()).toBe(status);
+}
 
 test('S01-UI03: abas concorrentes e logout após perda de conexão', async ({page,context}) => {
   if (!fixture) throw new Error('Massa privada obrigatória.');
@@ -7,7 +13,7 @@ test('S01-UI03: abas concorrentes e logout após perda de conexão', async ({pag
   await expect(page.getByRole('button',{name:'Entrar',exact:true})).toBeEnabled();
   await page.getByLabel('E-mail').fill(fixture.email);
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
-  await page.getByRole('button',{name:'Entrar',exact:true}).click();
+  await enviarLogin(page);
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
   const other = await context.newPage();
   await Promise.all([page.reload(),other.goto('/')]);
@@ -34,7 +40,7 @@ test('S01-UI01: login, recarga com refresh e logout revogam acesso real', async 
   await expect(page.getByRole('heading', {name:'Acessar minha conta'})).toBeVisible();
   await page.getByLabel('E-mail').fill(fixture.email);
   await page.getByLabel('Senha', {exact:true}).fill(fixture.senha);
-  await page.getByRole('button', {name:'Entrar',exact:true}).click();
+  await enviarLogin(page);
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
   expect(await page.evaluate(() => [localStorage.length,sessionStorage.length])).toEqual([0,0]);
   const cookies = await context.cookies();
@@ -57,13 +63,13 @@ test('S01-UI02: senha inválida, validação acessível e tentativa sem CSRF', a
   await page.goto('/');
   await page.getByLabel('E-mail').fill(fixture.email);
   await page.getByLabel('Senha',{exact:true}).fill('invalida-para-teste');
-  await page.getByRole('button',{name:'Entrar',exact:true}).click();
+  await enviarLogin(page,401);
   await expect(page.getByRole('alert')).toHaveText('Credencial inválida ou sessão encerrada.');
   await expect(page.getByRole('alert')).toBeFocused();
   const direct = await request.post('/api/v1/auth/login',{data:{email:fixture.email,senha:'invalida'}});
   expect(direct.status()).toBe(403);
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
-  await page.getByRole('button',{name:'Entrar',exact:true}).click();
+  await enviarLogin(page);
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
   await page.getByRole('button',{name:'Sair da conta'}).click();
 });

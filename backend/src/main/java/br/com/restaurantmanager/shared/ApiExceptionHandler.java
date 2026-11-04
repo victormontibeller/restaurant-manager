@@ -14,6 +14,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(error.status()).body(ApiError.of(error.code(), error.getMessage()));
     }
     @ExceptionHandler({org.springframework.web.bind.MethodArgumentNotValidException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
             org.springframework.http.converter.HttpMessageNotReadableException.class})
     ResponseEntity<ApiError> invalidInput(Exception error) {
         return ResponseEntity.badRequest().body(ApiError.of("ENTRADA_INVALIDA", "Confira os campos informados."));

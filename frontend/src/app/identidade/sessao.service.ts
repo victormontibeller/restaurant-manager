@@ -31,6 +31,21 @@ export class SessaoService {
       this.channel.postMessage('saiu');
     } finally { this.limpar(); }
   }
+  async api<T = void>(path: string, method = 'GET', body?: object): Promise<T> {
+    if (!this.access) throw new Error('Entre novamente para continuar.');
+    let response: Response;
+    try {
+      response = await fetch(path, {method,credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000),
+        headers:{Authorization:'Bearer '+this.access,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    } catch { throw new Error('Conexão interrompida. Recarregue para conferir o resultado antes de tentar novamente.'); }
+    if (!response.ok) {
+      if (response.status===401) this.limpar();
+      const error=await response.json() as {mensagem?:string};
+      throw new Error(error.mensagem??'Não foi possível concluir a operação.');
+    }
+    return response.status===204?undefined as T:await response.json() as T;
+  }
+  async atualizarIdentidade(): Promise<void> { this.identidade.set(await this.api<Identidade>('/api/v1/auth/me')); }
   private limpar(): void { clearTimeout(this.renewalTimer); this.access = null; this.identidade.set(null); }
   private async receber(response: Response): Promise<void> {
     if (!response.ok) {

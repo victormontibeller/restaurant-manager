@@ -38,7 +38,7 @@ Regras detalhadas sem uma decisão anterior explícita são especificações pro
 | D13 | Regras, validações e segurança no backend; frontend oferece usabilidade e portabilidade. SDKs têm preferência quando existem e atendem à necessidade. |
 | D14 | Entregar a documentação antes da aplicação. Repositório público, sem credenciais ou dados reais nos exemplos. |
 | D15 | Nesta execução autorizada em 2026-11-03, Hermes usa diretamente o provedor `openai-codex` com autenticação atual, sem instalar Codex CLI nem alterar credenciais. Documentos e checkpoint permitem retomada sem depender do chat. |
-| D16 | Hermes avança autonomamente pelo roadmap, implementa, testa, corrige, cria branches por incremento/commit principal, faz push e deploy automático em homologação após os checks necessários. Produção e merge em `main` permanecem separados; não pedir confirmação a cada tarefa/sprint ou deploy de homologação. |
+| D16 | Na missão noturna autorizada em 2026-11-03, Hermes implementa, testa, corrige e publica uma branch `hermes/...` e um PR por Sprint, com merge normal em `main` após gates reais e verificação do remoto. Sem commit direto, auto-merge ou force push. Homologação fictícia é autônoma; produção permanece fora do escopo. |
 | D17 | Combos permitem personalização de componentes. Preço base mais acréscimos das escolhas e adicionais; cada combo completo é uma unidade comercial para cancelamento, sem cancelamento isolado de componentes. |
 | D18 | Ao final, executar validação completa de todas as telas/jornadas do escopo e níveis de acesso, com positivos/negativos, isolamento, concorrência, recuperação e mobile; corrigir falhas e entregar relatório por cenário ligado ao release real de homologação. |
 

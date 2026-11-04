@@ -27,7 +27,7 @@ A autorização abaixo cobre a execução contínua do roadmap, quando o fluxo f
 | Definir detalhes técnicos compatíveis com as decisões | Autorizado, com justificativa e versões registradas; mudanças de produto/escopo permanecem explícitas |
 | Criar branches, commits e fazer push | Autorizado por incremento/commit principal, após revisão de diff, segredos e verificações pertinentes |
 | Abrir PR | Autorizado, um por Sprint na missão vigente |
-| Fazer merge ou atualizar diretamente `main` | Pedido específico de merge após gates registrado na missão; respeitar também restrições efetivas do executor. Commit direto e auto-merge não fazem parte do fluxo |
+| Fazer merge em `main` | Expressamente autorizado nesta missão após revisão, testes, CI e gates da Sprint; verificar PR mesclado, SHA remoto e árvore. Commit direto e auto-merge não fazem parte do fluxo |
 | Force push, apagar histórico ou descartar trabalho alheio | Fora da autorização automática |
 | Deploy, serviço e migrations de homologação | Autorizado automaticamente no ambiente exclusivo de homologação, com testes, verificação do alvo e recuperação conforme este guia |
 | Deploy, reinício/alteração de serviços de produção, migração de produção | Fora do fluxo automático; somente quando o usuário pedir a operação correspondente |
@@ -35,7 +35,7 @@ A autorização abaixo cobre a execução contínua do roadmap, quando o fluxo f
 
 Convenção desta missão: uma branch `hermes/sprint-NN-tema` e um PR por Sprint. Correções da mesma sprint geram commits adicionais, sem reescrever histórico. O proprietário solicitou também merges após os gates; nunca confundir essa solicitação com critério aprovado, nem fazer commit direto em main. Restrições efetivas do executor e gates pendentes devem ser preservados no checkpoint. Produção permanece fora do escopo.
 
-Cada nova branch parte do último SHA integrado e verificado da anterior, inclusive ao trocar de sprint. Assim, acumula o trabalho completo sem depender de merge automático em `main`. Subagentes com trabalho isolado são integrados pelo coordenador antes dessa passagem; não iniciar uma branch nova de uma `main` desatualizada e perder as entregas anteriores.
+Cada nova Sprint parte da `main` atualizada após o merge verificado da anterior. Branch existente empilhada deve ter o PR redirecionado para `main` após a integração de sua base, preservando commits e trabalho local. Subagentes com trabalho isolado são integrados pelo coordenador antes dessa passagem.
 
 Manter separados o **tip integrado de desenvolvimento** e o **último release validado em homologação**. Retornar um binário não retrocede a base do código nem apaga commits posteriores. Commit/push de trabalho incompleto pode preservar progresso, identificado como tal, mas não habilita deploy nem conclusão de critério. Alterações somente documentais não exigem novo release da aplicação.
 

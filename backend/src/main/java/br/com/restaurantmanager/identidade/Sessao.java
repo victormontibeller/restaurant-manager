@@ -16,6 +16,7 @@ public class Sessao {
     @Column(name = "expira_em", nullable = false) Instant expiraEm;
     @Column(name = "revogada_em") Instant revogadaEm;
     @Column(name = "autenticada_em", nullable = false) Instant autenticadaEm;
+    @Column(name = "reautenticada_em") Instant reautenticadaEm;
     protected Sessao() {}
     Sessao(UUID usuario, Instant agora) {
         id = UUID.randomUUID(); usuarioId = usuario; criadaEm = agora;

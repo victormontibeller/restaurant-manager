@@ -29,6 +29,12 @@ public class IdentidadeController {
         @Override public String toString() { return "Access[protegido]"; }
     }
     public record Csrf(String token, String headerName) {}
+    public record Confirmacao(@NotBlank @Size(max=72) String senha) {
+        @Override public String toString() { return "Confirmacao[protegida]"; }
+    }
+    @PostMapping("/reautenticar") public void reautenticar(@AuthenticationPrincipal IdentidadeAtual ator, @Valid @RequestBody Confirmacao body, HttpServletResponse response) {
+        service.reautenticar(ator, body.senha()); response.setStatus(204);
+    }
     @GetMapping("/csrf") public Csrf csrf(CsrfToken csrf) { return new Csrf(csrf.getToken(), csrf.getHeaderName()); }
     @PostMapping("/login") public Access login(@Valid @RequestBody Login body, HttpServletRequest request, HttpServletResponse response) {
         return respond(service.login(body.email(), body.senha(), request.getRemoteAddr()), response);

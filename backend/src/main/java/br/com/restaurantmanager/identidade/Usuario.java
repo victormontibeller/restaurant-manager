@@ -17,5 +17,6 @@ public class Usuario {
     boolean ativo;
     @Column(name = "email_verificado") boolean emailVerificado;
     @Version long versao;
+    @Column(name = "alterado_em") java.time.Instant alteradoEm;
     protected Usuario() {}
 }

@@ -65,6 +65,22 @@ CRUD não cobre automaticamente ações de negócio. `pedido.editar` não permit
 - Alterações concorrentes da matriz retornam conflito, sem sobrescrever silenciosamente outra edição.
 - Auditoria técnica da plataforma não deve se transformar em relatório comercial de todos os tenants.
 
+## Incremento da Sprint 01 — ciclo 5
+
+Implementados no candidato de desenvolvimento: catálogo explícito `Acao`, seeds aditivos por migration, matriz dos cinco perfis com dependências de consulta, versão/conflito e auditoria antes/depois; listagem paginada e edição dos funcionários existentes; perfil, unidades e inativação com revogação durável. Convites/criação de funcionários e cadastro de unidades ainda não estão entregues.
+
+Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`, revalidam ator/sessão e protegem o último Administrador. A política central adquire lock compartilhado dentro da transação do caso de uso e consulta vínculos/permissões atuais. Consumidores futuros precisam chamar essa política e validar recurso/estado/projeções; enumerar uma ação NÃO implementa pedido, catálogo ou finanças. Eventos ainda não existem e sua revogação permanece pendente.
+
+UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizontal obrigatória. Edições sensíveis exigem confirmação explícita da senha na sessão, válida por cinco minutos. Resultado de testes e limitações ficam no checkpoint; não inferir homologação a partir deste contrato.
+
+### Contratos disponíveis no candidato
+
+- `GET/PUT /api/v1/configuracoes/acessos`: consulta e substituição das ações de um perfil com `versao`, `perfil`, `acoes`; dependências mínimas são adicionadas pelo servidor.
+- `GET /api/v1/equipe?pagina=0`: até 50 funcionários, sem clientes/segredos.
+- `PUT /api/v1/equipe/{id}`: `versao`, `perfil`, `ativo`, `unidades`; Administrador não recebe vínculos individuais e nunca pode ser eliminado como último ativo.
+- `GET /api/v1/acessos/efetivos` e `GET /api/v1/operacao/unidades[/{id}]`: identidade atual, ações e unidades permitidas. A lista pública `/unidades` permanece somente dados públicos, não é lista operacional.
+- `POST /api/v1/auth/reautenticar`: Bearer e `senha`; falha de confirmação não deve invalidar a sessão existente. Limite por usuário e prazo conferidos no backend.
+
 ## Documentos relacionados
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)

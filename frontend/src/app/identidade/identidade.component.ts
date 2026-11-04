@@ -1,15 +1,18 @@
 import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { SessaoService } from './sessao.service';
+import { AcessosComponent } from '../acessos/acessos.component';
 
 @Component({
   selector:'app-identidade',
+  imports:[AcessosComponent],
   template:`
     <section aria-labelledby="conta-titulo" [attr.aria-busy]="ocupado()">
       @if (sessao.identidade(); as pessoa) {
         <h2 id="conta-titulo">Minha conta</h2>
         <p>Perfil: {{ pessoa.perfil }}</p>
-        <p>Acesso empresarial autenticado. Equipe, permissões e operação ainda estão em desenvolvimento.</p>
+        <p>Acesso empresarial autenticado. Operação e convites ainda estão em desenvolvimento.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
+        @if(pessoa.perfil==='ADMINISTRADOR'){<app-acessos />}
       } @else {
         <h2 id="conta-titulo">Acessar minha conta</h2>
         <p>Use somente uma conta fictícia provisionada nesta empresa. Cadastro e recuperação ainda não estão disponíveis.</p>
