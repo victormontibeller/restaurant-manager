@@ -68,8 +68,8 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito',async(
   expect((await publico.json()).map((u:{id:string})=>u.id)).not.toContain(unidade.id);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await editada.screenshot({path:test.info().outputPath('unidade-editada.png')});
-  await page.getByRole('heading',{name:'Configurações de unidades'}).scrollIntoViewIfNeeded();
-  await page.screenshot({path:test.info().outputPath('unidades.png'),fullPage:false});
+  await page.locator('app-unidades > section > form').nth(1).screenshot({path:test.info().outputPath('unidades.png')});
+  await page.getByRole('navigation',{name:'Páginas de unidades',exact:true}).screenshot({path:test.info().outputPath('paginacao-unidades.png')});
   await page.getByRole('button',{name:'Sair da conta'}).click();
   await expect(page.getByRole('heading',{name:'Configurações de unidades'})).toHaveCount(0);
 });
