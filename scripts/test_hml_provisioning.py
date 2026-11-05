@@ -9,10 +9,56 @@ import sys
 import tempfile
 from hml_provisioning import dispatch_one, validate_fictitious, main
 from provisioning_queue import Queue
+import fcntl
+import subprocess
 
 
 class HmlProvisioningTest(unittest.TestCase):
     identity = '11111111-1111-4111-8111-111111111111'
+
+    def test_lock_herdado_mantem_exclusao_apos_despacho(self):
+        from hml_provisioning import deployment_lock
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as temporary:
+            root = Path(temporary)
+            with (root/'deploy.lock').open('a') as parent:
+                fcntl.flock(parent, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                with deployment_lock(root, parent.fileno()) as inherited:
+                    self.assertNotEqual(inherited.fileno(), parent.fileno())
+                    with (root/'deploy.lock').open('a') as contender, self.assertRaises(BlockingIOError):
+                        fcntl.flock(contender, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                probe = subprocess.run([sys.executable, '-c',
+                    'import sys; from pathlib import Path; from hml_provisioning import deployment_lock; '
+                    'lock=deployment_lock(Path(sys.argv[1]),int(sys.argv[2])); '
+                    'lock.__enter__(); lock.__exit__(None,None,None)', str(root), str(parent.fileno())],
+                    cwd=Path(__file__).parent, pass_fds=(parent.fileno(),), capture_output=True, text=True)
+                self.assertEqual(probe.returncode, 0, probe.stderr)
+                bridge = """const {spawnSync}=require('node:child_process');
+const [python,root,fd]=process.argv.slice(1);
+const code='import sys; from pathlib import Path; from hml_provisioning import deployment_lock; lock=deployment_lock(Path(sys.argv[1]),3); lock.__enter__(); lock.__exit__(None,None,None)';
+const result=spawnSync('bash',['-c','exec "$@"','bridge',python,'-c',code,root],{stdio:['pipe','pipe','pipe',Number(fd)]});
+if(result.stderr)process.stderr.write(result.stderr);process.exit(result.status===null?1:result.status);
+"""
+                bridged = subprocess.run(['node', '-e', bridge, sys.executable, str(root), str(parent.fileno())],
+                    cwd=Path(__file__).parent, pass_fds=(parent.fileno(),), capture_output=True, text=True)
+                self.assertEqual(bridged.returncode, 0, bridged.stderr)
+                with (root/'deploy.lock').open('a') as contender, self.assertRaises(BlockingIOError):
+                    fcntl.flock(contender, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with deployment_lock(root, None):
+                with (root/'deploy.lock').open('a') as contender, self.assertRaises(BlockingIOError):
+                    fcntl.flock(contender, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    def test_lock_herdado_recusa_arquivo_diferente_ou_redirecionado(self):
+        from hml_provisioning import deployment_lock
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as temporary:
+            root = Path(temporary)
+            (root/'deploy.lock').touch()
+            with (root/'other.lock').open('a') as other:
+                with self.assertRaises(ValueError), deployment_lock(root, other.fileno()):
+                    self.fail('Lock diferente aceito.')
+            (root/'redirect').mkdir()
+            (root/'redirect/deploy.lock').symlink_to(root/'deploy.lock')
+            with self.assertRaises(ValueError), deployment_lock(root/'redirect', None):
+                self.fail('Redirecionamento aceito.')
 
     def test_intencao_duravel_antecede_cli_e_readback(self):
         calls = []
@@ -104,6 +150,20 @@ class HmlProvisioningTest(unittest.TestCase):
                 return 0
             queue.execute.side_effect = execute
             argv = ['hml', '--job', str(root/'builds/job'), '--id', self.identity, '--rehearsal', str(rehearsal)]
+            preflight_argv = ['hml', '--job', str(root/'builds/job'), '--rehearsal', str(rehearsal), '--check']
+            with patch.object(sys, 'argv', preflight_argv), redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(main(), 0)
+            queue.verify_migrations.assert_called_once_with()
+            self.assertTrue(json.loads(output.getvalue())['preflight_approved'])
+            self.assertFalse((root/'provisioning').exists())
+            queue.execute.assert_not_called()
+            queue.state.assert_not_called()
+            queue.sql.assert_not_called()
+            with patch.object(queue, 'verify_migrations', side_effect=ValueError('migration divergente')), \
+                    patch.object(sys, 'argv', preflight_argv), self.assertRaises(ValueError):
+                main()
+            self.assertFalse((root/'provisioning').exists())
+            queue.execute.assert_not_called()
             with patch.object(sys, 'argv', argv), redirect_stdout(io.StringIO()):
                 self.assertEqual(main(), 0)
             # Todos os pais criados precisam ser persistidos ANTES de executar Java.

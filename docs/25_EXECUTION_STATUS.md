@@ -1,5 +1,53 @@
 # Checkpoint de execução
 
+## Incremento — retomada ciclo17, 2026-11-04 local
+
+Workers15b/16/16b preservados, sem repetir build47ca909. Exportação15, eventos40
+e verificação15 passaram; identidade herdada falhou conforme registro anterior e
+aguarda reexecução corrigida pelo16b. CI0155ae3 falhou somente no download Maven;
+uma reexecução do job falho passou, ambos checks do SHA aprovados. Não é novo gate
+de runtime. Hml3cd4eeb/UP e originalOID16392 bloqueado/clone135836 conferidos.
+
+Revisão independente do roteiro assistido identificou preflight tardio, exclusão
+interrompida entre UI/CLI e retomada incompleta. CLI agora oferece preflight sem
+mutação e herança explícita do mesmo lock; vermelho observado,147Python passaram,
+incluindo processo filho real e recusa concorrente. Roteiro privado corrigido
+ainda preparado, NÃO executado em hml. Sem promoção/merge; Sprint01 aberta.
+Capturas de verificação/cadastro mobile e desktop inspecionadas; não constituem
+aprovação da matriz inteira. Próximo: recolher execuções sem duplicar, revisar
+resultados/capturas restantes, executar ensaio assistido quando gates liberarem.
+
+## Encerramento — retomada ciclo16, 2026-11-04 local
+
+Aviso efetivo de orçamento quase esgotado recebido após gravar STATUS privado;
+depois somente handoff obrigatório. Missão NÃO concluída. Sem merge, promoção
+ou CONCLUSAO.json; nenhum build repetido nem worker interrompido.
+
+Publicado0155ae315114fe1208aa920f6d1782811a259389, remoto/PR3 OPEN draft/base main
+relidos. Corpo atualizado e conferido01:41Z de2026-11-05. CI0964ecb passou nos
+dois checks; CI291af3d teve um success com173backend/145Python confirmados no log.
+Segundo check291af3d e CI0155ae3 ainda não consolidados no encerramento.
+
+Build47ca909 reutilizado;23XML/173backend sem falha/erro/skip recontados. Worker15b
+aprovou15combinações UI32/UI42/UI43 e identidade terminou37aprovações/8falhas:
+UI04 cinco projetos, UI08 mobile/tablet/WebKit, zero skip/retry/flaky. Correções
+publicadas, ainda sem reexecução. Última fase01:40Z: eventos. Não inventar resultado
+das famílias futuras. Fonte15b não contém as correções posteriores.
+
+Workers16/16b finitos permanecem em espera pelos predecessores, sem interrupção.
+16 não instala se15b falha;16b reexecuta família identidade45 corrigida no MESMO
+JAR e só continua manutenção/troca/smokes após demais famílias e CI aprovadas.
+Manifestos/scripts/fontes/locks no STATUS privado. Recolher antes de outra suíte.
+
+Hml3cd4eeb/UP/PID399982 preservada na última verificação; listeners loopback
+conferidos01:38Z. OriginalOID16392 bloqueado e clone135836 ativo; baseline449ce3c
+não promovido. Substituição frontend ainda NÃO executada nativamente. Jornada
+assistida preparada/sintaxe aprovada, NÃO executada. Relatório privado é snapshot
+01:30:54Z, anterior à consolidação identidade; STATUS final distingue resultados.
+Oito capturas-alvo/quatro adicionais inspecionadas, revisão integral pendente.
+Sprint01 aberta;02–05 não iniciadas. Este handoff fica LOCAL posterior ao push.
+[Evidência](evidencias/sprint-01-retomada-ciclo-16.md).
+
 ## Incremento — retomada ciclo16, 2026-11-04 local
 
 Build47ca909 reutilizado SEM reconstrução; fonte privada limpa conferida. Worker15b

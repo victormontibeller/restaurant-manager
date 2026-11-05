@@ -279,6 +279,17 @@ fixture já vinculada a um recibo. Isso não é aprovação do provisionamento.
 
 Após criar a solicitação pela UI/API SaaS, usar:
 
+Antes de criar a intenção HTTP, o mesmo comando com `--check` (sem `--id`)
+confere gates, runtime, OIDs, credenciais e migrations, sem escrever intenção ou
+executar Java. Esse resultado não substitui a revalidação obrigatória no despacho.
+Uma jornada coordenada mantém `e2e-worker.lock` e `deploy.lock` durante UI, CLI e
+read-back. Para não soltar a exclusão entre fases, pode passar o descritor aberto
+de `deploy.lock` por `--deploy-lock-fd`: o filho confere inode/proprietário e adquire
+o flock compartilhado com o pai. Fechar o filho não libera o lock ainda mantido
+pelo pai. Arquivo diferente, symlink ou concorrente são recusados; a opção não
+ignora locks nem gates. A transmissão explícita do descritor é responsabilidade
+do chamador, nunca um número copiado de outro processo.
+
 ```bash
 RM_HML_PROVISIONING_ENABLED=true bash scripts/with-env.sh hml \
   python3 scripts/hml_provisioning.py --job <JOB_PRIVADO> \

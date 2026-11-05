@@ -5,6 +5,7 @@ agendamento, não retoma FALHOU nem altera o baseline. --resume exige diagnósti
 prévio da intenção privada e apenas reconcilia/repete o mesmo UUID no mesmo banco.
 """
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import fcntl
 import json
@@ -12,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import stat
 import sys
 import uuid
 
@@ -64,17 +66,46 @@ def dispatch_one(queue, identity, persist):
                 state=state, reconciled_without_execution=False)
 
 
+@contextmanager
+def deployment_lock(root, inherited_fd=None):
+    """Compartilha a descrição aberta do pai sem liberar seu flock ao terminar.
+
+    Usado por jornada assistida que mantém exclusão entre UI, CLI e read-back.
+    Não aceita outro inode nem symlink; nenhuma opção ignora a aquisição do lock.
+    """
+    path = root / 'deploy.lock'
+    require(not path.is_symlink(), 'Lock não pode ser redirecionado.')
+    descriptor = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600) if inherited_fd is None else os.dup(inherited_fd)
+    try:
+        actual, expected = os.fstat(descriptor), path.stat()
+        require(stat.S_ISREG(actual.st_mode) and actual.st_uid == os.getuid()
+                and (actual.st_dev, actual.st_ino) == (expected.st_dev, expected.st_ino),
+                'Descritor não pertence ao lock de publicação.')
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with os.fdopen(descriptor, 'a') as lock:
+            descriptor = None
+            yield lock
+        # Não usar LOCK_UN: o pai conserva a mesma descrição aberta.
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
 def main():
     os.umask(0o077)
     signal.signal(signal.SIGTERM, interrupt)
     signal.signal(signal.SIGINT, interrupt)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--job', type=Path, required=True)
-    parser.add_argument('--id', required=True)
+    parser.add_argument('--id')
     parser.add_argument('--rehearsal', type=Path, required=True)
     parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--check', action='store_true', help='Confere gates/runtime/migrations sem criar intenção ou executar Java.')
+    parser.add_argument('--deploy-lock-fd', type=int, help='Descritor herdado do mesmo deploy.lock, mantido pelo chamador.')
     args = parser.parse_args()
-    identity = Queue.identity(args.id)
+    identity = Queue.identity(args.id) if args.id is not None else None
+    require(args.check or identity is not None, 'UUID obrigatório para despacho.')
+    require(not (args.check and args.resume), 'Preflight não executa retomada.')
     require(validate_environment(os.environ, allow_hml=True) == 'hml', 'Somente hml fictícia.')
     repo = Path(__file__).resolve().parents[1]
     runner_sha = clean_sha(repo)
@@ -83,8 +114,7 @@ def main():
     gate = validate_artifact(args.job, root)  # Mesma aplicação Java; Angular não executa DDL.
     rehearsal = private_runtime_path(str(args.rehearsal))
     validate_rehearsal(json.loads(rehearsal.read_text()), gate)
-    with (root / 'deploy.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    with deployment_lock(root, args.deploy_lock_fd) as lock:
         before = verify(root, gate['git_sha'])
         environ = dict(x.split(b'=', 1) for x in Path('/proc/%s/environ' % before['pid']).read_bytes().split(b'\0') if b'=' in x)
         validate_runtime(before, gate, environ)
@@ -92,6 +122,17 @@ def main():
         require(environ.get(b'RM_DB_PASSWORD') == os.environ['RM_DB_PASSWORD'].encode(), 'Credencial runtime divergente.')
         database = runtime_database(root, gate)
         baseline_hash = artifact_hash(root / 'healthy.json')
+        if args.check:
+            queue = Queue(os.environ, root, args.job.resolve(), root, lock.fileno(), allow_hml=True)
+            queue.verify_migrations()
+            require(verify(root, gate['git_sha']) == before and runtime_database(root, gate) == database
+                    and artifact_hash(root / 'healthy.json') == baseline_hash, 'Estado mudou durante preflight.')
+            clean_sha(repo, runner_sha)
+            print(json.dumps(dict(preflight_approved=True, git_sha=gate['git_sha'],
+                                  artifact_sha256=gate['artifact_sha256'], database=database,
+                                  healthy_promoted=False)))
+            return 0
+        identity = Queue.identity(args.id)
         directory = durable_directory(root, ('provisioning', 'hml-assisted', identity))
         intent = dict(id=identity, git_sha=gate['git_sha'], artifact_sha256=gate['artifact_sha256'], database=database)
         intent_path = directory / 'intent.json'
