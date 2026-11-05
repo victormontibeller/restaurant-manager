@@ -44,6 +44,7 @@ jobs:
           npm --prefix frontend run typecheck
           node scripts/test_platform_session.cjs
           node scripts/test_unit_events.cjs
+          node scripts/test_unit_export.cjs
           node scripts/test_inactive_memberships.cjs
           node scripts/test_hml_fixture.cjs
           node frontend/node_modules/playwright/cli.js install --with-deps chromium firefox webkit

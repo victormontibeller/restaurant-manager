@@ -132,6 +132,21 @@ de confirmação e recupera estado/histórico ao voltar. Tela fechada não mant�
 assinatura; retorno reconsulta o banco. Não é SSE nem comprova eventos de pedidos.
 [Contrato](api/eventos-unidade.yaml); [evidência](evidencias/sprint-01-retomada-ciclo-5.md).
 
+### Exportação cadastral — incremento do ciclo 14
+
+O candidato acrescenta exportação JSON do cadastro da unidade acompanhada:
+somente id, nome, fuso e versão. O clique faz nova consulta ao endpoint autorizado
+de acompanhamento, com sessão, ação e vínculo revalidados no backend; nunca
+transforma o cache da tela em arquivo depois de falha/revogação. Reutiliza a
+política `unidade.acompanhar`, sem introduzir rota pública ou autorização por botão.
+
+Trocar unidade, encerrar sessão ou destruir a tela descarta respostas pendentes.
+Download usa URL temporária revogada após acionamento, sem token em URL/storage.
+A UI diferencia arquivo solicitado ao navegador de download efetivamente salvo.
+Não exporta histórico, equipe, contatos ou dados financeiros. Este escopo não
+antecipa relatórios da Sprint04. Testes de lógica passaram; E2E/UI42–43 e build
+do novo Angular permanecem pendentes, conforme checkpoint.
+
 ## Referências relacionadas
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)

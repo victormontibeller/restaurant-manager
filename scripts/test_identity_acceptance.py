@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+from typing import Any
 from unittest.mock import Mock, patch
 from identity_acceptance import accept, Acceptance
 from maintenance_database import DatabaseSwap, durable_journal
@@ -33,11 +34,13 @@ class IdentityAcceptanceTest(unittest.TestCase):
                 root=Path(directory);attempt=root/'attempt';attempt.mkdir(mode=0o700)
                 ops=Acceptance(root,root,attempt,root/'bundle',None)
                 ops.state=dict(stage='hml',state='aceitacao-pendente',git_sha='a'*40,artifact_sha256='b'*64)
-                ops.intent=dict(original_oid='1',candidate_oid='2')
+                intent:dict[str,Any]=dict(original_oid='1',candidate_oid='2')
+                ops.intent=intent
                 durable_journal(attempt/'state.json',ops.state)
                 durable_journal(attempt/'identity-evidence.json',{'fixture':True})
                 swap=DatabaseSwap.__new__(DatabaseSwap);swap.attempt=attempt
-                swap.record=dict(stage='hml',state='clone-pronto',original_oid='1',candidate_oid='2')
+                record:dict[str,Any]=dict(stage='hml',state='clone-pronto',original_oid='1',candidate_oid='2')
+                swap.record=record
                 ops.swap=swap
                 def fault(path,data):
                     if path.name==failed:raise OSError('injetada antes de '+failed)

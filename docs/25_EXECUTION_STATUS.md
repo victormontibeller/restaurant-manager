@@ -1,5 +1,51 @@
 # Checkpoint de execução
 
+## Incremento — retomada ciclo 15, 2026-11-04 local
+
+Git/PR3 draft/CI de85872fd e hml3cd4eeb UP conferidos. Workers13/14 preservados:
+plataforma e estado comercial passaram quinze combinações cada; provisionamento
+ainda em execução. Sem promoção/merge nem repetição do build antigo.
+
+Exportação herdada revisada independentemente: nenhum bloqueador identificado.
+UI42 agora exige explicitamente a nova resposta GET disparada pelo download,
+distinguindo reconsulta de polling/cache. Cinco testes JS de exportação, quatro
+de eventos, typecheck aplicação/E2E,123Python, scanner e diff passaram. Logout/
+troca de unidade pendentes são cobertos em lógica, não por E2E dedicado. Captura
+UI32 corrigida e exportação ainda precisam de execução real em candidato novo.
+Build novo aguarda término das suítes herdadas; uma suíte pesada por vez.
+Sprint01 aberta;02–05 não iniciadas. Preservar release saudável e fontes privadas.
+
+## Encerramento — retomada ciclo 14, 2026-11-04 local
+
+Aviso efetivo de orçamento quase esgotado recebido após correção local da captura
+UI32; depois somente handoff obrigatório. Missão NÃO concluída, sem merge,
+promoção ou novo build. Nenhum worker interrompido/duplicado. SemCONCLUSAO.json.
+
+Publicado85872fdfacd14cf6ffb5672d4d47154674a2a159; remoto/PR3 OPEN/draft/base main
+relidos, dois checksCI aprovados. Consolidador/promotor revisado e testes verdes;
+NÃO executado para aceitar baseline. Homologação3cd4eeb/hash1697a473d968c0246a0b83b23bbd192b7e7fddbc282f061d66cf5f08a6c9d744,
+UP/PID399982 na última leitura00:01:43Z de2026-11-05. OriginalOID16392 bloqueado,
+cloneOID135836 ativo; healthy.json449ce3c preservado.
+
+Worker13 ainda ativo: verificação15/cadastro20/recuperação15/convites20/identidade35
+aprovados; eventos43aprovados/2falhas. Última fase00:04:14Z era plataforma, sem
+resultado consolidado observado. UI32 Firefox/WebKit falhou na captura fullPage
+acima32767px; correção local usa componente completo, mantém assertivas e NÃO
+foi reexecutada. UI04/UI05 anteriores não repetidos. Worker14 finito aguarda13,
+depois fundação/smoke com OIDs no MESMO JAR; fonte85872fd, sem promoção.
+
+Exportação JSON mínima implementada LOCALMENTE via reconsulta autorizada, cinco
+testes JS e quatro regressões de eventos aprovados;123Python/typecheck/scanner
+passaram antes da última correção de captura. UI42/UI43 descobertos, não executados.
+Terceira revisão independente recusada por limite2/2; incremento permanece SEM
+COMMIT/BUILD. Preservar todos os arquivos locais; não usar gate antigo no Angular
+novo (recusa real conferida). Onze imagens inspecionadas, revisão integral pendente.
+
+Próximo: recolher workers13/14 sem duplicar; revisar exportação/captura local,
+publicar e construir candidato novo somente após suíte pesada encerrada. Corrigir
+e reexecutar falhas; completar visual/fila hml/gate/promotor. Sprint01 aberta;
+02–05 não iniciadas. [Evidência](evidencias/sprint-01-retomada-ciclo-14.md).
+
 ## Incremento em execução — retomada ciclo 14, 2026-11-04
 
 Retomada conferiu e91a12f/PR3 draft/CI verde, hml3cd4eeb UP/PID399982,

@@ -43,7 +43,9 @@ test('S01-UI32: atualização durável, reconexão e leitura acessível sem dupl
   await page.getByLabel('Unidade acompanhada',{exact:true}).focus();await expect(page.getByLabel('Unidade acompanhada',{exact:true})).toBeFocused();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   expect(await page.evaluate(()=>[localStorage.length,sessionStorage.length])).toEqual([0,0]);
-  await page.screenshot({path:test.info().outputPath('eventos-unidade.png'),fullPage:true});
+  // Captura integral da superfície testada. A matriz administrativa abaixo pode
+  // ultrapassar o limite nativo de PNG com a massa acumulada e tem testes próprios.
+  await page.locator('app-eventos-unidade').screenshot({path:test.info().outputPath('eventos-unidade.png')});
 });
 test('S01-UI33: Cozinha perde evento por ação e vínculo com o mesmo JWT',async({page,request})=>{
   const admin=await administrador(request);const headers={Authorization:'Bearer '+admin};const id=await criar(request,admin,'Unidade da cozinha');const outra=await criar(request,admin,'Filial proibida');
@@ -73,4 +75,57 @@ test('S01-UI34: Cliente não recebe acompanhamento nem eventos de outra empresa'
   const foreign=await request.get('https://b.localhost:8089'+url,{headers:{Authorization:'Bearer '+token}});expect(foreign.status()).toBe(401);
   await page.getByRole('button',{name:'Sair da conta'}).click();await expect(page.getByRole('heading',{name:'Acessar minha conta'})).toBeVisible();
   expect((await request.get(url,{headers:{Authorization:'Bearer '+token}})).status()).toBe(401);
+});
+
+test('S01-UI42: exportação cadastral reconsulta o servidor, baixa JSON mínimo e não usa cache em falha',async({page,request})=>{
+  const token=await administrador(request);const id=await criar(request,token,'Cadastro para exportar');
+  await entrar(page,massa().admin);await acompanhar(page,id);
+  const nome='Cadastro atual '+crypto.randomUUID();
+  expect((await request.put('/api/v1/configuracoes/unidades/'+id,{headers:{Authorization:'Bearer '+token},data:{versao:0,nome,fuso:'UTC',ativa:true}})).status()).toBe(200);
+  const button=page.getByRole('button',{name:'Exportar cadastro da unidade (JSON)',exact:true});
+  await expect(button).toBeEnabled();await button.focus();
+  // O polling já avançou seu cursor; somente o clique deve reconsultar desde -1.
+  // Mesmo se o cache estiver atualizado, baixar sem esta leitura reprova o teste.
+  const consulta=page.waitForResponse(r=>r.url().endsWith('/'+id+'/eventos?depois=-1')&&r.request().method()==='GET');
+  const pending=page.waitForEvent('download');await page.keyboard.press('Enter');
+  expect((await consulta).status()).toBe(200);const download=await pending;
+  expect(download.suggestedFilename()).toBe('unidade-'+id+'.json');
+  const file=await download.path();expect(file).not.toBeNull();
+  expect(JSON.parse(fs.readFileSync(file!,'utf8'))).toEqual({unidade:{id,nome,fuso:'UTC',versao:'1'}});
+  const downloads:string[]=[];page.on('download',d=>downloads.push(d.suggestedFilename()));
+  // Falha de transporte, não substituição da resposta da API por dados prontos.
+  await page.route('**/eventos?depois=-1',route=>route.abort('internetdisconnected'));
+  await button.click();await expect(page.getByRole('alert')).toContainText('Nenhum arquivo foi gerado com dados antigos');
+  await expect(page.getByRole('alert')).toBeFocused();expect(downloads).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await page.locator('app-eventos-unidade').screenshot({path:test.info().outputPath('exportacao.png')});
+  await page.unroute('**/eventos?depois=-1');
+});
+
+test('S01-UI43: exportação pendente revalida revogação e não baixa dados de outra filial',async({page,request})=>{
+  const admin=await administrador(request);const headers={Authorization:'Bearer '+admin};
+  const id=await criar(request,admin,'Exportação permitida');const outra=await criar(request,admin,'Exportação proibida');
+  const funcionarios=await (await request.get('/api/v1/equipe',{headers})).json();
+  const funcionario=funcionarios.find((x:{id:string})=>x.id===massa().cozinha.id);expect(funcionario).toBeTruthy();
+  expect((await request.put('/api/v1/equipe/'+funcionario.id,{headers,data:{versao:funcionario.versao,perfil:'COZINHA',ativo:true,unidades:[id]}})).status()).toBe(200);
+  const token=await entrar(page,massa().cozinha);await acompanhar(page,id);
+  expect((await request.get('/api/v1/operacao/unidades/'+outra+'/eventos?depois=-1',{headers:{Authorization:'Bearer '+token}})).status()).toBe(404);
+  expect((await request.get('https://b.localhost:8089/api/v1/operacao/unidades/'+id+'/eventos?depois=-1',{headers:{Authorization:'Bearer '+token}})).status()).toBe(401);
+  const matriz=await (await request.get('/api/v1/configuracoes/acessos',{headers})).json();
+  let liberar!:()=>void;let recebeu!:()=>void;
+  const gate=new Promise<void>(resolve=>{liberar=resolve;});const chegou=new Promise<void>(resolve=>{recebeu=resolve;});
+  await page.route('**/eventos?depois=-1',async route=>{recebeu();await gate;await route.continue();});
+  const downloads:string[]=[];page.on('download',d=>downloads.push(d.suggestedFilename()));
+  let mudou=false;
+  try{
+    await page.getByRole('button',{name:'Exportar cadastro da unidade (JSON)',exact:true}).click();await chegou;
+    await expect(page.getByRole('button',{name:'Consultando para exportar…',exact:true})).toBeDisabled();
+    expect((await request.put('/api/v1/configuracoes/acessos',{headers,data:{versao:matriz.versao,perfil:'COZINHA',acoes:matriz.perfis.COZINHA.filter((a:string)=>a!=='unidade.acompanhar')}})).status()).toBe(200);mudou=true;
+    const denied=page.waitForResponse(r=>r.url().endsWith('/eventos?depois=-1'));liberar();expect((await denied).status()).toBe(403);
+    await expect(page.getByText('Acompanhamento encerrado.',{exact:true})).toBeVisible();
+    await expect(page.getByRole('button',{name:'Exportar cadastro da unidade (JSON)',exact:true})).toHaveCount(0);expect(downloads).toEqual([]);
+  }finally{
+    liberar();await page.unroute('**/eventos?depois=-1');
+    if(mudou)expect((await request.put('/api/v1/configuracoes/acessos',{headers,data:{versao:matriz.versao+1,perfil:'COZINHA',acoes:matriz.perfis.COZINHA}})).status()).toBe(200);
+  }
 });

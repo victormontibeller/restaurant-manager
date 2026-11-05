@@ -13,6 +13,7 @@ npm --prefix frontend ci --ignore-scripts
 npm --prefix frontend run typecheck
 node scripts/test_platform_session.cjs
 node scripts/test_unit_events.cjs
+node scripts/test_unit_export.cjs
 node scripts/test_event_config.cjs
 node scripts/test_inactive_memberships.cjs
 node scripts/test_hml_fixture.cjs

@@ -19,16 +19,17 @@ from hml_maintenance import validate_rehearsal
 from maintenance_database import durable_journal
 from release_support import artifact_hash, clean_sha, durable_artifact, private_runtime_path, verify
 
-SCENARIOS = tuple('S01-UI%02d' % i for i in range(1, 42)) + (
+SCENARIOS = tuple('S01-UI%02d' % i for i in range(1, 44)) + (
     'S00-UI01', 'S00-UI02', 'S00-UI03', 'S00-API01') + tuple('S01-HML%02d' % i for i in range(1, 11))
 EXPECTED = {(project, scenario) for project in PROJECTS for scenario in SCENARIOS}
 SURFACES = ('login', 'cadastro', 'recuperacao', 'verificacao', 'convites', 'acessos',
-            'equipe', 'unidades', 'eventos', 'plataforma', 'estado-empresa', 'provisionamento')
+            'equipe', 'unidades', 'eventos', 'plataforma', 'estado-empresa', 'provisionamento', 'exportacao')
 VISUAL_TARGETS = dict(login=('S01-UI01', 'login.png'), cadastro=('S01-UI14', 'cadastro-mobile.png'),
     recuperacao=('S01-UI11', 'recuperacao-mobile.png'), verificacao=('S01-UI21', 'verificacao-mobile.png'),
     convites=('S01-UI18', 'convites.png'), acessos=('S01-UI04', 'acessos.png'),
     equipe=('S01-UI04', 'administrador-protegido.png'), unidades=('S01-UI05', 'unidades.png'),
     eventos=('S01-UI32', 'eventos-unidade.png'), plataforma=('S01-UI24', 'saas-mobile.png'),
+    exportacao=('S01-UI42', 'exportacao.png'),
     **{'estado-empresa': ('S01-UI26', 'estado-comercial-mobile.png'),
        'provisionamento': ('S01-UI29', 'provisionamento-concluido.png')})
 

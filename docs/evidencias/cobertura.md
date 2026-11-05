@@ -1,5 +1,12 @@
 # Inventário rastreável de cobertura
 
+Atualização ciclo14: exportação cadastral acrescenta S01-UI42 (JSON mínimo de
+consulta atual, teclado e falha sem arquivo antigo) e S01-UI43 (filial/tenant e
+revogação durante requisição). Implementação/testes locais, E2E NÃO executado.
+Não pertence ao JAR3cd4eeb atualmente servido. Regressão herdada de eventos teve
+43 aprovações/2falhas na captura UI32 Firefox/WebKit acima do limite de altura;
+correção local ainda não reexecutada. [Evidência vigente](sprint-01-retomada-ciclo-14.md).
+
 [Índice](../README.md) · [Matriz normativa](../26_TEST_STRATEGY.md)
 
 Estado em 2026-11-04, retomada ciclo 13. Os IDs preservam o escopo integral;

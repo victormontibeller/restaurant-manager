@@ -11,7 +11,7 @@ interface Pagina {unidade:Atual;eventos:Evento[];proximo:string;temMais:boolean;
     <section aria-labelledby="eventos-titulo">
       <h3 id="eventos-titulo">Atualizações da unidade</h3>
       <p>Acompanhamento cadastral com consulta automática. Não inclui pedidos, pagamentos ou dados de clientes.</p>
-      <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar unidades permitidas</button>
+      <button type="button" (click)="carregar()" [disabled]="ocupado()||exportando()">Recarregar unidades permitidas</button>
       <label for="unidade-eventos">Unidade acompanhada</label>
       <select id="unidade-eventos" #seletor [value]="selecionada()" (change)="selecionar(seletor.value)">
         <option value="">Selecione uma unidade</option>
@@ -21,6 +21,8 @@ interface Pagina {unidade:Atual;eventos:Evento[];proximo:string;temMais:boolean;
       @if(erro()){<p #alerta role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
       @if(atual();as unidade){
         <p data-testid="unidade-atual"><strong>{{unidade.nome}}</strong> · {{unidade.fuso}} · versão {{unidade.versao}}</p>
+        <button type="button" (click)="exportar()" [disabled]="ocupado()||exportando()">{{exportando()?'Consultando para exportar…':'Exportar cadastro da unidade (JSON)'}}</button>
+        <p>O arquivo contém somente identificação, nome, fuso e versão, após nova autorização no servidor. Não inclui histórico, funcionários ou dados de clientes.</p>
         <p>Última consulta confirmada: {{confirmado()}}. Revalidação a cada cinco segundos enquanto esta tela estiver aberta.</p>
         @if(eventos().length===0){<p>Nenhuma alteração registrada desde o início deste acompanhamento.</p>}
         @else{<ol aria-label="Alterações cadastrais recebidas">
@@ -45,6 +47,7 @@ export class EventosUnidadeComponent {
   readonly estado=signal('Carregando unidades permitidas…');
   readonly erro=signal('');
   readonly ocupado=signal(false);
+  readonly exportando=signal(false);
   readonly confirmado=signal('');
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   constructor(){
@@ -53,7 +56,7 @@ export class EventosUnidadeComponent {
   }
   private vigente(geracao:number):boolean {return !this.destruido&&geracao===this.geracao&&this.conta===this.sessao.identidade()?.usuarioId;}
   private limpar():number {
-    clearTimeout(this.timer);this.geracao++;this.cursor='-1';this.atual.set(null);this.eventos.set([]);this.confirmado.set('');this.erro.set('');this.ocupado.set(false);return this.geracao;
+    clearTimeout(this.timer);this.geracao++;this.cursor='-1';this.atual.set(null);this.eventos.set([]);this.confirmado.set('');this.erro.set('');this.ocupado.set(false);this.exportando.set(false);return this.geracao;
   }
   async carregar():Promise<void>{
     const geracao=this.limpar();this.unidades.set([]);this.selecionada.set('');this.ocupado.set(true);this.estado.set('Carregando unidades permitidas…');
@@ -70,6 +73,34 @@ export class EventosUnidadeComponent {
     if(!id){this.estado.set('Selecione uma unidade para acompanhar.');return;}
     this.estado.set('Consultando atualizações…');void this.consultar(geracao,id);
   }
+  async exportar():Promise<void>{
+    const id=this.selecionada();const geracao=this.geracao;
+    if(!id||!this.atual()||this.ocupado()||this.exportando()||!this.vigente(geracao))return;
+    clearTimeout(this.timer);this.exportando.set(true);this.erro.set('');
+    try{
+      // Nunca exportar o cache da tela: ação, sessão e vínculo são revalidados.
+      const pagina=await this.sessao.api<Pagina>('/api/v1/operacao/unidades/'+encodeURIComponent(id)+'/eventos?depois=-1');
+      if(!this.vigente(geracao)||this.selecionada()!==id)return;
+      if(pagina.unidade.id!==id)throw new Error('Unidade divergente.');
+      this.baixar(id,pagina.unidade);this.estado.set('Arquivo cadastral solicitado ao navegador.');
+    }catch(error){
+      if(!this.vigente(geracao))return;
+      if(error instanceof ApiFailure&&[401,403,404].includes(error.status))this.encerrarAcompanhamento();
+      else{this.erro.set('Não foi possível exportar o cadastro. Nenhum arquivo foi gerado com dados antigos. Tente novamente com conexão.');this.foco();}
+    }finally{
+      if(this.vigente(geracao)){this.exportando.set(false);this.timer=setTimeout(()=>void this.consultar(geracao,id),5000);}
+    }
+  }
+  private baixar(id:string,unidade:Atual):void{
+    const arquivo=new Blob([JSON.stringify({unidade:{id:unidade.id,nome:unidade.nome,fuso:unidade.fuso,versao:unidade.versao}},null,2)+'\n'],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(arquivo);const link=document.createElement('a');
+    try{link.href=url;link.download='unidade-'+id+'.json';document.body.append(link);link.click();}
+    finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  }
+  private encerrarAcompanhamento():void{
+    this.limpar();this.unidades.set([]);this.selecionada.set('');this.estado.set('Acompanhamento encerrado.');
+    this.erro.set('Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.');this.foco();
+  }
   private async consultar(geracao:number,id:string):Promise<void>{
     if(!this.vigente(geracao))return;this.ocupado.set(true);let intervalo=5000;let continuar=true;
     try{
@@ -83,8 +114,7 @@ export class EventosUnidadeComponent {
       if(!this.vigente(geracao))return;
       this.atual.set(null);this.eventos.set([]);this.confirmado.set('');this.cursor='-1';
       if(error instanceof ApiFailure&&[401,403,404].includes(error.status)){
-        continuar=false;this.unidades.set([]);this.selecionada.set('');this.estado.set('Acompanhamento encerrado.');
-        this.erro.set('Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.');this.foco();
+        continuar=false;this.encerrarAcompanhamento();
       }else{this.estado.set('Sem conexão confirmada. Tentando recuperar o acompanhamento…');}
     }finally{
       if(this.vigente(geracao)){this.ocupado.set(false);if(continuar)this.timer=setTimeout(()=>void this.consultar(geracao,id),intervalo);}

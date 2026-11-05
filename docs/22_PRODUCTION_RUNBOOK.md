@@ -275,7 +275,7 @@ liberam o novo promotor. `--foundation` executa somente os vinte cenários do
 shell/API em HTTPS hml; não os confunde com os cinquenta de identidades.
 
 `identity_evidence.py --bundle <MANIFESTO_PRIVADO> --output <RESULTADO_NOVO>`
-reabre os relatórios reais e exige as combinações exatas S01-UI01–41, S00-UI01–03,
+reabre os relatórios reais e exige as combinações exatas S01-UI01–43, S00-UI01–03,
 S00-API01 e S01-HML01–10 nos cinco projetos, sem duplicatas/skip/retry/flaky.
 O manifesto referencia job aprovado, manutenção, recibos/fontes imutáveis e
 revisões visuais por superfície em mobile/desktop, com notas/hash do PNG.
