@@ -1,5 +1,6 @@
 import {Component,ElementRef,ViewChild,inject,output,signal} from '@angular/core';
 import {ApiFailure,SessaoService} from './sessao.service';
+import {senhaEmBranco} from './senha';
 
 @Component({
   selector:'app-recuperacao',
@@ -51,6 +52,7 @@ export class RecuperacaoComponent {
     this.iniciar();
     try {
       if(nova.value!==confirmacao.value){this.campoErro.set('confirmacao');throw new Error('As senhas devem ser iguais.');}
+      if(senhaEmBranco(nova.value)){this.campoErro.set('senha');throw new Error('A senha não pode conter somente espaços em branco.');}
       if(new TextEncoder().encode(nova.value).length>72){this.campoErro.set('senha');throw new Error('A senha deve ter no máximo 72 bytes.');}
       await this.sessao.recuperar('recuperacao/confirmar',{codigo:codigo.value,senha:nova.value});
       codigo.value='';this.sucesso('Senha alterada e sessões anteriores encerradas. Volte ao login para entrar com a nova senha.');

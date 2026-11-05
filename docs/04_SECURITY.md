@@ -72,6 +72,12 @@ Código aleatório de 256 bits, representado por 43 caracteres base64url, expira
 
 A nova senha exige pelo menos doze caracteres e no máximo 72 bytes UTF-8. Código não aparece em URL, query string, logs ou armazenamento do navegador. A UI limpa campos de senha e informa resultado incerto quando perde a resposta; orienta conferir login com a senha nova. Reutilização de código consumido é rejeitada, não produz outro reset.
 
+Recuperação, cadastro e aceite de convite também rejeitam senha composta somente
+de espaços em branco. A UI usa a mesma classificação de `String.isBlank` do
+Java21, informa o erro associado ao campo e mantém foco no alerta. A senha
+válida é enviada exatamente como digitada, inclusive espaços nas extremidades;
+não há normalização ou `trim`. O backend continua sendo a autoridade da validação.
+
 Conteúdo recuperável da outbox usa AES-256-GCM, nonce aleatório de 96 bits e autenticação adicional pelo tenant/id da mensagem. `RM_EMAIL_SECRET` é uma chave independente da assinatura JWT, com 32 bytes aleatórios codificados em base64; deve ficar fora do Git/banco. Sem chave ou captura configurada, a API retorna indisponibilidade, não sucesso fictício. Substituir a chave com mensagens pendentes as torna ilegíveis: esvaziar a fila sob controle antes de trocar ou permitir nova solicitação; não há rotação transparente dessa chave nesta entrega.
 
 Somente transporte de captura local fictícia, descrito em [Integrações](21_INTEGRATIONS.md). Contrato [OpenAPI de recuperação](api/recuperacao.yaml). A existência de recuperação não encerra a família T06 nem E05.

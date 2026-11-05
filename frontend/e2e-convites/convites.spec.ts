@@ -110,6 +110,10 @@ test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',as
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
   await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).toHaveAccessibleDescription('As senhas devem ser iguais.');
+  await preencher(page,codigo,' '.repeat(12));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();
+  await expect(page.getByRole('alert')).toHaveText('A senha não pode conter somente espaços em branco.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAccessibleDescription(/A senha não pode conter somente espaços em branco\./);
   await preencher(page,codigo,'á'.repeat(37));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();
   await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAccessibleDescription(/A senha deve ter no máximo 72 bytes\./);

@@ -1,6 +1,53 @@
 # Checkpoint de execução
 
+## Incremento — ciclo23, 2026-11-05
+
+Retomada conferiu Git/PR3 draft/CI36e49e7 e hml3cd4eeb UP. Workers21/22
+preservados, sem duplicar/interromper. Às23:11Z,200pares únicos aprovados no
+JAR96769ac; provisionamento ainda em execução, build36e49e7 não iniciado.
+
+Revisão identificou senha só de espaços sem erro por campo. Vermelho pertinente
+reproduzido; recuperação/cadastro/aceite corrigidos, sem normalizar senha válida.
+Paridade com Java21 em1114112pontos Unicode confirmada; Hibernate efetivo usa
+isBlank. Probes de formulários passaram nos três motores e typecheck passou;
+API fictícia, não E2E. Segunda revisão sem bloqueador. Probe geral de perfis
+expirou emWebKit, não aprovado integralmente. E2E ampliados ainda pendentes.
+
+O incremento altera Angular; evidência/build anteriores não o aprovam. Recolher
+despachante/build36e49e7 antes de novo build; não interromper. Manutenção/troca/
+assistido/smokes/visual/aceitação pendentes. Sprint01 aberta,02–05 não iniciadas.
+[Evidências e limites](evidencias/sprint-01-retomada-ciclo-23.md).
+
+## Encerramento — ciclo22, 2026-11-05
+
+Aviso efetivo do executor de orçamento quase esgotado após consulta22:52:32Z;
+depois somente handoff obrigatório. Missão NÃO concluída. Publicado36e49e7/PR3
+OPEN draft, ambos checksCI aprovados e corpo remoto relido;174backend na CI,
+zero falha/erro/skip. Sem merge/deploy/promoção ou CONCLUSAO.json.
+
+Worker21 preservado: último progresso22:51Z,150pares únicos aprovados no
+JAR96769ac, convites ainda em execução. Despachante22/PID656883 aguarda término
+para conferir matriz e iniciar UM build do36e49e7 congelado. Reentrada real
+recusada e hash/progresso preservados22:52:32Z; novo build não observado. Não
+iniciar concorrente: recolher unidades/resultados/latest.json primeiro.
+
+Hml3cd4eeb UP e baseline449ce3c preservados na última leitura; sem mudança de
+runtime. Probes/typecheck/compilação locais passaram, mas novo Angular ainda
+sem E2E/build nativos; revisão visual/manutenção/assistido/aceitação pendentes.
+STATUS e checkpoint privados registram caminhos/processos/limites/próximo passo.
+Documentos finais locais posteriores ao push preservados; nenhum código
+compilável novo. Sprint01 aberta;02–05 não iniciadas.
+
 ## Incremento — ciclo22, 2026-11-05
+
+Atualização22:51Z: publicado36e49e7/PR3 OPEN draft, remoto/corpo relidos. Ambos
+checksCI passaram; log confirma174backend sem falha/erro/skip, incluindo os novos
+testes PostgreSQL de cancelamento/reuso e escrita isolada. Não é teste nativo novo.
+Worker21 consolidou150 pares únicos no JAR96769ac, convites ainda em execução.
+Despachante finito22 aguarda21, sem reconstruir/interromper. Só lança build único
+do36e49e7 após verificar215pares/CI/fonte/hash/hml; unidade/PID/registros privados.
+Recolher seu resultado/latest.json antes de lançar build. Ainda sem build/E2E
+nativos do Angular novo. Hml3cd4eeb UP/baseline449ce3c preservados.
 
 Worker21/fonte96769ac preservados sem interrupção ou repetição de build. Na
 consulta22:35Z, cinco parcelas somavam115 combinações aprovadas, zero falha/skip/

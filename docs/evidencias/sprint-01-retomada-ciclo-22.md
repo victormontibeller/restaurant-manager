@@ -73,3 +73,35 @@ AGENTS.md foi recusada pela proteção do executor, sem contorno. Autorização
 vigente já está no guia canônico. Próximo: publicar incremento revisado, conferir
 CI/novos testes; recolher worker21 antes de build único novo e E2E atualizado.
 Manutenção/troca/ensaio assistido/smokes/visual/aceitação continuam pendentes.
+
+## Publicação e resultado da CI
+
+Publicado36e49e751f3f5cd8b1950d72a0ea70e223e6583c, remoto/PR3 OPEN draft/base
+main/corpo relidos. Ambos checksCI passaram:42123643400 e42123648791. Log do
+primeiro conferido integralmente para resultados:174 backend, zero falha/erro/
+skip, incluindo três testes PoolIsolationTest e21 AcessosTest; build Angular,
+probes e auditorias aprovados. Isso executou os novos testes PostgreSQL de
+isolamento/cancelamento em CI, não é execução local nem E2E do novo release.
+
+Às22:51Z, sete parcelas do worker21 somavam150 pares únicos aprovados; fase
+convites ainda em execução. Original/hml/baseline preservados. Capturas mobile
+de eventos/exportação vistas integralmente, cadastro/verificação com recortes
+legíveis: controles e alertas sem corte observado. Não aprova foco/ARIA nem
+substitui capturas do novo artefato; revisão visual global continua pendente.
+
+Despachante privado finito de uso único iniciado pelo systemd, PID656883,
+somente para aguardar o término do worker21 e lançar o build existente uma vez.
+Fonte congelada36e49e7, claim exclusivo, PID/início/hash/log/progresso registrados.
+Espera até7200s por essa fase; esse limite NÃO é teto da missão. Só lança se as
+215 combinações antigas forem conferidas por conteúdo/hash, CI nova aprovada,
+candidato antigo encerrado e hml inalterada. Não executa E2E, deploy ou merge.
+Na consulta22:51Z estava aguardando; novo build ainda NÃO iniciado. Recolher
+resultado e builds/latest.json antes de qualquer lançamento concorrente.
+
+## Encerramento
+
+Às22:52:32Z, reentrada real do despachante foi recusada por claim existente,
+sem alterar hash/progresso nem iniciar build duplicado. Scanner308 e diff
+passaram. Aviso efetivo do executor de orçamento quase esgotado recebido depois;
+somente escritas obrigatórias de handoff. Nenhuma execução ativa interrompida.
+STATUS/checkpoint privados preservados; resultados futuros não presumidos.

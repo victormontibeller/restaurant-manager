@@ -1,5 +1,6 @@
 import {Component,ElementRef,ViewChild,inject,output,signal} from '@angular/core';
 import {ApiFailure,SessaoService} from './sessao.service';
+import {senhaEmBranco} from './senha';
 
 @Component({
   selector:'app-cadastro',
@@ -52,6 +53,7 @@ export class CadastroComponent {
     this.iniciar();
     try {
       if(senha.value!==confirmacao.value){this.campoErro.set('confirmacao');throw new Error('As senhas devem ser iguais.');}
+      if(senhaEmBranco(senha.value)){this.campoErro.set('senha');throw new Error('A senha não pode conter somente espaços em branco.');}
       if(new TextEncoder().encode(senha.value).length>72){this.campoErro.set('senha');throw new Error('A senha deve ter no máximo 72 bytes.');}
       await this.sessao.cadastrar('cadastro/confirmar',{codigo:codigo.value,senha:senha.value});
       codigo.value='';this.sucesso('Conta criada com e-mail verificado. Volte ao login para entrar.');

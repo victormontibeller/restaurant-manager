@@ -54,6 +54,14 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
         }catch{failures.push(form.name+': divergência sem associação ao campo');}
         assert.equal(await page.evaluate(()=>window.fixture.calls.length),0);
         await expect(password).toHaveValue('');await expect(confirmation).toHaveValue('');
+        await password.fill(' '.repeat(12));await confirmation.fill(' '.repeat(12));await button.click();
+        await expect(page.getByRole('alert')).toHaveText('A senha não pode conter somente espaços em branco.');
+        await expect(page.getByRole('alert')).toBeFocused();
+        await expect(password).toHaveAttribute('aria-invalid','true');
+        await expect(password).toHaveAccessibleDescription(/A senha não pode conter somente espaços em branco\./);
+        await expect(confirmation).not.toHaveAttribute('aria-invalid','true');
+        assert.equal(await page.evaluate(()=>window.fixture.calls.length),0);
+        await expect(password).toHaveValue('');await expect(confirmation).toHaveValue('');
         await password.fill('á'.repeat(37));await confirmation.fill('á'.repeat(37));await button.click();
         await expect(page.getByRole('alert')).toHaveText('A senha deve ter no máximo 72 bytes.');
         try{
@@ -70,11 +78,12 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
         await expect(page.getByRole('alert')).toContainText('A resposta não chegou.');
         await expect(password).not.toHaveAttribute('aria-invalid','true');await expect(confirmation).not.toHaveAttribute('aria-invalid','true');
         await expect(code).not.toHaveAttribute('aria-invalid','true');
-        await password.fill('Senha fictícia 123');await confirmation.fill('Senha fictícia 123');
+        await password.fill('  Senha fictícia 123  ');await confirmation.fill('  Senha fictícia 123  ');
         await page.evaluate(()=>window.failure=0);await button.click();
         await expect(page.getByRole('status')).toContainText(/Senha alterada|Conta criada|Convite aceito/);
         await expect(code).toHaveValue('');await expect(password).toHaveValue('');await expect(confirmation).toHaveValue('');
         assert.equal(await page.evaluate(()=>window.fixture.calls.length),2);
+        assert.equal(await page.evaluate(()=>window.fixture.calls.at(-1).at(-1).senha),'  Senha fictícia 123  ');
       }
       for(const width of [360,768,1280]){
         await page.setViewportSize({width,height:800});

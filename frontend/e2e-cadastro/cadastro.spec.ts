@@ -61,6 +61,10 @@ test('S01-UI14: cadastro inválido, validação de senha, foco e offline',async(
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
   await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).toHaveAccessibleDescription('As senhas devem ser iguais.');
+  await preencher(page,'A'.repeat(43),' '.repeat(12));await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
+  await expect(page.getByRole('alert')).toHaveText('A senha não pode conter somente espaços em branco.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAccessibleDescription(/A senha não pode conter somente espaços em branco\./);
   await preencher(page,'A'.repeat(43),'á'.repeat(37));await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
   await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAccessibleDescription(/A senha deve ter no máximo 72 bytes\./);

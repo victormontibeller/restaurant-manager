@@ -1,5 +1,6 @@
 import {Component,ElementRef,ViewChild,inject,output,signal} from '@angular/core';
 import {ApiFailure,SessaoService} from './sessao.service';
+import {senhaEmBranco} from './senha';
 @Component({
   selector:'app-aceitar-convite',
   template:`
@@ -29,6 +30,7 @@ export class AceitarConviteComponent {
     event.preventDefault();if(this.ocupado())return;this.ocupado.set(true);this.erro.set('');this.aviso.set('');this.campoErro.set(null);
     try{
       if(senha.value!==confirmacao.value){this.campoErro.set('confirmacao');throw new Error('As senhas devem ser iguais.');}
+      if(senhaEmBranco(senha.value)){this.campoErro.set('senha');throw new Error('A senha não pode conter somente espaços em branco.');}
       if(new TextEncoder().encode(senha.value).length>72){this.campoErro.set('senha');throw new Error('A senha deve ter no máximo 72 bytes.');}
       await this.sessao.aceitarConvite({codigo:codigo.value,senha:senha.value});codigo.value='';
       this.aviso.set('Convite aceito e e-mail verificado. Volte ao login para entrar.');setTimeout(()=>this.resultado?.nativeElement.focus());
