@@ -1,5 +1,25 @@
 # Checkpoint de execução
 
+## Retomada — ciclo20, 2026-11-05
+
+[Evidências e limites](evidencias/sprint-01-retomada-ciclo-20.md). Estado real
+reconciliado: head2daf5c9/PR3 OPEN draft, ambos checks aprovados; hml3cd4eeb UP,
+baseline449ce3c preservado. Nenhum worker antigo vivo; os registros abaixo que
+os descrevem ativos são históricos.15b aprovou nove famílias/170combinações;
+16b encerrou identidade com44aprovações/1falha UI01/tablet, zero skip/flaky.
+16/17 recusaram seguir, sem manutenção/troca/ensaio assistido novos.
+
+Trace aponta asserção encerrada antes de enviar POST logout204. Foco original
+UI01/tablet passou uma vez, sem apagar a intermitência. Correção sincroniza HTTP
+e acrescenta prova do mesmo access token200→401; typecheck e quinze combinações
+UI01–03/cinco projetos passaram, zero falha/skip/flaky/retry. Duas revisões
+independentes realizadas; diff final/runner sem novo bloqueador. Matriz45 e
+manutenção/troca/smokes ainda pendentes. Build47ca909 reutilizado:23XML/173backend sem
+falha/erro/skip e hash conferidos, fonte de aplicação compatível. Não reconstruir
+para alterações só de testes/docs. Atualização AGENTS solicitada foi bloqueada
+pelo executor; não contornada. Guia canônico atualizado com exclusão segura de
+branches após merge autorizado. Sprint01 aberta;02–05 não iniciadas.
+
 ## Incremento — retomada ciclo17, 2026-11-04 local
 
 [Evidências e limites da rodada](evidencias/sprint-01-retomada-ciclo-17.md).

@@ -37,6 +37,12 @@ Convenção desta missão: uma branch `hermes/sprint-NN-tema` e um PR por Sprint
 
 Cada nova Sprint parte da `main` atualizada após o merge verificado da anterior. Branch existente empilhada deve ter o PR redirecionado para `main` após a integração de sua base, preservando commits e trabalho local. Subagentes com trabalho isolado são integrados pelo coordenador antes dessa passagem.
 
+Na retomada de 2026-11-05, o proprietário reafirmou a autorização temporária
+de merge desta missão e pediu excluir as branches após a integração. Conferir
+o head exato do PR, ancestralidade na `main` remota e ausência de commits
+posteriores antes da exclusão local/remota; reler a ausência das refs. Não usar
+exclusão forçada para descartar trabalho nem apagar a branch de PR ainda aberto.
+
 Manter separados o **tip integrado de desenvolvimento** e o **último release validado em homologação**. Retornar um binário não retrocede a base do código nem apaga commits posteriores. Commit/push de trabalho incompleto pode preservar progresso, identificado como tal, mas não habilita deploy nem conclusão de critério. Alterações somente documentais não exigem novo release da aplicação.
 
 ## Preparação e entrega do contexto

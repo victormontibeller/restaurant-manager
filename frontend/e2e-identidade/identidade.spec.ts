@@ -7,6 +7,15 @@ async function enviarLogin(page: Page, status = 200): Promise<void> {
   expect((await response).status()).toBe(status);
 }
 
+async function encerrarSessao(page: Page): Promise<void> {
+  // O clique inicia CSRF + logout; só a resposta confirma a revogação no servidor.
+  const response = page.waitForResponse(r => r.url().endsWith('/api/v1/auth/logout') && r.request().method()==='POST', {timeout:12000});
+  await page.getByRole('button',{name:'Sair da conta'}).click();
+  const logout = await response;
+  expect(logout.status()).toBe(204);
+  await logout.finished();
+}
+
 test('S01-UI03: abas concorrentes e logout após perda de conexão', async ({page,context}) => {
   if (!fixture) throw new Error('Massa privada obrigatória.');
   await page.goto('/');
@@ -47,9 +56,16 @@ test('S01-UI01: login, recarga com refresh e logout revogam acesso real', async 
   const cookies = await context.cookies();
   const refresh = cookies.find(c => c.name==='RM_REFRESH');
   expect(refresh?.httpOnly).toBe(true); expect(refresh?.secure).toBe(true); expect(refresh?.sameSite).toBe('Strict');
+  const renewal = page.waitForResponse(r => r.url().endsWith('/api/v1/auth/refresh') && r.request().method()==='POST', {timeout:12000});
   await page.reload();
+  const restored = await renewal;
+  expect(restored.status()).toBe(200);
+  const {accessToken} = await restored.json() as {accessToken:string};
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
-  await page.getByRole('button', {name:'Sair da conta'}).click();
+  const headers = {Authorization:'Bearer '+accessToken};
+  expect((await context.request.get('/api/v1/auth/me',{headers})).status()).toBe(200);
+  await encerrarSessao(page);
+  expect((await context.request.get('/api/v1/auth/me',{headers})).status()).toBe(401);
   await expect(page.getByRole('heading', {name:'Acessar minha conta'})).toBeVisible();
   await expect(page.getByText('Sessão encerrada no servidor.')).toBeVisible();
   await page.reload();
@@ -72,5 +88,5 @@ test('S01-UI02: senha inválida, validação acessível e tentativa sem CSRF', a
   await page.getByLabel('Senha',{exact:true}).fill(fixture.senha);
   await enviarLogin(page);
   await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
-  await page.getByRole('button',{name:'Sair da conta'}).click();
+  await encerrarSessao(page);
 });
