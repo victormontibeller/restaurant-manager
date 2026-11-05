@@ -1,5 +1,59 @@
 # Checkpoint de execução
 
+## Incremento — ciclo21, 2026-11-05
+
+Worker20 terminou21:20:20Z:42 aprovados/três falhas identidade, zero skip/flaky;
+manutenção/troca não executadas. Hml3cd4eeb UP/PID399982 e PR3 OPEN draft/head600274f
+conferidos. Não há build/suíte pesada herdada ativa. Alterações locais preservadas.
+
+Renderização de vínculos revisada independentemente sem bloqueador identificado;
+probe ampliado para troca de cartão com edição pendente e promoção com editor
+aberto. Três motores passaram com API fictícia, typecheck/regressões locais,
+scanner305/diff aprovados. Não equivalem a E2E. Próximo: publicar incremento,
+build durável novo uma única vez, focoUI04/UI35 e matriz do novo artefato; depois
+manutenção/ensaio assistido/smoke/aceitação. Sprint01 aberta;02–05 não iniciadas.
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-21.md).
+
+## Encerramento — ciclo20, 2026-11-05
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado recebido após
+typecheck/regressões locais; depois somente handoff obrigatório. Não houve
+merge, promoção nem novo build. Head publicado600274f/PR3 OPEN draft/base main
+e corpo atualizado relidos; ambos checks CI desse SHA passaram.
+
+UI01–03 corrigidos passaram quinze combinações nos cinco projetos, sem falha,
+skip/flaky/retry. A rodada integrada posterior encontrou UI04 reprovado em
+Chromium desktop e Firefox: no primeiro, timeout120s na captura após operações
+de negócio. Não aprovada. Worker finito ainda ativo na última consulta21:15Z,
+MainPID619890/candidato619911, fonte imutável600274f/JAR47ca909. Resultado final
+NÃO observado; recolher antes de outra suíte/build/migration. Tentativa explícita
+de parar o worker foi bloqueada pelo executor; não contornada. Sem troca hml
+iniciada no último estado, fase identidade. Último runtime verificado3cd4eeb UP;
+baseline anterior preservado. Não inferir verificação posterior ao aviso.
+
+Correção LOCAL posterior, ainda SEM COMMIT: edição de vínculos monta unidades
+somente de um funcionário por vez, mantendo perfil/ativo/salvar sempre visíveis.
+Vermelho Angular real: seis funcionários/cem unidades geravam506checkboxes em
+vez dos seis da lista compacta. Probes corrigidos passaram em Chromium/Firefox/
+WebKit, com teclado, recarga falha, seleção preservada, payload/leitura posterior,
+360/768/1280px e alvos/separação de botões. API desses probes é FICTÍCIA, não E2E.
+Capturas revisadas e espaçamento corrigido; doze capturas finais privadas.
+
+Typecheck final, lógica de vínculos, quatro regressões de sessão, duas de eventos,
+cinco de exportação, scanner305 e diff passaram. Comando anterior combinado
+expirou depois dos probes; typecheck/regressões foram reexecutados com exit0.
+Revisão independente desse NOVO incremento foi recusada pelo limite2/2; não
+substituída por aprovação. Preservar alterações locais em componente, UI35,
+probe existente e documentação. Não atribuir testes/JAR47ca909 ao Angular novo.
+
+Próximo: recolher worker20/relatórios, revisar independentemente o diff local,
+publicar após gate de revisão e construir novo artefato uma única vez, quando
+nenhuma suíte pesada estiver ativa. Validar UI04/UI35 e regressões afetadas,
+depois matriz integrada, manutenção/troca/ensaio assistido e aceitação. Não
+relançar o runner20 automaticamente: ele está fixado no JAR/fonte anteriores.
+Sprint01 aberta;02–05 não iniciadas. AGENTS permanece bloqueado pela ferramenta;
+guia canônico contém autorização atual. [Evidência](evidencias/sprint-01-retomada-ciclo-20.md).
+
 ## Retomada — ciclo20, 2026-11-05
 
 [Evidências e limites](evidencias/sprint-01-retomada-ciclo-20.md). Estado real

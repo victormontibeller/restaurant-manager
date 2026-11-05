@@ -47,11 +47,17 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
             </select>
             <label><input type="checkbox" [checked]="f.ativo" (change)="f.ativo=$any($event.target).checked" [disabled]="ocupado()">Ativo</label>
             @if(f.perfil!=='ADMINISTRADOR'){
-              <fieldset [disabled]="ocupado()"><legend>Unidades atribuídas</legend>
-                @for(u of unidades();track u.id){<label><input type="checkbox" [checked]="f.unidades.includes(u.id)" (change)="vincular(f,u.id,$any($event.target).checked)">{{u.nome}}</label>}
-                @for(id of unidadesInativas(f);track id){<label><input type="checkbox" [checked]="f.unidades.includes(id)" (change)="vincular(f,id,$any($event.target).checked)">Vínculo em unidade inativa · <span style="overflow-wrap:anywhere">{{id}}</span></label>}
-                @if(unidadesInativas(f).length){<p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>}
-              </fieldset>
+              <p>Vínculos nesta edição: {{f.unidades.length}}. Alterações só valem após salvar o funcionário.</p>
+              <button type="button" style="margin-bottom:.5rem;max-width:100%" (click)="alternarUnidades(f.id)" [disabled]="ocupado()" [attr.aria-expanded]="funcionarioExpandido()===f.id" [attr.aria-controls]="'unidades-'+f.id">Editar unidades atribuídas</button>
+              <div [id]="'unidades-'+f.id">
+                @if(funcionarioExpandido()===f.id){
+                  <fieldset [disabled]="ocupado()"><legend>Unidades atribuídas</legend>
+                    @for(u of unidades();track u.id){<label><input type="checkbox" [checked]="f.unidades.includes(u.id)" (change)="vincular(f,u.id,$any($event.target).checked)">{{u.nome}}</label>}
+                    @for(id of unidadesInativas(f);track id){<label><input type="checkbox" [checked]="f.unidades.includes(id)" (change)="vincular(f,id,$any($event.target).checked)">Vínculo em unidade inativa · <span style="overflow-wrap:anywhere">{{id}}</span></label>}
+                    @if(unidadesInativas(f).length){<p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>}
+                  </fieldset>
+                }
+              </div>
             } @else {<p>Cobertura integral da empresa.</p>}
             <button type="button" (click)="salvarFuncionario(f)" [disabled]="ocupado()">Salvar funcionário</button>
           </article>
@@ -80,6 +86,7 @@ export class AcessosComponent implements OnInit {
   readonly erro=signal('');
   readonly aviso=signal('');
   readonly pagina=signal(0);
+  readonly funcionarioExpandido=signal<string|null>(null);
   readonly bloqueio=output<boolean>();
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   ngOnInit():void{void this.carregar();}
@@ -88,7 +95,7 @@ export class AcessosComponent implements OnInit {
       const m=await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
       const e=await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina='+pagina);
       const u=await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
-      this.matriz.set(m);this.equipe.set(e);this.vinculosOriginais.set(Object.fromEntries(e.map(f=>[f.id,[...f.unidades]])));this.unidades.set(u);this.pagina.set(pagina);this.selecionar(this.perfil());
+      this.matriz.set(m);this.equipe.set(e);this.vinculosOriginais.set(Object.fromEntries(e.map(f=>[f.id,[...f.unidades]])));this.unidades.set(u);this.pagina.set(pagina);this.funcionarioExpandido.set(null);this.selecionar(this.perfil());
     });
   }
   selecionar(perfil:string):void {this.perfil.set(perfil);this.escolhidas.set(new Set(this.matriz()?.perfis[perfil]??[]));}
@@ -97,7 +104,8 @@ export class AcessosComponent implements OnInit {
   marcar(acao:Acao,marcado:boolean):void {const a=new Set(this.escolhidas());if(marcado){a.add(acao.codigo);if(acao.dependencia)a.add(acao.dependencia);}else a.delete(acao.codigo);this.escolhidas.set(a);}
   async confirmar(event:Event,input:HTMLInputElement):Promise<void>{event.preventDefault();const senha=input.value;input.value='';await this.executar(async()=>{await this.sessao.api('/api/v1/auth/reautenticar','POST',{senha});this.aviso.set('Identidade confirmada por cinco minutos.');});}
   async salvarMatriz():Promise<void>{await this.executar(async()=>{const m=await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos','PUT',{versao:this.matriz()?.versao,perfil:this.perfil(),acoes:[...this.escolhidas()]});this.matriz.set(m);this.selecionar(this.perfil());this.aviso.set('Permissões salvas no servidor.');});}
-  mudarPerfil(f:Funcionario,perfil:string):void{f.perfil=perfil;if(perfil==='ADMINISTRADOR')f.unidades=[];}
+  mudarPerfil(f:Funcionario,perfil:string):void{f.perfil=perfil;if(perfil==='ADMINISTRADOR'){f.unidades=[];if(this.funcionarioExpandido()===f.id)this.funcionarioExpandido.set(null);}}
+  alternarUnidades(id:string):void{if(!this.ocupado())this.funcionarioExpandido.update(atual=>atual===id?null:id);}
   unidadesInativas(f:Funcionario):string[]{return (this.vinculosOriginais()[f.id]??[]).filter(id=>!this.unidades().some(u=>u.id===id));}
   vincular(f:Funcionario,id:string,marcado:boolean):void{f.unidades=marcado?[...new Set([...f.unidades,id])]:f.unidades.filter(u=>u!==id);}
   async salvarFuncionario(f:Funcionario):Promise<void>{await this.executar(async()=>{const result=await this.sessao.api<Funcionario>('/api/v1/equipe/'+f.id,'PUT',{versao:f.versao,perfil:f.perfil,ativo:f.ativo,unidades:f.unidades});this.equipe.update(rows=>rows.map(row=>row.id===result.id?result:row));this.vinculosOriginais.update(rows=>({...rows,[result.id]:[...result.unidades]}));this.aviso.set('Funcionário atualizado no servidor.');await this.sessao.atualizarIdentidade();});}

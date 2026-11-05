@@ -73,6 +73,18 @@ Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`
 
 UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizontal obrigatória. Edições sensíveis exigem confirmação explícita da senha na sessão, válida por cinco minutos. Resultado de testes e limitações ficam no checkpoint; não inferir homologação a partir deste contrato.
 
+No incremento local do ciclo20, a lista de funcionários mantém perfil, atividade
+e salvamento visíveis, mas monta os checkboxes de unidades somente para um
+funcionário aberto por vez. O botão com estado expandido/controle associado
+funciona por teclado e apresenta a contagem de vínculos em edição. Fechar ou
+abrir outro cartão não salva nem perde as escolhas em memória; a escrita
+continua explícita, versionada e autorizada no backend. Recarga/paginação bem
+sucedida fecha o editor junto da substituição da lista; falha mantém os dados e
+o editor anteriores. Vínculos inativos continuam removíveis no editor aberto.
+Essa alteração evita multiplicar todos os controles por funcionários × unidades.
+Probes de componente com API fictícia não substituem E2E do novo artefato;
+publicação e homologação devem ser conferidas no checkpoint.
+
 ### Contratos disponíveis no candidato
 
 Esquemas de entrada/saída, segurança e erros em [OpenAPI de acessos](api/acessos.yaml);

@@ -16,11 +16,13 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     import {SessaoService} from './src/app/identidade/sessao.service';
     const roles=['ADMINISTRADOR','GERENTE','ATENDIMENTO','CAIXA','COZINHA','EXPEDICAO'];
     const team=roles.map((perfil,i)=>({id:'f'+i,email:'p'+i+'@example.invalid',perfil,ativo:true,versao:0,unidades:[]}));
+    const units=Array.from({length:100},(_,i)=>({id:'u'+i,nome:'Filial '+i}));
     const writes=[];const invitations=[];
     const matrix={versao:0,acoes:[{codigo:'UNIDADE_CONSULTAR',descricao:'Consultar unidade',escopo:'UNIDADE',dependencia:null}],perfis:Object.fromEntries(roles.slice(1).map(r=>[r,[]]))};
     const mock={identidade:()=>({usuarioId:'ficticio'}),api:async(path,method='GET',body)=>{
       if(method!=='GET')writes.push({path,method,body:structuredClone(body)});
       if(path.includes('/configuracoes/acessos')){
+        if(window.failLoad)throw new Error('Falha fictícia de consulta.');
         if(method==='PUT'){matrix.perfis[body.perfil]=[...body.acoes];matrix.versao++;}
         return structuredClone(matrix);
       }
@@ -32,6 +34,7 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
         if(method==='PUT'){const i=team.findIndex(f=>path.endsWith('/'+f.id));team[i]={...team[i],...body,versao:body.versao+1};return structuredClone(team[i]);}
         return structuredClone(team);
       }
+      if(path.includes('/operacao/unidades'))return structuredClone(units);
       return [];
     },atualizarIdentidade:async()=>{}};
     bootstrapApplication(window.kind==='convites'?ConvitesComponent:AcessosComponent,{providers:[{provide:SessaoService,useValue:mock}]}).then(app=>{window.fixture={appRef:app,app:app.components[0],team,roles,writes};});
@@ -39,7 +42,8 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
   const name=process.env.RM_TEMPLATE_BROWSER||'chromium';
   assert.ok(['chromium','firefox','webkit'].includes(name));
   const browser=await playwright[name].launch(name==='webkit'&&process.env.RM_WEBKIT_EXECUTABLE?{executablePath:process.env.RM_WEBKIT_EXECUTABLE}:{});
-  const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end(req.url==='/convites'?'<app-convites></app-convites>':'<app-acessos></app-acessos>');});
+  const styles=fs.readFileSync(repo+'/frontend/src/styles.css','utf8');
+  const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<style>'+styles+'</style><main><section>'+(req.url==='/convites'?'<app-convites></app-convites>':'<app-acessos></app-acessos>')+'</section></main>');});
   try{
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const origin='http://127.0.0.1:'+server.address().port;
@@ -51,9 +55,53 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
       await target.waitForFunction(()=>window.fixture&&!window.fixture.app.instance.ocupado());
       await target.evaluate(()=>window.fixture.appRef.whenStable());
     };
+    const capture=async(label,target)=>{
+      const directory=process.env.RM_TEMPLATE_REPORT_DIR;
+      if(!directory)return;
+      assert(path.isAbsolute(directory)&&!path.resolve(directory).startsWith(repo+path.sep));
+      await target.screenshot({path:path.join(directory,name+'-'+label+'.png')});
+    };
     await page.goto(origin);await page.addScriptTag({content:built.outputFiles[0].text});
     await page.waitForFunction(()=>window.fixture&&document.querySelectorAll('article').length===6);
     await stable(page);
+    // A lista mostra o resumo; vínculos são montados só para o funcionário aberto.
+    await expect(page.locator('article input[type=checkbox]')).toHaveCount(6);
+    const kitchenCard=page.locator('article').nth(4);
+    for(const width of [360,768,1280]){
+      await page.setViewportSize({width,height:900});
+      assert((await page.evaluate(()=>document.documentElement.scrollWidth))<=width,'Lista excede viewport');
+      const edit=await kitchenCard.getByRole('button',{name:'Editar unidades atribuídas',exact:true}).boundingBox();
+      const save=await kitchenCard.getByRole('button',{name:'Salvar funcionário',exact:true}).boundingBox();
+      assert(edit&&save&&edit.height>=48&&save.height>=48&&save.y>=edit.y+edit.height+7,'Ações devem ter alvo de toque e separação visível');
+      await capture('lista-'+width,page.locator('app-acessos'));
+    }
+    await page.setViewportSize({width:360,height:800});
+    const editUnits=kitchenCard.getByRole('button',{name:'Editar unidades atribuídas',exact:true});
+    await editUnits.focus();await page.keyboard.press('Enter');
+    await expect(editUnits).toHaveAttribute('aria-expanded','true');
+    await expect(editUnits).toBeFocused();
+    await expect(page.locator('article fieldset')).toHaveCount(1);
+    await expect(kitchenCard.getByRole('group',{name:'Unidades atribuídas',exact:true}).getByRole('checkbox')).toHaveCount(100);
+    assert((await page.evaluate(()=>document.documentElement.scrollWidth))<=360,'Editor excede viewport');
+    await capture('unidades-abertas-mobile',kitchenCard);
+    await kitchenCard.getByLabel('Filial 0',{exact:true}).check();
+    await editUnits.click();
+    await expect(page.locator('article input[type=checkbox]')).toHaveCount(6);
+    await editUnits.click();
+    await expect(kitchenCard.getByLabel('Filial 0',{exact:true})).toBeChecked();
+    await page.locator('article').nth(1).getByRole('button',{name:'Editar unidades atribuídas',exact:true}).click();
+    await expect(editUnits).toHaveAttribute('aria-expanded','false');
+    await expect(page.locator('article fieldset')).toHaveCount(1);
+    await editUnits.click();
+    await expect(kitchenCard.getByLabel('Filial 0',{exact:true})).toBeChecked();
+    await kitchenCard.getByLabel('Filial 0',{exact:true}).uncheck();
+    await page.evaluate(()=>window.failLoad=true);
+    await page.getByRole('button',{name:'Recarregar acessos'}).click();await stable(page);
+    await expect(page.getByRole('alert')).toHaveText('Falha fictícia de consulta.');
+    await expect(page.locator('article fieldset')).toHaveCount(1);
+    await page.evaluate(()=>window.failLoad=false);
+    await page.getByRole('button',{name:'Recarregar acessos'}).click();await stable(page);
+    await expect(page.locator('article fieldset')).toHaveCount(0);
     const values=await page.locator('article select').evaluateAll(selects=>selects.map(s=>s.value));
     const roles=['ADMINISTRADOR','GERENTE','ATENDIMENTO','CAIXA','COZINHA','EXPEDICAO'];
     console.log(JSON.stringify({browser:name,expected:roles,observed:values}));assert.deepEqual(values,roles,'Perfil exibido diverge do modelo carregado');
@@ -69,12 +117,25 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     await stable(page);
     await expect(page.locator('article').nth(4).getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
     await page.locator('article').nth(4).getByLabel('Perfil do funcionário').selectOption('EXPEDICAO');
+    await editUnits.click();await kitchenCard.getByLabel('Filial 7',{exact:true}).check();await editUnits.click();
     await page.locator('article').nth(4).getByRole('button',{name:'Salvar funcionário'}).click();
     await stable(page);
-    assert.deepEqual(await page.evaluate(()=>window.fixture.writes.at(-1)),{path:'/api/v1/equipe/f4',method:'PUT',body:{versao:0,perfil:'EXPEDICAO',ativo:true,unidades:[]}});
+    assert.deepEqual(await page.evaluate(()=>window.fixture.writes.at(-1)),{path:'/api/v1/equipe/f4',method:'PUT',body:{versao:0,perfil:'EXPEDICAO',ativo:true,unidades:['u7']}});
     await page.getByRole('button',{name:'Recarregar acessos'}).click();
     await stable(page);
     await expect(page.locator('article').nth(4).getByLabel('Perfil do funcionário')).toHaveValue('EXPEDICAO');
+    await editUnits.click();await expect(kitchenCard.getByLabel('Filial 7',{exact:true})).toBeChecked();
+    await kitchenCard.getByLabel('Filial 7',{exact:true}).uncheck();await editUnits.click();
+    await kitchenCard.getByRole('button',{name:'Salvar funcionário'}).click();await stable(page);
+    assert.deepEqual(await page.evaluate(()=>window.fixture.writes.at(-1)),{path:'/api/v1/equipe/f4',method:'PUT',body:{versao:1,perfil:'EXPEDICAO',ativo:true,unidades:[]}});
+    await editUnits.click();await kitchenCard.getByLabel('Filial 7',{exact:true}).check();
+    await kitchenCard.getByLabel('Perfil do funcionário').selectOption('ADMINISTRADOR');
+    await expect(page.locator('article fieldset')).toHaveCount(0);
+    assert.deepEqual(await page.evaluate(()=>window.fixture.app.instance.equipe()[4].unidades),[]);
+    await kitchenCard.getByLabel('Perfil do funcionário').selectOption('EXPEDICAO');
+    await expect(editUnits).toHaveAttribute('aria-expanded','false');
+    await editUnits.click();await expect(kitchenCard.getByLabel('Filial 7',{exact:true})).not.toBeChecked();
+    await editUnits.click();
     await page.getByLabel('Consultar unidade',{exact:true}).check();
     await page.getByRole('button',{name:'Salvar permissões'}).click();
     await stable(page);

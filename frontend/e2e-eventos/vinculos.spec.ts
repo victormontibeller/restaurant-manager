@@ -34,8 +34,14 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   await page.getByRole('button',{name:'Confirmar identidade'}).click();expect((await reauth).status()).toBe(204);
   const card=page.getByRole('article').filter({hasText:fixture.cozinha.email});
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
+  const editarUnidades=card.getByRole('button',{name:'Editar unidades atribuídas',exact:true});
+  await expect(editarUnidades).toHaveAttribute('aria-expanded','false');
+  await editarUnidades.focus();await page.keyboard.press('Enter');
+  await expect(editarUnidades).toHaveAttribute('aria-expanded','true');
   const link=card.getByLabel('Vínculo em unidade inativa · '+id);
   await expect(link).toBeChecked();await link.focus();await link.uncheck();await expect(link).toBeFocused();await link.check();
+  await editarUnidades.click();await expect(link).toHaveCount(0);
+  await editarUnidades.click();await expect(link).toBeChecked();
   await card.getByLabel('Ativo',{exact:true}).uncheck();
   const save=()=>page.waitForResponse(r=>r.url().endsWith('/equipe/'+fixture.cozinha.id)&&r.request().method()==='PUT');
   let saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
@@ -61,6 +67,8 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   await expect(card.getByLabel('Perfil do funcionário')).toBeEnabled();
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('EXPEDICAO');
+  await expect(editarUnidades).toHaveAttribute('aria-expanded','false');
+  await editarUnidades.click();await expect(link).toHaveCount(0);
   expect((await (await request.get('/api/v1/equipe',{headers})).json()).find((f:{id:string})=>f.id===fixture.cozinha.id).perfil).toBe('EXPEDICAO');
   // Restaura o perfil da fixture por UI para as jornadas seguintes.
   await card.getByLabel('Perfil do funcionário').selectOption('COZINHA');
