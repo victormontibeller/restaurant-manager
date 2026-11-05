@@ -29,11 +29,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class RetencaoIdentidadeTest {
+    // O banco persiste entre execuções: não contar/expurgar massa de outras suítes.
+    private static final String A = "t_" + UUID.randomUUID().toString().replace("-", "");
+    private static final String B = "t_" + UUID.randomUUID().toString().replace("-", "");
     @Autowired RetencaoIdentidadeService retencao;
     @Autowired IdentidadeService identidade;
     private UUID usuario;
     private final List<String> chaves = new ArrayList<>();
-    @BeforeAll static void preparar() throws Exception { TestDatabase.prepare(); }
+    @BeforeAll static void preparar() throws Exception {
+        TestDatabase.prepare();
+        TestDatabase.migrate(A, "tenant");
+        TestDatabase.migrate(B, "tenant");
+    }
     private Connection owner() throws Exception {
         var c = DriverManager.getConnection(System.getenv("RM_DB_URL"), System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"));
         try { Migrations.verifyIdentity(c, "rm_test", "rm_test_owner"); return c; }
@@ -42,7 +49,7 @@ class RetencaoIdentidadeTest {
     @BeforeEach void conta() throws Exception {
         usuario = UUID.randomUUID();
         try (var c = owner()) {
-            for (String schema : List.of(FundacaoTest.A, FundacaoTest.B)) {
+            for (String schema : List.of(A, B)) {
                 try (var s = c.prepareStatement("insert into " + schema + ".usuario(id,email,senha_hash,perfil,email_verificado) values (?,?,?,'CLIENTE',true)")) {
                     s.setObject(1, usuario); s.setString(2, usuario + "@example.invalid");
                     // Esta conta é usada somente em sessões preparadas, sem login por senha.
@@ -71,7 +78,7 @@ class RetencaoIdentidadeTest {
     }
     private String limite(long segundos) throws Exception {
         String chave = UUID.randomUUID().toString(); chaves.add(chave);
-        try (var c = owner(); var s = c.prepareStatement("insert into " + FundacaoTest.A + ".limite_login(chave,tentativas,inicio_em) values (?,5,?::timestamptz)")) {
+        try (var c = owner(); var s = c.prepareStatement("insert into " + A + ".limite_login(chave,tentativas,inicio_em) values (?,5,?::timestamptz)")) {
             s.setString(1, chave); s.setString(2, Instant.now().plusSeconds(segundos).toString()); s.executeUpdate();
         }
         return chave;
@@ -85,21 +92,21 @@ class RetencaoIdentidadeTest {
         try (var scope = TenantScope.open(schema)) { return retencao.executarLote(); }
     }
     @Test void eliminaSomenteExpiradosAntigosDoTenantSemPerderDeteccaoDeReuso() throws Exception {
-        UUID antiga = sessao(FundacaoTest.A, -172800, false); refresh(FundacaoTest.A, antiga, false);
-        UUID recente = sessao(FundacaoTest.A, -60, false); refresh(FundacaoTest.A, recente, false);
-        UUID ativa = sessao(FundacaoTest.A, 3600, false);
-        String usado = refresh(FundacaoTest.A, ativa, true); String atual = refresh(FundacaoTest.A, ativa, false);
-        UUID revogada = sessao(FundacaoTest.A, 3600, true);
-        UUID outra = sessao(FundacaoTest.B, -172800, false); refresh(FundacaoTest.B, outra, false);
+        UUID antiga = sessao(A, -172800, false); refresh(A, antiga, false);
+        UUID recente = sessao(A, -60, false); refresh(A, recente, false);
+        UUID ativa = sessao(A, 3600, false);
+        String usado = refresh(A, ativa, true); String atual = refresh(A, ativa, false);
+        UUID revogada = sessao(A, 3600, true);
+        UUID outra = sessao(B, -172800, false); refresh(B, outra, false);
         String velho = limite(-172800), bloqueio = limite(-60);
-        executar(FundacaoTest.A);
-        assertThat(existe(FundacaoTest.A, "sessao", "id", antiga)).isFalse();
-        assertThat(existe(FundacaoTest.A, "refresh_token", "sessao_id", antiga)).isFalse();
-        for (UUID id : List.of(recente, ativa, revogada)) assertThat(existe(FundacaoTest.A, "sessao", "id", id)).isTrue();
-        assertThat(existe(FundacaoTest.B, "sessao", "id", outra)).isTrue();
-        assertThat(existe(FundacaoTest.A, "limite_login", "chave", velho)).isFalse();
-        assertThat(existe(FundacaoTest.A, "limite_login", "chave", bloqueio)).isTrue();
-        try (var scope = TenantScope.open(FundacaoTest.A)) {
+        executar(A);
+        assertThat(existe(A, "sessao", "id", antiga)).isFalse();
+        assertThat(existe(A, "refresh_token", "sessao_id", antiga)).isFalse();
+        for (UUID id : List.of(recente, ativa, revogada)) assertThat(existe(A, "sessao", "id", id)).isTrue();
+        assertThat(existe(B, "sessao", "id", outra)).isTrue();
+        assertThat(existe(A, "limite_login", "chave", velho)).isFalse();
+        assertThat(existe(A, "limite_login", "chave", bloqueio)).isTrue();
+        try (var scope = TenantScope.open(A)) {
             assertThatThrownBy(() -> identidade.refresh(usado)).isInstanceOf(AuthFailure.class);
             assertThatThrownBy(() -> identidade.refresh(atual)).isInstanceOf(AuthFailure.class);
         }
@@ -107,40 +114,42 @@ class RetencaoIdentidadeTest {
     }
     @Test void loteTemLimiteEReexecucaoConcluiSemDuplicacao() throws Exception {
         var ids = new ArrayList<UUID>();
-        for (int i = 0; i < 105; i++) ids.add(sessao(FundacaoTest.A, -172800, false));
-        var primeiro = executar(FundacaoTest.A);
+        for (int i = 0; i < 105; i++) ids.add(sessao(A, -172800, false));
+        var primeiro = executar(A);
         assertThat(primeiro.sessoes()).isEqualTo(100);
         int restantes = 0;
-        for (UUID id : ids) if (existe(FundacaoTest.A, "sessao", "id", id)) restantes++;
+        for (UUID id : ids) if (existe(A, "sessao", "id", id)) restantes++;
         assertThat(restantes).isEqualTo(5);
-        assertThat(executar(FundacaoTest.A).sessoes()).isEqualTo(5);
-        assertThat(executar(FundacaoTest.A).sessoes()).isZero();
+        assertThat(executar(A).sessoes()).isEqualTo(5);
+        assertThat(executar(A).sessoes()).isZero();
     }
     @Test void trabalhadoresConcorrentesNaoDuplicamEfeitos() throws Exception {
-        for (int i = 0; i < 20; i++) sessao(FundacaoTest.A, -172800, false);
+        for (int i = 0; i < 20; i++) sessao(A, -172800, false);
         var inicio = new CyclicBarrier(2);
         try (var threads = Executors.newFixedThreadPool(2)) {
             java.util.concurrent.Callable<Integer> tarefa = () -> {
-                inicio.await(10, TimeUnit.SECONDS); return executar(FundacaoTest.A).sessoes();
+                inicio.await(10, TimeUnit.SECONDS); return executar(A).sessoes();
             };
             var a = threads.submit(tarefa); var b = threads.submit(tarefa);
             assertThat(a.get(20, TimeUnit.SECONDS) + b.get(20, TimeUnit.SECONDS)).isEqualTo(20);
         }
-        assertThat(executar(FundacaoTest.A).sessoes()).isZero();
+        assertThat(executar(A).sessoes()).isZero();
     }
     @Test void sessaoBloqueadaNaoInterrompeLoteEExpurgoRetomaDepois() throws Exception {
-        UUID id = sessao(FundacaoTest.A, -172800, false);
+        UUID id = sessao(A, -172800, false);
         try (var c = owner()) {
             c.setAutoCommit(false);
-            try (var s = c.prepareStatement("select id from " + FundacaoTest.A + ".sessao where id=? for update")) {
+            try (var s = c.prepareStatement("select id from " + A + ".sessao where id=? for update")) {
                 s.setObject(1, id); s.executeQuery().close();
             }
             try (var thread = Executors.newSingleThreadExecutor()) {
-                var task = thread.submit(() -> executar(FundacaoTest.A));
+                var task = thread.submit(() -> executar(A));
                 assertThat(task.get(10, TimeUnit.SECONDS).sessoes()).isZero();
+                assertThat(existe(A, "sessao", "id", id)).isTrue();
             } finally { c.rollback(); }
         }
-        assertThat(executar(FundacaoTest.A).sessoes()).isEqualTo(1);
+        assertThat(executar(A).sessoes()).isEqualTo(1);
+        assertThat(existe(A, "sessao", "id", id)).isFalse();
     }
     @Test void semContextoFalhaFechado() {
         assertThatThrownBy(() -> retencao.executarLote()).isInstanceOf(RuntimeException.class);
@@ -150,25 +159,25 @@ class RetencaoIdentidadeTest {
         String chave = limite(-172800);
         try (var c = owner()) {
             c.setAutoCommit(false);
-            try (var s = c.prepareStatement("update " + FundacaoTest.A + ".limite_login set inicio_em=now(),tentativas=5 where chave=?")) {
+            try (var s = c.prepareStatement("update " + A + ".limite_login set inicio_em=now(),tentativas=5 where chave=?")) {
                 s.setString(1, chave); s.executeUpdate();
             }
             try (var thread = Executors.newSingleThreadExecutor()) {
-                thread.submit(() -> executar(FundacaoTest.A)).get(10, TimeUnit.SECONDS);
+                thread.submit(() -> executar(A)).get(10, TimeUnit.SECONDS);
             } finally { c.commit(); }
         }
-        executar(FundacaoTest.A);
-        assertThat(existe(FundacaoTest.A, "limite_login", "chave", chave)).isTrue();
+        executar(A);
+        assertThat(existe(A, "limite_login", "chave", chave)).isTrue();
     }
     @AfterEach void limparSomenteMassaPropria() throws Exception {
         try (var c = owner()) {
-            for (String schema : List.of(FundacaoTest.A, FundacaoTest.B)) {
+            for (String schema : List.of(A, B)) {
                 for (String sql : List.of("delete from " + schema + ".refresh_token where sessao_id in (select id from " + schema + ".sessao where usuario_id=?)", "delete from " + schema + ".sessao where usuario_id=?", "delete from " + schema + ".usuario where id=?")) {
                     try (var s = c.prepareStatement(sql)) { s.setObject(1, usuario); s.executeUpdate(); }
                 }
             }
             for (String chave : chaves) {
-                try (var s = c.prepareStatement("delete from " + FundacaoTest.A + ".limite_login where chave=?")) { s.setString(1, chave); s.executeUpdate(); }
+                try (var s = c.prepareStatement("delete from " + A + ".limite_login where chave=?")) { s.setString(1, chave); s.executeUpdate(); }
             }
         }
     }

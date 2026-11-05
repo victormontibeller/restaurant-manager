@@ -1,5 +1,44 @@
 # Checkpoint de execução
 
+## Retomada — ciclo24, 2026-11-05
+
+Build36e49e7 e worker23 encerrados com falha, sem candidato novo. Git/PR3 draft,
+CI0094839 e hml3cd4eeb UP/PID399982 conferidos. Nenhuma suíte pesada ativa.
+Correção herdada de RetencaoIdentidadeTest revisada independentemente: sem
+bloqueador identificado; schemas exclusivos preservam contagens e concorrência.
+XML focado relido: seis testes, zero falha/erro/skip. Scanner310 e diff passaram.
+Publicação e build consolidado ainda pendentes neste registro; não reutilizar
+gate falho36e49e7 nem atribuir matriz96769ac ao Angular novo. Sprint01 aberta.
+
+
+## Encerramento — ciclo23, 2026-11-05
+
+Aviso efetivo de orçamento quase esgotado recebido após Maven focado de retenção
+retornar exit0; depois somente handoff obrigatório. Missão NÃO concluída.
+Publicado0094839/PR3 OPEN draft, ambos checksCI aprovados e corpo relido. Sem
+merge/deploy/promoção/CONCLUSAO.json. Sprint01 aberta;02–05 não iniciadas.
+
+Matriz herdada96769ac terminou23:13:50Z:215pares únicos aprovados, sem falha/
+skip/flaky/retry, relatórios/hashes conferidos. Não aprova Angular posterior.
+Build36e49e7 terminou23:36:39Z exit1/release_gate=false: retenção esperou zero
+exclusões e encontrou uma em schema compartilhado. Worker23 encerrou23:36:41Z
+exit1 por gate ausente, SEM iniciar build0094839, seed, candidato ou E2E novo.
+Ambas unidades inactive/MainPID0 relidas23:37:16Z. Não relançar o rótulo23.
+
+Correção LOCAL SEM COMMIT isola toda RetencaoIdentidadeTest em dois schemas
+próprios, preserva contagens exatas/concorrência e prova presença da sessão
+bloqueada antes do desbloqueio e ausência após expurgo. Maven focado sob lock
+retornou exit0; XML final não reconsolidado após o aviso. Não é gate integrado.
+Revisão independente adicional recusada por limite2/2; não presumir aprovação.
+Nenhuma regra de produto/backend/migration alterada por esse ajuste de teste.
+
+Hml3cd4eeb UP/PID399982 confirmado no término do worker; baseline449ce3c
+preservado. STATUS/checkpoint privados registram todos caminhos e falha. Preservar
+teste/documentos locais; revisar/publicar ajuste, conferir CI e executar UM build
+consolidado com teste corrigido, seguido de focos/matriz. Não reutilizar gate
+falho nem disparar workers antigos fixados em fonte superada. Visual/manutenção/
+troca/assistido/smokes/aceitação continuam pendentes.
+
 ## Incremento — ciclo23, 2026-11-05
 
 Retomada conferiu Git/PR3 draft/CI36e49e7 e hml3cd4eeb UP. Workers21/22

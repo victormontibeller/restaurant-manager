@@ -1,6 +1,24 @@
 # Inventário rastreável de cobertura
 
-Atualização ciclo14: exportação cadastral acrescenta S01-UI42 (JSON mínimo de
+## Estado vigente — ciclo23, 2026-11-05
+
+Matriz S01-UI01–43 concluída em23:13:50Z no artefato96769ac/hash50a2a604:
+215pares únicos nos cinco projetos, sem falha/skip/flaky/retry. Recibos,
+relatórios, hashes e cobertura foram reabertos e conferidos. Inclui exportação,
+eventos, vínculos, convites e provisionamento; as falhas históricas abaixo não
+descrevem essa rodada. Não somar execuções antigas ao total dessa matriz.
+
+O head0094839 contém correções posteriores de foco/erro por campo, incluindo
+senha em branco. CI aprovada com174backend sem falha/erro/skip e probes nos três
+motores; build nativo/E2E novos ainda pendentes nesta atualização. A matriz do
+96769ac NÃO aprova o Angular novo. Hml permanece3cd4eeb, baseline449ce3c.
+Fundação/smoke/assistido/manutenção/revisão visual do candidato final ainda são
+gates abertos. Nenhuma família T ou cenário X incompleto foi convertido em
+aprovado. [Evidência atual](sprint-01-retomada-ciclo-23.md).
+
+## Histórico — ciclo14
+
+Exportação cadastral acrescenta S01-UI42 (JSON mínimo de
 consulta atual, teclado e falha sem arquivo antigo) e S01-UI43 (filial/tenant e
 revogação durante requisição). Implementação/testes locais, E2E NÃO executado.
 Não pertence ao JAR3cd4eeb atualmente servido. Regressão herdada de eventos teve
@@ -14,7 +32,7 @@ não são aprovação de famílias incompletas. Candidato de identidade3cd4eeb e
 servido em hml, com baseline anterior preservado. Não há aprovação integrada
 da Sprint; consulte o checkpoint para resultados consolidados e SHAs.
 
-## Atualização vigente — retomada ciclo 13
+## Histórico — retomada ciclo 13
 
 Manutenção corrigida aprovada no JAR3cd4eeb, seguida de instalação real e seeds
 fictícios por CLI/API/captura. UI04/UI05 passaram dez combinações no mesmo JAR,
@@ -129,7 +147,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | T21 | Não implementado/não executado | Sprint 02 |
 | T22 | Não implementado/não executado | Sprints 01/04 |
 | T23 | Parcial, família não aprovada | CRUD lógico de unidades em validação; horários/regiões/parâmetros pendentes |
-| T24 | Parcial, família não aprovada | Equipe, vínculos e convites implementados/testados; reexecução UI35 e integração hml pendentes |
+| T24 | Parcial, família não aprovada | Equipe, vínculos e convites implementados; UI35 aprovado no96769ac; reexecução do Angular posterior e integração hml pendentes |
 | T25 | Parcial, família não aprovada | Matriz, concorrência e eventos cadastrais testados por artefato; gate integrado e ações operacionais futuras pendentes |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
 | T27 | Parcial, família não aprovada | Acompanhamento cadastral da unidade em validação; eventos operacionais nas Sprints 03–04 |
