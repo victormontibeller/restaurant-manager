@@ -51,3 +51,16 @@ e término do corpo antes da assertiva, mantendo o teste de bloqueio da navegaç
 Typecheck passou. Reexecução real ainda pendente; falhas anteriores preservadas.
 Worker16 finito aguarda15b e não instala se a regressão falhar. Não confundir
 esse lançamento com manutenção/deploy aprovados.
+
+Identidade consolidou37aprovações/8falhas: UI04 nos cinco projetos e UI08 em
+mobile/tablet/WebKit. Zero skip/flaky/retry. Worker16b finito aguarda15b/16 para
+reexecutar toda a família corrigida no MESMO JAR; somente continua para manutenção/
+troca/smokes se todas as demais famílias e CI estiverem aprovadas. Não duplica build.
+
+Smoke hml passa a aceitar inventário ADICIONAL explícito de empresas, para um
+ensaio assistido futuro que crie terceiro tenant, mantendo igualdade exata e
+recusando duplicatas/formato/sobreposição/limite. Vermelho unitário reproduzido,
+guardas JS/typecheck aprovados; não foi executado o smoke com terceiro tenant.
+Tentativa de revisão independente adicional recusada pelo limite2/2 desta chamada;
+revisão local não é apresentada como parecer independente. Jornada assistida
+privada preparada e sintaxe verificada, ainda NÃO executada.

@@ -5,7 +5,7 @@ interface Conta {
   host:string;email:string;senha:string;perfil:string;usuario_id:string;
   empresa_id?:string;unit?:string;second_unit?:string;allowed_unit?:string;forbidden_unit?:string;
 }
-interface Massa {stage:string;approved:boolean;git_sha:string;accounts:Conta[];}
+interface Massa {stage:string;approved:boolean;git_sha:string;accounts:Conta[];empresas_adicionais?:string[];}
 const path=process.env['RM_HML_FIXTURE'];
 if(!path)throw new Error('Massa privada consolidada de homologação obrigatória.');
 const fixture=JSON.parse(fs.readFileSync(path,'utf8')) as Massa;
@@ -19,6 +19,13 @@ if(fixture.stage!=='hml'||fixture.approved!==true||fixture.accounts.length!==10|
      (i!==9&&!a.empresa_id))){
   throw new Error('Massa incompleta ou fora das origens de homologação.');
 }
+const additional=fixture.empresas_adicionais===undefined?[]:fixture.empresas_adicionais;
+if(!Array.isArray(additional)||additional.length>48||new Set(additional).size!==additional.length||
+   additional.some(id=>typeof id!=='string'||!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(id)||
+     fixture.accounts.slice(0,2).some(a=>a.empresa_id===id))){
+  throw new Error('Empresas adicionais exigem inventário explícito, UUIDs únicos e limite da página.');
+}
+const companyIds=[...fixture.accounts.slice(0,2).map(a=>a.empresa_id),...additional];
 const origin=(host:string)=>`https://${host}:8088`;
 async function screen(page:Page,name:string):Promise<void>{
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -48,10 +55,10 @@ for(const [index,account] of fixture.accounts.entries()){
     const api=page.request;
     if(platform){
       await expect(page.getByRole('status').filter({hasText:'Consulta atualizada.'})).toBeVisible();
-      await expect(page.getByRole('article')).toHaveCount(2);
+      await expect(page.getByRole('article')).toHaveCount(companyIds.length);
       const result=await api.get(base+'/api/v1/plataforma/empresas',{headers});expect(result.status()).toBe(200);
       const companies=await result.json() as Array<Record<string,unknown>>;
-      expect(companies.map(c=>c['id']).sort()).toEqual(fixture.accounts.slice(0,2).map(a=>a.empresa_id).sort());
+      expect(companies.map(c=>c['id']).sort()).toEqual([...companyIds].sort());
       for(const company of companies)expect(Object.keys(company).sort()).toEqual(['dominios','estado','id','nome','versao']);
       expect((await api.get(origin('hmla.localhost')+'/api/v1/auth/me',{headers})).status()).toBe(401);
       expect((await api.get(base+'/api/v1/plataforma/empresas')).status()).toBe(401);

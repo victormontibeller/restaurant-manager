@@ -266,6 +266,14 @@ NÃO substitui testes mutantes/concorrentes, recuperação ou matriz integral e 
 promove `healthy.json`; os wrappers de fundação continuam recusando identidade.
 Resultado efetivamente observado fica no checkpoint, não é presumido pelo script.
 
+Quando o ensaio assistido acrescentar empresas fictícias, uma NOVA fixture pode
+informar `empresas_adicionais` com os UUIDs das intenções confirmadas. O smoke
+continua exigindo igualdade exata do inventário SaaS, sem aceitar empresas
+desconhecidas. Rejeita repetição, UUID inválido, sobreposição às empresas A/B e
+conjunto além de cinquenta empresas, limite da página exercitada. Não construir
+a expectativa copiando a própria listagem que será testada nem sobrescrever a
+fixture já vinculada a um recibo. Isso não é aprovação do provisionamento.
+
 <a id="despacho-assistido-hml"></a>
 ### Provisionamento assistido em homologação — ciclo 15
 

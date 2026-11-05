@@ -17,3 +17,13 @@ for(const change of ['cliente','admin','host','empresa','perfil']){
   assert.throws(()=>vm.runInNewContext(guard,{fixture:data}),/Massa incompleta/);
 }
 console.log('Guardas reais da fixture: massa distinta aceita e cinco adulterações recusadas.');
+const extra='11111111-2222-4333-8444-555555555555';
+const expanded=vm.runInNewContext(guard+'\nJSON.stringify(companyIds)',{fixture:{...fixture,empresas_adicionais:[extra]}});
+assert.deepEqual(JSON.parse(expanded),['empresa-a','empresa-b',extra]);
+const excess=Array.from({length:49},(_,i)=>'11111111-2222-4333-8444-'+String(i).padStart(12,'0'));
+for(const extras of [[extra,extra],['invalido'],['EMPRESA-A'],excess,null]){
+  assert.throws(()=>vm.runInNewContext(guard,{fixture:{...fixture,empresas_adicionais:extras}}),/Empresas adicionais/);
+}
+const duplicatedPrimary=structuredClone(fixture);duplicatedPrimary.accounts[0].empresa_id=extra;
+assert.throws(()=>vm.runInNewContext(guard,{fixture:{...duplicatedPrimary,empresas_adicionais:[extra]}}),/Empresas adicionais/);
+console.log('Inventário explícito adicional aceito; duplicação, formato e limite recusados.');
