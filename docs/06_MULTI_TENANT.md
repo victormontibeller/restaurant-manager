@@ -127,6 +127,22 @@ exportado ao HTTP e não é uma prova de gate aprovado. O despachante automátic
 `provisioning_queue.py` permanece limitado a dev/test. A disponibilidade efetiva
 do novo binário e o provisionamento real hml devem ser conferidos no checkpoint.
 
+### Despacho assistido por UUID — ciclo 15
+
+`scripts/hml_provisioning.py` acrescenta uma invocação operacional explícita de
+uma solicitação SaaS em hml fictícia. Exige opt-in, mesmo backend/artefato servido,
+ensaio de manutenção aprovado e vínculo ao banco candidato por OID. Não instala
+timer nem habilita hml no despachante automático dev/test. A solicitação deve
+usar domínio `.localhost` e Administrador `@example.invalid`.
+
+O processo registra intenção antes do CLI, confere empresa/domínio após sua
+execução e preserva cada tentativa. Retomada técnica exige `--resume` para o
+mesmo UUID, artefato e banco; conclusão já confirmada é reconciliada sem executar
+Java novamente. Estado `FALHOU` continua exigindo retomada versionada pela API/UI.
+Esse comando não promove release nem substitui a jornada integrada de
+provisionamento. Testes de coordenação não são homologação real; consultar o
+[runbook](22_PRODUCTION_RUNBOOK.md#despacho-assistido-hml) e checkpoint.
+
 ## Documentos relacionados
 
 - [Modelo de dados](05_DATABASE.md)

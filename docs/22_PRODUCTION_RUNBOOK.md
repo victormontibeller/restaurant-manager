@@ -266,6 +266,34 @@ NÃO substitui testes mutantes/concorrentes, recuperação ou matriz integral e 
 promove `healthy.json`; os wrappers de fundação continuam recusando identidade.
 Resultado efetivamente observado fica no checkpoint, não é presumido pelo script.
 
+<a id="despacho-assistido-hml"></a>
+### Provisionamento assistido em homologação — ciclo 15
+
+Após criar a solicitação pela UI/API SaaS, usar:
+
+```bash
+RM_HML_PROVISIONING_ENABLED=true bash scripts/with-env.sh hml \
+  python3 scripts/hml_provisioning.py --job <JOB_PRIVADO> \
+  --id <UUID_CANONICO_DA_SOLICITACAO> --rehearsal <RESULTADO_MANUTENCAO>
+```
+
+O comando exige fonte limpa, mesmo backend e dependências do artefato, hash/SHA
+do runtime, hml/role/porta exatas, HTTPS verificado, migrations compatíveis,
+manutenção aprovada e OIDs preservados. Adquire `deploy.lock`; não o execute
+concorrentemente com build, E2E ou migration. Não transfere ambiente do Hermes
+para Java nem credencial owner ao HTTP. O timer dev/test continua recusando hml.
+
+Intenção e tentativas ficam em `provisioning/hml-assisted/<UUID>` na área privada.
+Arquivos e ancestrais recém-criados são sincronizados antes do CLI. Interrupção,
+timeout ou read-back falho não aprovam a operação. Conferir solicitação/empresa,
+processos/log privado e intenção antes de usar `--resume`; somente a mesma
+intenção no mesmo artefato/banco é admitida. `CONCLUIDO` é relido sem nova chamada
+Java. `FALHOU` requer ação SaaS versionada, não retry automático deste script.
+
+Nenhum deploy, reinício, exclusão de banco ou promoção de `healthy.json` ocorre.
+Resultado de coordenação simulada e verificação de lock não demonstram ativação
+real; a evidência deve incluir UI/API, CLI e leitura posterior da empresa criada.
+
 ### Consolidação e aceitação de identidade — ciclo 14
 
 O smoke registra agora tentativa de manutenção e OIDs original/candidato antes

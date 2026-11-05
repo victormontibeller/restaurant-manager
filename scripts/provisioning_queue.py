@@ -48,9 +48,11 @@ def process_batch(queue, limit, on_result=lambda result: None, on_start=lambda i
     return results
 
 
-def validate_environment(env):
+def validate_environment(env, *, allow_hml=False):
     stage = env.get('RM_STAGE')
-    if (stage not in ('dev', 'test')
+    permitted = stage in ('dev', 'test') or (stage == 'hml' and allow_hml is True
+                                           and env.get('RM_HML_PROVISIONING_ENABLED') == 'true')
+    if (not isinstance(stage, str) or not permitted
             or env.get('RM_DB_URL') != f'jdbc:postgresql://127.0.0.1:55432/rm_{stage}'
             or env.get('RM_DB_USER') != f'rm_{stage}_app'
             or env.get('RM_MIGRATION_USER') != f'rm_{stage}_owner'):
@@ -118,10 +120,12 @@ def interrupt(signum, frame):
 
 
 class Queue:
-    def __init__(self, env, root, job, attempt, lock_fd=None):
-        self.stage = validate_environment(env)
+    def __init__(self, env, root, job, attempt, lock_fd=None, *, allow_hml=False):
+        self.stage = validate_environment(env, allow_hml=allow_hml)
         self.env = {k: env[k] for k in ('RM_STAGE', 'RM_DB_URL', 'RM_DB_USER',
                     'RM_DB_PASSWORD', 'RM_MIGRATION_USER', 'RM_MIGRATION_PASSWORD')}
+        if self.stage == 'hml':
+            self.env['RM_HML_PROVISIONING_ENABLED'] = 'true'
         self.java = Path(env['JAVA_HOME']) / 'bin/java'
         self.job = job
         self.attempt = attempt

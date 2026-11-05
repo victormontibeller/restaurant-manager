@@ -2,6 +2,18 @@
 
 ## Incremento — retomada ciclo 15, 2026-11-04 local
 
+Publicado47ca909/PR3 OPEN draft, ambos checksCI aprovados. Worker13 encerrou
+00:21:09Z:193combinações aprovadas/2falhas UI32 de captura, zero skip/flaky;
+regressão global reprovada. Fundação hml20combinações passou com OIDs, smoke
+de identidades ainda em execução na consulta00:29Z. Worker15 finito aguarda
+13/14 para build único de47ca909 e matriz do novo JAR; sem promoção/merge.
+
+Despacho assistido hml por UUID implementado em scripts, mantendo timer dev/test
+restrito. Exige artefato/runtime/manutenção/OIDs, intenção durável e read-back.
+Revisão independente encontrou fsync ausente em ancestrais novos; vermelho
+reproduzido e correção testada inclusive pelo main.131Python passaram. Execução
+real da ativação ainda pendente, não confundir unitário com homologação da fila.
+
 Git/PR3 draft/CI de85872fd e hml3cd4eeb UP conferidos. Workers13/14 preservados:
 plataforma e estado comercial passaram quinze combinações cada; provisionamento
 ainda em execução. Sem promoção/merge nem repetição do build antigo.

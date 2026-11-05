@@ -114,6 +114,24 @@ class ProvisioningQueueTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises((ValueError, TypeError)):
                 Queue.identity(value)
 
+    def test_hml_exige_opt_in_explicito_e_nao_e_aceita_pelo_despachante(self):
+        env = dict(RM_STAGE='hml', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_hml',
+                   RM_DB_USER='rm_hml_app', RM_MIGRATION_USER='rm_hml_owner',
+                   RM_DB_PASSWORD='ficticio', RM_MIGRATION_PASSWORD='ficticio',
+                   JAVA_HOME='/private/java', RM_HML_PROVISIONING_ENABLED='true')
+        with self.assertRaises(ValueError):
+            validate_environment(env)
+        self.assertEqual(validate_environment(env, allow_hml=True), 'hml')
+        for key, value in [('RM_HML_PROVISIONING_ENABLED', 'false'), ('RM_DB_USER', 'rm_test_app'),
+                           ('RM_DB_URL', 'jdbc:postgresql://127.0.0.1:55432/rm_test'),
+                           ('RM_MIGRATION_USER', 'rm_test_owner')]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                validate_environment(dict(env, **{key: value}), allow_hml=True)
+        with patch.object(Queue, 'sql', return_value='rm_hml|rm_hml_app|55432|127.0.0.1'):
+            queue = Queue(env, Path('/private'), Path('/private/builds/job'), Path('/private/attempt'), allow_hml=True)
+        self.assertEqual(queue.env['RM_HML_PROVISIONING_ENABLED'], 'true')
+        self.assertEqual(queue.stage, 'hml')
+
     def test_timeout_fica_incerto_e_nao_propaga_ambiente_hermes(self):
         env = dict(RM_STAGE='test', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_test',
                    RM_DB_USER='rm_test_app', RM_MIGRATION_USER='rm_test_owner',
