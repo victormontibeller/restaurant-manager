@@ -95,6 +95,8 @@ class Operations:
         self.values = {}
 
     def load(self):
+        if (self.attempt / 'frontend-replacement').exists() or any(self.attempt.glob('frontend-history-*')):
+            raise ValueError('Troca de frontend registrada: recuperar somente binário, nunca o banco antigo.')
         self.record = json.loads(private_runtime_path(str(self.attempt / 'state.json')).read_text())
         if self.record.get('stage') != 'hml' or self.record.get('attempt') != str(self.attempt):
             raise ValueError('Ledger de homologação divergente.')

@@ -2,7 +2,7 @@
 
 [Índice da documentação](../README.md)
 
-Esta pasta receberá registros de decisões arquiteturais relevantes. Não há ADR de implementação aprovado neste estágio. As decisões de produto confirmadas continuam em [Visão do projeto](../00_PROJECT_VISION.md).
+Esta pasta mantém registros de decisões arquiteturais relevantes. O [ADR 0001 — Fundação nativa](0001-fundacao-nativa.md) foi aceito tecnicamente no escopo da Sprint 00; seus limites históricos não aprovam sprints posteriores. As decisões de produto confirmadas continuam em [Visão do projeto](../00_PROJECT_VISION.md).
 
 ## Quando registrar
 

@@ -9,7 +9,9 @@
 convites/verificação/recuperação, matriz/equipe/unidades, eventos cadastrais e fila
 de provisionamento. No ciclo 13, manutenção/retorno reais permitiram instalar o
 candidato de identidade em hml, com dois tenants, A1/A2, nove contas empresariais
-e operador SaaS. Smoke API aprovado; UI e regressão integrada ainda em execução.
+e operador SaaS. Smoke API aprovado; no ciclo15, fundação20 e smoke de identidade50
+combinações passaram no JAR servido. A regressão herdada terminou com duas falhas
+de captura, não aprovada integralmente; correções/exportação seguem em candidato novo.
 O baseline da fundação permanece preservado e não foi promovido. Não concluída:
 gates integrados, revisão visual e aceitação definitiva do release continuam
 pendentes. Resultados, limites dos ensaios e SHAs no [checkpoint](25_EXECUTION_STATUS.md).

@@ -1,5 +1,14 @@
 # Sprint 01 — retomada ciclo 15
 
+Atualização final: build47ca909 aprovado00:53:04Z, hash
+674b00421e6b7ee9d8fd54047401755acbf444921acc1d67547fb9ef22aa02be;
+23XML/173backend sem falha/erro/skip conferidos. Worker posterior falhou antes
+de iniciar E2E porque node_modules era link não ignorado na fonte privada.
+Exclusão local exata corrigida, sem mudar fonte ou guarda; runner de retomada
+preparado para o MESMO JAR, mas NÃO iniciado antes do aviso de orçamento.
+Não há resultado E2E novo aprovado. Handoff detalhado no checkpoint; os
+registros de build em andamento abaixo são históricos anteriores ao término.
+
 Missão e Sprint 01 não concluídas. Sprints 02–05 não iniciadas. Sem merge ou
 promoção de baseline; homologação continua no candidato de identidade anterior.
 Este registro distingue código, testes locais, CI e resultados reais do runtime.

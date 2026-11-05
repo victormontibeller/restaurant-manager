@@ -55,7 +55,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 - D01–D18 e P01–P13 ficam somente no [registro central](00_PROJECT_VISION.md); E01–E12 ficam no [registro do piloto](23_PILOT_IMPLEMENTATION.md#registro-externo). Preserve esses IDs ao evoluir o projeto.
 - Sprints organizam trabalho e, depois da execução, registram resultados. Em caso de divergência com relato histórico, prevalece a fonte vigente do assunto; atualize as referências quando uma decisão mudar.
 - Cada regra detalhada tem um documento responsável. Prefira links à cópia de trechos inteiros entre arquivos. Requisitos e seus critérios de aceite podem referenciar o mesmo comportamento sem criar duas fontes da regra.
-- [ADRs](adr/README.md) registram contexto, decisão e consequências de escolhas relevantes. Não há ADR de implementação aprovado nesta reorganização.
+- [ADRs](adr/README.md) registram contexto, decisão e consequências de escolhas relevantes. O ADR 0001 registra a fundação tecnicamente aceita, sem aprovar sprints posteriores.
 - Relatórios de revisão e evidências, quando produzidos, ficam em documentos próprios, identificados por data e vinculados à sprint. Não criar histórico de testes que ainda não ocorreram.
 - [Referências externas e projetos de origem](REFERENCES.md) orientam a implementação e precisam de revalidação quando aplicáveis.
 

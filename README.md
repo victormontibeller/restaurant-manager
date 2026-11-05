@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação técnica integrada; Sprint 01 em andamento com provisionamento, autenticação empresarial, equipe/matriz e unidades administrativas implementados no candidato de desenvolvimento. As evidências distinguem versões e execuções; cadastro/recuperação/convites, SaaS e eventos ainda têm critérios pendentes. Catálogo, pedidos e pagamentos não estão disponíveis. Homologação preserva o shell validado da fundação, não o candidato de identidade. Estado de publicação e resultados no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação técnica integrada; Sprint 01 em andamento. Homologação fictícia já serve um candidato de identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz e acompanhamento cadastral. Fundação e smoke das dez identidades foram verificados nos cinco projetos de navegador; isso não encerra a matriz integrada nem promove o baseline anterior, que permanece preservado. Exportação cadastral tem um novo candidato em validação. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -17,7 +17,7 @@ Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visu
 | Desenvolvimento | Linux do Hermes com checkout e bancos PostgreSQL exclusivos para desenvolvimento, testes e homologação; Mac como ambiente adicional |
 | Publicação inicial | Servidor Linux próprio com 8 GB de RAM, serviços nativos e operação com Hermes |
 
-As versões compatíveis da stack serão verificadas e fixadas na sprint de fundação. A arquitetura da **loja-virtual** é a referência principal; **Schools** contribui com os conceitos de isolamento e acessos. A preferência é por SDKs oficiais quando disponíveis e adequados.
+As versões fixadas na fundação estão no [ADR 0001](docs/adr/0001-fundacao-nativa.md). A arquitetura da **loja-virtual** é a referência principal; **Schools** contribui com os conceitos de isolamento e acessos. A preferência é por SDKs oficiais quando disponíveis e adequados.
 
 ## Piloto
 
@@ -93,7 +93,10 @@ O candidato da retomada ciclo 2 acrescenta identidade SaaS e consulta de empresa
 em `https://plataforma.localhost:<PORTA>/?area=plataforma`, com origem dedicada
 configurável por `rm.platform.host`. Operador é cadastrado de forma assistida no
 registro público pelo owner; não reutiliza uma conta empresarial implicitamente.
-Não há ainda formulário de provisionamento/suspensão. API e fronteiras em
+Os incrementos posteriores acrescentam formulários de solicitação de
+provisionamento e suspensão/reativação, com gates ainda pendentes no checkpoint.
+O despacho assistido hml por UUID está no [runbook](docs/22_PRODUCTION_RUNBOOK.md#despacho-assistido-hml).
+API e fronteiras em
 [Segurança](docs/04_SECURITY.md) e [OpenAPI SaaS](docs/api/plataforma.yaml).
 Playwright: `--config=playwright.plataforma.config.ts`, `RM_PLATFORM_FIXTURE`
 privado com `email`/`senha`, HTTPS e banco rm_test previamente verificado. Não

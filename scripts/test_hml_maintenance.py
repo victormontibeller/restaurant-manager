@@ -9,6 +9,15 @@ from hml_maintenance import Operations, upgrade, rollback, validate_rehearsal
 
 
 class HmlMaintenanceTest(unittest.TestCase):
+    def test_troca_frontend_impede_retorno_do_banco_antigo(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            attempt = Path(directory)
+            (attempt / 'frontend-replacement').mkdir()
+            ops = Operations.__new__(Operations)
+            ops.attempt = attempt
+            with self.assertRaisesRegex(ValueError, 'frontend'):
+                ops.load()
+
     def test_verificacao_de_retorno_falha_para_servico_iniciado(self):
         ops = self.operations()
         ops.verify_previous.side_effect = ValueError('health')

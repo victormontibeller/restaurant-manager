@@ -23,6 +23,8 @@ def runtime_database(root, gate):
     attempt = private_runtime_path(candidate['maintenance_attempt'], directory=True)
     require(attempt.parent == root / 'maintenance-releases', 'Tentativa hml fora do registro.')
     state = json.loads(private_runtime_path(str(attempt / 'state.json')).read_text())
+    from hml_frontend import verify_frontend_record
+    verify_frontend_record(attempt, gate)
     require(state.get('stage') == 'hml' and state.get('state') in (
         'health-aprovado-e2e-pendente', 'aceitacao-pendente', 'identidade-aceita')
         and all(state.get(k) == gate[k] for k in ('git_sha', 'artifact_sha256')),

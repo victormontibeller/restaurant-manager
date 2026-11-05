@@ -53,7 +53,7 @@ Procedimento futuro de release:
 4. Instalar release, reiniciar serviço e verificar saúde técnica e jornadas críticas.
 5. Em falha, executar retorno compatível: trocar binário não desfaz migração de banco. Mudança incompatível exige estratégia própria de recuperação, sem perder transações reais. O runbook deve cobrir eventos externos durante manutenção, comportamento de retry do provedor e reconciliação ao retomar.
 
-Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. Autenticação e unidades da Sprint 01 ainda não foram promovidas ao serviço de homologação. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
+Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. O candidato de identidade está servido em homologação desde o ciclo13, sem aceitação definitiva do baseline; conferir SHA e limites no checkpoint. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
 ## Provisionamento assistido pela fila SaaS
 
@@ -326,6 +326,34 @@ iniciada a aceitação: perderia as contas/dados posteriores. Mudança incompat�
 futura ainda exige outro procedimento de manutenção; o deploy comum conserva
 sua guarda de fingerprints. Código/testes unitários não significam aceitação
 real; o checkpoint informa se o comando foi efetivamente aprovado.
+
+## Substituição restrita do frontend pendente — ciclo16
+
+`hml_frontend.py replace --attempt <TENTATIVA_HML> --job <JOB>
+--rehearsal <RESULTADO_MANUTENCAO>` instala um novo candidato sem aprovar o
+anterior para liberar o deploy. Exige build e ensaio do novo SHA/hash, fonte limpa,
+unidade/runtime conhecidos e igualdade byte a byte de TODAS as entradas dos JARs
+fora de `BOOT-INF/classes/static/`. Não ignora metadados, bibliotecas ou migrations.
+Mudança no backend exige outro procedimento, não flexibilização dessa comparação.
+
+A preparação fica privada e só publica seu marcador depois de persistir journal
+e arquivos de retorno. Mantém banco/OIDs, chaves/runtime, original bloqueado e
+`healthy.json`; não chama migrador nem restaura banco. Para/reinicia somente o
+serviço reconhecido, verifica HTTPS/hash/PID e ambiente efetivo. Estado final
+continua `health-aprovado-e2e-pendente`; nenhuma evidência antiga muda de SHA.
+
+`hml_frontend.py recover --attempt <TENTATIVA_HML>` recupera somente o binário
+imediatamente anterior no MESMO clone, inclusive quando o health passou mas E2E
+posterior reprovou. Aceitação já iniciada impede esse retorno. Falha de persistência
+durante recuperação tenta parar o candidato próprio, sem declarar sucesso. Troca
+incompleta bloqueia smoke/aceitação. O rollback legado de banco fica recusado
+depois do marcador, inclusive após retorno binário, para não perder contas novas.
+
+Após retorno confirmado, `replace` pode preparar outro candidato preservando o
+journal anterior em histórico privado; não apaga tentativas. Sobras de preparação
+antes do marcador não alteram serviço e não são aprovação. Conferir estado real
+após interrupção. Testes de coordenação/disco usam serviços simulados; resultado
+nativo e limitações permanecem no checkpoint. A matriz integral continua obrigatória.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade

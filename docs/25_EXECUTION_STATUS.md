@@ -1,5 +1,52 @@
 # Checkpoint de execução
 
+## Incremento — retomada ciclo16, 2026-11-04 local
+
+Build47ca909 reutilizado SEM reconstrução; fonte privada limpa conferida. Worker15b
+iniciado e exportação/UI32/UI42/UI43 passou quinze combinações nos cinco projetos,
+zero falha/skip/flaky/retry. Demais famílias continuam sequencialmente; não duplicar
+suíte ou interromper processo. SQL dev/test/hml e CI721b068/PR3 draft conferidos.
+
+Substituição restrita de frontend implementada, ainda não executada em hml. Dois
+JARs têm todas as entradas fora de static idênticas na comparação real. Duas
+revisões independentes, achados de recuperação reproduzidos/corrigidos;145Python
+passaram. Não relaxa migrations nem promove evidência antiga. Próximo: recolher
+E2E, ensaio novo e substituição/smoke quando lock livre; revisão visual integral
+e jornada assistida hml continuam pendentes. Hml3cd4eeb UP/baseline449ce3c
+preservados. Sprint01 aberta;02–05 não iniciadas. [Evidência](evidencias/sprint-01-retomada-ciclo-16.md).
+
+## Encerramento — retomada ciclo 15, 2026-11-04 local
+
+Aviso efetivo de orçamento quase esgotado após preparar o runner de retomada
+E2E; depois somente handoff obrigatório. Missão NÃO concluída. Sem merge,
+promoção ou CONCLUSAO.json. Nenhum build interrompido/repetido.
+
+Build47ca909 concluiu00:53:04Z de2026-11-05, exit0/release_gate=true; hash
+674b00421e6b7ee9d8fd54047401755acbf444921acc1d67547fb9ef22aa02be.
+Gate/hash/fonte atual conferidos e XML recontado:23suítes/173backend, zero falha/
+erro/skip. Angular/probes/auditorias passaram. NÃO reconstruir esse artefato.
+
+Worker15 terminou00:53:08Z exit1 ANTES de seed/candidato/E2E: link node_modules
+não era ignorado por padrão terminado em barra e deixou a fonte privada suja.
+Diagnóstico confirmado por git status; exclusão LOCAL exata do link acrescentada
+em .git/info/exclude, sem alterar fonte/testes nem relaxar clean_sha. Porta8089
+livre e fixtures/candidato novos ausentes na última consulta00:53:56Z.
+Runner15b finito preparado para reutilizar o job e executar a matriz; NÃO iniciado
+antes do aviso. Conferir fonte limpa e lançar o script privado, sem repetir build.
+
+Publicado721b06821828f289a7749ec716a81135e934e988; remoto/PR3 OPEN draft/base main
+e corpo atualizado relidos. CI51e3456 aprovada nos dois checks; CI do head
+documental721b068 não consolidada. README/índices/Sprint01 corrigidos localmente
+depois do push; preservar esses arquivos e este handoff, ainda sem commit.
+
+Homologação3cd4eeb preservada, último runtime observado UP/PID399982; baseline
+449ce3c e originalOID16392 bloqueado conservados, clone135836 ativo. Wrapper
+assistido hml ainda sem ativação real; somente coordenação131Python e recusa real
+de lock aprovadas. Raiz privada do projeto restringida0775→0700 após conferência.
+Relatório privado é snapshot00:37:27Z anterior ao término; checkpoint/STATUS
+finais distinguem o resultado posterior. Sprint01 aberta;02–05 não iniciadas.
+[Evidência](evidencias/sprint-01-retomada-ciclo-15.md).
+
 ## Incremento — retomada ciclo 15, 2026-11-04 local
 
 Publicado47ca909/PR3 OPEN draft, ambos checksCI aprovados. Worker13 encerrou
