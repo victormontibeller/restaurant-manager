@@ -51,8 +51,10 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real',a
     if(route.request().method()!=='PUT'){await route.continue();return;}
     const response=await route.fetch();expect(response.status()).toBe(200);gravou();await gate;await route.fulfill({response});
   },{times:1});
+  const recebida=page.waitForResponse(r=>r.url().endsWith('/api/v1/configuracoes/acessos')&&r.request().method()==='PUT');
   await page.getByRole('button',{name:'Salvar permissões'}).click();await gravada;
   try{await expect(page.getByRole('button',{name:'Gerenciar unidades',exact:true})).toBeDisabled();}finally{liberar();}
+  const response=await recebida;expect(response.status()).toBe(200);await response.finished();
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   await expect(page.getByRole('button',{name:'Gerenciar unidades',exact:true})).toBeEnabled();
   await page.getByRole('button',{name:'Sair da conta'}).click();

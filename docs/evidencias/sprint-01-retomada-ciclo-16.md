@@ -38,3 +38,16 @@ bloqueia smoke/aceitação e rollback de banco legado fica recusado.
 arquivos reais no scratch; não são deploy nativo. Novo ensaio/manutenção/troca e
 smoke do novo SHA ainda pendentes neste registro. Nenhuma aprovação transferida
 entre artefatos. Procedimento e limites na [fonte operacional](../22_PRODUCTION_RUNBOOK.md).
+
+## Falhas da regressão em diagnóstico
+
+UI04 falhou aguardando Administrador que não estava na primeira página. Trace
+mostrou GET200 com cinquenta funcionários, sem a conta procurada; não foi falha
+da proteção transacional. O teste passa a percorrer a paginação real até a conta,
+conferindo respostas e controles, sem apagar massa nem aumentar o timeout.
+UI08 mobile falhou na espera visual após liberar resposta interceptada; snapshot
+posterior contém a mensagem correta. Correção espera explicitamente resposta200
+e término do corpo antes da assertiva, mantendo o teste de bloqueio da navegação.
+Typecheck passou. Reexecução real ainda pendente; falhas anteriores preservadas.
+Worker16 finito aguarda15b e não instala se a regressão falhar. Não confundir
+esse lançamento com manutenção/deploy aprovados.

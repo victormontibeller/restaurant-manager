@@ -49,6 +49,21 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await confirmarResposta(page,'/configuracoes/acessos','PUT',200,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   const employee=page.getByRole('article').filter({hasText:fixture.email});
+  // Convites de execuções anteriores permanecem no PostgreSQL. O Administrador
+  // não é necessariamente um dos primeiros cinquenta funcionários ordenados.
+  const pages=page.getByRole('navigation',{name:'Páginas de funcionários'});
+  let pagina=0;
+  while(await employee.count()===0){
+    await expect(pages.getByRole('button',{name:'Próxima página',exact:true})).toBeEnabled();
+    pagina++;
+    const loaded=Promise.all(['/configuracoes/acessos','/equipe?pagina='+pagina,'/operacao/unidades'].map(path=>
+      page.waitForResponse(r=>r.url().endsWith(path)&&r.request().method()==='GET')));
+    await pages.getByRole('button',{name:'Próxima página',exact:true}).click();
+    for(const response of await loaded){expect(response.status()).toBe(200);await response.finished();}
+    await expect(pages.getByText('Página '+(pagina+1),{exact:true})).toBeVisible();
+    await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
+  }
+  await expect(employee).toHaveCount(1);
   await employee.getByLabel('Ativo').uncheck();
   const protectedResponse=page.waitForResponse(r=>r.url().includes('/api/v1/equipe/')&&r.request().method()==='PUT',{timeout:15000});
   await employee.getByRole('button',{name:'Salvar funcionário'}).click();
