@@ -1,0 +1,256 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — identidade empresarial
+  version: 0.1.0
+  description: >-
+    Contrato das rotas empresariais existentes na Sprint 01, derivado dos
+    controllers/DTOs e serviços. Não concede identidade SaaS ou sessão de mesa.
+    HTTPS obrigatório; empresa resolvida pelo domínio cadastrado antes da
+    autenticação. Domínio desconhecido falha fechado. Nenhuma rota aceita schema
+    arbitrário. Tokens e senhas não devem constar em URLs, logs ou exemplos.
+paths:
+  /api/v1/auth/csrf:
+    get:
+      operationId: obterCsrfEmpresarial
+      summary: Obter token CSRF mascarado e o nome do header
+      security: []
+      responses:
+        '200':
+          description: >-
+            Token vinculado ao cookie host-only __Host-RM_CSRF,
+            HttpOnly/Secure/SameSite Strict, path /. Preservar o cookie e enviar
+            o token no header informado nas operações de login/refresh/logout.
+          headers:
+            Set-Cookie:
+              description: Cookie CSRF quando necessário; nunca retornar seu conteúdo em logs
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Csrf'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/auth/login:
+    post:
+      operationId: autenticarContaEmpresarial
+      summary: Autenticar conta ativa da empresa atual
+      description: >-
+        E-mail normalizado com remoção de espaços externos e letras minúsculas.
+        Senha deve caber em 72 bytes UTF-8. Resposta inválida não revela se a
+        conta existe. Limites persistidos por empresa: cinco tentativas por
+        e-mail e cem por origem em quinze minutos; login correto limpa o
+        contador do e-mail, não o da origem. Origem vem da conexão, não de um
+        header arbitrário. CSRF continua obrigatório mesmo com Bearer.
+      security:
+        - csrf: []
+          cookieCsrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Login'}
+      responses:
+        '200': {$ref: '#/components/responses/Tokens'}
+        '400': {$ref: '#/components/responses/EntradaInvalida'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        '403': {$ref: '#/components/responses/CsrfInvalido'}
+        '429': {$ref: '#/components/responses/Limite'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/auth/refresh:
+    post:
+      operationId: renovarSessaoEmpresarial
+      summary: Consumir refresh atual e emitir novo par de tokens
+      description: >-
+        Refresh aleatório de 256 bits, somente hash persistido; consumo
+        serializado. Reutilização revoga a família em transação confirmada,
+        inclusive com access ainda válido. A expiração absoluta da sessão
+        permanece doze horas após sua criação. Coordenar renovação entre abas;
+        não repetir cegamente um refresh cujo resultado foi perdido.
+      security:
+        - csrf: []
+          cookieCsrf: []
+          refresh: []
+      responses:
+        '200': {$ref: '#/components/responses/Tokens'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        '403': {$ref: '#/components/responses/CsrfInvalido'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/auth/logout:
+    post:
+      operationId: encerrarSessaoEmpresarial
+      summary: Revogar a sessão do refresh e expirar seu cookie
+      description: >-
+        Exige refresh reconhecido da empresa atual; Bearer não substitui o
+        cookie nem CSRF. Revogação é persistida e vale também para access JWT
+        ainda não expirado. Uma resposta perdida não autoriza afirmar que o
+        encerramento foi confirmado; consultar ou reconciliar a mesma sessão.
+      security:
+        - csrf: []
+          cookieCsrf: []
+          refresh: []
+      responses:
+        '204':
+          description: Revogação confirmada; resposta sem corpo
+          headers:
+            Set-Cookie:
+              description: RM_REFRESH vazio, Max-Age zero, mesmo path e atributos de segurança
+              schema: {type: string}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        '403': {$ref: '#/components/responses/CsrfInvalido'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/auth/me:
+    get:
+      operationId: consultarIdentidadeEmpresarial
+      summary: Consultar identidade atual sem retornar credenciais ou permissões embutidas
+      description: >-
+        Valida assinatura, claims, empresa, sessão e conta atuais. Perfil e
+        verificação de e-mail são relidos; não derivam de permissões antigas
+        dentro do JWT. Token SaaS ou de outro tenant não autentica esta rota.
+      security:
+        - empresarial: []
+      responses:
+        '200':
+          description: Identidade da sessão empresarial atual
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Identidade'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/auth/reautenticar:
+    post:
+      operationId: confirmarSenhaEmpresarial
+      summary: Confirmar senha para operações sensíveis na sessão atual
+      description: >-
+        A confirmação vale cinco minutos e não eleva o perfil nem renova o
+        prazo absoluto da sessão. Cinco tentativas por usuário em quinze
+        minutos; confirmação correta limpa seu contador. Senha incorreta
+        retorna 422 sem encerrar o login existente. O caso de uso sensível
+        revalida sessão, perfil e prazo depois de adquirir os locks próprios.
+      security:
+        - empresarial: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Confirmacao'}
+      responses:
+        '204': {description: Confirmação persistida na sessão; sem corpo}
+        '400': {$ref: '#/components/responses/EntradaInvalida'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        '422':
+          description: Senha de confirmação inválida; sessão não é revogada por esse erro
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Erro'}
+        '429': {$ref: '#/components/responses/Limite'}
+        default: {$ref: '#/components/responses/Erro'}
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        HS256 com kid local, emissor restaurant-manager e audiência
+        restaurant-manager-empresa. Access de cinco minutos com sub, sid e
+        tenant; sessão/política atuais continuam obrigatórias no servidor.
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: Token mascarado obtido em auth/csrf, junto ao cookie correspondente
+    cookieCsrf:
+      type: apiKey
+      in: cookie
+      name: __Host-RM_CSRF
+      description: Host-only, HttpOnly, Secure, SameSite Strict, path /
+    refresh:
+      type: apiKey
+      in: cookie
+      name: RM_REFRESH
+      description: Host-only, HttpOnly, Secure, SameSite Strict, path /api/v1/auth
+  schemas:
+    Login:
+      type: object
+      additionalProperties: false
+      required: [email, senha]
+      properties:
+        email: {type: string, format: email, minLength: 1, maxLength: 254}
+        senha: {$ref: '#/components/schemas/Senha'}
+    Confirmacao:
+      type: object
+      additionalProperties: false
+      required: [senha]
+      properties:
+        senha: {$ref: '#/components/schemas/Senha'}
+    Senha:
+      type: string
+      minLength: 1
+      maxLength: 72
+      writeOnly: true
+      description: Não vazia; adicionalmente limitada a 72 bytes UTF-8 no serviço
+    Csrf:
+      type: object
+      additionalProperties: false
+      required: [token, headerName]
+      properties:
+        token: {type: string}
+        headerName: {type: string, const: X-XSRF-TOKEN}
+    Access:
+      type: object
+      additionalProperties: false
+      required: [accessToken, expiresIn]
+      properties:
+        accessToken: {type: string, description: JWT; manter somente em memória no navegador}
+        expiresIn: {type: integer, format: int64, const: 300, description: Validade do access em segundos}
+    Identidade:
+      type: object
+      additionalProperties: false
+      required: [usuarioId, sessaoId, empresaId, perfil, emailVerificado]
+      properties:
+        usuarioId: {type: string, format: uuid}
+        sessaoId: {type: string, format: uuid}
+        empresaId: {type: string, format: uuid}
+        perfil: {type: string, enum: [ADMINISTRADOR, GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO, CLIENTE]}
+        emailVerificado: {type: boolean}
+    Erro:
+      type: object
+      additionalProperties: false
+      required: [codigo, mensagem, correlacao]
+      properties:
+        codigo: {type: string}
+        mensagem: {type: string, description: Mensagem sanitizada em PT-BR}
+        correlacao: {type: string, format: uuid}
+  responses:
+    Tokens:
+      description: Access no corpo e novo refresh no cookie; refresh nunca é retornado no JSON
+      headers:
+        Set-Cookie:
+          description: RM_REFRESH com Max-Age 43200, HttpOnly/Secure/Strict e path /api/v1/auth; expiração absoluta permanece no servidor
+          schema: {type: string}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Access'}
+    EntradaInvalida:
+      description: Estrutura, formato ou campo desconhecido; erro sanitizado
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}
+    IdentidadeInvalida:
+      description: Credencial, JWT, empresa ou sessão inválida, revogada ou expirada; conta inativa
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}
+    CsrfInvalido:
+      description: CSRF ausente ou inválido; Bearer não dispensa CSRF nas rotas por cookie
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}
+    Limite:
+      description: Limite persistido atingido; aguardar a janela, sem retry automático
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}
+    Erro:
+      description: Inclui 404 de domínio desconhecido e 500 de falha interna; sem stack trace ou credenciais
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}

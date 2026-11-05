@@ -75,6 +75,9 @@ UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizo
 
 ### Contratos disponíveis no candidato
 
+Esquemas de entrada/saída, segurança e erros em [OpenAPI de acessos](api/acessos.yaml);
+login/refresh/confirmação em [OpenAPI de identidade](api/identidade.yaml).
+
 - `GET/PUT /api/v1/configuracoes/acessos`: consulta e substituição das ações de um perfil com `versao`, `perfil`, `acoes`; dependências mínimas são adicionadas pelo servidor.
 - `GET /api/v1/equipe?pagina=0`: até 50 funcionários, sem clientes/segredos.
 - `PUT /api/v1/equipe/{id}`: `versao`, `perfil`, `ativo`, `unidades`; Administrador não recebe vínculos individuais e nunca pode ser eliminado como último ativo.

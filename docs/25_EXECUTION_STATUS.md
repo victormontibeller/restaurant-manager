@@ -2,6 +2,17 @@
 
 ## Incremento — retomada ciclo17, 2026-11-04 local
 
+[Evidências e limites da rodada](evidencias/sprint-01-retomada-ciclo-17.md).
+
+Atualização02:12Z: contratos empresariais antes ausentes documentam treze operações
+existentes (identidade/matriz/equipe/acessos). Validação OpenAPI, schemas e refs
+passou; probe HTTP real no hml3cd4eeb confirmou dezoito verificações de schemas,
+sessões próprias, leituras e negativos, sem alterar matriz/equipe/unidades.
+Não equivale à matriz completa nem testa os PUTs de negócio novamente. Relatório
+privado ligado ao SHA/hash servido; não exigiu novo build. CI dcf1831 ainda em
+consolidação. Worker15b já aprovou também cadastro20/recuperação15/convites20/
+plataforma15; demais fases continuam em execução, sem promoção.
+
 Workers15b/16/16b preservados, sem repetir build47ca909. Exportação15, eventos40
 e verificação15 passaram; identidade herdada falhou conforme registro anterior e
 aguarda reexecução corrigida pelo16b. CI0155ae3 falhou somente no download Maven;

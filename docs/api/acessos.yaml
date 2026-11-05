@@ -1,0 +1,281 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — acessos e equipe
+  version: 0.1.0
+  description: >-
+    Contrato das rotas existentes da Sprint 01. Tenant resolvido pelo domínio;
+    autorização por sessão e política atuais no servidor. Administrador cobre
+    toda a empresa. Os cinco perfis operacionais usam a mesma matriz empresarial
+    combinada com seus vínculos de unidades. Cliente não pode usar estas rotas.
+    Cadastrar uma ação no catálogo NÃO implementa a operação de negócio futura.
+security:
+  - empresarial: []
+paths:
+  /api/v1/configuracoes/acessos:
+    get:
+      operationId: consultarMatrizEmpresarial
+      summary: Consultar catálogo de ações e política dos cinco perfis operacionais
+      description: Exclusivo de Administrador atual; não exige confirmação de senha para leitura
+      responses:
+        '200':
+          description: Matriz empresarial atual, com versão única e dependências mínimas
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Matriz'}
+        default: {$ref: '#/components/responses/Erro'}
+    put:
+      operationId: substituirPermissoesDoPerfil
+      summary: Substituir as ações de um perfil operacional, com versão e auditoria
+      description: >-
+        Exclusivo de Administrador com senha confirmada há no máximo cinco
+        minutos na sessão. A versão pertence à política empresarial inteira,
+        não a uma coluna. Edição concorrente ou versão antiga retorna 409.
+        Dependências mínimas são acrescentadas pelo servidor. Administrador,
+        Cliente e ações desconhecidas não são configuráveis. Remoção vale na
+        próxima operação protegida, mesmo com JWT ainda válido; consumidores
+        revalidam política, sessão e unidade. Após resposta incerta consultar
+        a matriz antes de nova decisão, sem repetir silenciosamente a escrita.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlterarMatriz'}
+      responses:
+        '200':
+          description: Matriz inteira com versão incrementada; alteração e auditoria atômicas
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Matriz'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/equipe:
+    get:
+      operationId: listarFuncionarios
+      summary: Listar até cinquenta funcionários da empresa, inclusive inativos
+      description: >-
+        Exclusivo de Administrador. Ordenação por e-mail único no tenant.
+        Clientes não aparecem. Não expõe senha, hash, sessão ou dados de outro
+        tenant. Não é endpoint de criação; novas contas usam o contrato de convites.
+      parameters:
+        - in: query
+          name: pagina
+          schema: {type: integer, minimum: 0, maximum: 10000, default: 0}
+      responses:
+        '200':
+          description: Página de funcionários; página além do fim retorna lista vazia
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 50
+                items: {$ref: '#/components/schemas/Funcionario'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/equipe/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      operationId: alterarFuncionario
+      summary: Alterar perfil, atividade e vínculos de funcionário existente
+      description: >-
+        Administrador reautenticado; versão do funcionário obrigatória para
+        controle de concorrência do cliente. Não converte Cliente em funcionário.
+        Impede inativar ou rebaixar o último Administrador ativo, inclusive em
+        transações simultâneas. Administrador recebe unidades vazias e cobre
+        toda a empresa. Demais perfis só recebem unidades ativas da empresa
+        ou vínculos inativos já existentes do alvo, que podem ser mantidos ou
+        removidos. Não concede novo vínculo a unidade inativa. Inativação revoga
+        sessões na mesma transação; reativação não restaura sessões revogadas.
+        Perfil e vínculos são reavaliados na próxima operação com o mesmo JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlterarFuncionario'}
+      responses:
+        '200':
+          description: Funcionário atualizado, com versão atual e vínculos persistidos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Funcionario'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/acessos/efetivos:
+    get:
+      operationId: consultarAcessosEfetivos
+      summary: Consultar perfil, política, ações e unidades operacionais atuais
+      description: >-
+        Disponível aos seis perfis de funcionário, não ao Cliente. Administrador
+        recebe o catálogo de ações e todas as unidades ativas; outros perfis
+        recebem as ações atuais e somente unidades ativas atribuídas. Retornar
+        uma ação não implementa sua operação nem dispensa a regra do recurso.
+      responses:
+        '200':
+          description: Projeção mínima dos acessos atuais
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Efetivo'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/unidades:
+    get:
+      operationId: listarUnidadesPermitidas
+      summary: Listar unidades ativas permitidas ao funcionário atual
+      description: >-
+        Lista operacional, sem paginação nesta versão. Não confundir com a
+        lista pública de unidades nem com o cadastro administrativo completo.
+        Administrador cobre todas; demais funcionários somente vínculos ativos.
+      responses:
+        '200':
+          description: Unidades autorizadas; conjunto vazio não concede acesso a outra unidade
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/UnidadePermitida'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/unidades/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      operationId: consultarUnidadePermitida
+      summary: Consultar unidade ativa atribuída, sem revelar unidade alheia
+      responses:
+        '200':
+          description: Unidade operacional permitida
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UnidadePermitida'}
+        default: {$ref: '#/components/responses/Erro'}
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Audiência empresarial; sessão, conta e tenant atuais obrigatórios
+  schemas:
+    PerfilOperacional:
+      type: string
+      enum: [GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]
+    PerfilFuncionario:
+      type: string
+      enum: [ADMINISTRADOR, GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]
+    VersaoEntrada:
+      type: integer
+      format: int64
+      minimum: 0
+      default: 0
+      description: >-
+        Enviar explicitamente a versão recebida na consulta. O DTO atual usa
+        long primitivo, cujo valor inicial é zero; ausência não é uma forma
+        de ignorar o conflito com uma versão persistida diferente.
+    CodigosAcao:
+      type: array
+      uniqueItems: true
+      items: {type: string, minLength: 1, description: Código existente no catálogo retornado pela matriz}
+    AlterarMatriz:
+      type: object
+      additionalProperties: false
+      required: [perfil, acoes]
+      properties:
+        versao: {$ref: '#/components/schemas/VersaoEntrada'}
+        perfil: {$ref: '#/components/schemas/PerfilOperacional'}
+        acoes:
+          $ref: '#/components/schemas/CodigosAcao'
+          maxItems: 80
+    AlterarFuncionario:
+      type: object
+      additionalProperties: false
+      required: [perfil, ativo, unidades]
+      properties:
+        versao: {$ref: '#/components/schemas/VersaoEntrada'}
+        perfil: {$ref: '#/components/schemas/PerfilFuncionario'}
+        ativo: {type: boolean}
+        unidades:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          items: {type: string, format: uuid}
+    DescricaoAcao:
+      type: object
+      additionalProperties: false
+      required: [codigo, descricao, escopo, dependencia]
+      properties:
+        codigo: {type: string}
+        descricao: {type: string}
+        escopo: {type: string, enum: [EMPRESA, UNIDADE]}
+        dependencia: {type: [string, 'null'], description: Código da consulta mínima ou null}
+    Matriz:
+      type: object
+      additionalProperties: false
+      required: [versao, acoes, perfis]
+      properties:
+        versao: {type: integer, format: int64, minimum: 0}
+        acoes:
+          type: array
+          items: {$ref: '#/components/schemas/DescricaoAcao'}
+        perfis:
+          type: object
+          additionalProperties: false
+          required: [GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]
+          properties:
+            GERENTE: {$ref: '#/components/schemas/CodigosAcao'}
+            ATENDIMENTO: {$ref: '#/components/schemas/CodigosAcao'}
+            CAIXA: {$ref: '#/components/schemas/CodigosAcao'}
+            COZINHA: {$ref: '#/components/schemas/CodigosAcao'}
+            EXPEDICAO: {$ref: '#/components/schemas/CodigosAcao'}
+    Funcionario:
+      type: object
+      additionalProperties: false
+      required: [id, email, perfil, ativo, versao, unidades]
+      properties:
+        id: {type: string, format: uuid}
+        email: {type: string, format: email}
+        perfil: {$ref: '#/components/schemas/PerfilFuncionario'}
+        ativo: {type: boolean}
+        versao: {type: integer, format: int64, minimum: 0}
+        unidades:
+          type: array
+          uniqueItems: true
+          items: {type: string, format: uuid}
+    UnidadePermitida:
+      type: object
+      additionalProperties: false
+      required: [id, nome, fuso]
+      properties:
+        id: {type: string, format: uuid}
+        nome: {type: string}
+        fuso: {type: string}
+    Efetivo:
+      type: object
+      additionalProperties: false
+      required: [perfil, versaoPolitica, acoes, unidades]
+      properties:
+        perfil: {$ref: '#/components/schemas/PerfilFuncionario'}
+        versaoPolitica: {type: integer, format: int64, minimum: 0}
+        acoes: {$ref: '#/components/schemas/CodigosAcao'}
+        unidades:
+          type: array
+          items: {$ref: '#/components/schemas/UnidadePermitida'}
+    Erro:
+      type: object
+      additionalProperties: false
+      required: [codigo, mensagem, correlacao]
+      properties:
+        codigo: {type: string}
+        mensagem: {type: string, description: Mensagem sanitizada em PT-BR}
+        correlacao: {type: string, format: uuid}
+  responses:
+    Erro:
+      description: >-
+        400 para estrutura, perfil, ação ou página inválida; 401 para sessão ou
+        JWT inválido; 403 para perfil negado ou reautenticação ausente/expirada;
+        404 para domínio desconhecido, recurso alheio, funcionário inexistente,
+        Cliente usado como alvo ou unidade não permitida; 409 para versão
+        divergente ou proteção do último Administrador; 500 para falha interna.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Erro'}

@@ -168,6 +168,8 @@ pela UI e as demais condições de T28 continuam pendentes.
 
 ## Referências relacionadas
 
+- [Contrato da identidade empresarial](api/identidade.yaml)
+
 - [Autorização por perfil e unidade](11_ACCESS_CONTROL.md)
 - [Isolamento e contexto](06_MULTI_TENANT.md)
 - [Logs e auditoria](07_OBSERVABILITY.md)

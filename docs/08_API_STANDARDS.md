@@ -33,6 +33,15 @@ A API não deve depender de DOM, cookie exclusivo do Angular ou chamadas locais 
 
 ## Consistência dos contratos
 
+Contratos acrescentados na retomada ciclo17: [identidade empresarial](api/identidade.yaml)
+(CSRF, login, refresh, logout, identidade e confirmação de senha) e
+[matriz, equipe e acessos efetivos](api/acessos.yaml). Documentam os DTOs e
+comportamentos existentes, sem criar novas rotas ou aprovar funcionalidades futuras
+somente porque suas ações aparecem no catálogo. O contrato distingue os limites
+de bytes da senha e a versão primitiva atual; consumidores devem enviar a versão
+consultada. Validação estrutural/referências e consultas HTTP reais são evidências
+separadas da matriz E2E e dos testes de escrita/concorrência.
+
 Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), com CSRF, resposta neutra, consumo único e limites; [cadastro verificado de cliente](api/cadastro.yaml), no candidato do ciclo 10, sem atribuição pública de perfil/unidades nem senha anterior à prova de e-mail. Não representam OpenAPI completo das demais famílias.
 
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
