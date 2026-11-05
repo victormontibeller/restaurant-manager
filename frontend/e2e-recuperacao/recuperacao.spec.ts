@@ -8,8 +8,9 @@ if(!arquivo)throw new Error('Fixture privada de recuperação obrigatória.');
 const fixture=JSON.parse(fs.readFileSync(arquivo,'utf8')) as {emails:Record<string,string>;captureDirectory:string};
 async function abrir(page:Page):Promise<void>{
   await page.goto('/');await expect(page.getByRole('button',{name:'Recuperar senha',exact:true})).toBeEnabled();
-  await page.getByRole('button',{name:'Recuperar senha',exact:true}).click();
+  await page.getByRole('button',{name:'Recuperar senha',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Recuperar senha',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Recuperar senha',exact:true})).toBeFocused();
 }
 async function solicitar(page:Page,email:string):Promise<string>{
   const anteriores=new Set(fs.existsSync(fixture.captureDirectory)?fs.readdirSync(fixture.captureDirectory):[]);
@@ -55,8 +56,15 @@ test('S01-UI11: validação, código inválido, teclado e rede indisponível',as
   await page.getByLabel('Confirmar nova senha',{exact:true}).fill(crypto.randomUUID());
   await page.getByRole('button',{name:'Alterar senha',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Confirmar nova senha',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar nova senha',{exact:true})).toHaveAccessibleDescription('As senhas devem ser iguais.');
+  await preencher(page,'A'.repeat(43),'á'.repeat(37));await page.getByRole('button',{name:'Alterar senha',exact:true}).click();
+  await expect(page.getByLabel('Nova senha',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Nova senha',{exact:true})).toHaveAccessibleDescription(/A senha deve ter no máximo 72 bytes\./);
   await preencher(page,'A'.repeat(43),crypto.randomUUID());await page.getByRole('button',{name:'Alterar senha',exact:true}).click();
   await expect(page.getByRole('alert')).toContainText('Código inválido, expirado ou já utilizado.');
+  await expect(page.getByLabel('Nova senha',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar nova senha',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await context.setOffline(true);await page.getByLabel('E-mail da recuperação').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
   await context.setOffline(false);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -64,6 +72,7 @@ test('S01-UI11: validação, código inválido, teclado e rede indisponível',as
   await page.screenshot({path:test.info().outputPath('recuperacao-mobile.png'),fullPage:true});
   await page.getByRole('button',{name:'Voltar ao login',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Acessar minha conta',exact:true})).toBeVisible();
+  await expect(page.getByLabel('E-mail',{exact:true})).toBeFocused();
 });
 test('S01-UI12: resposta perdida não confirma alteração e login reconcilia',async({page},info)=>{
   const email=fixture.emails[info.project.name];const senha=crypto.randomUUID();

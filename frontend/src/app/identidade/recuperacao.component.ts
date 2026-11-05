@@ -5,7 +5,7 @@ import {ApiFailure,SessaoService} from './sessao.service';
   selector:'app-recuperacao',
   template:`
     <section aria-labelledby="recuperacao-titulo" [attr.aria-busy]="ocupado()">
-      <h2 id="recuperacao-titulo">Recuperar senha</h2>
+      <h2 id="recuperacao-titulo" tabindex="-1">Recuperar senha</h2>
       <p>Solicite um código para a conta desta empresa. Neste ambiente fictício, as mensagens são capturadas localmente; nenhum e-mail real é enviado.</p>
       <form (submit)="solicitar($event,email.value)">
         <label for="email-recuperacao">E-mail da recuperação</label>
@@ -18,13 +18,13 @@ import {ApiFailure,SessaoService} from './sessao.service';
         <label for="codigo-recuperacao">Código de recuperação</label>
         <input #codigo id="codigo-recuperacao" type="password" autocomplete="off" required minlength="43" maxlength="43" pattern="[A-Za-z0-9_-]{43}" [disabled]="ocupado()">
         <label for="nova-senha">Nova senha</label>
-        <input #nova id="nova-senha" type="password" autocomplete="new-password" required minlength="12" maxlength="72" aria-describedby="regra-senha" [disabled]="ocupado()">
+        <input #nova id="nova-senha" type="password" autocomplete="new-password" required minlength="12" maxlength="72" [attr.aria-describedby]="campoErro()==='senha'?'regra-senha erro-recuperacao':'regra-senha'" [attr.aria-invalid]="campoErro()==='senha'?true:null" [disabled]="ocupado()">
         <p id="regra-senha">Use pelo menos 12 caracteres e no máximo 72 bytes. Caracteres acentuados podem ocupar mais de um byte.</p>
         <label for="confirmar-senha">Confirmar nova senha</label>
-        <input #confirmacao id="confirmar-senha" type="password" autocomplete="new-password" required minlength="12" maxlength="72" [disabled]="ocupado()">
+        <input #confirmacao id="confirmar-senha" type="password" autocomplete="new-password" required minlength="12" maxlength="72" [attr.aria-describedby]="campoErro()==='confirmacao'?'erro-recuperacao':null" [attr.aria-invalid]="campoErro()==='confirmacao'?true:null" [disabled]="ocupado()">
         <button type="submit" [disabled]="ocupado()">Alterar senha</button>
       </form>
-      @if(erro()){<p #alerta role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
+      @if(erro()){<p #alerta id="erro-recuperacao" role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
       @if(aviso()){<p #resultado role="status" tabindex="-1">{{aviso()}}</p>}
       <button type="button" (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
     </section>
@@ -36,6 +36,7 @@ export class RecuperacaoComponent {
   readonly voltar=output<void>();
   readonly ocupado=signal(false);
   readonly erro=signal('');
+  readonly campoErro=signal<'senha'|'confirmacao'|null>(null);
   readonly aviso=signal('');
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   @ViewChild('resultado') resultado?:ElementRef<HTMLElement>;
@@ -49,13 +50,13 @@ export class RecuperacaoComponent {
     event.preventDefault();if(this.ocupado())return;
     this.iniciar();
     try {
-      if(nova.value!==confirmacao.value)throw new Error('As senhas devem ser iguais.');
-      if(new TextEncoder().encode(nova.value).length>72)throw new Error('A senha deve ter no máximo 72 bytes.');
+      if(nova.value!==confirmacao.value){this.campoErro.set('confirmacao');throw new Error('As senhas devem ser iguais.');}
+      if(new TextEncoder().encode(nova.value).length>72){this.campoErro.set('senha');throw new Error('A senha deve ter no máximo 72 bytes.');}
       await this.sessao.recuperar('recuperacao/confirmar',{codigo:codigo.value,senha:nova.value});
       codigo.value='';this.sucesso('Senha alterada e sessões anteriores encerradas. Volte ao login para entrar com a nova senha.');
     } catch(error){this.falha(error,true);}finally{nova.value='';confirmacao.value='';this.ocupado.set(false);}
   }
-  private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');}
+  private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');this.campoErro.set(null);}
   private sucesso(texto:string):void{this.aviso.set(texto);setTimeout(()=>this.resultado?.nativeElement.focus());}
   private falha(error:unknown,confirmacao:boolean):void {
     const rede=error instanceof TypeError||(error instanceof ApiFailure&&error.status>=500)||(error instanceof Error&&['TimeoutError','AbortError'].includes(error.name));

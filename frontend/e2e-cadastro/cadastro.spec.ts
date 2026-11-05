@@ -8,8 +8,9 @@ if(!arquivo)throw new Error('Fixture privada de captura obrigatória.');
 const fixture=JSON.parse(fs.readFileSync(arquivo,'utf8')) as {captureDirectory:string};
 async function abrir(page:Page):Promise<void>{
   await page.goto('/');await expect(page.getByRole('button',{name:'Criar conta de cliente',exact:true})).toBeEnabled();
-  await page.getByRole('button',{name:'Criar conta de cliente',exact:true}).click();
+  await page.getByRole('button',{name:'Criar conta de cliente',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Criar conta de cliente',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Criar conta de cliente',exact:true})).toBeFocused();
 }
 async function solicitar(page:Page,email:string):Promise<string>{
   const anteriores=new Set(fs.existsSync(fixture.captureDirectory)?fs.readdirSync(fixture.captureDirectory):[]);
@@ -58,8 +59,15 @@ test('S01-UI14: cadastro inválido, validação de senha, foco e offline',async(
   await page.getByLabel('Confirmar senha da nova conta',{exact:true}).fill(crypto.randomUUID());
   await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).toHaveAccessibleDescription('As senhas devem ser iguais.');
+  await preencher(page,'A'.repeat(43),'á'.repeat(37));await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
+  await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Senha da nova conta',{exact:true})).toHaveAccessibleDescription(/A senha deve ter no máximo 72 bytes\./);
   await preencher(page,'A'.repeat(43),crypto.randomUUID());await page.getByRole('button',{name:'Verificar e criar conta',exact:true}).click();
   await expect(page.getByRole('alert')).toContainText('Código inválido, expirado ou já utilizado.');
+  await expect(page.getByLabel('Senha da nova conta',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await context.setOffline(true);await page.getByLabel('E-mail do cadastro').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código de cadastro',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
   await context.setOffline(false);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

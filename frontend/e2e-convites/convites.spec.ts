@@ -42,8 +42,9 @@ async function criar(page:Page,email:string):Promise<{id:string;codigo:string}>{
   return {id:c.id,codigo:await capturar(email)};
 }
 async function abrirAceite(page:Page):Promise<void>{
-  await page.getByRole('button',{name:'Aceitar convite de funcionário',exact:true}).click();
+  await page.getByRole('button',{name:'Aceitar convite de funcionário',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Aceitar convite de funcionário',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Aceitar convite de funcionário',exact:true})).toBeFocused();
 }
 async function preencher(page:Page,codigo:string,senha:string):Promise<void>{
   await page.getByLabel('Código do convite',{exact:true}).fill(codigo);await page.getByLabel('Senha da conta de funcionário',{exact:true}).fill(senha);
@@ -107,8 +108,15 @@ test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',as
   await expect(page.getByRole('status').filter({hasText:'Revogação confirmada'})).toBeVisible();await page.getByRole('button',{name:'Sair da conta',exact:true}).click();await abrirAceite(page);
   await preencher(page,codigo,crypto.randomUUID());await page.getByLabel('Confirmar senha de funcionário').fill(crypto.randomUUID());await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();
   await expect(page.getByRole('alert')).toHaveText('As senhas devem ser iguais.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).toHaveAccessibleDescription('As senhas devem ser iguais.');
+  await preencher(page,codigo,'á'.repeat(37));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();
+  await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).toHaveAccessibleDescription(/A senha deve ter no máximo 72 bytes\./);
   await preencher(page,codigo,crypto.randomUUID());const r=page.waitForResponse(r=>r.url().endsWith('/convites/aceitar'));await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();expect((await r).status()).toBe(422);
   await expect(page.getByRole('alert')).toContainText('Convite inválido, expirado, revogado ou já utilizado.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.getByLabel('Código do convite').fill('');
   await page.screenshot({path:test.info().outputPath('aceite-negado.png'),fullPage:true});await page.getByRole('button',{name:'Voltar ao login',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByLabel('E-mail',{exact:true})).toBeFocused();
 });

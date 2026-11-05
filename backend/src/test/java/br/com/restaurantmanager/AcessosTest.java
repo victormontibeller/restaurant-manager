@@ -217,6 +217,36 @@ class AcessosTest {
             var b=mvc.perform(get(eventos(U1,-1)).header("Host",outroHost).header("Authorization","Bearer "+other)).andReturn().getResponse();
             assertThat(b.getStatus()).isEqualTo(200);assertThat(b.getContentAsString()).contains("Somente B").doesNotContain("A1");
             var a=consultar(token,eventos(U1,-1)).getResponse();assertThat(a.getStatus()).isEqualTo(200);assertThat(a.getContentAsString()).contains("A1").doesNotContain("Somente B");
+            reautenticar(token);
+            var body=Map.of("versao",0,"nome","Alterada somente A","fuso","UTC","ativa",true);
+            assertThat(alterar(token,"/api/v1/configuracoes/unidades/"+U1,body).getResponse().getStatus()).isEqualTo(200);
+            assertThat(mvc.perform(put("/api/v1/configuracoes/unidades/"+U1).header("Host",outroHost).header("Authorization","Bearer "+token)
+                    .contentType("application/json").content(mapper.writeValueAsString(body))).andReturn().getResponse().getStatus()).isEqualTo(401);
+            assertThat(alterar(other,"/api/v1/configuracoes/unidades/"+U1,body).getResponse().getStatus()).isEqualTo(401);
+            var unchanged=mvc.perform(get("/api/v1/configuracoes/unidades/"+U1).header("Host",outroHost).header("Authorization","Bearer "+other)).andReturn().getResponse();
+            assertThat(unchanged.getStatus()).isEqualTo(200);
+            assertThat(mapper.readTree(unchanged.getContentAsString()).get("nome").asText()).isEqualTo("Somente B");
+            assertThat(mapper.readTree(unchanged.getContentAsString()).get("versao").asLong()).isZero();
+            assertThat(mvc.perform(post("/api/v1/auth/reautenticar").header("Host",outroHost).header("Authorization","Bearer "+other)
+                    .contentType("application/json").content(mapper.writeValueAsString(Map.of("senha",senha)))).andReturn().getResponse().getStatus()).isEqualTo(204);
+            assertThat(mvc.perform(put("/api/v1/configuracoes/unidades/"+U1).header("Host",outroHost).header("Authorization","Bearer "+other)
+                    .contentType("application/json").content(mapper.writeValueAsString(Map.of("versao",0,"nome","Alterada somente B","fuso","UTC","ativa",true)))).andReturn().getResponse().getStatus()).isEqualTo(200);
+            var persisted=mapper.readTree(consultar(token,"/api/v1/configuracoes/unidades/"+U1).getResponse().getContentAsString());
+            assertThat(persisted.get("nome").asText()).isEqualTo("Alterada somente A");assertThat(persisted.get("versao").asLong()).isEqualTo(1);
+            var eventA=consultar(token,eventos(U1,-1)).getResponse();
+            var eventB=mvc.perform(get(eventos(U1,-1)).header("Host",outroHost).header("Authorization","Bearer "+other)).andReturn().getResponse();
+            assertThat(eventA.getStatus()).isEqualTo(200);
+            assertThat(eventA.getContentAsString()).contains("Alterada somente A").doesNotContain("Alterada somente B");
+            assertThat(eventB.getStatus()).isEqualTo(200);assertThat(eventB.getContentAsString()).contains("Alterada somente B").doesNotContain("Alterada somente A");
+            var eventsA=mapper.readTree(eventA.getContentAsString()).get("eventos");
+            var eventsB=mapper.readTree(eventB.getContentAsString()).get("eventos");
+            assertThat(eventsA.size()).isEqualTo(1);assertThat(eventsB.size()).isEqualTo(2);
+            for(var event:List.of(eventsA.get(0),eventsB.get(1))) {
+                assertThat(event.get("versao").asText()).isEqualTo("1");
+                assertThat(event.get("tipo").asText()).isEqualTo("UNIDADE_ALTERADA");
+            }
+            assertThat(eventsA.get(0).get("nome").asText()).isEqualTo("Alterada somente A");
+            assertThat(eventsB.get(1).get("nome").asText()).isEqualTo("Alterada somente B");
         }finally{
             try(var c=banco();var s=c.createStatement()){s.execute("delete from public.dominio where empresa_id='"+outra+"'");s.execute("delete from public.empresa where id='"+outra+"'");s.execute("drop schema "+outroSchema+" cascade");}
         }

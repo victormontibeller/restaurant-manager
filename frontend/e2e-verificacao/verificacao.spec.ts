@@ -8,8 +8,9 @@ if(!arquivo)throw new Error('Fixture privada de funcionários preexistentes obri
 const fixture=JSON.parse(fs.readFileSync(arquivo,'utf8')) as {contas:Record<string,{email:string;senha:string}>;captureDirectory:string};
 async function abrir(page:Page):Promise<void>{
   await page.goto('/');await expect(page.getByRole('button',{name:'Verificar e-mail existente',exact:true})).toBeEnabled();
-  await page.getByRole('button',{name:'Verificar e-mail existente',exact:true}).click();
+  await page.getByRole('button',{name:'Verificar e-mail existente',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.getByRole('heading',{name:'Verificar e-mail existente',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Verificar e-mail existente',exact:true})).toBeFocused();
 }
 async function solicitar(page:Page,email:string):Promise<string>{
   const anteriores=new Set(fs.existsSync(fixture.captureDirectory)?fs.readdirSync(fixture.captureDirectory):[]);

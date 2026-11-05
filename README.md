@@ -68,7 +68,11 @@ Os testes recusam qualquer alvo diferente de `rm_test`, roles `rm_test_owner`/`r
 Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL`; execute `npm --prefix frontend run e2e`. Instale browsers com o CLI Playwright; no Linux sem sudo, `scripts/install-browser-libs.py` extrai pacotes Ubuntu em prefixo privado. Relatórios e credenciais nunca vão ao Git.
 
 Probe unitário dos seletores de perfil: `node scripts/test_profile_selects.cjs`.
+Formulários/foco/erros locais: `node scripts/test_identity_forms.cjs`.
 Usa os componentes/templates Angular reais com API fictícia em memória, não E2E.
+O probe JIT de formulários testa o handler de retorno; emissão de `output()`
+no template compilado é verificada pelos E2E. `scripts/test-profile-templates.sh`
+executa ambos os probes nos três motores durante o build.
 Exige browser Playwright instalado; `RM_TEMPLATE_BROWSER=chromium|firefox|webkit`
 seleciona o motor, Chromium por padrão. A configuração privada de browsers/libs
 é a mesma do E2E; WebKit aceita o wrapper local em `RM_WEBKIT_EXECUTABLE`.

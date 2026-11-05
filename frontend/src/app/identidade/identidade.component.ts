@@ -53,20 +53,23 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
           <input #senha id="senha-conta" name="senha" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
           <button type="submit" [disabled]="ocupado()||encerramentoPendente()">{{ ocupado() ? 'Aguarde…' : 'Entrar' }}</button>
         </form>
-        <button type="button" (click)="recuperacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Recuperar senha</button>
-        <button type="button" (click)="cadastro.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Criar conta de cliente</button>
-        <button type="button" (click)="convite.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Aceitar convite de funcionário</button>
-        <button type="button" (click)="verificacao.set(true);erro.set('');aviso.set('')" [disabled]="ocupado()||encerramentoPendente()">Verificar e-mail existente</button>
+        <nav class="jornadas" aria-label="Acesso à conta">
+          <button type="button" (click)="abrirFormulario('recuperacao')" [disabled]="ocupado()||encerramentoPendente()">Recuperar senha</button>
+          <button type="button" (click)="abrirFormulario('cadastro')" [disabled]="ocupado()||encerramentoPendente()">Criar conta de cliente</button>
+          <button type="button" (click)="abrirFormulario('convite')" [disabled]="ocupado()||encerramentoPendente()">Aceitar convite de funcionário</button>
+          <button type="button" (click)="abrirFormulario('verificacao')" [disabled]="ocupado()||encerramentoPendente()">Verificar e-mail existente</button>
+        </nav>
       }
       @if (erro()) { <p #alerta class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
       @if (encerramentoPendente()) { <button type="button" (click)="sair()" [disabled]="ocupado()">Tentar encerrar novamente</button> }
       @if (aviso()) { <p aria-live="polite">{{ aviso() }}</p> }
     </section>
   `,
-  styles:`form{display:grid;gap:.5rem;max-width:28rem}input{width:100%;min-height:48px;border:1px solid #6b7a70;border-radius:.4rem;padding:.6rem;font:inherit}label{font-weight:650}form button{margin-top:.7rem}.erro{color:#9d2424;font-weight:600}`,
+  styles:`form{display:grid;gap:.5rem;max-width:28rem}input{width:100%;min-height:48px;border:1px solid #6b7a70;border-radius:.4rem;padding:.6rem;font:inherit}label{font-weight:650}form button{margin-top:.7rem}.jornadas{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}.erro{color:#9d2424;font-weight:600}`,
 })
 export class IdentidadeComponent {
   readonly sessao = inject(SessaoService);
+  private readonly elemento:ElementRef<HTMLElement>=inject(ElementRef);
   private readonly pendencias = inject(CriacaoPendenteService);
   private readonly convitesPendentes = inject(ConvitePendenteService);
   readonly ocupado = signal(true);
@@ -108,6 +111,12 @@ export class IdentidadeComponent {
     const pendente=!!(pessoa&&this.pendencias.daConta(pessoa.usuarioId)());
     const convite=!!(pessoa&&this.convitesPendentes.daConta(pessoa.usuarioId)());
     this.configuracaoBloqueada.set(pendente||convite);this.configuracao.set(pendente?'unidades':convite?'convites':'acessos');
+  }
+  abrirFormulario(area:'recuperacao'|'cadastro'|'convite'|'verificacao'):void {
+    if(this.ocupado()||this.encerramentoPendente())return;
+    this[area].set(true);this.erro.set('');this.aviso.set('');
+    const titulo=area==='convite'?'aceitar-convite-titulo':area+'-titulo';
+    setTimeout(()=>this.elemento.nativeElement.querySelector<HTMLElement>('#'+titulo)?.focus());
   }
   voltarAoLogin():void {
     this.recuperacao.set(false);

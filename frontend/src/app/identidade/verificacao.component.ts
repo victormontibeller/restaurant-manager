@@ -5,7 +5,7 @@ import {ApiFailure,SessaoService} from './sessao.service';
   selector:'app-verificacao',
   template:`
     <section aria-labelledby="verificacao-titulo" [attr.aria-busy]="ocupado()">
-      <h2 id="verificacao-titulo">Verificar e-mail existente</h2>
+      <h2 id="verificacao-titulo" tabindex="-1">Verificar e-mail existente</h2>
       <p>Confirme o e-mail de uma conta já cadastrada nesta empresa. Sua senha, seu perfil e suas unidades não serão alterados.</p>
       <p>Neste ambiente fictício, as mensagens são capturadas localmente; nenhum e-mail real é enviado.</p>
       <form (submit)="solicitar($event,email.value)">

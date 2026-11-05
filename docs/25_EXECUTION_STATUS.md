@@ -1,6 +1,60 @@
 # Checkpoint de execução
 
+## Incremento — ciclo22, 2026-11-05
+
+Worker21/fonte96769ac preservados sem interrupção ou repetição de build. Na
+consulta22:35Z, cinco parcelas somavam115 combinações aprovadas, zero falha/skip/
+flaky/retry; cadastro em execução. Não presumir resultado posterior nem global.
+
+Revisão independente identificou foco perdido e erros de senha sem associação
+ao campo. Vermelho pertinente reproduzido; corrigidos recuperação/cadastro/aceite,
+entrada na verificação e espaçamento dos botões públicos. Probes de componentes
+reais com serviço fictício passaram nos três motores; E2E ampliados, não executados
+no novo Angular. Typecheck/compilação de testes passaram. Duas lacunas de isolamento
+viraram testes PostgreSQL de cancelamento/reuso e escrita entre IDs coincidentes;
+execução local aguarda fim do worker, não concorrer com rm_test. Segunda revisão
+fortaleceu assertivas ARIA/eventos e liberação JDBC. Sem backend de produto alterado.
+
+Hml3cd4eeb saudável na retomada, baseline preservado. Sem deploy/promoção/merge.
+AGENTS segue bloqueado pelo executor; guia canônico contém autorização atual.
+Próximo: conferir CI/testes novos e recolher21; depois construir artefato único
+do incremento consolidado, foco de formulários e regressão integrada. Não atribuir
+matriz96769ac ao Angular alterado. Sprint01 aberta,02–05 não iniciadas.
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-22.md).
+
+## Encerramento — ciclo21, 2026-11-05
+
+Missão NÃO concluída. Aviso efetivo de orçamento quase esgotado após consulta
+22:06:19Z; depois somente handoff obrigatório. Publicado96769ac/PR3 OPEN draft,
+ambos checksCI aprovados e corpo relido. Sem merge/deploy/promoção/CONCLUSAO.json.
+
+Build único96769ac aprovado;23XML/173backend e hash conferidos. UI04/UI35 passaram
+dez combinações exatas/cinco projetos, zero falha/skip/flaky/retry; não repetidos.
+Worker632199 mantém candidato637235/fonte imutável e continua identidade restante
+na última consulta. Nenhum resultado global novo presumido. Não interromper,
+duplicar suíte ou reconstruir o artefato. Registros privados apontam fonte/job/
+manifests/logs; o rótulo de execução é de uso único e recusa reentrada.
+
+Hml3cd4eeb UP/PID399982 na última verificação, baseline449ce3c preservado. Matriz
+global, revisão visual restante, manutenção/troca/assistido/smokes/aceitação
+continuam pendentes. Quatro capturas de matriz/equipe registradas com hash;
+outros recortes inspecionados não equivalem à revisão integral. Documentos finais
+locais posteriores ao push preservados; nenhum código compilável novo. Recolher
+worker21 antes do próximo trabalho. Sprint01 aberta;02–05 não iniciadas.
+[Evidências e limites](evidencias/sprint-01-retomada-ciclo-21.md).
+
 ## Incremento — ciclo21, 2026-11-05
+
+Atualização21:57Z: build único96769ac aprovado/gate/hash conferidos,23XML/173backend
+sem falha/erro/skip. UI04/UI35 passaram dez combinações exatas nos cinco projetos,
+sem skip/flaky/retry; correção real verificada sem aumentar timeout. Ambos checksCI
+aprovados após um retry limitado de download Ubuntu falho. Worker632199 mantém
+candidato637235 e executa restante da matriz; não duplicar suíte nem build. Fonte
+imutável do job/hash e comandos no STATUS privado. Quatro capturas revisadas
+mobile/desktop com hash; UI35 revisado parcialmente topo/fim. Hml3cd4eeb UP,
+baseline preservado. Sem troca/manutenção/aceitação/merge novos. NÃO reconstruir
+para estes registros documentais. Próximo: recolher matriz/corrigir falhas,
+completar revisão visual e fases operacionais existentes; Sprint01 permanece aberta.
 
 Worker20 terminou21:20:20Z:42 aprovados/três falhas identidade, zero skip/flaky;
 manutenção/troca não executadas. Hml3cd4eeb UP/PID399982 e PR3 OPEN draft/head600274f
