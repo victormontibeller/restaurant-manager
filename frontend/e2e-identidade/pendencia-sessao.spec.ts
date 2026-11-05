@@ -55,6 +55,10 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real',a
   await page.getByRole('button',{name:'Salvar permissões'}).click();await gravada;
   try{await expect(page.getByRole('button',{name:'Gerenciar unidades',exact:true})).toBeDisabled();}finally{liberar();}
   const response=await recebida;expect(response.status()).toBe(200);await response.finished();
+  // A massa persistente gera milhares de controles de vínculos. O trace mostrou
+  // resposta entregue antes da reconciliação visual; esperar o estado de fim
+  // da operação, sem retry da escrita ou pausa fixa.
+  await expect(page.getByRole('region',{name:'Configurações de acessos'})).toHaveAttribute('aria-busy','false',{timeout:15000});
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   await expect(page.getByRole('button',{name:'Gerenciar unidades',exact:true})).toBeEnabled();
   await page.getByRole('button',{name:'Sair da conta'}).click();
