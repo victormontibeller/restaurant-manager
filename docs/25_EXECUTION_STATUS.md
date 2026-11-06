@@ -1,12 +1,42 @@
 # Checkpoint de execução
 
+## Sprint 2 — publicada para revisão, 2026-11-06
+
+Commit de implementação `27e36eac447cd163ad50b55c1bc6fa6552e85622`
+publicado em `origin/codex/sprint-02-catalogo-pwa`.
+[PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5)
+aberto para revisão, sem draft, com base `main` no merge do PR #4
+`19dff9d625d03cdba9d23bf023e88846743dec03`. Publicação solicitada pelo
+proprietário; nenhum merge, auto-merge ou deploy executado. Este registro
+documental acompanha o PR e não altera a aplicação validada localmente.
+
+Antes do commit, os 428 arquivos coincidiram com o manifesto final da validação;
+diff, formatação, links e scanners de segredos aprovados. Revisão independente
+dos 139 arquivos novos/alterados não encontrou bloqueador de publicação nem
+artefato privado. Os testes da aplicação não foram repetidos para publicar:
+262 testes backend e 295 pares únicos de navegador permanecem identificados
+na [evidência local](evidencias/sprint-02-local-2026-11-06.md).
+
+A CI desta entrega deve ser conferida no SHA exato do head nos
+[checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/5/checks);
+não herdar aprovação da base ou de outro commit. O workflow executa testes
+operacionais no runner Ubuntu, backend com PostgreSQL real e verificações
+frontend, mas não executa a matriz completa do release em homologação.
+
+**Linux/Hermes e homologação permanecem pendentes por orientação do proprietário:**
+UI29/UI31 com worker/gates reais, 50 smokes, restore e matriz integrada do novo
+release. Instalação física/PWA e piloto não estão aprovados. Próximo passo:
+revisão do PR; retomar homologação somente quando solicitado, reconciliando
+antes o estado real do Linux.
+
 ## Sprint 2 — implementação e testes locais concluídos, 2026-11-06
 
 Atendida a orientação de concluir a Sprint 2 localmente, preservando a divisão
 por domínio e deixando Linux/homologação pendentes. Branch
 `codex/sprint-02-catalogo-pwa`, baseada no merge do PR #4
 `19dff9d625d03cdba9d23bf023e88846743dec03`; novo `git fetch origin` confirmou
-`origin/main` nessa base. Alterações sem commit/push, merge ou deploy.
+`origin/main` nessa base. Nesse encerramento local, as alterações ainda estavam
+sem commit/push; a publicação posterior está registrada acima. Sem merge ou deploy.
 
 Funcionamento, catálogo/ofertas, adicionais/combos, mídia, favoritos, carrinho
 calculado pelo servidor e PWA implementados. Controller → Service → Repository,

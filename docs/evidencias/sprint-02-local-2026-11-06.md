@@ -7,8 +7,10 @@ homologação, instalação em aparelho físico e piloto permanecem pendentes.
 
 Branch `codex/sprint-02-catalogo-pwa`, baseada no merge do PR #4
 `19dff9d625d03cdba9d23bf023e88846743dec03`. Um novo `git fetch origin`
-confirmou essa base durante a validação. Alterações locais sem commit/push,
-merge ou deploy. P05/P06/P12/P13 foram confirmadas pelo proprietário, que
+confirmou essa base durante a validação. No encerramento dos testes, as alterações
+ainda estavam sem commit/push. A publicação posterior está registrada no
+[checkpoint](../25_EXECUTION_STATUS.md), sem merge ou deploy.
+P05/P06/P12/P13 foram confirmadas pelo proprietário, que
 orientou concluir desenvolvimento/testes locais e deixar Linux para depois.
 
 Ambiente macOS, Java 21.0.9, PostgreSQL 18.4 exclusivo do projeto em
