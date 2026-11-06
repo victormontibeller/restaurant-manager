@@ -1,12 +1,24 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo34, 2026-11-06
+## Estado vigente — ciclo35, 2026-11-06
 
-Mesmo JAR95 às08:15Z:155pares únicos aprovados — UI18×5, identidade45,
-eventos55, verificação15, cadastro20 e recuperação15 — com resultados/hashes/
-cobertura reabertos. Convites restantes e demais parcelas em execução;
-sem gate global.42capturas vinculadas:20principais/12complementos/10adicionais.
-Manutenção95, troca/smokes e aceitação pendentes. Revisão independente conferiu
+Baseline95 aceito em homologação:175backend/24XML,215pares UI01–43,20fundação
+e50smokes de identidades, total285pares únicos nos cinco projetos, sem falha/
+erro/skip/retry/flaky. Recibos/hashes/fontes/OIDs reabertos; não somar partidas
+frias nem matrizes antigas. Manutenção/troca/contas/aceitação nativas aprovadas.
+Revisão visual:56imagens32/34 e dez viewports hml adicionais, limites explícitos.
+Os sete critérios técnicosSprint01 foram conferidos. PR3 aberto, integração
+em main pendente; Sprints02–05, famílias futuras, Mac e piloto não aprovados.
+[Evidência final35](sprint-01-retomada-ciclo-35.md).
+
+## Histórico — ciclo34, 2026-11-06
+
+Consolidação final do mesmo JAR95:215pares únicos/10parcelas aprovados,
+sem falha/skip/retry/flaky, com resultados/hashes/cobertura reabertos e candidato
+recolhido.56capturas vinculadas:26principais/20complementos/10adicionais,
+com limites de componentes/viewports explícitos. Manutenção95 não iniciou
+por preflight incorreto do coordenador (dev recusado em helper test/hml).
+Troca/smokes/aceitação pendentes; nenhum gate global. Revisão independente conferiu
 rastreabilidade dos sete critérios, sem converter execução futura em aprovação.
 [Evidência34](sprint-01-retomada-ciclo-34.md).
 
@@ -203,7 +215,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | T03 | Não implementado/não executado | Sprint 02 |
 | T04 | Não implementado/não executado | Sprint 02 |
 | T05 | Não implementado/não executado | Sprint 02 |
-| T06 | Parcial, família não aprovada | Login, cadastro, recuperação, verificação e convites implementados/testados por artefato; regressão integrada/hml pendente |
+| T06 | Aprovado no escopo Sprint01 | Login/cadastro/recuperação/verificação/convites no95, com negativos, matriz integrada e hml; e-mail é captura fictícia |
 | T07 | Não implementado/não executado | Sprints 01–04 |
 | T08 | Não implementado/não executado | Sprint 04; provedor externo separado |
 | T09 | Não implementado/não executado | Sprints 03–04 |
@@ -220,12 +232,12 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | T20 | Não implementado/não executado | Sprint 02 |
 | T21 | Não implementado/não executado | Sprint 02 |
 | T22 | Não implementado/não executado | Sprints 01/04 |
-| T23 | Parcial, família não aprovada | CRUD lógico de unidades em validação; horários/regiões/parâmetros pendentes |
-| T24 | Parcial, família não aprovada | Equipe, vínculos e convites implementados; UI35 aprovado no96769ac; reexecução do Angular posterior e integração hml pendentes |
-| T25 | Parcial, família não aprovada | Matriz, concorrência e eventos cadastrais testados por artefato; gate integrado e ações operacionais futuras pendentes |
+| T23 | Parcial, família não aprovada | CRUD lógico de unidades aprovado no95; horários/regiões/parâmetros futuros pendentes |
+| T24 | Aprovado no escopo Sprint01 | Equipe/vínculos/convites e último Administrador, incluindo concorrência, revogação e UI35; matriz95 e hml conferidos |
+| T25 | Aprovado no escopo Sprint01 | Matriz versionada, conflito, autorização e revogação comprovados no95; isso não entrega ações de negócio de pedidos/pagamentos futuros |
 | T26 | Não implementado/não executado | Sprint 04; E04/E05 pendentes |
-| T27 | Parcial, família não aprovada | Acompanhamento cadastral da unidade em validação; eventos operacionais nas Sprints 03–04 |
-| T28 | Parcial, família não aprovada | HTTP/UI/CLI/fila, identidade SaaS e suspensão implementados; retomada operacional, gate integrado/hml e integração futura com pedidos pendentes |
+| T27 | Parcial, família não aprovada | Acompanhamento/exportação cadastral por unidade aprovados no95; eventos de pedidos/pagamentos e leitura nas Sprints03–04 |
+| T28 | Aprovado no escopo Sprint01 | Identidade SaaS, HTTP/UI/CLI/fila, retomada e suspensão conferidos; assistido28 histórico preservado e componentes compatíveis no95. Não há pedidos para homologar suspensão operacional futura |
 
 ## Cenários transversais
 
@@ -245,7 +257,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 | X12 | Não implementado/não executado | Sprints 02–04 |
 | X13 | Parcial, não aprovado como cenário completo | Pool/thread comprovados; jobs/mídia futuros |
 | X14 | Parcial, não aprovado como cenário completo | Shell informa offline; PWA/sessão/transações futuras |
-| X15 | Parcial, não aprovado como cenário completo | SHA/hash, restore isolado com aplicação e retorno nativo de banco após DDL/erro injetados comprovados; promoção/migration incompatível hml, mídia e recuperação integral pendentes |
+| X15 | Parcial, não aprovado como cenário completo | SHA/hash, restore isolado com aplicação, retorno nativo após DDL/erro e baseline95 aceito; mídia, recuperação integral e mudanças incompatíveis futuras pendentes |
 
 ## Incremento de provisionamento — retomada ciclo 4
 

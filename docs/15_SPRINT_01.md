@@ -1,20 +1,31 @@
 # Sprint 01 — Tenant, autenticação e acessos
 
 > **Escopo:** plano de execução; não altera as fontes normativas dos assuntos.
-> **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
+> **Situação:** implementação e validação do escopo abaixo concluídas em homologação fictícia; integração em `main` pendente. Não representa conclusão do produto nem aprovação do piloto.
 
 [Índice da documentação](README.md)
 
-**Status:** em andamento desde 2026-11-04; não concluída. Há implementação
-empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
-eventos cadastrais, exportação mínima e provisionamento assistido.
+**Status:** implementação e validação técnica encerradas em 2026-11-06,
+ciclo35; entrega integrada da Sprint ainda pendente do merge do PR #3 pelo
+proprietário. Homologação aceita no artefato95d278e:175 testes backend e285
+combinações únicas de navegador, sem falha/erro/skip/retry/flaky. Manutenção,
+troca composta, contas preservadas e baseline foram conferidos por leitura.
+Os cinco entregáveis e sete critérios abaixo têm evidências; marcar esses itens
+não declara integração em main, setup Mac, Sprints02–05 ou piloto concluídos.
+[Evidência final35](evidencias/sprint-01-retomada-ciclo-35.md) e
+[handoff Mac](27_HANDOFF_CODEX_MAC.md).
 
-Atualização ciclo34 às08:15Z: mesmo build95, sem reconstrução;155pares únicos
-aprovados, incluindo cadastro20 e recuperação15. Convites restantes/demais
-parcelas ainda em execução.42capturas inspecionadas/vinculadas, revisão integral pendente. Revisão
-independente rastreou os sete critérios aos testes existentes; manutenção95,
-troca composta, smokes e aceitação continuam pendentes. Não marcar critérios
-por antecipação. [Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
+Há identidade empresarial e SaaS, convites/verificação/recuperação,
+matriz/equipe/unidades, eventos cadastrais, exportação mínima e provisionamento
+assistido. Os registros abaixo são históricos; o estado vigente é o acima.
+
+Atualização final ciclo34: matriz32 aprovada em215pares únicos do JAR95,
+sem falha/skip/retry/flaky, fontes/hashes/resultados reabertos e candidato
+recolhido.56capturas-alvo/complementos/adicionais vinculadas com limites
+explícitos. Manutenção95 NÃO iniciou: preflight do coordenador chamou helper
+restrito a test/hml com dev e foi recusado. Corrigir apenas essa chamada,
+sem ampliar guardas nem repetir build/matriz. Troca, smokes e aceitação ainda
+pendentes; sete critérios não encerrados. [Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
 
 Histórico ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip.
 Worker32 aprovou UI18×5 e identidade45,50pares únicos conferidos; eventos em
@@ -104,23 +115,27 @@ Retomada ciclo 5 acrescenta acompanhamento cadastral por unidade com persistênc
 e polling autenticado, em validação. Revogação/projeção deste caso não aprova
 eventos de pedidos futuros nem encerra o gate integrado. [Evidência](evidencias/sprint-01-retomada-ciclo-5.md).
 
-- [ ] Registro de domínio/empresa, provisionamento retomável e migrações por schema.
-- [ ] Identidade empresarial/plataforma separada, JWT, refresh/revogação, convite e recuperação conforme P04.
-- [ ] Unidades, funcionários, perfis fixos, matriz com versão/auditoria e ações exclusivas do Administrador.
-- [ ] Política central de autorização e projeções de dados por função; escopo de unidade em consultas, mutações e eventos.
-- [ ] Estado operacional da empresa e regras de suspensão conforme P11, preservando reconciliação.
+- [x] Registro de domínio/empresa, provisionamento retomável e migrações por schema.
+- [x] Identidade empresarial/plataforma separada, JWT, refresh/revogação, convite e recuperação conforme P04.
+- [x] Unidades, funcionários, perfis fixos, matriz com versão/auditoria e ações exclusivas do Administrador.
+- [x] Política central de autorização e projeções de dados por função; escopo de unidade em consultas, mutações e eventos cadastrais.
+- [x] Estado operacional da empresa e suspensão conforme P11, preservando reconciliação do provisionamento. Operações de pedidos/pagamentos ainda não existem.
 
 ## Dependências
 
-Sprint 0; validar P04/P11 e durações de sessão. Captura local atende testes de e-mail; uso real exige provedor e domínio do [registro do piloto](23_PILOT_IMPLEMENTATION.md#registro-externo).
+Sprint 0 integrada. P04/P11 e política de sessões foram exercitadas no escopo
+fictício implementado; não são homologação de cobrança SaaS nem de comunicação
+externa. Captura local atende testes de e-mail; uso real exige provedor e domínio
+do [registro do piloto](23_PILOT_IMPLEMENTATION.md#registro-externo).
 
 ## Critérios de aceite
 
 ### Rastreabilidade para o fechamento
 
-Esta tabela indica onde procurar as provas, não aprova testes pendentes nem
-converte nomes de métodos em evidência de execução. O gate final deve reler os
-resultados do mesmo candidato e conferir também o runtime de homologação.
+Esta tabela localiza as provas. No ciclo35, os XML/JSON/hash/cobertura do
+candidato95 foram reabertos e o gate integrado confirmou também o runtime de
+homologação; o relato final vincula essas execuções. Nomes de métodos sozinhos
+não constituem evidência, e esta aprovação não se transfere a código posterior.
 
 | Critério abaixo | Suítes e jornadas correspondentes |
 | --- | --- |
@@ -137,13 +152,17 @@ T22 continua pendente no [inventário](evidencias/cobertura.md), assim como as
 jornadas operacionais futuras. O fechamento desta sprint não encerra essas
 famílias nem dispensa sua implementação e matriz final.
 
-- [ ] Pelo menos duas empresas com IDs/e-mails semelhantes, uma delas com duas unidades, demonstram isolamento em listagem, detalhe, alteração, exportação e evento. Funcionário autorizado em uma filial é impedido de consultar, alterar e receber eventos da outra filial da mesma empresa; trocar domínio/ID/claim não concede acesso.
-- [ ] Reutilizar conexão/thread após erro, cancelamento ou job não mantém schema anterior. Host desconhecido, tenant incompatível e sessão revogada falham fechado.
-- [ ] Permissão removida e unidade retirada passam a valer mesmo com access JWT não expirado; conexão de eventos perde acesso correspondente.
-- [ ] Refresh repetido, login concorrente, recuperação inválida/expirada e logout têm comportamento previsto; cookies/CSRF e limites de tentativa são verificados.
-- [ ] Edições simultâneas da matriz dão conflito explícito; impedir remoção do último Administrador inclusive sob concorrência.
-- [ ] Provisionamento interrompido retoma sem duplicação nem empresa parcialmente ativa; migração registra resultado por schema.
-- [ ] Login, recuperação e matriz são utilizáveis no celular, com erro por campo, foco e sem exigir tabela horizontal inacessível para ações essenciais.
+- [x] Pelo menos duas empresas com IDs/e-mails semelhantes, uma delas com duas unidades, demonstram isolamento em listagem, detalhe, alteração, exportação e evento. Funcionário autorizado em uma filial é impedido de consultar, alterar e receber eventos da outra filial da mesma empresa; trocar domínio/ID/claim não concede acesso.
+- [x] Reutilizar conexão/thread após erro, cancelamento ou job não mantém schema anterior. Host desconhecido, tenant incompatível e sessão revogada falham fechado.
+- [x] Permissão removida e unidade retirada passam a valer mesmo com access JWT não expirado; acompanhamento de eventos por polling perde acesso correspondente. Não é prova de SSE/WebSocket futuro.
+- [x] Refresh repetido, login concorrente, recuperação inválida/expirada e logout têm comportamento previsto; cookies/CSRF e limites de tentativa são verificados.
+- [x] Edições simultâneas da matriz dão conflito explícito; impedir remoção do último Administrador inclusive sob concorrência.
+- [x] Provisionamento interrompido retoma sem duplicação nem empresa parcialmente ativa; migração registra resultado por schema.
+- [x] Login, recuperação e matriz são utilizáveis em viewport mobile emulado, com erro por campo, foco e sem exigir tabela horizontal inacessível para ações essenciais. Aparelhos físicos e auditoria integral de acessibilidade não foram executados.
+
+**Pendência de entrega:** integração em `main` pelo proprietário e verificação
+posterior do SHA integrado. O aceite de baseline registra deliberadamente
+`sprint_complete=false`; não substitui o merge nem o fechamento do projeto.
 
 ## Documentos relacionados
 

@@ -4,6 +4,26 @@
 
 ## Escopo e retomada
 
+Resultado final observado às08:34Z: matriz32 terminou com215pares únicos nas
+dez parcelas, zero falha/skip/retry/flaky. Resultados, hashes e cobertura foram
+reabertos. Unidade inactive/MainPID0; preflight posterior confirmou ausência
+do candidato/cgroup e locks livres.56imagens vinculadas,26principais/
+20complementos/10adicionais; contrato visual validado, com os limites das notas.
+Isso não aprova páginas/controles não mostrados nem libera aceitação operacional.
+
+Manutenção95 NÃO iniciou. O comando de preflight chamou indevidamente
+`verify_policy` com dev; o helper corretamente admite apenas test/hml e
+recusou antes do `systemd-run`. É erro de coordenação, não regressão do produto.
+As políticas test/hml já haviam passado; verificações posteriores de conexões/
+runtime e gravação do recibo não executaram. Conferir dev separadamente e
+repetir apenas preflight corrigido/manutenção; não ampliar a guarda nem
+reconstruir/repetir a matriz. Aviso de orçamento veio depois dessa recusa;
+nenhuma nova verificação após o aviso. Handoff obrigatório preservado.
+
+Publicado3a5d7a7/PR3 OPEN draft, ambos checksCI aprovados; log confirma175backend
+e160Python. Este fechamento documental permanece local após o push.
+Os parágrafos abaixo registram o snapshot intermediário, não o término.
+
 Somente implementação/validação da Sprint 01 e passagem Codex/Mac. PR #3
 permanece aberto, sem merge pelo agente e sem iniciar Sprints 02–05.
 Na retomada, head `59bd4a45ec77e9569306b3abd4dcc85683cddca4` publicado e

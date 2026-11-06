@@ -1,5 +1,80 @@
 # Checkpoint de execução
 
+## Estado vigente — ciclo35, 2026-11-06
+
+Implementação e validação técnica da Sprint01 concluídas em homologação
+fictícia. Entrega integrada ainda PENDENTE do merge do PR #3 pelo proprietário;
+nenhum merge/auto-merge nem Sprint02–05. Escopo desta missão termina no handoff
+Codex/Mac; setupMac não executado/verificado. Não criar conclusão do projeto.
+
+Aplicação servida/aceita:95d278eebb275521ead3299fbb12f067f6e2419c,
+JARbb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d.
+Fonte operacional01e2724; aceitação por fonte imutável3a5d7a7, distinta das
+fontes dos testes. Mudanças documentais não exigiram rebuild. Build24XML/
+175backend e215pares mutantes da matriz32 reabertos, sem falha/erro/skip/retry/flaky.
+
+Manutenção95 aprovada08:51:56Z:4797tabelas/40457linhas, migrador/contas/negativos,
+três partidas nativas e retorno original16389; candidato223048 bloqueado.
+Troca composta terminou08:53:28Z no MESMO clonehml135836; nove contas revalidadas,
+sem seed/empresa repetidos. Fundação20 terminou08:55:15Z e smoke50 às09:03:18Z;
+consolidação285pares exatos do mesmo JAR, sem somar matrizes/partidas antigas.
+
+Aceitação real09:10:43Z; read-back09:11Z confirmou baseline95, estado/candidato/
+ledger identidade-aceita, HTTPS/UP/PID896547 e OIDs. Original16392 bloqueado e
+baseline449ce3c anterior preservados, NÃO restaurar banco pré-identidade. Após
+aceite, recover binário antigo também é recusado; seguir runbook compatível.
+Unidades/cleanup recolhidos. Dois revisores independentes; sete critérios
+rastreáveis e causa HQL fria encerrada delimitadamente, sem garantia global de
+performance.56capturas anteriores e dez viewports hml complementares revisados,
+com limites explícitos, sem alegar aparelhos físicos ou páginas não mostradas.
+
+Primeira consolidação recusou fonte dentro do próprio checkout, antes de
+intenção/aceite; runner imutável separado resolveu sem modificar guarda ou
+recibo. Não reconstruir/repetir suítes aprovadas por essa recusa.
+
+Relatório privado navegável gerado09:16:10Z:285cenários e70links existentes
+conferidos por parser, sem credenciais/fixtures no relatório. ACESSO.md0600
+preservado. Isso não representa execução do setupMac.
+
+Branch hermes/sprint-01-identidade-acessos, PR #3 aberto, base main. Última
+base publicada/CI conferida antes deste registro:3a5d7a7; consultar head e checks
+reais no GitHub, não inferir CI de commit documental posterior. Publicação do
+handoff e estado final do PR são relidos e registrados também no STATUS privado.
+Próximo responsável: proprietário revisa/integra PR3, prepara e valida ambiente
+Mac antes da próxima sprint. Nenhum gate pendente foi convertido em aprovação.
+[Evidência35](evidencias/sprint-01-retomada-ciclo-35.md) ·
+[Handoff utilizável](27_HANDOFF_CODEX_MAC.md).
+
+## Encerramento — ciclo34, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado recebido após preflight operacional;
+depois somente escritas obrigatórias de handoff, sem novas verificações.
+Sprint01 NÃO concluída. Sem manutenção nova, deploy, promoção, merge ou STOP.
+
+Matriz32 terminou:215pares únicos/10parcelas no JAR95, sem falha/skip/retry/flaky;
+todos JSONs/hashes/stats/coberturas reabertos. Unidade inactive/MainPID0 às08:34Z;
+preflight posterior confirmou candidato recolhido/cgroup ausente e locks livres.
+56imagens vinculadas:26principais/20complementos/10adicionais. Contrato visual
+validado com notas de limites; complete=true refere-se às capturas-alvo, NÃO
+à Sprint nem a páginas/controles não mostrados. Aceitação permanece false.
+
+Manutenção95 NÃO iniciou: preflight adicional chamou verify_policy com dev,
+mas esse helper aceita somente test/hml e recusou antes de systemd-run. É erro
+do comando de coordenação, não falha do produto; não ampliar a guarda. Políticas
+test/hml passaram; verificações posteriores de conexões/runtime não executaram
+nessa tentativa. Repetir somente preflight corrigido e manutenção após conferir
+estado real, sem repetir matriz/build/seed. Dev deve ser conferido separadamente,
+nunca admitido na manutenção. Recibo de preflight não chegou a ser gravado.
+
+Publicado3a5d7a7/PR3 OPEN draft/base main/head/corpo relidos; ambos checksCI
+aprovados, log175backend/160Python conferido. Estes registros finais ficam
+LOCAIS após o push. Hml97/UP/PID754824, clone135836/original16392 bloqueado e
+baseline449ce3c preservados na última leitura08:13:50Z; sem consulta posterior
+ao aviso. Fonte operacional01 e script de revalidação95 preparados/revisados,
+ainda não executados. Próximo: manutenção95, troca composta, revalidação das
+contas, fundação20/smoke50/aceitação e handoff final. Não retornar banco
+pré-identidade nem repetir empresa assistida28. Mac não verificado;02–05 fora.
+
 ## Incremento — ciclo34, 2026-11-06
 
 Missão vigente somente Sprint01/handoffMac. PR3 OPEN draft/head59bd4a4 e ambos

@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação técnica integrada; Sprint 01 em andamento. Homologação fictícia já serve um candidato de identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz e acompanhamento cadastral. Fundação e smoke das dez identidades foram verificados nos cinco projetos de navegador; isso não encerra a matriz integrada nem promove o baseline anterior, que permanece preservado. Exportação cadastral tem um novo candidato em validação. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação técnica integrada; implementação e validação técnica da Sprint 01 concluídas em homologação fictícia, com integração em main pendente no PR #3. O baseline aceito oferece identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz, acompanhamento e exportação cadastrais. Foram conferidos 175 testes backend e 285 combinações únicas de navegador, além de manutenção/retorno e revisão visual delimitada. Isso não aprova produção/piloto, aparelhos físicos ou setup Mac. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md) e no [handoff Mac](docs/27_HANDOFF_CODEX_MAC.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -99,7 +99,7 @@ em `https://plataforma.localhost:<PORTA>/?area=plataforma`, com origem dedicada
 configurável por `rm.platform.host`. Operador é cadastrado de forma assistida no
 registro público pelo owner; não reutiliza uma conta empresarial implicitamente.
 Os incrementos posteriores acrescentam formulários de solicitação de
-provisionamento e suspensão/reativação, com gates ainda pendentes no checkpoint.
+provisionamento e suspensão/reativação, validados no escopo fictício da Sprint01.
 O despacho assistido hml por UUID está no [runbook](docs/22_PRODUCTION_RUNBOOK.md#despacho-assistido-hml).
 API e fronteiras em
 [Segurança](docs/04_SECURITY.md) e [OpenAPI SaaS](docs/api/plataforma.yaml).

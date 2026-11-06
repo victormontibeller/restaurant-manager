@@ -227,11 +227,19 @@ SHA, hash e processo. Fundação sem identidades pode ser inventariada explicita
 o ensaio de restore de identidade continua exigindo contas de duas empresas.
 
 Health aprovado deixa estado `health-aprovado-e2e-pendente`, NÃO altera
-`healthy.json` e NÃO encerra a Sprint. O original bloqueado continua disponível
-para retorno. Esta versão não implementa aceitação definitiva desse candidato:
-matriz integrada e promotor Sprint01 continuam necessários antes de novo deploy.
+`healthy.json` e NÃO encerra a Sprint. No fluxo inicial do ciclo11, o original
+bloqueado permitia retorno antes de criar contas/dados no candidato. A aceitação
+de identidade foi acrescentada posteriormente, conforme a seção de consolidação
+e aceitação abaixo; matriz integrada e promotor continuam obrigatórios.
 
-`scripts/hml_maintenance.py rollback <TENTATIVA_PRIVADA>` confirma arquivos do
+**Não aplicar o retorno de banco abaixo ao estado atual da Sprint01.** Depois
+de contas/dados novos, de troca binária registrada ou de início da aceitação,
+restaurar o banco pré-identidade perderia dados. As guardas recusam esses estados.
+O modo `hml_frontend.py recover` só retorna o binário imediatamente anterior no
+mesmo clone enquanto a aceitação ainda não começou; após o aceite também fica
+recusado. Nova recuperação exige procedimento compatível explicitamente revisado.
+
+No estado inicial elegível, `scripts/hml_maintenance.py rollback <TENTATIVA_PRIVADA>` confirma arquivos do
 baseline, para apenas processo reconhecido, retorna o banco por OID, compara
 inventário e reinicia/verifica a unidade anterior. Preserva o candidato abandonado
 sem conexões; não apaga banco nem aplica down migration. JAR candidato corrompido

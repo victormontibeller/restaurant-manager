@@ -4,60 +4,32 @@
 
 ## Situação da passagem
 
-Preparação iniciada em 2026-11-06; **não é declaração de Sprint concluída**.
-O checkpoint registra o resultado mais recente. Escopo vigente: fechar somente
-Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta execução.
-
-Resumo vigente ciclo34 às08:15Z: build95 preservado;155pares únicos aprovados,
-incluindo cadastro20 e recuperação15; demais parcelas em execução.42capturas vinculadas;
-manutenção95/troca/smokes/aceitação continuam pendentes. Fonte operacional01
-limpa/compatível e revalidação das contas preparada, ainda não executada.
-Não repetir empresa assistida28 nem retornar banco pré-identidade.
-[Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
-
-Resumo histórico ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip;
-hashbb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d.
-Worker32 aprovou50pares únicos (UI18×5+identidade45) e segue eventos.32capturas
-novas inspecionadas/vinculadas; revisão integral continua pendente. Opt-in
-composto publicado01e2724/CI aprovada, conferido nos JARs reais, sem reconstrução.
-Nenhuma troca nativa nova; restante da matriz95, manutenção e smokes/aceitação
-continuam pendentes.
-[Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
-
-Resumo histórico do ciclo32: a correção da consulta fria tem quatro partidas
-aprovadas e sua matriz integrada31 terminou com215pares únicos conferidos.
-Correção acessível publicada em95d278e, ambos checksCI aprovados. Build nativo
-95 ativo na última consulta, ainda sem resultado; novo workerE2E preparado mas
-não iniciado. A revisão encontrou
-uma lacuna adicional de associação acessível dos erros de código/reautenticação.
-Correção Angular e probes passaram, mas novo artefato/E2E e gates operacionais
-continuam pendentes. Não confundir os resultados históricos abaixo com aceite
-do código posterior. [Evidência32](evidencias/sprint-01-retomada-ciclo-32.md).
-
-O modo operacional `login-startup` não aceita frontend diferente. O novo
-`login-startup-frontend` mantém a delimitação backend e permite static;
-comparação dos JARs reais e gates operacionais continuam obrigatórios.
-Não retornar ao banco anterior à identidade. Nenhuma operação nativa nova
-foi executada32 nem aprovada antecipadamente no ciclo33.
+Atualização do ciclo35, 2026-11-06: **implementação e validação técnica da
+Sprint01 concluídas em homologação fictícia; integração em main pendente.**
+Os cinco entregáveis e sete critérios foram conferidos, mas isso não declara
+entrega integrada. A missão termina na Sprint01/handoff; Sprints02–05 ficam
+para continuidade pelo proprietário. Setup macOS não foi executado.
 
 - Repositório: `victormontibeller/restaurant-manager`.
 - Branch: `hermes/sprint-01-identidade-acessos`; PR **#3**, base `main`.
-- Correção de produto publicada e CI aprovada:
-  `5cce633e515d76346da3b534e7f9ce3697a65eb3`. A consulta de login agora é
-  interpretada no startup; não está no JAR de homologação abaixo.
-  A guarda de aceitação foi entregue em `a94e475f7dec9c49a4dca40978880c0cb052f8c4`.
-  O head documental posterior deve ser consultado
-  com o comando abaixo, não inferido a partir deste snapshot.
-- Aplicação servida em homologação:
-  `97d75b09b5b783b18104812cf67fb2e18afdf76a`.
+- Fonte da aplicação e SHA servido desde08:53:28Z:
+  `95d278eebb275521ead3299fbb12f067f6e2419c`.
 - SHA-256 do JAR:
-  `34e207ff6f877d050ef2c9c485c6fb7ff32a2297abb8f2834cf852286ce91f47`.
-- Baseline anterior preservado: `449ce3ccf941c73b34ac15a4754183c147f91aaa`.
-  O candidato de identidade ainda não foi promovido. Não restaurar o banco
-  anterior à identidade: existem contas e uma empresa fictícia adicional no
-  banco atual. Recuperação compatível é assunto do [runbook](22_PRODUCTION_RUNBOOK.md).
-- PR permanece aberto; merge e integração em `main` aguardam o proprietário,
-  após os gates. Não apagar a branch aberta nem declarar entrega integrada.
+  `bb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d`.
+- Fonte operacional usada na troca/smokes:
+  `01e27240ed56f5a462fff1964aae8c094ea621bc`.
+- Último head publicado conferido antes deste handoff: `3a5d7a7ddb02b7153fd49194acfc86ab24cf8599`.
+  Commits documentais posteriores não mudam o JAR; consultar o head real pelo
+  comando abaixo. Não tentar gravar o hash do documento dentro do próprio commit.
+- Baseline95 aceito às09:10:43Z; registro anterior449ce3c preservado.
+  Troca composta executada no mesmo banco, sem migrations novas nem retorno de
+  dados. Não restaurar o banco pré-identidade: há contas e uma empresa fictícia
+  adicional que precisam ser preservadas.
+- PR aberto; merge e integração em `main` aguardam o proprietário após gates.
+  Não apagar a branch aberta nem declarar entrega integrada.
+
+Resultados atuais e limites na [evidência35](evidencias/sprint-01-retomada-ciclo-35.md).
+O [checkpoint](25_EXECUTION_STATUS.md) distingue passos concluídos dos pendentes.
 
 ## O que existe no produto
 
@@ -79,61 +51,51 @@ pela UI/API. O [inventário de cobertura](evidencias/cobertura.md) mantém as
 superfícies futuras explícitas. Não há envio externo de e-mail, pagamentos reais,
 produção ou piloto aprovado.
 
-## Evidências disponíveis e bloqueios
+## Evidências disponíveis e pendências
 
-No JAR indicado, a consolidação do ciclo28 conferiu:
+Provas do JAR95, sem atribuir a ele execuções de versões anteriores:
 
-- 174 testes backend, zero falha/erro/skip, em 23 XML.
-- 215 combinações mutantes UI01–43 × cinco projetos, mais 20 de fundação e 50
-  smokes de identidades hml: 285 pares únicos, sem somar retestes duplicados.
-- Manutenção nativa com clone/migração/retorno; despacho assistido hml com
-  read-back, replay, conflito e reconciliação sem reexecutar o Java.
-- Revisão visual com 26 capturas principais e 20 complementos, com limites de
-  viewport/componente registrados. Browsers mobile são emulados, não aparelhos.
+- Build nativo:175 testes backend em24 XML, zero falha/erro/skip.
+- Matriz32:215 combinações UI01–43 nos cinco projetos, zero falha/skip/retry/flaky.
+  Jornadas mutantes usam Angular/API reais e PostgreSQL exclusivo de testes.
+- Revisão visual:26 capturas principais,20 complementos e10 adicionais,
+  com notas/hash/origem. Limites de componente/viewport são explícitos;
+  mobile é emulado, não teste de aparelho nem auditoria integral de acessibilidade.
+- Manutenção35:4797 tabelas/40457 linhas, clone equivalente, migrador Java,
+  três partidas e contas/negativos, falha SQL injetada após DDL confirmado e
+  retorno ao banco original. Hml preservada durante o ensaio.
+- Troca nativa `login-startup-frontend` concluída; nove contas empresariais
+  revalidadas por login/me/logout e negação do JWT antigo. Sem novo seed.
+- Fundação hml:20 combinações; smoke das dez identidades:50 combinações,
+  ambos aprovados e encerrados. Consolidação real:285 pares únicos do mesmo JAR,
+  sem duplicatas/falha/skip/retry/flaky; não soma partidas frias nem matrizes antigas.
+- Aceitação real às09:10:43Z e leitura posterior de baseline, estado, ledger,
+  candidato e serviço confirmadas. Sem restart/migration na aceitação;
+  clone135836 e original16392 bloqueado preservados. Não equivale a merge.
 
-**Bloqueio:** UI18 falhou no ciclo27 em Firefox/WebKit. O reteste28 passou,
-mas não demonstrou correção da causa. Conferência de contagens não resolve
-instabilidade. O diagnóstico focado do ciclo29 está no checkpoint; consultar
-seu término antes de iniciar nova suíte. Não repetir build, manutenção,
-provisionamento ou todas as famílias apenas para investigar esse cenário.
+A causa demonstrada de UI18 foi corrigida por interpretação HQL no startup
+(`5cce633`), comprovada por teste de cache, quatro partidas frias Firefox/WebKit
+e regressão integrada95. A compatibilidade do backend desses dois JARs foi
+conferida byte a byte. Isso não explica toda latência histórica nem garante
+performance sob qualquer carga; falhas anteriores e diagnósticos limitados
+permanecem nas [evidências31](evidencias/sprint-01-retomada-ciclo-31.md) e
+[35](evidencias/sprint-01-retomada-ciclo-35.md). Não ampliar timeout/relaxar segurança.
 
-Atualização29b: a reprodução instrumentada com relógio corrigido voltou a
-falhar emFirefox e passou emWebKit. O primeiro login foi abortado pelo navegador
-em10009ms, mas o servidor só terminou200 em12547ms. Há custo de inicialização
-antes das amostras BCrypt; próxima investigação deve cobrir a primeira
-autenticação em processo novo, sem aquecimento exclusivo do teste ou aumento
-cego de timeout. Resultado e limites em
-[evidência29](evidencias/sprint-01-retomada-ciclo-29.md).
+O assistido28 criou uma empresa fictícia com UI/API/CLI, replay/conflito e
+reconciliação sem reexecutar Java. É prova histórica do97, não execução95.
+Os componentes de provisionamento/migrations não mudaram; UI29–31 foram
+executadas no95 em testes. A empresa adicional foi preservada na troca e
+permanece na expectativa independente do inventário SaaS. Não repetir o cadastro.
 
-No ciclo30, a mesma consulta HQL virou named query validada no startup.
-Teste vermelho/verde e dez regressões de identidade passaram (11 ao todo);
-ambos checks CI do5cce633 passaram, com175backend e152Python no log conferido.
-Build nativo único e ensaio frio de quatro partidas estão identificados no
-checkpoint; consultar resultados antes de iniciar outro trabalho pesado.
-Isso ainda não fecha UI18. Não alterar timeouts/criptografia nem aquecer apenas
-a fixture. [Evidência30](evidencias/sprint-01-retomada-ciclo-30.md).
-
-No ciclo31, as quatro partidas frias passaram sem retry/skip/flaky. Primeiro
-login no navegador: 3414, 3433, 5681 e 4006ms; JFR calibrado registrou HQL no
-startup, sem amostras desse parser nas autenticações observadas. Ausência de
-amostras não prova ausência de custo. A correção tem causa e prova delimitadas;
-não explica automaticamente toda lentidão histórica de navegação/reautenticação.
-Regressão integrada do novo JAR continua necessária. Build local recontado:
-24XML/175backend, zero falha/erro/skip, sem reconstrução.
-
-O novo backend não é uma troca somente de frontend. O modo padrão permanece
-restrito; o opt-in `login-startup` aceita apenas as três entradas do incremento
-revisado, preserva o clone e retorna somente o binário imediatamente anterior.
-Detalhes e limites no [runbook](22_PRODUCTION_RUNBOOK.md). Implementação/testes
-de coordenação não são execução nativa: troca e manutenção do novo JAR ainda
-pendentes neste registro. Não retornar o banco pré-identidade.
-
-A aceitação de baseline e o fechamento dos sete critérios da Sprint dependem
-da resolução fundamentada desse achado e dos gates restantes. O consolidador
-recusa manifestos com achados abertos ou sem revisão explícita. Não trocar
-flags para obter aprovação. Evidências privadas continuam no servidor; não
-copiar credenciais, fixtures, traces ou screenshots autenticados para o Git/PR.
-Acesso hml/túnel/contas continuam somente no arquivo privado `ACESSO.md` existente.
+Não reconstruir nem repetir matrizes aprovadas por alteração documental.
+O escopo de implementação/validação desta missão está encerrado; o proprietário
+deve revisar/integrar PR #3 antes da próxima sprint. Recuperação e mudanças
+incompatíveis devem seguir o [runbook](22_PRODUCTION_RUNBOOK.md), sem retornar
+ao banco pré-identidade. Após aceite, o antigo `hml_frontend.py recover` também
+recusa retorno; não contornar suas guardas.
+Evidências privadas ficam no servidor; não copiar credenciais, fixtures,
+traces ou screenshots autenticados para Git/PR. Acesso hml/túnel/contas
+continuam somente no arquivo privado `ACESSO.md` existente.
 
 ## Retomar o código no Mac
 
@@ -243,7 +205,7 @@ E2E requer browsers nativos instalados pelo CLI Playwright do próprio checkout,
 HTTPS, massa `rm_test`, fixtures e diretórios privados definidos. Usar as
 configurações específicas existentes; `playwright.convites.config.ts` e filtro
 `S01-UI18:` delimitam a investigação histórica de login frio. As jornadas
-alteradas no ciclo32 também precisam ser executadas no artefato correspondente.
+alteradas no ciclo32 foram executadas no95 no Linux; isso não valida o Mac.
 `RM_REPORT_DIR` deve apontar para diretório privado externo ao checkout;
 `RM_BASE_URL` deve ser a origem HTTPS da massa local e `RM_AUTH_FIXTURE` o arquivo
 privado das contas preparadas. A configuração de identidade exige host
