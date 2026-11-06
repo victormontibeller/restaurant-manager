@@ -63,3 +63,37 @@ Tentativa de atualizar AGENTS foi bloqueada pelo executor e não contornada.
 
 [Estratégia](../26_TEST_STRATEGY.md) · [Critérios](../15_SPRINT_01.md) ·
 [Checkpoint](../25_EXECUTION_STATUS.md)
+
+## Consolidação observada até01:10Z de2026-11-06
+
+Correção publicada em6f623bd, remoto/PR3 OPEN draft/head/corpo relidos. Ambos
+checks CI aprovados; um log confirma174backend sem falha/erro/skip,147Python,
+build e teste novo de exportação aprovados. Não é gate nativo desse artefato.
+Probe privado com componente Angular real passou em Chromium/Firefox/WebKit,
+larguras360/768/1280: pendência, falha sem download, foco e recuperação. Duas
+capturas corrigidas foram inspecionadas sem sucesso antigo visível; transporte
+FICTÍCIO, não JAR integrado. A guarda recusou realmente reutilizar6cd8a86 para
+a fonte compilável alterada, exigindo build novo.
+
+Worker24 agora tem185pares únicos aprovados, relatórios/hashes/cobertura
+reabertos; estado comercial e provisionamento ainda não consolidados. Sem
+resultado global presumido, sem interrupção ou reconstrução do job anterior.
+
+Revisão adicional de convites encontrou imagem mobile27850px e desktop17283px.
+Somente visão geral/recortes foram inspecionados, não todos os registros repetidos.
+Plataforma também teve inspeção parcial dos controles/avisos e primeiros cartões.
+Não houve novo defeito funcional observado nesses recortes; isso não aprova
+integralmente as páginas nem o candidato visualmente reprovado em exportação.
+
+A mesma correção de capturas foi aplicada aos testes irmãos: UI18 registra
+contexto/viewport, reautenticação, consulta, convite criado e paginação; UI24
+registra viewport/erro/estado, metadados e paginação; UI26 registra o formulário
+comercial inteiro. Nenhuma asserção de negócio, isolamento, quantidade, foco ou
+overflow removida. Não são screenshots de página inteira; notas futuras devem
+referenciar também os complementos. Typecheck e scanner passaram. Essas mudanças
+de testes são posteriores à revisão independente; E2E novo ainda pendente.
+
+Não foi acrescentada nova camada de orquestração. Próximo build será iniciado
+pelo runner durável existente somente após recolher worker24/candidato/locks,
+em fonte consolidada limpa. Se atravessar o ciclo, recolher seu resultado sem
+reconstruir. Hml3cd4eeb UP/baseline449ce3c preservados.

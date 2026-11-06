@@ -58,7 +58,8 @@ test('S01-UI26: suspensão e reativação exigem confirmação sem bloquear cons
     expect((await page.request.get(business.toString())).status()).toBe(200);
     await alterar(page);await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
-    await page.screenshot({path:test.info().outputPath('estado-comercial-mobile.png'),fullPage:true});
+    // Esta jornada valida o formulário comercial, não a lista SaaS repetida.
+    await page.locator('section[aria-labelledby="estado-comercial-titulo"]').screenshot({path:test.info().outputPath('estado-comercial-mobile.png')});
   }finally{await restaurar(page,token);}
 });
 test('S01-UI27: resposta perdida reconcilia detalhe e cartão sem repetir a escrita',async({page})=>{

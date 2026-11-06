@@ -99,7 +99,18 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   const retry=page.waitForResponse(r=>r.url().endsWith('/equipe/convites')&&r.request().method()==='POST');await page.getByRole('button',{name:'Reenviar mesma intenção',exact:true}).click();const response=await retry;
   expect(response.status()).toBe(200);expect((await response.json()).id).toBe(id);await expect(page.getByRole('button',{name:'Reenviar mesma intenção',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Recarregar convites',exact:true}).click();await expect(page.getByRole('heading',{name:email,exact:true})).toHaveCount(1);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.screenshot({path:test.info().outputPath('convites.png'),fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  // A massa acumulada alonga unidades e convites. Preservar os controles e o
+  // resultado desta intenção em capturas distintas, não em um PNG ilimitado.
+  const convites=page.locator('app-convites');
+  await page.getByRole('heading',{name:'Convites de funcionários',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:test.info().outputPath('convites-contexto.png'),fullPage:false});
+  await convites.locator('form').first().screenshot({path:test.info().outputPath('convites-reautenticacao.png')});
+  await page.getByLabel('E-mail do funcionário convidado').scrollIntoViewIfNeeded();
+  await page.screenshot({path:test.info().outputPath('convites-cadastro-viewport.png'),fullPage:false});
+  await convites.locator('form').filter({has:page.getByLabel('Identificador do convite')}).screenshot({path:test.info().outputPath('convites-consulta.png')});
+  await convites.getByRole('article').filter({has:page.getByRole('heading',{name:email,exact:true})}).screenshot({path:test.info().outputPath('convites.png')});
+  await page.getByRole('navigation',{name:'Páginas de convites',exact:true}).screenshot({path:test.info().outputPath('convites-paginacao.png')});
   await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
 });
 test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',async({page})=>{

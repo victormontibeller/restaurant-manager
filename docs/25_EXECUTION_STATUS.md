@@ -2,6 +2,14 @@
 
 ## Incremento — ciclo25, 2026-11-05 local
 
+Atualização01:10Z:6f623bd publicado, PR3/head/corpo relidos, ambos checksCI
+aprovados;174backend/147Python no log conferido. Probe Angular corrigido passou
+nos três motores com API FICTÍCIA, sem substituir E2E. Worker24 consolidou185pares
+únicos no6cd8a86; estado comercial/provisionamento ainda em execução. Capturas
+de convites/SaaS revisadas parcialmente; testes passam a registrar controles e
+resultado em imagens delimitadas, sem remover assertivas. Novo build ainda não
+iniciado; aguardar encerramento do worker/candidato/locks e usar fonte consolidada.
+
 Retomada conferiu Git/PR3 draft/CI5d9dbf8, hml3cd4eeb UP e bancos exclusivos.
 Worker24 preservado, sem reconstrução/interrupção:65pares únicos aprovados
 (20focos+45identidade), resultados/hashes/cobertura reabertos. Eventos e demais
