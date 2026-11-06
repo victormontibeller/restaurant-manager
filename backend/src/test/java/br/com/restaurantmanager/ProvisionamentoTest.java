@@ -103,6 +103,42 @@ class ProvisionamentoTest {
         assertThatThrownBy(() -> service.reservar(pedido(first.host()))).isInstanceOf(IllegalStateException.class);
     }
 
+    @Test void dominioSaasNaoReservaEmpresaPlanoOuSchema() throws Exception {
+        var command = pedido("plataforma.localhost");
+        assertThatThrownBy(() -> service.reservar(command))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Domínio indisponível para empresa.");
+        try (var c = owner(); var s = c.prepareStatement("select "
+                + "(select count(*) from public.empresa where id=?),"
+                + "(select count(*) from public.dominio where host=?),"
+                + "(select count(*) from public.provisionamento where empresa_id=?),"
+                + "(select count(*) from pg_namespace where nspname=?)")) {
+            s.setObject(1, command.id()); s.setString(2, command.host()); s.setObject(3, command.id());
+            s.setString(4, "t_" + command.id().toString().replace("-", ""));
+            try (var rows = s.executeQuery()) {
+                rows.next();
+                for (int coluna = 1; coluna <= 4; coluna++) assertThat(rows.getLong(coluna)).isZero();
+            }
+        }
+    }
+
+    @Test void retomadaRecusaDominioQuePassouASerOrigemSaas() throws Exception {
+        var command = pedido("p-" + UUID.randomUUID() + ".localhost");
+        service.reservar(command);
+        var ambiente = new java.util.HashMap<>(System.getenv());
+        ambiente.put("RM_PLATFORM_HOST", command.host());
+        assertThatThrownBy(() -> new ProvisionamentoService(ambiente).concluir(command.id()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Domínio indisponível para empresa.");
+        try (var c = owner(); var s = c.prepareStatement("select estado,"
+                + "exists(select 1 from pg_namespace where nspname=schema_name) from public.empresa where id=?")) {
+            s.setObject(1, command.id());
+            try (var rows = s.executeQuery()) {
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getString(1)).isEqualTo("PROVISIONANDO");
+                assertThat(rows.getBoolean(2)).isFalse();
+            }
+        }
+    }
+
     @Test void entradasMalformadasNaoReservamSchema() {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         for (String host : List.of("A.localhost", "a.localhost:8088", "a.localhost/rota", "a;drop.localhost", "a.example.com")) {

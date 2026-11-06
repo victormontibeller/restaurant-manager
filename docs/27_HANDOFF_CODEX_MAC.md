@@ -4,6 +4,13 @@
 
 ## Situação da passagem
 
+Atualização posterior ao handoff, 2026-11-06: o proprietário integrou o PR #3
+em `main` (`b50b9d1`). O checkout Mac foi sincronizado e a revisão anterior à
+Sprint 2 ocorre em `codex/revisao-pre-sprint-02`. Consulte o
+[checkpoint](25_EXECUTION_STATUS.md) para testes locais e limitações atuais.
+Os registros do ciclo35 abaixo descrevem a passagem histórica; a pendência de
+merge foi resolvida, sem alterar o artefato de homologação registrado.
+
 Atualização do ciclo35, 2026-11-06: **implementação e validação técnica da
 Sprint01 concluídas em homologação fictícia; integração em main pendente.**
 Os cinco entregáveis e sete critérios foram conferidos, mas isso não declara
@@ -99,7 +106,7 @@ continuam somente no arquivo privado `ACESSO.md` existente.
 
 ## Retomar o código no Mac
 
-**Setup macOS não executado nem verificado nesta missão.** Os comandos abaixo
+**Setup macOS não executado nem verificado na missão original do Hermes.** Os comandos abaixo
 são orientação baseada nos manifests e fontes do repositório; não comprovam
 compatibilidade operacional do Mac. Não copiar toolchains Linux para macOS.
 
@@ -213,3 +220,22 @@ privado das contas preparadas. A configuração de identidade exige host
 nomes são contratos existentes, não configuração Mac já criada. Relatórios locais não devem sobrescrever
 evidências do Linux. Registrar sistema, SHA, JAR/hash, banco e resultados reais
 antes de afirmar que o ambiente Mac está validado.
+
+## Resultado da revisão local posterior ao handoff
+
+A [revisão pré-Sprint 2 de 2026-11-06](evidencias/revisao-pre-sprint-02-2026-11-06.md)
+registra as verificações realmente executadas no Mac e os gates Linux pendentes.
+Os comandos operacionais baseados em systemd e `/proc` continuam restritos ao
+Linux; não são um bootstrap portátil. Os probes frontend podem ser executados
+por `npm --prefix frontend run test:logic` e, com browsers nativos instalados,
+`npm --prefix frontend run test:templates`.
+
+Planeje a massa E2E por bloco: contas diferentes no mesmo schema ainda
+compartilham a quota de login por origem (100 tentativas em 15 minutos).
+Uma rodada de identidade, recuperação, verificação e cadastro contabiliza
+90 tentativas; convites acrescenta 35. A matriz completa de eventos também
+pode ultrapassar a quota quando os cinco projetos rodam rapidamente sobre o
+mesmo schema. Preserve os contadores e aguarde a janela ou prepare empresas
+fictícias isoladas, com origem/fixtures verificadas. Não aumentar timeouts,
+ampliar limites ou limpar quotas para aprovar a matriz. Registre os blocos,
+tentativas anteriores e pares únicos efetivamente aprovados.

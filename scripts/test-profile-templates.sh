@@ -2,7 +2,7 @@
 # Templates reais; API unitária fictícia, sem PostgreSQL e sem promoção de release.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if [[ "${CI:-}" != "true" ]]; then
+if [[ "${CI:-}" != "true" && "$(uname -s)" == "Linux" ]]; then
   root="${RM_HOME:-$HOME/.local/share/restaurant-manager}"
   export PLAYWRIGHT_BROWSERS_PATH="$root/browsers"
   export LD_LIBRARY_PATH="$root/toolchains/browser-libs/usr/lib/x86_64-linux-gnu"

@@ -29,11 +29,13 @@ class ReleaseGuardsTest(unittest.TestCase):
     def test_runtime_nao_recebe_migracao_nem_chaves_arbitrarias(self):
         self.values['SPRING_APPLICATION_JSON'] = 'qualquer'
         self.values['RM_HML_PROVISIONING_ENABLED'] = 'true'
+        self.values['RM_PLATFORM_HOST'] = 'gestao.localhost'
         result = runtime_config(self.values)
         self.assertNotIn('MIGRATION', result)
         self.assertNotIn('SPRING', result)
         self.assertNotIn('RM_HML_PROVISIONING_ENABLED', result)
         self.assertIn('RM_DB_USER=rm_hml_app\n', result)
+        self.assertIn('RM_PLATFORM_HOST=gestao.localhost\n', result)
 
     def test_deploy_comum_recusa_manutencao_pendente_antes_de_ler_build(self):
         import runpy

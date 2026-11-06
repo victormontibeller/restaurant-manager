@@ -140,6 +140,9 @@ JDBC explícita e recusa contexto empresarial/transação ambiente. Não existe
 impersonação nem concessão implícita de Administrador de restaurante.
 
 Origem SaaS configurada por `rm.platform.host`, padrão local `plataforma.localhost`.
+Usar `RM_PLATFORM_HOST` com o mesmo valor no HTTP e nos comandos privilegiados;
+a reserva de domínio e as retomadas aplicam a mesma política descrita em
+[Tenancy](06_MULTI_TENANT.md).
 Host diferente ou também registrado para uma empresa falha fechado com 404;
 Forwarded não escolhe origem nem schema. A UI fica em `/?area=plataforma`, mas
 essa seleção visual não concede autenticação. API [documentada](api/plataforma.yaml).

@@ -36,7 +36,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 | [Piloto](23_PILOT_IMPLEMENTATION.md) | `23_PILOT_IMPLEMENTATION.md` | E01–E12, responsáveis e condições de início |
 | [Execução pelo Hermes/Codex](24_AGENT_EXECUTION.md) | `24_AGENT_EXECUTION.md` | Autonomia, ambiente, divisão de tarefas e retomada |
 | [Checkpoint vigente](25_EXECUTION_STATUS.md) | `25_EXECUTION_STATUS.md` | Tarefa, evidências, pendências e próximo passo |
-| [Passagem para Codex/Mac](27_HANDOFF_CODEX_MAC.md) | `27_HANDOFF_CODEX_MAC.md` | Código, evidências, bloqueios e preparação macOS não verificada |
+| [Passagem para Codex/Mac](27_HANDOFF_CODEX_MAC.md) | `27_HANDOFF_CODEX_MAC.md` | Histórico do handoff e referência à revisão atual no Mac |
 | [Testes completos](26_TEST_STRATEGY.md) | `26_TEST_STRATEGY.md` | Telas, jornadas, perfis, gates e relatório final |
 
 ## Sprints
@@ -44,7 +44,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 | Plano | Situação |
 | --- | --- |
 | [Sprint 0 — Fundação](14_SPRINT_00.md) | Fundação validada; PR #2 mesclado |
-| [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | Implementação/validação técnica concluídas em hml; PR #3 aguarda integração pelo proprietário |
+| [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | PR #3 integrado em `b50b9d1`; correções locais pré-Sprint 2 aguardam gates Linux/homologação |
 | [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Não iniciada |
 | [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Não iniciada |
 | [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | Não iniciada |
@@ -62,4 +62,4 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 
 ## Situação atual
 
-O estado de execução fica no [checkpoint vigente](25_EXECUTION_STATUS.md). A documentação descreve requisitos e critérios; somente evidências registradas da implementação permitem marcar entregas como concluídas. Revisão de links, coerência de escopo, permissões e estados não constitui teste da aplicação nem homologação externa.
+O estado de execução fica no [checkpoint vigente](25_EXECUTION_STATUS.md). A [revisão pré-Sprint 2](evidencias/revisao-pre-sprint-02-2026-11-06.md) registra achados, correções e limites de validação no Mac. A documentação descreve requisitos e critérios; somente evidências registradas da implementação permitem marcar entregas como concluídas. Revisão de links, coerência de escopo, permissões e estados não constitui teste da aplicação nem homologação externa.

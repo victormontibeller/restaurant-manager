@@ -1,2 +1,2 @@
-# Wrapper Windows oficial usa CRLF.
-*.cmd text eol=crlf whitespace=cr-at-eol
+# Preserva os bytes CRLF do wrapper Windows oficial já versionado.
+*.cmd -text whitespace=cr-at-eol

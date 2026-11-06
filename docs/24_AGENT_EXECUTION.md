@@ -7,9 +7,16 @@
 
 ## Fluxo e responsabilidades
 
-Escopo vigente desde 2026-11-06: terminar somente a implementação/validação da
+Na revisão Mac de 2026-11-06, o PR #3 foi confirmado como integrado pelo
+proprietário em `b50b9d1`. O escopo atual é revisar/corrigir a base antes da
+Sprint 2, em `codex/revisao-pre-sprint-02`, sem iniciar a próxima sprint.
+Resultados locais não substituem os gates de homologação. O parágrafo a seguir
+registra a delimitação da missão original do Hermes; sua pendência de merge
+foi resolvida pelo proprietário.
+
+Delimitação histórica da missão Hermes em 2026-11-06: terminar somente a implementação/validação da
 Sprint 01 e preparar passagem sanitizada para o proprietário continuar no
-Codex/Mac. Não iniciar Sprints 02–05 nesta execução. PR #3 permanece aberto:
+Codex/Mac. Não iniciar Sprints 02–05 nessa execução. Naquele handoff, PR #3 estava aberto:
 merge/auto-merge não são executados pelo agente; integração em `main` depende
 do proprietário, após os gates. A branch do PR aberto deve ser preservada.
 Esta delimitação substitui as autorizações históricas de avanço/merge abaixo.

@@ -64,6 +64,8 @@ def private_runtime_path(value, directory=False):
 
 def runtime_config(values, identity=False):
     keys: list[str] = list(RUNTIME_KEYS)
+    if 'RM_PLATFORM_HOST' in values:
+        keys.append('RM_PLATFORM_HOST')
     if identity:
         if any(not values.get(k) for k in IDENTITY_KEYS if k != 'RM_JWT_KEY_ID'):
             raise ValueError('Configuração de identidade/TLS incompleta.')

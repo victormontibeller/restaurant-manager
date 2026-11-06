@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação técnica integrada; implementação e validação técnica da Sprint 01 concluídas em homologação fictícia, com integração em main pendente no PR #3. O baseline aceito oferece identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz, acompanhamento e exportação cadastrais. Foram conferidos 175 testes backend e 285 combinações únicas de navegador, além de manutenção/retorno e revisão visual delimitada. Isso não aprova produção/piloto, aparelhos físicos ou setup Mac. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md) e no [handoff Mac](docs/27_HANDOFF_CODEX_MAC.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação e Sprint 01 integradas em `main` pelo PR #3 (`b50b9d1`). Há identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz, acompanhamento e exportação cadastrais. A [revisão pré-Sprint 2](docs/evidencias/revisao-pre-sprint-02-2026-11-06.md) registra correções e validação local no Mac; os gates Linux e a homologação dessas correções permanecem pendentes. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e próximos passos ficam no [checkpoint](docs/25_EXECUTION_STATUS.md) e no [handoff Mac](docs/27_HANDOFF_CODEX_MAC.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -43,7 +43,7 @@ Comece pelo [índice da documentação](docs/README.md). Os arquivos seguem a or
 - [Roadmap e sprints](docs/13_ROADMAP.md), [critérios de entrega](docs/12_DEFINITION_OF_DONE.md) e [condições do piloto](docs/23_PILOT_IMPLEMENTATION.md).
 - [Ambientes e operação](docs/22_PRODUCTION_RUNBOOK.md) e [guia de contribuição](AGENTS.md).
 - [Execução pelo Hermes/Codex](docs/24_AGENT_EXECUTION.md) e [checkpoint de retomada](docs/25_EXECUTION_STATUS.md).
-- [Passagem da Sprint 01 para Codex no Mac](docs/27_HANDOFF_CODEX_MAC.md), com bloqueios e setup macOS ainda não verificado.
+- [Passagem da Sprint 01 para Codex no Mac](docs/27_HANDOFF_CODEX_MAC.md), com histórico do handoff e referência às verificações locais atuais.
 - [Validação completa de telas, jornadas e acessos](docs/26_TEST_STRATEGY.md).
 
 Decisões confirmadas, premissas propostas e dependências externas permanecem identificadas. Os critérios descritos são trabalho a executar, não evidência de implementação concluída.
@@ -56,7 +56,9 @@ Com Java 21/Maven e Node 26 no PATH, e as variáveis de banco configuradas em am
 
 ```bash
 npm --prefix frontend ci --ignore-scripts
+npm --prefix frontend run format:check
 npm --prefix frontend run typecheck
+npm --prefix frontend run test:logic
 npm --prefix frontend run build
 bash backend/mvnw -B -ntp -f backend/pom.xml verify
 python3 scripts/check-repository.py
@@ -68,6 +70,11 @@ Os testes recusam qualquer alvo diferente de `rm_test`, roles `rm_test_owner`/`r
 
 Para Playwright: defina `RM_REPORT_DIR` absoluto fora do checkout e `RM_BASE_URL`; execute `npm --prefix frontend run e2e`. Instale browsers com o CLI Playwright; no Linux sem sudo, `scripts/install-browser-libs.py` extrai pacotes Ubuntu em prefixo privado. Relatórios e credenciais nunca vão ao Git.
 
+Os probes de lógica têm lista única em `scripts/test-frontend.cjs`, usada por
+`npm --prefix frontend run test:logic`, CI e build de release.
+O padrão de legibilidade e modularidade fica nas [convenções Angular](docs/10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
+Use `npm --prefix frontend run format` para aplicar a formatação de código.
+Templates com navegador: `npm --prefix frontend run test:templates`.
 Probe unitário dos seletores de perfil: `node scripts/test_profile_selects.cjs`.
 Formulários/foco/erros locais: `node scripts/test_identity_forms.cjs`.
 Usa os componentes/templates Angular reais com API fictícia em memória, não E2E.
@@ -80,7 +87,7 @@ seleciona o motor, Chromium por padrão. A configuração privada de browsers/li
 
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
-Hermes usa o provedor `openai-codex` autenticado atual. O escopo vigente de 2026-11-06 limita esta execução ao fechamento da Sprint 01 e passagem para Codex/Mac, sem iniciar Sprints 02–05; PR aberto e integração em main pelo proprietário após os gates. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
+Hermes usa o provedor `openai-codex` autenticado atual. O escopo vigente de 2026-11-06 limita esta execução ao fechamento da Sprint 01 e passagem para Codex/Mac, sem iniciar Sprints 02–05. O PR #3 já foi integrado pelo proprietário; a revisão Mac preserva esse limite de escopo. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
 
 ### Provisionamento local em desenvolvimento/testes
 

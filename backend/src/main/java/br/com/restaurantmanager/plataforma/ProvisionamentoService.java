@@ -1,6 +1,6 @@
 package br.com.restaurantmanager.plataforma;
 
-import java.nio.charset.StandardCharsets;
+import br.com.restaurantmanager.identidade.PoliticaSenha;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
@@ -9,10 +9,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 /** Caso de uso privilegiado executado fora do servidor HTTP; não é um bean runtime. */
 public final class ProvisionamentoService {
     private final ProvisionamentoRepository repository;
+    private final DominioPlataforma plataforma;
     private final BCryptPasswordEncoder passwords = new BCryptPasswordEncoder(12);
 
     public ProvisionamentoService(Map<String, String> env) {
         repository = new ProvisionamentoRepository(env);
+        plataforma = new DominioPlataforma(env.getOrDefault("RM_PLATFORM_HOST", DominioPlataforma.PADRAO));
     }
 
     public Resultado provisionar(Pedido pedido) throws SQLException {
@@ -22,6 +24,7 @@ public final class ProvisionamentoService {
 
     public void reservar(Pedido pedido) throws SQLException {
         validar(pedido);
+        plataforma.exigirDisponivel(pedido.host());
         try (var c = repository.abrirComLock()) {
             if(repository.reservadoNaFila(c,pedido.id(),pedido.host()))
                 throw new IllegalStateException("Reserva pertence à fila SaaS; processe a solicitação original.");
@@ -59,6 +62,7 @@ public final class ProvisionamentoService {
         try(var c=repository.abrirComLock()) {
             var pedido=repository.solicitacao(c,id);
             if(pedido==null)throw new IllegalArgumentException("Solicitação não encontrada.");
+            plataforma.exigirDisponivel(pedido.host());
             if(pedido.estado().equals("FALHOU"))throw new IllegalStateException("Solicite retomada pela plataforma.");
             try {
                 var existente=repository.buscar(c,id);
@@ -85,6 +89,7 @@ public final class ProvisionamentoService {
     private Resultado concluir(java.sql.Connection c,UUID id) throws SQLException {
             var registro = repository.buscar(c, id);
             if (registro == null) throw new IllegalArgumentException("Provisionamento não encontrado.");
+            plataforma.exigirDisponivel(registro.host());
             if (registro.estado().equals("ATIVO")) return new Resultado(id, registro.schema(), "ATIVO");
             if (!java.util.List.of("PROVISIONANDO", "FALHOU").contains(registro.estado())) {
                 throw new IllegalStateException("Estado empresarial não permite provisionamento.");
@@ -121,7 +126,7 @@ public final class ProvisionamentoService {
                 || !p.email().matches("[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9-]+)+")) {
             throw new IllegalArgumentException("E-mail normalizado inválido.");
         }
-        if (p.senha() == null || p.senha().length() < 12 || p.senha().getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (!PoliticaSenha.novaSenhaValida(p.senha())) {
             throw new IllegalArgumentException("Senha deve ter pelo menos 12 caracteres e no máximo 72 bytes.");
         }
     }

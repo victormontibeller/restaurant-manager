@@ -40,6 +40,15 @@ O provisionamento local usa processo privilegiado separado, não bean/runtime HT
 
 O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. O provisionador aceita `dev`/`test`; o opt-in restrito de hml e seus gates estão descritos adiante. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. Identidade SaaS segue [Segurança](04_SECURITY.md); solicitação HTTP, suspensão comercial e despacho assistido estão descritos abaixo. O [checkpoint](25_EXECUTION_STATUS.md) identifica os artefatos e resultados efetivamente implantados, sem transferir aprovação entre incrementos.
 
+O domínio da plataforma é reservado também nos comandos privilegiados, antes da
+reserva, retomada ou processamento da fila. Para personalizá-lo, fornecer o mesmo
+`RM_PLATFORM_HOST` ao HTTP e ao CLI; no Spring corresponde a `rm.platform.host`.
+O padrão dos dois processos é `plataforma.localhost`. Divergência entre essas
+configurações não é permitida: uma empresa não pode ocupar a origem SaaS.
+Se o domínio configurado mudar depois da solicitação/reserva, a retomada recusa
+o conflito sem criar schema ou ativar a empresa; corrigir a configuração antes
+de repetir. Não há remoção automática de domínio já persistido.
+
 JDBC atende à infraestrutura privilegiada de provisionamento/migração e ao registro
 público explícito da identidade SaaS, fora do EntityManager que exige tenant já
 provisionado. O serviço SaaS utiliza apenas credencial runtime e transação própria;

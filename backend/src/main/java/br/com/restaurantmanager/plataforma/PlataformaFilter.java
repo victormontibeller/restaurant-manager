@@ -15,17 +15,16 @@ import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class PlataformaFilter extends OncePerRequestFilter {
-    private final String host;
+    private final DominioPlataforma dominio;
     private final ObjectMapper mapper;
     private final JdbcTemplate jdbc;
-    public PlataformaFilter(@Value("${rm.platform.host:plataforma.localhost}") String host,ObjectMapper mapper,JdbcTemplate jdbc) {
-        if(!host.matches("[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?"))throw new IllegalStateException("Domínio SaaS inválido.");
-        this.host=host;this.mapper=mapper;this.jdbc=jdbc;
+    public PlataformaFilter(@Value(DominioPlataforma.CONFIGURACAO) String host,ObjectMapper mapper,JdbcTemplate jdbc) {
+        this.dominio=new DominioPlataforma(host);this.mapper=mapper;this.jdbc=jdbc;
     }
     @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain) throws ServletException,IOException {
         // Host é origem configurada, nunca um seletor de schema ou um header de proxy livre.
-        if(!host.equalsIgnoreCase(request.getServerName()) || !TenantScope.current().equals("__none__")
-                || Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from public.dominio where host=?)",Boolean.class,host))) {
+        if(!dominio.reservado(request.getServerName()) || !TenantScope.current().equals("__none__")
+                || Boolean.TRUE.equals(jdbc.queryForObject("select exists(select 1 from public.dominio where host=?)",Boolean.class,dominio.host()))) {
             response.setStatus(404);response.setContentType("application/json");mapper.writeValue(response.getOutputStream(),ApiError.of("PLATAFORMA_INDISPONIVEL","Plataforma indisponível."));return;
         }
         chain.doFilter(request,response);

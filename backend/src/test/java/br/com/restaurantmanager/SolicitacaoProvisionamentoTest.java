@@ -153,6 +153,17 @@ class SolicitacaoProvisionamentoTest {
         assertThat(contar("select count(*) from public.solicitacao_provisionamento where id=?",id)).isEqualTo(1);
         assertThat(contar("select count(*) from public.auditoria_solicitacao_provisionamento where solicitacao_id=?",id)).isEqualTo(1);
     }
+    @Test void senhaBrancaNaoCriaSolicitacaoNemReservaAdministradorInutilizavel() throws Exception {
+        for (String senhaInicial : java.util.List.of(" ".repeat(12), "\u2003".repeat(12))) {
+            UUID id=UUID.randomUUID();
+            var p=new java.util.HashMap<>(pedido(id));p.put("senha",senhaInicial);
+            var resposta=criar(p).getResponse();
+            assertThat(resposta.getStatus()).isEqualTo(400);
+            assertThat(mapper.readTree(resposta.getContentAsString()).get("codigo").asText()).isEqualTo("ENTRADA_INVALIDA");
+            assertThat(contar("select count(*) from public.solicitacao_provisionamento where id=?",id)).isZero();
+            assertThat(contar("select count(*) from public.empresa where id=?",id)).isZero();
+        }
+    }
     @Test void auditoriaFalhaReverteSolicitacaoSemReservaParcial() throws Exception {
         UUID id=UUID.randomUUID();String constraint="teste_pedido_"+id.toString().replace("-","");
         try(var c=owner();var s=c.createStatement()){s.execute("alter table public.auditoria_solicitacao_provisionamento add constraint "+constraint+" check(solicitacao_id<>'"+id+"'::uuid) not valid");}
@@ -160,6 +171,18 @@ class SolicitacaoProvisionamentoTest {
         finally{try(var c=owner();var s=c.createStatement()){s.execute("alter table public.auditoria_solicitacao_provisionamento drop constraint "+constraint);}}
         assertThat(contar("select count(*) from public.solicitacao_provisionamento where id=?",id)).isZero();
     }
+    @Test void trabalhadorRecusaSolicitacaoQuePassouAUsarOrigemSaas() throws Exception {
+        UUID id=UUID.randomUUID();var p=pedido(id);assertThat(criar(p).getResponse().getStatus()).isEqualTo(202);
+        var ambiente=new java.util.HashMap<>(System.getenv());ambiente.put("RM_PLATFORM_HOST",(String)p.get("host"));
+        assertThatThrownBy(()->new ProvisionamentoService(ambiente).processarSolicitacao(id))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("Domínio indisponível para empresa.");
+        assertThat(contar("select count(*) from public.empresa where id=?",id)).isZero();
+        assertThat(contar("select count(*) from public.auditoria_provisionamento where empresa_id=?",id)).isZero();
+        assertThat(mapper.readTree(consultar(id).getResponse().getContentAsString()).get("estado").asText()).isEqualTo("SOLICITADO");
+        mvc.perform(get("/api/v1/plataforma/auth/me").header("Host",HOST).header("Authorization","Bearer "+token))
+                .andExpect(status().isOk());
+    }
+
     @Test void cliLegadoNaoTomaReservaDaApiNemCriaHashDivergente() throws Exception {
         UUID id=UUID.randomUUID();var p=pedido(id);assertThat(criar(p).getResponse().getStatus()).isEqualTo(202);
         var service=new ProvisionamentoService(System.getenv());

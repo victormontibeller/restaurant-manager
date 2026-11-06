@@ -1,7 +1,6 @@
 package br.com.restaurantmanager.identidade;
 
 import br.com.restaurantmanager.unidades.Unidade;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
@@ -80,7 +79,7 @@ public class ConviteService {
         return resumo(convite);
     }
     public void aceitar(String codigo,String senha,String origem) {
-        if(senha.length()<12||senha.getBytes(StandardCharsets.UTF_8).length>72)throw new AuthFailure(422,"SENHA_INVALIDA","Use pelo menos 12 caracteres e no máximo 72 bytes na senha.");
+        if(!PoliticaSenha.novaSenhaValida(senha))throw new AuthFailure(422,"SENHA_INVALIDA","Use pelo menos 12 caracteres e no máximo 72 bytes na senha.");
         confirmacoes.executar("convite-confirmar:"+origem,()->aceitarTransacao(codigo,senha));
     }
     private void aceitarTransacao(String raw,String senha) {

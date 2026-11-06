@@ -6,7 +6,7 @@ A documentação canônica fica em `docs/`, organizada por assunto e sprint. Est
 
 - Use PT-BR na documentação, interface e mensagens de validação. Prefira linguagem direta e termos consistentes com o domínio.
 - Comece pelo [índice](docs/README.md) e leia a fonte do assunto afetado antes de editar. Diferencie decisões confirmadas, premissas propostas e dependências externas; o registro central fica em [Visão do projeto](docs/00_PROJECT_VISION.md).
-- Neste estágio há somente documentação. Não declare implementado, testado ou homologado o que ainda é um requisito.
+- A fundação e a Sprint 1 têm implementação; consulte o checkpoint para versões e evidências. Não declare implementado, testado ou homologado o que ainda é um requisito.
 - Preserve alterações existentes do usuário. Não altere os projetos de referência. O fluxo pelo Hermes está autorizado a avançar autonomamente pelo roadmap, implementar, testar, corrigir, criar branches/commits, fazer push e deploy em homologação conforme o [guia](docs/24_AGENT_EXECUTION.md#autonomia), sem confirmação a cada etapa. Merge em `main` e produção permanecem fora da autorização automática. A configuração documental não inicia nem instala a execução no Linux.
 
 Leia também a sprint relacionada e os critérios de entrega. Não crie cópias integrais das regras no AGENTS, no README ou no relato da sprint; atualize a fonte do assunto e suas referências.

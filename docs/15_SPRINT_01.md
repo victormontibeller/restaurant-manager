@@ -1,19 +1,19 @@
 # Sprint 01 — Tenant, autenticação e acessos
 
 > **Escopo:** plano de execução; não altera as fontes normativas dos assuntos.
-> **Situação:** implementação e validação do escopo abaixo concluídas em homologação fictícia; integração em `main` pendente. Não representa conclusão do produto nem aprovação do piloto.
+> **Situação:** implementação integrada em `main` pelo PR #3 (`b50b9d1`). Evidências de homologação abaixo pertencem ao candidato histórico; correções da revisão no Mac exigem validação própria. Não representa conclusão do produto nem aprovação do piloto.
 
 [Índice da documentação](README.md)
 
-**Status:** implementação e validação técnica encerradas em 2026-11-06,
-ciclo35; entrega integrada da Sprint ainda pendente do merge do PR #3 pelo
-proprietário. Homologação aceita no artefato95d278e:175 testes backend e285
+**Status:** PR #3 integrado pelo proprietário em 2026-11-06 às 11:17 (Brasília),
+confirmado no GitHub e na ancestralidade de `main` (`b50b9d1`). Revisão pré-Sprint 2
+em branch dedicada no Mac. Homologação histórica aceita no artefato95d278e:175 testes backend e285
 combinações únicas de navegador, sem falha/erro/skip/retry/flaky. Manutenção,
 troca composta, contas preservadas e baseline foram conferidos por leitura.
 Os cinco entregáveis e sete critérios abaixo têm evidências; marcar esses itens
-não declara integração em main, setup Mac, Sprints02–05 ou piloto concluídos.
+não transfere a aprovação para correções posteriores, setup Mac, Sprints02–05 ou piloto.
 [Evidência final35](evidencias/sprint-01-retomada-ciclo-35.md) e
-[handoff Mac](27_HANDOFF_CODEX_MAC.md).
+[handoff Mac](27_HANDOFF_CODEX_MAC.md). A [revisão posterior ao merge](evidencias/revisao-pre-sprint-02-2026-11-06.md) registra correções e novas verificações locais.
 
 Há identidade empresarial e SaaS, convites/verificação/recuperação,
 matriz/equipe/unidades, eventos cadastrais, exportação mínima e provisionamento
@@ -160,9 +160,10 @@ famílias nem dispensa sua implementação e matriz final.
 - [x] Provisionamento interrompido retoma sem duplicação nem empresa parcialmente ativa; migração registra resultado por schema.
 - [x] Login, recuperação e matriz são utilizáveis em viewport mobile emulado, com erro por campo, foco e sem exigir tabela horizontal inacessível para ações essenciais. Aparelhos físicos e auditoria integral de acessibilidade não foram executados.
 
-**Pendência de entrega:** integração em `main` pelo proprietário e verificação
-posterior do SHA integrado. O aceite de baseline registra deliberadamente
-`sprint_complete=false`; não substitui o merge nem o fechamento do projeto.
+**Revisão posterior ao merge:** integração de `b50b9d1` verificada no Mac;
+correções pré-Sprint 2 ainda não são um novo release homologado. O aceite histórico
+de baseline registra `sprint_complete=false`; esse recibo permanece preservado.
+Resultados atuais e próximos gates ficam no [checkpoint](25_EXECUTION_STATUS.md).
 
 ## Documentos relacionados
 

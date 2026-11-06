@@ -36,6 +36,12 @@ def validate_fictitious(data):
             'Solicitação deve usar domínio local e identidade fictícia.')
 
 
+def validate_platform_host(runtime, configured):
+    require(runtime.get(b'RM_PLATFORM_HOST', b'plataforma.localhost')
+            == configured.get('RM_PLATFORM_HOST', 'plataforma.localhost').encode(),
+            'Domínio SaaS divergente entre HTTP e provisionador.')
+
+
 def durable_directory(root, parts):
     path = root
     for part in parts:
@@ -118,6 +124,7 @@ def main():
         before = verify(root, gate['git_sha'])
         environ = dict(x.split(b'=', 1) for x in Path('/proc/%s/environ' % before['pid']).read_bytes().split(b'\0') if b'=' in x)
         validate_runtime(before, gate, environ)
+        validate_platform_host(environ, os.environ)
         require(not any(k.startswith(b'RM_MIGRATION_') for k in environ), 'HTTP contém credencial privilegiada.')
         require(environ.get(b'RM_DB_PASSWORD') == os.environ['RM_DB_PASSWORD'].encode(), 'Credencial runtime divergente.')
         database = runtime_database(root, gate)
