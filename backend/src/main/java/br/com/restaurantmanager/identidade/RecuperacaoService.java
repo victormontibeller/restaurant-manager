@@ -1,6 +1,5 @@
 package br.com.restaurantmanager.identidade;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
@@ -34,7 +33,7 @@ public class RecuperacaoService {
     }
     public void confirmar(String raw,String senha,String origem) {
         protecao.exigirConfiguracao(); captura.exigirConfiguracao();
-        if(senha.getBytes(StandardCharsets.UTF_8).length>72 || senha.length()<12) {
+        if(!PoliticaSenha.novaSenhaValida(senha)) {
             throw new AuthFailure(422,"SENHA_INVALIDA","Use pelo menos 12 caracteres e no máximo 72 bytes na senha.");
         }
         confirmacoes.executar("recuperacao-confirmar:"+origem,()->confirmarTransacao(raw,senha));

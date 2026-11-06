@@ -124,6 +124,8 @@ class Queue:
         self.stage = validate_environment(env, allow_hml=allow_hml)
         self.env = {k: env[k] for k in ('RM_STAGE', 'RM_DB_URL', 'RM_DB_USER',
                     'RM_DB_PASSWORD', 'RM_MIGRATION_USER', 'RM_MIGRATION_PASSWORD')}
+        if 'RM_PLATFORM_HOST' in env:
+            self.env['RM_PLATFORM_HOST'] = env['RM_PLATFORM_HOST']
         if self.stage == 'hml':
             self.env['RM_HML_PROVISIONING_ENABLED'] = 'true'
         self.java = Path(env['JAVA_HOME']) / 'bin/java'

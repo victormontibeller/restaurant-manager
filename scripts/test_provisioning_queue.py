@@ -136,13 +136,14 @@ class ProvisioningQueueTest(unittest.TestCase):
         env = dict(RM_STAGE='test', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_test',
                    RM_DB_USER='rm_test_app', RM_MIGRATION_USER='rm_test_owner',
                    RM_DB_PASSWORD='ficticio', RM_MIGRATION_PASSWORD='ficticio',
-                   JAVA_HOME='/private/java', SEGREDO_ALHEIO='nao-propagar')
+                   JAVA_HOME='/private/java', RM_PLATFORM_HOST='gestao.localhost', SEGREDO_ALHEIO='nao-propagar')
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as folder:
             with patch.object(Queue, 'sql', return_value='rm_test|rm_test_app|55432|127.0.0.1'):
                 queue = Queue(env, Path('/private'), Path('/private/builds/job'), Path(folder))
             with patch('provisioning_queue.subprocess.run', side_effect=subprocess.TimeoutExpired('java', 90)) as run:
                 self.assertEqual(queue.execute(str(uuid.uuid4())), 124)
                 self.assertNotIn('SEGREDO_ALHEIO', run.call_args.kwargs['env'])
+                self.assertEqual(run.call_args.kwargs['env']['RM_PLATFORM_HOST'], 'gestao.localhost')
                 self.assertNotIn('RM_DB_PASSWORD', run.call_args.args[0])
                 self.assertEqual(run.call_args.kwargs['timeout'], 90)
 

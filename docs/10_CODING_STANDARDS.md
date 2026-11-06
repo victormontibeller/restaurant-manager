@@ -21,6 +21,27 @@ Consulte os padrões existentes antes de criar abstrações; a [arquitetura](02_
 
 A preferência por SDKs e o isolamento de credenciais estão em [Integrações](21_INTEGRATIONS.md#sdk-first). Os padrões Angular/PWA e de acessibilidade ficam em [Interface](09_UI_GUIDELINES.md).
 
+### Legibilidade e organização Angular
+
+- Preserve a divisão por domínio: `identidade`, `acessos`, `unidades` e
+  `plataforma`. Componentes, serviços e tipos relacionados permanecem próximos;
+  novas pastas ou abstrações compartilhadas precisam de consumidores reais.
+- Separe declarações, métodos e etapas de uma jornada com linhas em branco.
+  Evite acumular várias instruções na mesma linha. Comentários explicam uma
+  decisão ou transição importante, sem repetir o nome do método.
+- Mantenha os templates e estilos inline existentes em blocos legíveis. Ao
+  quebrar HTML em linhas, preserve os espaços significativos entre texto,
+  interpolação e elementos; a disposição do fonte não pode mudar a interface.
+- Nos testes, deixe preparação, ação, resultado e recuperação reconhecíveis.
+  Refatorações de legibilidade preservam asserções, ordem, seletores, massas,
+  timeouts e tentativas; não esconda a jornada em helpers genéricos.
+- Use o Prettier fixado em `frontend/package-lock.json`, com a configuração da
+  raiz. `npm --prefix frontend run format` formata TypeScript e probes CJS;
+  `npm --prefix frontend run format:check` verifica o padrão no CI e no build
+  de release. A formatação automática de linguagens embutidas fica desativada
+  para preservar strings executáveis e espaços de templates; esses blocos
+  exigem revisão e validação próprias quando editados.
+
 ## Documentos relacionados
 
 - [Regras de engenharia](03_ENGINEERING_RULES.md)

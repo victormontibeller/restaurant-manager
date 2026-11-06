@@ -14,17 +14,17 @@ public class SolicitacaoProvisionamentoService {
     private final PlataformaRepository identidade;
     private final SolicitacaoProvisionamentoRepository repository;
     private final BCryptPasswordEncoder passwords=new BCryptPasswordEncoder(12);
-    private final String platformHost;
+    private final DominioPlataforma dominio;
     public SolicitacaoProvisionamentoService(PlataformaService plataforma,PlataformaRepository identidade,
-            SolicitacaoProvisionamentoRepository repository,@Value("${rm.platform.host:plataforma.localhost}") String platformHost) {
-        this.plataforma=plataforma;this.identidade=identidade;this.repository=repository;this.platformHost=platformHost;
+            SolicitacaoProvisionamentoRepository repository,@Value(DominioPlataforma.CONFIGURACAO) String platformHost) {
+        this.plataforma=plataforma;this.identidade=identidade;this.repository=repository;this.dominio=new DominioPlataforma(platformHost);
     }
     public record Resumo(UUID id,String nome,String host,String estado,long versao,String ultimaFalha) {}
     public Resumo solicitar(PlataformaService.Identidade ator,ProvisionamentoService.Pedido p) {
         return plataforma.executar(()->{
             plataforma.autorizar(ator,true);
             try{ProvisionamentoService.validar(p);}catch(IllegalArgumentException failure){throw new AuthFailure(400,"ENTRADA_INVALIDA",failure.getMessage());}
-            if(p.host().equals(platformHost))throw new AuthFailure(409,"DOMINIO_RESERVADO","Domínio indisponível para empresa.");
+            if(dominio.reservado(p.host()))throw new AuthFailure(409,"DOMINIO_RESERVADO","Domínio indisponível para empresa.");
             repository.bloquear(p.id());plataforma.autorizar(ator,true);
             var existente=repository.buscar(p.id());
             if(existente!=null) {

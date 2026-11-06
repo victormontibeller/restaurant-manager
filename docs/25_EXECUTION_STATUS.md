@@ -1,6 +1,100 @@
 # Checkpoint de execução
 
-## Estado vigente — ciclo35, 2026-11-06
+## Publicação da revisão pré-Sprint 2 — 2026-11-06 (PR aberto para revisão)
+
+Commit `367a5ef381f09645aaebf90e4be481434ae1dbd1` criado e publicado em
+`origin/codex/revisao-pre-sprint-02`. [PR #4](https://github.com/victormontibeller/restaurant-manager/pull/4)
+aberto para revisão, sem draft, com base `main` (`b50b9d1`) e branch de origem
+conferidas no GitHub. Esta entrega reúne as correções funcionais e o incremento
+de legibilidade descritos abaixo; este registro documental acompanha o PR.
+
+Publicação autorizada pelo usuário. Scanner de links/segredos, diff preparado e
+`format:check` aprovados antes do commit. A publicação não repetiu as suítes de
+aplicação já registradas. Acompanhar a CI no SHA exato do head do PR; não herdar
+aprovação de commits anteriores nem confundir CI com homologação operacional.
+
+A publicação do código não aprova o novo release. Permanecem pendentes a suíte
+operacional no Linux (161 testes no Mac, com 15 erros ligados a `/proc`), UI29/UI31
+com worker/gates reais (10 combinações), 50 smokes e a matriz integrada do novo
+release em homologação. Os resultados locais e as falhas/reexecuções estão no
+[relatório](evidencias/revisao-pre-sprint-02-2026-11-06.md). Merge e deploy não fazem
+parte desta solicitação; a Sprint 2 permanece não iniciada.
+
+## Legibilidade Angular e testes — 2026-11-06 (concluída localmente)
+
+Solicitação posterior à revisão: melhorar leitura dos componentes/testes,
+preservando comportamento e a divisão por domínio valorizada pelo usuário.
+Branch `codex/revisao-pre-sprint-02`, base `b50b9d1`; correções anteriores
+preservadas por snapshot privado antes da formatação. Nenhuma mudança backend.
+
+TypeScript, configurações Playwright e probes CJS formatados; métodos separados
+e jornadas longas organizadas em fases. Doze templates e 11 estilos inline
+expandidos, mantendo texto/interpolação e semântica CSS. Pastas `identidade`,
+`acessos`, `unidades` e `plataforma` preservadas. Prettier 3.9.10 fixado em dev,
+sem alterar versões existentes; `format:check` integrado ao CI/build. Convenções
+na [fonte de código](10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
+
+Aprovados: `format:check`, typecheck, build Angular, oito probes de lógica, seis
+combinações de templates reais (dois probes × três motores) e layout Chromium
+isolado. Dois extratores de fonte foram corrigidos para aceitar whitespace,
+com falha anterior e sucesso posterior, preservando asserções funcionais.
+Comparação estrutural de 58 arquivos, 12 templates e 11 CSSs aprovada. Os quatro
+arquivos do build são idênticos byte a byte ao snapshot anterior, incluindo
+`main-7EHWONZT.js`; igualdade também registrada por SHA-256. Scanner de documentos,
+links/âncoras, diff e sintaxe do build aprovados.
+
+[Evidência e limites deste incremento](evidencias/revisao-pre-sprint-02-2026-11-06.md#legibilidade-angular-e-testes--incremento-posterior).
+Suítes backend/E2E anteriores não foram reexecutadas nem contadas como novos
+resultados. Runtime/banco não iniciados. No encerramento desse incremento, as
+alterações ainda eram locais, sem commit/push; a publicação é registrada acima.
+Linux/homologação continuam pendentes por decisão anterior. Próximo: seguir os
+gates do novo release antes do aceite integrado. Sprint 2 não iniciada.
+
+## Revisão pré-Sprint 2 no Mac — 2026-11-06 (concluída localmente)
+
+`main` local sincronizada por fast-forward com `origin/main`,
+`b50b9d15eeb1683cf73e7ba9fcf3c1ebed3de3ea`. PR #3 integrado pelo proprietário às
+11:17 (Brasília), conferido no GitHub. Correções em `codex/revisao-pre-sprint-02`,
+naquele encerramento ainda sem commit/push; antiga branch documental preservada. Sprint 2 não iniciada.
+
+Revisão de identidade, tenancy/plataforma e frontend integrada por um coordenador.
+Corrigidos senha branca no provisionamento, domínio SaaS reservado no CLI,
+propagação da configuração de domínio, erros de sessão, aviso de convites
+pendentes após logout e associação acessível da reautenticação. Regras comuns
+reutilizadas e probes frontend centralizados no CI/build. Sem nova migration,
+contrato público ou dependência. Revisões independentes finais sem novo bloqueador
+concreto de código. Detalhes no [relatório](evidencias/revisao-pre-sprint-02-2026-11-06.md).
+
+Validação local: Java 21.0.9, Node 26.0.0, Python 3.14.7 e PostgreSQL 18.4.
+Cluster novo e exclusivo em loopback:55432, banco `rm_test`, roles owner/runtime
+distintas; nenhum banco de outro projeto utilizado. PostgreSQL 16 continua a
+referência do Linux. Typecheck/build Angular, oito probes de lógica e templates
+reais nos três motores aprovados. Backend: 186 testes/27 suítes, zero
+falha/erro/skip. Auditorias npm e OSV (94 bibliotecas Java) sem achado reportado.
+
+Matriz local consolidada: 225 pares únicos cenário/projeto aprovados, após as
+correções/reexecuções documentadas, todos no JAR de SHA-256
+`cbc4014086fb0c7a58ed244a34afe0dae9d9c865ffd761cecd1a951ff6c385bb`.
+Falhas originais preservadas, sem duplicar pares ou limpar/ampliar quotas. A
+consolidação não transforma uma rodada inicialmente falha em aprovada.
+Inspeção visual amostral de 16 capturas; não é auditoria integral de acessibilidade.
+Links locais/12 âncoras, scanner de padrões de segredo e `git diff --check` aprovados.
+
+Por decisão do usuário, encerramento local com testes Linux pendentes. Suíte
+Python operacional: 161 testes, 15 erros relacionados a `/proc` (inclui subcasos),
+zero failures; NÃO aprovada no Mac. Três regressões focadas de configuração de
+domínio passaram. UI29/UI31 (10 combinações), 50 smokes de homologação e gates
+Linux do novo release não executados. Evidências históricas abaixo não aprovam
+estas correções. Nenhum recurso do Hermes foi alterado.
+
+Aplicação e PostgreSQL temporários encerrados; evidências privadas preservadas
+em `/private/tmp/restaurant-manager-review-db/`. Não publicar esse diretório,
+que também contém fixtures privadas. Próximo: publicar/revisar as correções pelo
+fluxo do projeto e executar gates Linux/matriz integrada sobre o novo release;
+conferir premissas P05/P06/P12/P13 antes da Sprint 2. Não houve merge ou deploy
+pelo agente, nem avanço para a próxima sprint.
+
+## Estado histórico — ciclo35, 2026-11-06
 
 Implementação e validação técnica da Sprint01 concluídas em homologação
 fictícia. Entrega integrada ainda PENDENTE do merge do PR #3 pelo proprietário;

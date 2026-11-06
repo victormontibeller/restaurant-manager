@@ -6,7 +6,11 @@
     "build": "ng build",
     "start": "ng serve --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc -p tsconfig.e2e.json",
-    "e2e": "playwright test"
+    "test:logic": "node ../scripts/test-frontend.cjs",
+    "test:templates": "bash ../scripts/test-profile-templates.sh",
+    "e2e": "playwright test",
+    "format": "prettier --write \"src/**/*.ts\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\""
   },
   "dependencies": {
     "@angular/common": "22.2.4",
@@ -22,6 +26,7 @@
     "@angular/compiler-cli": "22.2.4",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.6",
+    "prettier": "3.9.10",
     "typescript": "6.0.2"
   },
   "engines": {

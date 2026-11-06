@@ -10,14 +10,10 @@ flock -n 9 || { printf 'Build/deploy concorrente recusado.\n'; exit 2; }
 python3 scripts/check-repository.py
 python3 -m unittest discover -s scripts -p 'test_*.py'
 npm --prefix frontend ci --ignore-scripts
+npm --prefix frontend run format:check
 npm --prefix frontend run typecheck
-node scripts/test_platform_session.cjs
-node scripts/test_unit_events.cjs
-node scripts/test_unit_export.cjs
-node scripts/test_event_config.cjs
-node scripts/test_inactive_memberships.cjs
-node scripts/test_hml_fixture.cjs
-bash scripts/test-profile-templates.sh
+npm --prefix frontend run test:logic
+npm --prefix frontend run test:templates
 npm --prefix frontend run build
 npm --prefix frontend audit --audit-level=moderate
 bash scripts/with-env.sh test bash backend/mvnw -B -ntp -f backend/pom.xml clean verify

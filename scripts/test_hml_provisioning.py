@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-from hml_provisioning import dispatch_one, validate_fictitious, main
+from hml_provisioning import dispatch_one, validate_fictitious, validate_platform_host, main
 from provisioning_queue import Queue
 import fcntl
 import subprocess
@@ -15,6 +15,17 @@ import subprocess
 
 class HmlProvisioningTest(unittest.TestCase):
     identity = '11111111-1111-4111-8111-111111111111'
+
+    def test_host_do_worker_deve_corresponder_ao_http_efetivo(self):
+        validate_platform_host({}, {})
+        validate_platform_host({b'RM_PLATFORM_HOST': b'plataforma.localhost'}, {})
+        validate_platform_host({}, {'RM_PLATFORM_HOST': 'plataforma.localhost'})
+        validate_platform_host({b'RM_PLATFORM_HOST': b'gestao.localhost'}, {'RM_PLATFORM_HOST': 'gestao.localhost'})
+        for runtime, configured in [({b'RM_PLATFORM_HOST': b'gestao.localhost'}, {}),
+                                    ({}, {'RM_PLATFORM_HOST': 'gestao.localhost'}),
+                                    ({b'RM_PLATFORM_HOST': b'gestao.localhost'}, {'RM_PLATFORM_HOST': 'outro.localhost'})]:
+            with self.subTest(runtime=runtime, configured=configured), self.assertRaisesRegex(ValueError, 'Domínio SaaS divergente'):
+                validate_platform_host(runtime, configured)
 
     def test_lock_herdado_mantem_exclusao_apos_despacho(self):
         from hml_provisioning import deployment_lock
