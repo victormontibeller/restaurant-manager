@@ -24,11 +24,22 @@ O ensaio de manutenção97 passou no ciclo28, com clone/retorno e verificações
 reais de aplicação. A troca do frontend foi conferida, nove contas empresariais
 foram revalidadas por API e a fundação hml passou20combinações. Jornada assistida
 hml executada e aprovada no ciclo28, com read-back independente e reconciliação
-sem reexecutar Java. Smoke das dez identidades está em execução; aceitação
-permanece pendente. A revisão visual
+sem reexecutar Java. Smoke das dez identidades passou as50combinações;
+consolidação conferiu285pares únicos no mesmo JAR, mas mantém o gate bloqueado
+pela instabilidade27. Aceitação permanece pendente. A revisão visual
 materializada contém26capturas principais/20complementos, sem aprovar a
 instabilidade. [Evidência28](evidencias/sprint-01-retomada-ciclo-28.md). Estado atual, resultados e
 limites no [checkpoint](25_EXECUTION_STATUS.md).
+
+No ciclo29, a revisão confirmou os mecanismos imediatos das falhas27:
+aborto HTTP em Firefox e orçamento de jornada consumido em WebKit. Diagnóstico
+instrumentado no mesmo JAR passou nos dois motores, sem demonstrar correção da
+instabilidade. Os tempos absolutos JFR divergiram do término do processo; a
+correlação por requisição foi invalidada, não usada para aprovar o candidato.
+O consolidador agora recusa de fato achados abertos/autorização falsa, antes de
+acessar o runtime; regressões e preflight real exercitados. Nenhuma promoção.
+[Evidência29](evidencias/sprint-01-retomada-ciclo-29.md) e
+[passagem Mac em preparação](27_HANDOFF_CODEX_MAC.md).
 
 Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
 HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID.

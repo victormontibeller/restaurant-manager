@@ -1,6 +1,92 @@
 # Checkpoint de execução
 
+## Incremento — ciclo 29, 2026-11-06
+
+Escopo vigente relido: SOMENTE Sprint01 e passagem para Codex/Mac. Sprints02–05
+fora desta execução. PR3 permanece aberto; merge/integração em main pelo
+proprietário após gates. Esta delimitação substitui instruções históricas abaixo
+que indicavam avançar automaticamente ou mesclar. Nenhum STOP/CONCLUSAO.json.
+
+Git/PR3/head290d60e e CI aprovados conferidos na retomada; três documentos locais
+herdados preservados. Hml97d75b0/hash34e207ff/UP/PID754824, baseline449ce3c e
+OIDs135836/16392 preservados; rm_test16389 ativo. Nenhum build/seed/manutenção/
+deploy repetido.23XML/174backend, zero falha/erro/skip recontados no job existente.
+
+Correção real no consolidador: manifesto com achados abertos, autorização falsa
+ou campos ausentes/malformados agora é recusado antes do artefato/runtime. Sete
+vermelhos pertinentes;14focados e152regressões Python aprovados. Preflight real
+do promotor coberto sem escritas. Bundle28real recusado. Revisão independente
+sem bloqueador na guarda; nenhum baseline promovido nem flag liberada.
+
+Diagnóstico UI18×Firefox/WebKit no MESMO JAR/fonte d1dc30b terminou04:00:36Z:
+dois aprovados sem skip/retry/flaky,71733/62925ms. Hml antes/depois idêntica;
+worker/candidato recolhidos e unidade inactive/MainPID0. Isso NÃO demonstra
+correção da instabilidade27; matriz285não foi inflada com esses dois retestes.
+
+Instrumentação obteve temposHTTP,152amostrasPG sem bloqueador observado eJFR
+seletivo. Correlação absolutaJFR/HTTP INVALIDADA: timestampsJFR posteriores ao
+término real do processo. Não usar a primeira tabela por requisição nem seu
+corte temporal. Agregado revisado usa gravação inteira; contagens não são duração
+de BCrypt/porcentagemCPU. Decomposição monotônica interna dos traces27/29 mostra
+esperas no cliqueEntrar/navegação inicial além da latênciaHTTP. Causa ainda aberta;
+não reduzir BCrypt, aumentar timeout, alterar CPU global ou repetir até verde.
+
+[Evidência29](evidencias/sprint-01-retomada-ciclo-29.md) e
+[handoff Mac em preparação](27_HANDOFF_CODEX_MAC.md) detalham código/artefato,
+funcionalidades, testes e bloqueios. Setup Mac NÃO executado/verificado.
+Próximo: medir custo por requisição/espera da carga inicial com relógio coerente,
+corrigir causa demonstrada e validar regressões afetadas; só então aceitação e
+sete critériosSprint01. Não repetir build97/manutenção/assistido/smokes28.
+Resultado de publicação deste incremento deve ser relido no PR, não presumido.
+
+## Encerramento — ciclo 28, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado após tentativa bloqueada de conferir
+links do relatório privado; depois somente handoff obrigatório. Missão NÃO
+concluída. Nenhum merge/promoção/CONCLUSAO.json. Nenhum trabalhador interrompido
+nem build repetido. Houve manutenção, troca restrita e provisionamento hml reais.
+
+Head publicado290d60e/PR3 OPEN draft/base main e ambos checks CI aprovados
+relidos. CorpoPR ainda é snapshot anterior ao fim do smoke; atualizar sem rebuild.
+Documentos finais da Sprint01, evidência28 e este checkpoint permanecem LOCAIS
+posteriores ao push. Preservar. Relatório privado foi escrito, mas sua checagem
+de links foi bloqueada e não executou; não presumir validação posterior ao aviso.
+
+Runtime97d75b0/hash34e207ff/UP/PID754824 e OIDs conferidos na consolidação03:40:56Z.
+Baseline449ce3c e originalhml16392 bloqueado preservados; clone135836 ativo.
+Manutenção97 passou, assistido passou com empresa adicional real fictícia,
+fundação20 e smoke50 passaram. Consolidação285pares únicos mantém gatefalse:
+instabilidadeUI18/ciclo27 NÃO resolvida apesar de reteste5verde. Não executar
+aceitação ignorando o achado no bundleBLOCKED. Dez viewports mobile adicionais
+inspecionados com limites, sem alegar páginas inteiras.
+
+STATUS e checkpointJSON privados registram fontes, hashes, recibos, unidades,
+nova fixture ampliada e comandos. Não repetir build/manutenção/seed/matrizes já
+aprovados. Próximo: reconciliar estado, conferir arquivos finais, diagnosticar
+instabilidade com traces/latência/carga antes de aceitar/mesclarSprint01. Não
+ampliar timeout cegamente nem alterar CPU/serviços globais.02–05 não iniciadas.
+
 ## Retomada — ciclo 28, 2026-11-06
+
+Atualização 03:41Z: smoke hml terminou às 03:37:46Z, com 50 aprovações e zero
+falha/skip/retry/flaky. Recibos, hashes, fontes, OIDs e cobertura reabertos:
+285 combinações únicas do mesmo JAR (215 mutantes + 20 fundação + 50 smoke).
+Consolidação privada mantém `release_gate=false` e `sprint_complete=false`:
+instabilidade27 continua aberta. CLI de aceitação NÃO executado; não promover
+o bundle marcado BLOCKED só porque sua cobertura é consistente.
+
+Dez viewports mobile do smoke e cartão do provisionamento hml inspecionados,
+com limites explícitos; não são páginas inteiras. Probe API complementar confirmou
+ID exato do operador SaaS, projeção, logout e JWT anterior negado. A primeira
+execução desse probe falhou ao montar o recibo por chave repetida; corrigida e
+reexecutada com sucesso, sem mudança de produto ou cadastro.
+
+Publicado290d60e e PR3 OPEN/draft/base main/head/corpo relidos. Ambos checks CI
+passaram. Manutenção, troca, reteste, fundação e assistido estão encerrados;
+smoke também inactive/MainPID0. Hml97d75b0 UP/PID754824, baseline449ce3c e
+OIDs preservados. Há uma nova empresa fictícia do ensaio; usar a fixture ampliada,
+nunca repetir seed nem retornar ao banco anterior à criação das contas.
+Sem merge/promoção/CONCLUSAO.json; Sprint01 aberta,02–05 não iniciadas.
 
 Atualização03:29Z: ensaio assistido hml passou de verdade às03:27:45Z: UI202,
 CLI/ativação, read-backCONCLUIDO, replay/conflito, reconciliação sem executar

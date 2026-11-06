@@ -7,6 +7,15 @@
 
 ## Fluxo e responsabilidades
 
+Escopo vigente desde 2026-11-06: terminar somente a implementação/validação da
+Sprint 01 e preparar passagem sanitizada para o proprietário continuar no
+Codex/Mac. Não iniciar Sprints 02–05 nesta execução. PR #3 permanece aberto:
+merge/auto-merge não são executados pelo agente; integração em `main` depende
+do proprietário, após os gates. A branch do PR aberto deve ser preservada.
+Esta delimitação substitui as autorizações históricas de avanço/merge abaixo.
+Handoff não é prova de conclusão: critérios pendentes continuam pendentes e
+setup macOS não executado deve ser identificado como não verificado.
+
 Na execução noturna autorizada em 2026-11-03, o Hermes executa diretamente com o provedor `openai-codex` e autenticação atual, sem instalar o Codex CLI. O desenvolvimento e os testes acontecem no Linux, em checkout e bancos exclusivos. O Mac continua ambiente adicional, sem ser dependência da execução.
 
 - **Hermes:** inicia o fluxo solicitado, fornece diretório/contexto, acompanha término e retoma o próximo incremento até concluir o escopo técnico, sem nova aprovação a cada tarefa ou sprint.
@@ -27,7 +36,7 @@ A autorização abaixo cobre a execução contínua do roadmap, quando o fluxo f
 | Definir detalhes técnicos compatíveis com as decisões | Autorizado, com justificativa e versões registradas; mudanças de produto/escopo permanecem explícitas |
 | Criar branches, commits e fazer push | Autorizado por incremento/commit principal, após revisão de diff, segredos e verificações pertinentes |
 | Abrir PR | Autorizado, um por Sprint na missão vigente |
-| Fazer merge em `main` | Expressamente autorizado nesta missão após revisão, testes, CI e gates da Sprint; verificar PR mesclado, SHA remoto e árvore. Commit direto e auto-merge não fazem parte do fluxo |
+| Fazer merge em `main` | Na delimitação vigente de 2026-11-06, reservado ao proprietário; deixar PR aberto. Sem commit direto nem auto-merge |
 | Force push, apagar histórico ou descartar trabalho alheio | Fora da autorização automática |
 | Deploy, serviço e migrations de homologação | Autorizado automaticamente no ambiente exclusivo de homologação, com testes, verificação do alvo e recuperação conforme este guia |
 | Deploy, reinício/alteração de serviços de produção, migração de produção | Fora do fluxo automático; somente quando o usuário pedir a operação correspondente |

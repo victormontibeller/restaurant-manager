@@ -36,6 +36,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 | [Piloto](23_PILOT_IMPLEMENTATION.md) | `23_PILOT_IMPLEMENTATION.md` | E01–E12, responsáveis e condições de início |
 | [Execução pelo Hermes/Codex](24_AGENT_EXECUTION.md) | `24_AGENT_EXECUTION.md` | Autonomia, ambiente, divisão de tarefas e retomada |
 | [Checkpoint vigente](25_EXECUTION_STATUS.md) | `25_EXECUTION_STATUS.md` | Tarefa, evidências, pendências e próximo passo |
+| [Passagem para Codex/Mac](27_HANDOFF_CODEX_MAC.md) | `27_HANDOFF_CODEX_MAC.md` | Código, evidências, bloqueios e preparação macOS não verificada |
 | [Testes completos](26_TEST_STRATEGY.md) | `26_TEST_STRATEGY.md` | Telas, jornadas, perfis, gates e relatório final |
 
 ## Sprints

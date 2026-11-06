@@ -1,5 +1,7 @@
 """Evidências sintéticas destas unidades não aprovam release real."""
 import copy
+import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +17,32 @@ def report(keys):
 
 
 class IdentityEvidenceTest(unittest.TestCase):
+    def test_bundle_bloqueado_ou_sem_revisao_nao_chega_ao_runtime(self):
+        from identity_evidence import check_bundle
+        base = dict(scope='sprint-01-regressao-identidade', job='/private/job',
+                    blocking_findings=[], acceptance_authorized=True)
+        variants = [dict(base, blocking_findings=[{'id': 'instabilidade', 'status': 'aberto'}]),
+                    dict(base, acceptance_authorized=False), dict(base, acceptance_authorized=1),
+                    dict(base, blocking_findings=None), dict(base, blocking_findings={})]
+        variants.extend({k: v for k, v in base.items() if k != missing}
+                        for missing in ('blocking_findings', 'acceptance_authorized'))
+        with tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder) / 'bundle.json'
+            for manifest in variants:
+                bundle.write_text(json.dumps(manifest))
+                with self.subTest(manifest=manifest), \
+                        patch('identity_evidence.private_runtime_path', side_effect=Path), \
+                        patch('identity_evidence.durable_artifact', side_effect=AssertionError('Não acessar runtime.')) as artifact:
+                    with self.assertRaisesRegex(ValueError, 'bloqueado|revisão'):
+                        check_bundle(bundle, Path('/private'), Path('/repo'))
+                    artifact.assert_not_called()
+            bundle.write_text(json.dumps(base))
+            with patch('identity_evidence.private_runtime_path', side_effect=Path), \
+                    patch('identity_evidence.durable_artifact', side_effect=ValueError('Gate do artefato ainda obrigatório.')) as artifact:
+                with self.assertRaisesRegex(ValueError, 'Gate do artefato'):
+                    check_bundle(bundle, Path('/private'), Path('/repo'))
+                artifact.assert_called_once()
+
     def visual_entries(self):
         from identity_evidence import SURFACES
         complements = {

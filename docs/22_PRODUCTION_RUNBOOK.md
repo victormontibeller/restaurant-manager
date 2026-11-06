@@ -326,6 +326,12 @@ reabre os relatórios reais e exige as combinações exatas S01-UI01–43, S00-U
 S00-API01 e S01-HML01–10 nos cinco projetos, sem duplicatas/skip/retry/flaky.
 O manifesto referencia job aprovado, manutenção, recibos/fontes imutáveis e
 revisões visuais por superfície em mobile/desktop, com notas/hash do PNG.
+Exige também `blocking_findings: []` e `acceptance_authorized: true`, definidos
+somente após revisão real dos achados. Campo ausente, malformado, achado aberto
+ou autorização falsa recusam a conferência antes de acessar o runtime. Ambos
+os comandos compartilham essa guarda. Não apagar um achado nem alterar a flag
+para converter um reteste verde em correção; preservar o manifesto bloqueado
+e registrar causa, correção e regressões antes de preparar outro manifesto.
 Capturas precisam pertencer ao cenário/projeto correspondente. Não cria revisão
 visual automaticamente. Parcelas explicitamente aprovadas de um worker cuja
 fase posterior falhou podem ser consideradas isoladamente no MESMO artefato;

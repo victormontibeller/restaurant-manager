@@ -86,13 +86,26 @@ intenção conhecida adicional. Não houve retomada do wrapper após falha; o te
 deliberado de reconciliação conferiuCONCLUIDO sem nova execução. Essas verificações
 não são ensaio de timeout arbitrário nem tornam qualquer futura retomada segura.
 
-Smoke50 do candidato servido iniciou depois desses checks, usando a fixture
-ampliada; resultado ainda pendente nesta atualização. Não repetir seed ou criar
-outra empresa para substituir a intenção já concluída.
+O smoke do candidato servido terminou às03:37:46Z, com50combinações aprovadas
+e zero falha/skip/retry/flaky, usando a fixture ampliada. JSON/hash/cobertura e
+OIDs foram relidos. Dez viewports mobile foram inspecionados, com notas dos
+limites de cada captura; não são páginas inteiras.
+
+Probe API complementar confirmou o ID exato do operador, projeção mínima,
+logout e recusa do JWT anterior. O primeiro probe falhou somente ao montar o
+recibo por chave repetida; correção pontual e reexecução passaram, sem mudança
+de produto ou cadastro. Não repetir seed ou criar outra empresa para substituir
+a intenção já concluída.
+
+Consolidação privada reabriu resultados/fontes/hashes e confirmou285pares
+únicos do mesmo JAR:215mutantes,20fundação e50smoke. O manifesto está marcado
+BLOCKED e mantém `release_gate=false`/`sprint_complete=false`, com a instabilidade27
+explicitamente aberta. Não foi executado o CLI de aceitação. Cobertura
+consistente não é prova de resolução de uma falha intermitente.
 
 ## Limites
 
-Sem merge ou promoção de baseline. Smoke das identidades e aceitação integrada
-permanecem pendentes, assim como o fechamento da instabilidade27. Sprint01 não
+Sem merge ou promoção de baseline. Aceitação integrada permanece pendente,
+assim como o fechamento da instabilidade27. Sprint01 não
 concluída; Sprints02–05 não iniciadas. E01–E12 e matriz T01–T28/X01–X15 preservadas.
 Consultar o [checkpoint](../25_EXECUTION_STATUS.md) para atualizações posteriores.

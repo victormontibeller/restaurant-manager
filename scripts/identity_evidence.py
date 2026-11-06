@@ -139,6 +139,9 @@ def check_bundle(bundle, root, repo):
     bundle_hash = artifact_hash(bundle)
     manifest = json.loads(bundle.read_text())
     require(manifest.get('scope') == 'sprint-01-regressao-identidade', 'Escopo desconhecido.')
+    require(manifest.get('blocking_findings') == []
+            and manifest.get('acceptance_authorized') is True,
+            'Manifesto bloqueado ou sem revisão explícita para aceitação.')
     job = Path(manifest['job'])
     artifact, gate = durable_artifact(job, root, repo)
     before = verify(root, gate['git_sha'])

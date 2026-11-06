@@ -43,6 +43,7 @@ Comece pelo [índice da documentação](docs/README.md). Os arquivos seguem a or
 - [Roadmap e sprints](docs/13_ROADMAP.md), [critérios de entrega](docs/12_DEFINITION_OF_DONE.md) e [condições do piloto](docs/23_PILOT_IMPLEMENTATION.md).
 - [Ambientes e operação](docs/22_PRODUCTION_RUNBOOK.md) e [guia de contribuição](AGENTS.md).
 - [Execução pelo Hermes/Codex](docs/24_AGENT_EXECUTION.md) e [checkpoint de retomada](docs/25_EXECUTION_STATUS.md).
+- [Passagem da Sprint 01 para Codex no Mac](docs/27_HANDOFF_CODEX_MAC.md), com bloqueios e setup macOS ainda não verificado.
 - [Validação completa de telas, jornadas e acessos](docs/26_TEST_STRATEGY.md).
 
 Decisões confirmadas, premissas propostas e dependências externas permanecem identificadas. Os critérios descritos são trabalho a executar, não evidência de implementação concluída.
@@ -79,7 +80,7 @@ seleciona o motor, Chromium por padrão. A configuração privada de browsers/li
 
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
-Hermes usa o provedor `openai-codex` autenticado atual e avança pelo roadmap autorizado. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
+Hermes usa o provedor `openai-codex` autenticado atual. O escopo vigente de 2026-11-06 limita esta execução ao fechamento da Sprint 01 e passagem para Codex/Mac, sem iniciar Sprints 02–05; PR aberto e integração em main pelo proprietário após os gates. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
 
 ### Provisionamento local em desenvolvimento/testes
 

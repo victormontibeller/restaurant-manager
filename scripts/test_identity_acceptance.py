@@ -12,6 +12,23 @@ from release_support import verify_hml_acceptance
 
 
 class IdentityAcceptanceTest(unittest.TestCase):
+    def test_manifesto_bloqueado_recusado_pelo_preflight_real_sem_escritas(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            root=Path(directory);attempt=root/'maintenance-releases'/('a'*32)
+            attempt.mkdir(parents=True,mode=0o700)
+            state=dict(stage='hml',attempt=str(attempt),state='health-aprovado-e2e-pendente')
+            durable_journal(attempt/'state.json',state)
+            bundle=root/'bundle.json'
+            durable_journal(bundle,dict(scope='sprint-01-regressao-identidade',
+                blocking_findings=[{'id':'instabilidade'}],acceptance_authorized=False))
+            ops=Acceptance(root,root,attempt,bundle,None)
+            with patch.object(ops,'prepare') as prepare,patch.object(ops,'publish') as publish:
+                with self.assertRaisesRegex(ValueError,'Manifesto bloqueado'):
+                    accept(ops)
+                prepare.assert_not_called();publish.assert_not_called()
+            self.assertEqual(json.loads((attempt/'state.json').read_text()),state)
+            self.assertFalse((root/'healthy.json').exists())
+
     def test_preflight_falho_nao_publica_baseline(self):
         ops=Mock();ops.preflight.side_effect=ValueError('matriz incompleta')
         with self.assertRaises(ValueError): accept(ops)
