@@ -34,6 +34,13 @@ Login/refresh/logout têm chain separada com CSRF obrigatório mesmo quando rece
 
 Tentativas persistem no PostgreSQL: por empresa, 5 por e-mail e 100 por endereço de origem em janela de 15 minutos. Origem bloqueada é rejeitada antes de consumir limite de qualquer conta. Endereço vem da conexão, sem confiar em Forwarded; proxy futuro precisa de política explícita antes de ativar confiança. BCrypt custo 12, resposta inválida genérica, limite de 72 bytes. A retenção técnica de sessões/limitadores do ciclo 8 está descrita abaixo; não é uma política jurídica de retenção de dados.
 
+A consulta de usuário por e-mail é nomeada e validada na criação da
+SessionFactory, antes de atender o primeiro login. Essa preparação interpreta
+HQL, não autentica conta nem escolhe tenant para executar SQL de aquecimento.
+O parâmetro, EntityManager empresarial e regras de autenticação são os mesmos.
+Não garante eliminar custos residuais de validação/plano SQL; o ensaio frio e
+seus limites ficam na [evidência30](evidencias/sprint-01-retomada-ciclo-30.md).
+
 Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Reautenticação sensível, equipe/matriz, unidades e eventos cadastrais estão em [Acessos](11_ACCESS_CONTROL.md); recuperação, cadastro, convites, verificação e identidade SaaS estão descritos abaixo. Contrato implementado não equivale à aprovação integrada da Sprint.
 
 - JWT deve ser validado quanto a assinatura, algoritmo permitido, emissor, audiência, expiração e sessão ativa. Permissões atuais são verificadas no servidor; não dependem de um JWT antigo expirar.

@@ -1,6 +1,57 @@
 # Checkpoint de execução
 
+## Incremento — ciclo 30, 2026-11-06
+
+Retomada conferiu PR3 OPEN/draft/heada94e475 e ambos checksCI aprovados;
+três documentos locais29 preservados. Hml97d75b0 UP/PID754824, rm_test16389 e
+clonehml135836 ativos. Sem trabalhador herdado em execução, sem rejeição de
+conclusão encontrada. Nenhum build/manutenção/seed antigo repetido.
+
+Análise independente do JFR29b calibrado confirmou inicialização HQL antes de
+BCrypt. Correção mínima transforma a consulta de usuário em named query
+validada no startup, sem SQL empresarial/aquecimento por login. Teste novo
+reproduziu interpretação ausente no cache; depois passou, junto aos dez casos
+IdentidadeTest:11testes, zero falha/erro/skip. Não altera segurança/timeout.
+
+[Evidência30](evidencias/sprint-01-retomada-ciclo-30.md) distingue antecipação
+HQL comprovada de desempenho frio ainda pendente. Revisão/build novo e ensaio
+UI18 finito ainda necessários; matriz/manutenção anteriores não aprovam
+automaticamente produto alterado. Sprint01 aberta, sem promoção/merge/STOP.
+Missão SOMENTE Sprint01 e handoffMac;02–05 fora desta execução.
+
+## Encerramento — ciclo 29, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado após registrar diagnóstico29b;
+depois somente escritas obrigatórias de handoff. Missão NÃO concluída.
+Publicadoa94e475/PR3 OPEN draft, ambos checksCI aprovados e corpo relidos.
+Atualizações finais neste checkpoint, handoffMac e evidência29 permanecem
+LOCAIS posteriores ao push; preservar/publicar. CorpoPR ainda é anterior à
+falha29b e precisa de atualização. Não transferir CI para futuroSHA.
+
+Diagnóstico29b terminou com falhaFirefox/aprovaçãoWebKit; unidadefailed/MainPID0,
+candidato recolhido, hml97d75b0 UP/PID754824 e baseline449ce3c preservados no
+último estado observado. Não houve verificação após o aviso. STATUS/checkpoint
+privados identificam resultados, perfilJFRcalibrado, análise antiga invalidada
+e próximo foco no primeiro login/custo de inicialização. Sem promoção, merge,
+STOP ou CONCLUSAO.json;02–05 fora desta execução. Mac não verificado.
+
 ## Incremento — ciclo 29, 2026-11-06
+
+Atualização04:30Z: publicadoa94e475 e PR3 OPEN/draft/base main/corpo relidos;
+ambos checksCI aprovados.19links do relatório28 e recibos/hash/cobertura20+50
+conferidos. Sonda isolada reproduziu derivaJFR e zerou desvio ao desabilitar
+UseFastUnorderedTimeStamps somente naquela JVM. Não alterou hml/CPU global.
+
+Diagnóstico29b posterior terminou04:26:54Z, com uma falhaFirefox e uma aprovação
+WebKit, zero skip/retry/flaky. MainPID0/candidato recolhido; hml antes/depois
+idêntica. Navegador abortou primeiro login em10009ms; servidor só terminou200
+em12547ms. JFR corrigido contém inicialização/parser/validação antes de BCrypt,
+cuja primeira amostra é cerca de8244ms após envio. Não converter amostras em
+tempo exclusivo nem imputar toda a falha27 a esse resultado. Próximo foco:
+primeira autenticação em processo novo, custo de inicialização de validação/
+consultas e prontidão real; não aquecer só a fixture, reduzir BCrypt ou ampliar
+timeout cegamente. Nenhuma nova mudança Java/Angular/build necessária foi
+presumida. Falha preservada; gate continua falso, nenhum STOP/promoção/merge.
 
 Escopo vigente relido: SOMENTE Sprint01 e passagem para Codex/Mac. Sprints02–05
 fora desta execução. PR3 permanece aberto; merge/integração em main pelo

@@ -26,6 +26,8 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.jdbc.time_zone: UTC
+      # Compila/valida a HQL nomeada no startup, não no primeiro login.
+      hibernate.query.startup_check: true
   jackson:
     deserialization:
       fail-on-unknown-properties: true

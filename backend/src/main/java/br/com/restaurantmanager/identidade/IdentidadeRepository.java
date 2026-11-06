@@ -13,7 +13,7 @@ public class IdentidadeRepository {
     public IdentidadeRepository(EntityManager em) { this.em = em; }
     void bloquearAlteracoesDeAcesso() { em.find(PoliticaAcesso.class, 1, LockModeType.PESSIMISTIC_READ); }
     Optional<Usuario> porEmail(String email) {
-        return em.createQuery("from Usuario where email=:email", Usuario.class).setParameter("email", email).getResultStream().findFirst();
+        return em.createNamedQuery("Usuario.porEmail", Usuario.class).setParameter("email", email).getResultStream().findFirst();
     }
     Usuario usuario(UUID id) { return em.find(Usuario.class, id); }
     Sessao sessao(UUID id, boolean lock) { return em.find(Sessao.class, id, lock ? LockModeType.PESSIMISTIC_WRITE : LockModeType.NONE); }

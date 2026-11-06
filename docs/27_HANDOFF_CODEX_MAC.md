@@ -10,8 +10,8 @@ Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta exe
 
 - Repositório: `victormontibeller/restaurant-manager`.
 - Branch: `hermes/sprint-01-identidade-acessos`; PR **#3**, base `main`.
-- Referência publicada conferida antes deste documento:
-  `290d60edc00ce84a4dd38320c1b3393c0befed35`. O head posterior deve ser consultado
+- Implementação/testes da guarda de aceitação publicados e CI aprovada:
+  `a94e475f7dec9c49a4dca40978880c0cb052f8c4`. O head documental posterior deve ser consultado
   com o comando abaixo, não inferido a partir deste snapshot.
 - Aplicação servida em homologação:
   `97d75b09b5b783b18104812cf67fb2e18afdf76a`.
@@ -61,6 +61,14 @@ mas não demonstrou correção da causa. Conferência de contagens não resolve
 instabilidade. O diagnóstico focado do ciclo29 está no checkpoint; consultar
 seu término antes de iniciar nova suíte. Não repetir build, manutenção,
 provisionamento ou todas as famílias apenas para investigar esse cenário.
+
+Atualização29b: a reprodução instrumentada com relógio corrigido voltou a
+falhar emFirefox e passou emWebKit. O primeiro login foi abortado pelo navegador
+em10009ms, mas o servidor só terminou200 em12547ms. Há custo de inicialização
+antes das amostras BCrypt; próxima investigação deve cobrir a primeira
+autenticação em processo novo, sem aquecimento exclusivo do teste ou aumento
+cego de timeout. Resultado e limites em
+[evidência29](evidencias/sprint-01-retomada-ciclo-29.md).
 
 A aceitação de baseline e o fechamento dos sete critérios da Sprint dependem
 da resolução fundamentada desse achado e dos gates restantes. O consolidador

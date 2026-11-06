@@ -73,7 +73,16 @@ real do processo04:00:36. Portanto, a primeira correlação JFR/requisição e o
 corte por horário foram **invalidados**. O JSON derivado inicial é preservado
 como análise inválida, não evidência de custo por login. O agregado revisado
 usa somente contagens da gravação inteira por thread; não chama amostras de
-duração ou porcentagem de CPU. A causa da divergência temporal não foi estabelecida.
+duração ou porcentagem de CPU.
+
+Sonda Java isolada posterior reproduziu a divergência:24eventos, desvioJFR
+crescendo de4 para493ms enquanto relógio civil e `System.nanoTime` avançavam
+5759ms. Com `-XX:+UnlockExperimentalVMOptions -XX:-UseFastUnorderedTimeStamps`
+somente na JVM da sonda,24eventos tiveram desvio zero. A primeira tentativa
+dessa opção foi recusada pela JVM por faltar a opção experimental precedente;
+não executou a sonda. A opção não foi aplicada à homologação nem globalmente.
+Isso corrige a instrumentação para uma próxima captura, não a instabilidade
+do produto nem retroativamente os timestamps do primeiro JFR.
 
 Uma sonda Java independente usou o BCrypt custo12 da mesma biblioteca do JAR,
 com senha aleatória apenas em memória. Oito verificações consumiram entre
@@ -98,6 +107,33 @@ correção. O reteste verde continua sendo diagnóstico, não resolução.
 
 ## Passagem e próximos gates
 
+### Reprodução posterior com relógio corrigido — diagnóstico29b
+
+Uma execução focada adicional, sem novo build, terminou04:26:54Z: Firefox
+falhou no primeiro login; WebKit passou. Sem skip/retry/flaky. A unidade
+encerrou com falha/MainPID0 e recolheu candidato/monitor; hml antes/depois
+permaneceu idêntica. Não é uma matriz aprovada.
+
+A falha agora tem correspondência navegador/servidor: o navegador abortou o
+POST login aos10009,294ms; o servidor terminou200 somente aos12547ms.
+O teste permaneceu esperando resposta até o limite global. A nova gravação
+JFR ficou dentro da janela real do processo. No thread dessa requisição,
+185amostras incluem147 em BCrypt; a primeira amostra BCrypt ocorre cerca de
+8244ms após envio, e aparecem inicialização/parser ANTLR e validação antes dela.
+Não houve espera PostgreSQL/pool acima do limiar20ms registrada nessa janela.
+O logHTTP tem resolução de segundos, considerada na correlação; amostras não
+são medição exata de tempo exclusivo de método.
+
+As autenticações seguintes no WebKit terminaram entre1173 e2682ms no servidor.
+Isso localiza o próximo trabalho no custo do primeiro caminho de autenticação
+e sua inicialização sob carga, não somente no custo BCrypt nem em submit perdido.
+Ainda não prova retrospectivamente toda a falha27 ou elimina contenção externa.
+Investigar inicialização de validação/consultas antes de disponibilizar prontidão,
+com teste de primeira autenticação em processo novo. Não aquecer apenas a fixture
+E2E para esconder uma primeira autenticação real falha; não ampliar timeouts
+ou reduzir criptografia sem demonstração. Nenhuma alteração de produto foi
+aplicada às pressas após este diagnóstico; aceitação permanece bloqueada.
+
 O novo handoff lista funcionalidades, commits/artefato, provas e bloqueios,
 com passos locais e limites dos scripts Linux. Setup macOS **não executado**.
 Revisor apontou falta de referência29 no checkpoint e de link no índice;
@@ -112,3 +148,9 @@ validar regressões afetadas e só então conferir aceitação e critériosSprin
 
 Sprint01 continua aberta. Não houve promoção, merge, STOP ou conclusão global.
 A passagem está em preparação, não substitui gates pendentes.
+
+Publicação do incremento `a94e475f7dec9c49a4dca40978880c0cb052f8c4` conferida
+no remoto e no PR3 OPEN/draft/base main. Corpo remoto comparado integralmente;
+ambos checksCI passaram, relidos às04:21Z.19links do relatório privado28 foram
+conferidos, sem alvo ausente; recibos/hash/cobertura da fundação20 e smoke50
+reabertos. Arquivo privado de acesso continua0600, sem leitura de credenciais.
