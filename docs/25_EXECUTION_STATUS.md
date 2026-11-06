@@ -1,5 +1,55 @@
 # Checkpoint de execução
 
+## Incremento — ciclo34, 2026-11-06
+
+Missão vigente somente Sprint01/handoffMac. PR3 OPEN draft/head59bd4a4 e ambos
+checksCI aprovados conferidos; alteração documental herdada preservada. Build95
+recontado:24XML/175backend sem falha/erro/skip; NÃO reconstruir. Worker32
+preservado,155pares únicos conferidos08:15Z: UI18×5/identidade45/eventos55/
+verificação15/cadastro20/recuperação15. Convites restantes em execução. Resultado
+global ainda pendente, sem promoção/deploy/merge/STOP.
+
+42imagens95 materializadas com origem/hash:20principais/12complementos/10adicionais.
+Formulários públicos inspecionados também em recortes mobile nativos. Coletor33 agora
+executado,16links privados conferidos. Revisão independente rastreou sete critérios
+aos testes existentes; não aprova gates futuros. Fonte operacional01 limpa e
+compatível; dependências existentes ligadas sem instalação/build. Revalidação
+de contas preparada, NÃO executada. Preserva empresa adicional28/clone135836/
+original16392 bloqueado/baseline449ce3c; não repetir assistido nem retornar banco
+pré-identidade. Próximo: terminar matriz/visual, manutenção95, troca composta,
+fundação/smokes/aceitação. Mac não verificado;02–05 fora do escopo.
+[Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
+
+## Encerramento — ciclo33, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado após escrever o coletor somente
+leitura; depois somente handoff obrigatório, sem novas verificações.
+Sprint01 NÃO concluída. Sem deploy/promoção/merge/STOP/CONCLUSAO.json.
+
+Publicado59bd4a4/PR3 OPEN draft, head/base/corpo relidos. CI01e2724 aprovada
+nos dois checks,175backend/160Python no log; CI59 ainda IN_PROGRESS nos dois
+checks na última consulta07:45:50Z. Não presumir término posterior.
+
+Build95 aprovado/hash conferido,24XML/175backend sem falha/erro/skip. Comparação
+real dos JARs validou composto e recusou modos antigos; nenhum rebuild necessário.
+Worker32/MainPID850944/candidato857166 preservado, faseeventos na última
+observação.50pares únicos conferidos07:41:56Z; nenhum gate global recolhido.
+Não interromper/duplicar nem iniciar manutenção concorrente.
+
+32capturas95 inspecionadas/vinculadas:10principais/12complementos/10adicionais.
+Duas imagensdesktop de eventos/exportação inspecionadas depois, notas privadas,
+mas vínculo/hash de família ainda pendentes: NÃO incluídas nas32. Relatório
+privado escrito; checagem de links bloqueada pelo parser, não executada. Coletor
+alternativo foi escrito, NÃO executado antes do aviso; não inventar verificação.
+
+Hml97/UP/PID754824 e OIDs135836/16392 bloqueado/baseline449ce3c preservados
+na última verificação07:36:10Z. Fonte operacional01 e fixture95 conferidas;
+manutenção/troca novas ainda NÃO iniciadas. STATUS/checkpointJSON privados
+identificam fontes, resultados, limites e próximos comandos. Nunca retornar
+banco pré-identidade nem repetir empresa assistida28. Este encerramento fica
+LOCAL após push59; publicar sem reconstruir. Mac não verificado;02–05 fora
+do escopo. Próximo: recolher matriz/CI, completar visual e gates operacionais.
+
 ## Incremento — ciclo33, 2026-11-06
 
 Atualização07:42Z: publicado01e2724/PR3 OPEN draft e ambos checksCI aprovados;

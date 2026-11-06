@@ -1,6 +1,16 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo33, 2026-11-06
+## Estado vigente — ciclo34, 2026-11-06
+
+Mesmo JAR95 às08:15Z:155pares únicos aprovados — UI18×5, identidade45,
+eventos55, verificação15, cadastro20 e recuperação15 — com resultados/hashes/
+cobertura reabertos. Convites restantes e demais parcelas em execução;
+sem gate global.42capturas vinculadas:20principais/12complementos/10adicionais.
+Manutenção95, troca/smokes e aceitação pendentes. Revisão independente conferiu
+rastreabilidade dos sete critérios, sem converter execução futura em aprovação.
+[Evidência34](sprint-01-retomada-ciclo-34.md).
+
+## Histórico — ciclo33, 2026-11-06
 
 Build95 aprovado,24XML/175backend sem falha/erro/skip. Matriz32 conferiu50pares
 únicos no mesmo95 (UI18×5 e identidade45); eventos em execução, sem gate global.

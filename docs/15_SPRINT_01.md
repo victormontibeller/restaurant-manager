@@ -9,7 +9,14 @@
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
 eventos cadastrais, exportação mínima e provisionamento assistido.
 
-Atualização ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip.
+Atualização ciclo34 às08:15Z: mesmo build95, sem reconstrução;155pares únicos
+aprovados, incluindo cadastro20 e recuperação15. Convites restantes/demais
+parcelas ainda em execução.42capturas inspecionadas/vinculadas, revisão integral pendente. Revisão
+independente rastreou os sete critérios aos testes existentes; manutenção95,
+troca composta, smokes e aceitação continuam pendentes. Não marcar critérios
+por antecipação. [Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
+
+Histórico ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip.
 Worker32 aprovou UI18×5 e identidade45,50pares únicos conferidos; eventos em
 execução.32capturas95 inspecionadas e vinculadas, revisão integral ainda pendente.
 Composição restrita login+frontend implementada/testada/revisada e conferida

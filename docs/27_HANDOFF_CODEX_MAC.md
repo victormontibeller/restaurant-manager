@@ -8,7 +8,14 @@ Preparação iniciada em 2026-11-06; **não é declaração de Sprint concluída
 O checkpoint registra o resultado mais recente. Escopo vigente: fechar somente
 Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta execução.
 
-Resumo vigente ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip;
+Resumo vigente ciclo34 às08:15Z: build95 preservado;155pares únicos aprovados,
+incluindo cadastro20 e recuperação15; demais parcelas em execução.42capturas vinculadas;
+manutenção95/troca/smokes/aceitação continuam pendentes. Fonte operacional01
+limpa/compatível e revalidação das contas preparada, ainda não executada.
+Não repetir empresa assistida28 nem retornar banco pré-identidade.
+[Evidência34](evidencias/sprint-01-retomada-ciclo-34.md).
+
+Resumo histórico ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip;
 hashbb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d.
 Worker32 aprovou50pares únicos (UI18×5+identidade45) e segue eventos.32capturas
 novas inspecionadas/vinculadas; revisão integral continua pendente. Opt-in
