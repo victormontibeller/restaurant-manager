@@ -1,0 +1,130 @@
+# Sprint 01 — retomada ciclo31
+
+[Checkpoint](../25_EXECUTION_STATUS.md) · [Sprint](../15_SPRINT_01.md) · [Passagem Mac](../27_HANDOFF_CODEX_MAC.md)
+
+## Build e ensaio frio recolhidos
+
+Artefato5cce633e515d76346da3b534e7f9ce3697a65eb3, SHA-256
+`2db5ed4a9c167a7f356da21b792a602e84d160435b18a7e44e4134ab9d0933d6`.
+Build único do ciclo30, sem reconstrução:24XML/175testes backend, zero
+falha/erro/skip. Gate, hash e fonte imutável conferidos. CI desse commit
+aprovada nos dois checks; não é aprovação de alterações posteriores de scripts.
+
+O worker frio terminou em2026-11-06T05:36:19Z. Quatro partidas de processo novo,
+Firefox/WebKit/Firefox/WebKit, passaram UI18 sem retry/skip/flaky. Nenhum login
+ou seed de aquecimento; readiness somente por health. JSONs, cobertura, hashes
+e JFR reabertos. São quatro execuções diagnósticas de dois pares distintos,
+não quatro cenários novos a somar à matriz. Unidade encerrada/MainPID0,
+candidatos recolhidos, homologação antes/depois idêntica.
+
+| Partida | Browser | Primeiro login no navegador (ms, arredondado) | Primeiro login no servidor (ms) | Startup até health (ms) |
+| --- | --- | --- | --- | --- |
+| 1 | Firefox | 3414 | 3410 | 154449 |
+| 2 | WebKit | 3433 | 2945 | 149591 |
+| 3 | Firefox | 5681 | 5674 | 158062 |
+| 4 | WebKit | 4006 | 3272 | 154428 |
+
+JFR com relógio calibrado registrou amostras HQL na thread main antes do
+primeiro login, sem amostras desse parser nas autenticações observadas. Isso
+corrobora o teste de cache e o deslocamento da interpretação para o startup.
+Ausência de amostras não prova ausência de custo; pilhas limitadas a cinco
+frames e timestamp HTTP com resolução de um segundo. Contagens não equivalem
+a duração exclusiva ou porcentagem de CPU.
+
+A reprodução29b tinha primeiro login abortado em10009ms e resposta do servidor
+em12547ms, com inicialização HQL antes de BCrypt. Existe agora correção e prova
+delimitada desse custo frio. Não atribuir automaticamente toda lentidão histórica
+no ciclo27 à mesma causa, nem garantir desempenho sob qualquer carga. A matriz
+integrada e os gates do novo artefato continuam necessários; timeout e BCrypt
+não foram relaxados.
+
+## Atualização binária delimitada, ainda não executada nativamente
+
+A comparação real dos JARs97d75b0 e5cce633 encontrou somente três entradas
+diferentes: `Usuario.class`, `IdentidadeRepository.class` e `application.yml`.
+Migrations, frontend, dependências e demais metadados permaneceram iguais.
+
+O procedimento existente `hml_frontend.py` ganhou opt-in `login-startup` para
+exatamente esse conjunto de entradas e a adição YAML revisada. O padrão continua
+exigindo backend byte a byte idêntico. Não há deploy Java genérico, migration,
+restore de banco ou promoção implícita. Encadeamento sobre troca concluída
+preserva o journal anterior e permite retorno somente ao binário imediatamente
+anterior no mesmo clone. Modo desconhecido falha fechado; journals legados
+continuam válidos como frontend. Detalhes no [runbook](../22_PRODUCTION_RUNBOOK.md).
+
+Provas executadas:
+
+- Vermelho inicial recusou a mudança delimitada pela guarda anterior; verde
+  confirmou opt-in, mantendo a recusa no padrão e negativos de alterações
+  externas ao incremento, inclusive recursos de migrations não SQL/ZIP duplicado.
+- Revisão independente encontrou janela entre arquivamento e publicação do
+  journal. Dois negativos reproduziram aceitação indevida da ausência do registro.
+  Correção recusa nova troca/consumidores quando há histórico ou preparação
+  órfãos; teste injeta a interrupção entre renames e comprova serviço intacto.
+  Essa janela exige reconciliação explícita; `recover` não a resolve sozinho.
+- Recuperação de disco simulada preservou histórico/baseline e voltou ao
+  predecessor imediato mesmo com novo JAR corrompido. Não é ensaio systemd real.
+- 19testes focados e158regressões Python passaram. Comparação dos JARs reais
+  aprovou o opt-in sem tocar em serviço/banco.
+
+CI d0150b8 falhou nos dois checks antes do backend: a fixture de ensaio do
+teste novo era criada sem0600 explícito. A umask local restrita ocultava o
+defeito; reprodução com Python3.12/umask022 falhou no mesmo preflight. Correção
+fixa0600 na fixture, sem relaxar a guarda de produção.158testes passaram com
+Python3.12/umask022. Commit corretivo b5448c74bfe88877124bbe59b71f90377d4cc09f
+publicado; ambos checksCI passaram. Log confirma175backend sem falha/erro/skip
+e158Python. Checkout operacional imutável compatível com o JAR5cce633 conferido;
+nenhuma reconstrução. Fixture existente de manutenção foi conferida contra o
+novo runtime, sem imprimir segredos nem criar contas; ensaio ainda não iniciado.
+
+## Matriz do novo artefato
+
+Worker finito31 iniciou05:39:49Z em fonte imutável do job5cce633, após término
+comprovado do ensaio frio. Plano215pares UI01–43 nos cinco projetos conferido
+programaticamente contra specs/configs, sem lacunas ou duplicatas. UI18 é foco
+inicial; sua falha impede seguir a matriz. Não reconstrói, não publica hml e não
+promove baseline. Limite informado de quatro horas, unidade própria com
+`KillMode=control-group` conferido pelo próprio worker e externamente, para
+recolher descendentes quando encerrar. Pode atravessar ciclos sem relançamento.
+
+UI18 passou as cinco combinações e identidade as45;50pares únicos, sem
+falha/skip/flaky/retry, JSONs/hashes/cobertura reabertos às05:58Z. Famíliaeventos
+está em execução. Não é aprovação da matriz inteira.
+Quatorze capturas de convites mobile/desktop foram inspecionadas com limites:
+cartão, contexto, reautenticação, cadastro com perfil inteiro, ação de criar,
+consulta e paginação. Viewports/componente não equivalem à página inteira.
+Mais oito principais de login/matriz/equipe/unidades e dez adicionais de
+reautenticação/proteção/Salvar/edição/paginação foram inspecionados. A matriz
+mobile foi vista em quatro recortes sobrepostos; nome longo de unidade fica
+parcial no input de linha única, mas integral no título. Materialização privada
+conferiu32imagens:10principais/12complementos/10adicionais. Não presumir cobertura
+das famílias futuras ou páginas inteiras a partir de componentes.
+Manutenção, atualização/retorno binário nativos, smokes e aceitação do novo JAR
+continuam pendentes. Não repetir provisionamento assistido28 nem restaurar o
+banco anterior à identidade.
+
+## Estado preservado e limites
+
+Hml97d75b0 UP/PID754824, cloneOID135836 ativo; originalOID16392 bloqueado,
+zero conexões. rm_testOID16389 conferido. Baseline449ce3c não promovido.
+Trabalho documental herdado preservado. PR3 aberto/draft; sem merge, produção,
+STOP ou conclusão global. Escopo somente Sprint01 e handoffMac;02–05 não
+iniciadas. Setup Mac não executado/verificado.
+
+## Encerramento da chamada
+
+Aviso efetivo de orçamento recebido após consulta06:08:23Z; depois somente
+handoff obrigatório. Worker31 continua emeventos,50pares consolidados, sem
+resultado global observado. Não foi interrompido nem duplicado. Quatro imagens
+de eventos/exportação inspecionadas posteriormente têm notas privadas salvas;
+vínculo ao recibo final da família ainda pendente, não somado à revisão32.
+
+Preflight real somente leitura recusou ensaio do JAR anterior para atualizar
+o backend; hashes de unidade/journals/baseline e runtime antes/depois idênticos.
+Não é execução nativa da troca. Fonte operacionalb5448c7 e fixture existente
+conferidas, mas manutenção/troca/smokes/aceitação continuam pendentes.
+
+Head publicadob5448c7 e ambos checksCI aprovados. Estes registros documentais
+posteriores ficam locais; corpoPR atualizado foi preparado, ainda não reenviado.
+Preservar trabalho e último runtime saudável. Nenhuma nova verificação após
+o aviso, nenhum STOP/conclusão global ou avanço para02–05.

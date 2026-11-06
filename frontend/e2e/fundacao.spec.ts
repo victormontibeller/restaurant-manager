@@ -7,7 +7,7 @@ test('S00-UI01: shell conecta à API e PostgreSQL reais', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByRole('status')).toHaveText('Sistema conectado. Banco de dados disponível.');
   await expect(page.getByText('Nenhum pedido ou pagamento é aceito nesta versão.', {exact:false})).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   expect(await page.getByRole('button', {name:'Verificar conexão'}).evaluate(e => e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
   expect(await page.locator('main').evaluate(e => getComputedStyle(e).paddingLeft)).not.toBe('0px');
   expect(errors).toEqual([]);
@@ -51,7 +51,9 @@ test('S00-API01: gestão privada e domínio arbitrário negados', async ({ reque
   const unknown = await request.get('/api/v1/unidades', { headers: { Host: 'desconhecido.localhost' } });
   expect(unknown.status()).toBe(404);
   expect((await unknown.json()).codigo).toBe('EMPRESA_INDISPONIVEL');
-  const privateRoute = await request.get('/api/v1/equipe');
+  const privateHost=process.env['RM_PRIVATE_HOST']??'a.localhost';
+  expect(['a.localhost','hmla.localhost']).toContain(privateHost);
+  const privateRoute = await request.get('/api/v1/equipe', { headers: { Host: privateHost } });
   expect(privateRoute.status()).toBe(401);
   expect((await privateRoute.json()).codigo).toBe('AUTENTICACAO_NECESSARIA');
   const health = await request.get('/actuator/health');

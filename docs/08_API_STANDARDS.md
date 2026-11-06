@@ -33,7 +33,35 @@ A API não deve depender de DOM, cookie exclusivo do Angular ou chamadas locais 
 
 ## Consistência dos contratos
 
+Contratos acrescentados na retomada ciclo17: [identidade empresarial](api/identidade.yaml)
+(CSRF, login, refresh, logout, identidade e confirmação de senha) e
+[matriz, equipe e acessos efetivos](api/acessos.yaml). Documentam os DTOs e
+comportamentos existentes, sem criar novas rotas ou aprovar funcionalidades futuras
+somente porque suas ações aparecem no catálogo. O contrato distingue os limites
+de bytes da senha e a versão primitiva atual; consumidores devem enviar a versão
+consultada. Validação estrutural/referências e consultas HTTP reais são evidências
+separadas da matriz E2E e dos testes de escrita/concorrência.
+
+Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), com CSRF, resposta neutra, consumo único e limites; [cadastro verificado de cliente](api/cadastro.yaml), no candidato do ciclo 10, sem atribuição pública de perfil/unidades nem senha anterior à prova de e-mail. Não representam OpenAPI completo das demais famílias.
+
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
+
+Contrato adicional do ciclo 11: [convites de funcionários](api/convites.yaml), com intenção durável, consulta por UUID, revogação e aceite público protegido por CSRF. Candidato em validação, sem publicação em homologação.
+
+Contrato da retomada: [verificação de conta existente](api/verificacao.yaml),
+sem alteração de senha/perfil nem criação de sessão. Implementação em validação;
+resultados e artefatos aprovados são registrados no checkpoint.
+
+Contrato SaaS parcial: [identidade de operador e consulta de empresas](api/plataforma.yaml).
+Audiência, sessões, CSRF e origem separados; não há acesso implícito aos schemas
+empresariais. A retomada ciclo 3 acrescenta confirmação de senha SaaS, consulta
+exata e suspensão/reativação versionada. A retomada ciclo 4 acrescenta
+[solicitação/consulta/retomada de provisionamento](api/provisionamento.yaml),
+em validação, com execução DDL separada por CLI e sem promoção para homologação.
+
+Contrato de acompanhamento cadastral: [eventos de unidade](api/eventos-unidade.yaml),
+em validação na retomada ciclo 5. Cursor por versão, paginação, projeção mínima,
+política e sessão revalidadas por consulta. Não é contrato de eventos financeiros.
 
 ## Documentos relacionados
 

@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UnidadeRepository extends JpaRepository<Unidade, UUID> {
     List<Unidade> findByAtivaTrueOrderByNome();
+    List<Unidade> findAllByOrderByNomeAscIdAsc(org.springframework.data.domain.Pageable pagina);
 }

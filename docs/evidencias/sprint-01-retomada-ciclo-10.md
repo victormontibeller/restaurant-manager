@@ -1,0 +1,101 @@
+# Sprint 01 — retomada ciclo 10
+
+[Checkpoint](../25_EXECUTION_STATUS.md) · [Sprint](../15_SPRINT_01.md)
+
+Missão não concluída. Build/worker herdados de `e847fee` foram preservados;
+nenhuma aprovação inferida de execução ainda ativa. Homologação `449ce3c`
+conferida saudável, sem alteração neste registro.
+
+## Correção do probe Angular
+
+CI do `f1e58de` teve um check aprovado e outro falho. O log da falha mostra
+`COZINHA` no modelo contra `GERENTE` esperado após recarga. Revisão independente
+identificou a causa: `ocupado=false` e valores iguais no DOM não demonstram que
+o `@for` reconciliou seus objetos; o listener ainda pode capturar o funcionário
+anterior. O probe agora conserva `ApplicationRef` e aguarda `whenStable()` após
+operações/recargas antes da interação seguinte. Não repete a escrita, força
+change detection nem troca a assertiva de modelo por polling.
+
+`bash scripts/test-profile-templates.sh` passou localmente nos três motores,
+com payloads e recarga de equipe/matriz/convite conferidos. Angular real com API
+fictícia: esta é uma unidade de UI, NÃO E2E/PostgreSQL nem aprovação de release.
+CI nova e E2E herdado permanecem em acompanhamento.
+
+A mesma revisão independente não identificou regressão bloqueante no leitor de
+snapshot separado nem na preparação única da fixture por JVM. O snapshot não
+protege contra DDL concorrente; lock e coordenação operacional continuam
+obrigatórios. Não foi executado teste novo pelo revisor.
+
+## Manutenção — implementação e testes unitários
+
+Novo ensaio nativo conserva o banco original, clona sob nome canônico e retorna
+por OID, sem DROP nem encerramento de clientes desconhecidos. O runner aceita
+somente rm_test; hml é observada e preservada. Código e limites no
+[runbook](../22_PRODUCTION_RUNBOOK.md). Nenhuma mutação real deste ensaio havia
+sido executada na gravação deste registro.
+
+Revisão independente encontrou retomada cega de clone abandonado, janela de
+CREATE DATABASE com resposta perdida, journal sem fsync e redirects no probe.
+Correções recusam ledger/banco pendente, conservam ambos os bancos quando o OID
+novo é incerto, sincronizam journal/diretórios e rejeitam redirects sem propagar
+Bearer/CSRF. Vermelho dos testes novos reproduziu duas falhas comportamentais e
+uma importação ainda ausente. A primeira rodada do módulo teve somente erro de
+importação, não demonstração comportamental.
+
+Suíte Python passou 83 testes, incluindo doze de manutenção e duas novas provas
+do cliente HTTP. O negativo de redirect usa servidor HTTP loopback real e conta
+requisições: destino não autorizado não é chamado. Fixtures de clone são
+unitárias, não demonstram manutenção PostgreSQL nem aprovam hml.
+
+Build herdado e847fee terminou exit0/gate true, hash
+`7bd1db646ab2ddabe4a92facb133fb41cc2af85e85429b813223e3df3caa19dd`.
+Recontados 22 XML/170 testes backend, zero falhas/erros/skip. Build inteiro entre
+20:18:11Z e20:41:16Z; Maven reportou19:17. Não repetir: alterações deste ciclo
+são scripts/testes/docs, sem mudança na fonte compilável. Worker9 prossegue E2E.
+CI a939142 aprovada nos dois checks; isso não encerra gate de release.
+
+## Manutenção nativa efetivamente executada
+
+Segunda execução terminou21:02:13Z, exit0/aprovada, fonte242c4a3 e JAR e847fee.
+Comparou1853tabelas/17301linhas antes, no clone e após retorno. Original conservou
+OID16389; candidato125314 foi preservado bloqueado, não apagado. Migrador Java
+real retornou0. DDL exclusivo de teste confirmou e a instrução posterior falhou
+intencionalmente; o retorno recuperou o original sem aquele DDL, sem down migration.
+Três inicializações/paradas systemd reais, TLS e banco/credencial runtime
+verificados; três contas de duas empresas, negativos de tenant/unidade e Cozinha
+sem administração conferidos em cada fase. Serviço próprio de ensaio encerrado;
+hml com mesmo SHA/hash/PID antes e depois. Não encerra X15 nem promove hml.
+
+## Reexecuções e pendências
+
+Worker9 terminou exit1: S01-UI35 passou quatro combinações e falhou WebKit;
+S01-UI41 passou cinco, sem skip/retry/flaky. TLS/contrato runtime do candidato
+foram verificados nativamente. Falha UI35 ocorreu após login200 enquanto a view
+de acessos ainda carregava; trace registra me/matriz/equipe/unidades200 e
+snapshot ocupado. Teste agora aguarda essas respostas/corpos antes de iniciar
+a assertiva de DOM, mantendo os cinco segundos de assertiva, sem retry ou
+relaxar o resultado. Typecheck E2E passou; reexecução corrigida ainda pendente.
+A tentativa anterior de typecheck completo excedeu90s; não foi aprovada.
+
+Primeiro preflight de manutenção recusou chaves da fixture de restore distintas
+do runtime, antes de criar tentativa ou tocar banco/serviço. Preparada outra
+fixture privada com AS MESMAS contas e chaves/certificado do runtime sob ensaio,
+sem alterar validação nem banco. Segunda execução nativa está em andamento,
+com fonte imutável242c4a3 e artefatoe847fee. Não é aprovação antecipada.
+
+Recorte mobile do cartão UI35 inspecionado: COZINHA visível e texto quebrado sem
+overflow no topo; o cartão completo tem lista muito longa da massa acumulada.
+Não apresentar essa inspeção de recorte como revisão integral da tela.
+
+Manutenção/migrations com recuperação, gate integrado e publicação Sprint01;
+Sprints02–05 não iniciadas. Sem merge ou conclusão técnica antecipada.
+
+## Handoff
+
+Aviso efetivo de orçamento quase esgotado após gravação do STATUS privado.
+Último snapshot verificável21:05:00Z; CI/data consultadas21:05:05Z. Ambos os
+checks do head0eb0a70 passaram. E2E10 ainda em andamento, sem resultado novo
+consolidado; nenhum worker foi interrompido para encerrar a chamada. Documentos
+finais locais posteriores ao push. Hml preservada; não houve verificação nova
+após o aviso. Próxima execução deve recolher o worker existente, não repetir
+build ou afirmar matriz integrada aprovada.

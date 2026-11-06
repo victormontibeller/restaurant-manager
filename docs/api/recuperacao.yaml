@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: Recuperação de senha empresarial
+  version: 0.1.0
+  description: >-
+    Contrato do candidato da Sprint 01. Empresa resolvida por domínio cadastrado.
+    Somente captura privada de e-mail em desenvolvimento/testes/homologação fictícia.
+    Não há envio a provedor externo. Access JWT não substitui CSRF nestas rotas.
+paths:
+  /api/v1/auth/recuperacao:
+    post:
+      summary: Solicitar instruções sem revelar existência da conta
+      description: >-
+        Obter antes GET /api/v1/auth/csrf e devolver o token no headerName informado,
+        junto do cookie seguro de CSRF. Limites persistidos independem da existência
+        da conta: 3 solicitações por e-mail e 30 por origem em quinze minutos.
+        A resposta não afirma entrega. Consulta da conta ocorre no worker durável.
+      security:
+        - csrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: {type: string, format: email, maxLength: 254}
+      responses:
+        '202':
+          description: Solicitação persistida, mesmo para conta desconhecida ou inativa
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mensagem]
+                properties:
+                  mensagem:
+                    type: string
+                    const: Se a conta estiver elegível, enviaremos instruções de recuperação.
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '429': {description: Limite de tentativas persistido}
+        '503': {description: Captura ou chave de comunicação não configurada}
+  /api/v1/auth/recuperacao/confirmar:
+    post:
+      summary: Consumir código e substituir senha atomicamente
+      description: >-
+        Código aleatório de 256 bits, válido por quinze minutos a partir da solicitação.
+        Somente SHA-256 é armazenado na tabela de verificação. Conteúdo recuperável
+        da outbox é cifrado com chave própria. A confirmação revoga todas as sessões
+        e códigos anteriores do usuário nesta empresa, preserva perfil/unidades e
+        registra auditoria e aviso. Não autentica automaticamente nem confirma e-mail.
+        Concorrência resulta em um sucesso e uma rejeição. Resposta perdida exige
+        conferir login com a nova senha; código consumido não é reutilizado.
+      security:
+        - csrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [codigo, senha]
+              properties:
+                codigo: {type: string, pattern: '^[A-Za-z0-9_-]{43}$', writeOnly: true}
+                senha:
+                  type: string
+                  minLength: 12
+                  maxLength: 72
+                  writeOnly: true
+                  description: Além do limite de caracteres, máximo de 72 bytes UTF-8
+      responses:
+        '204': {description: Senha alterada e sessões anteriores revogadas}
+        '400': {description: Estrutura inválida ou campo desconhecido}
+        '403': {description: CSRF inválido ou ausente}
+        '404': {description: Empresa indisponível}
+        '422': {description: Código inválido/expirado/consumido ou senha excedendo bytes}
+        '429': {description: Limite de confirmações por origem em quinze minutos}
+        '503': {description: Comunicação não configurada}
+components:
+  securitySchemes:
+    csrf:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: Token mascarado fornecido por /api/v1/auth/csrf; exige também cookie __Host-RM_CSRF

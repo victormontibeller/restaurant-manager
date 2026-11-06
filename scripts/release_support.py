@@ -1,10 +1,14 @@
 """Primitivas pequenas de release; sem ações ao importar."""
 import hashlib
+import base64
+import grp
 import json
 import os
 from pathlib import Path
 import re
+import pwd
 import shutil
+import ssl
 import subprocess
 import time
 import urllib.request
@@ -12,6 +16,10 @@ import zipfile
 
 UNIT = 'restaurant-manager-hml.service'
 RUNTIME_KEYS = ('RM_DB_URL', 'RM_DB_USER', 'RM_DB_PASSWORD', 'RM_STAGE')
+IDENTITY_KEYS = ('RM_JWT_SECRET', 'RM_JWT_KEY_ID', 'RM_EMAIL_SECRET',
+                 'RM_EMAIL_CAPTURE_DIRECTORY', 'SERVER_SSL_KEY_STORE',
+                 'SERVER_SSL_KEY_STORE_PASSWORD', 'SERVER_SSL_KEY_STORE_TYPE',
+                 'RM_TLS_TRUST_CERTIFICATE')
 
 
 def private_config(path):
@@ -34,8 +42,112 @@ def private_config(path):
     return values
 
 
-def runtime_config(values):
-    return ''.join(f'{key}={values[key]}\n' for key in RUNTIME_KEYS)
+def private_runtime_path(value, directory=False):
+    path = Path(value)
+    repo = Path(__file__).resolve().parents[1]
+    if (not path.is_absolute() or '..' in path.parts or path.is_symlink() or not path.exists()
+            or path.stat().st_uid != os.getuid() or path.stat().st_mode & 0o077
+            or path.resolve().is_relative_to(repo)
+            or (not path.is_dir() if directory else not path.is_file())):
+        raise ValueError('Caminho de runtime deve ser privado e externo ao checkout.')
+    for parent in path.parents:
+        stat = parent.stat()
+        # Grupo privado do proprietário não representa escrita por terceiros.
+        group_users = set(grp.getgrgid(stat.st_gid).gr_mem)
+        group_users.update(user.pw_name for user in pwd.getpwall() if user.pw_gid == stat.st_gid)
+        trusted_users = {pwd.getpwuid(uid).pw_name for uid in (0, os.getuid())}
+        if (parent.is_symlink() or stat.st_uid not in (0, os.getuid()) or stat.st_mode & 0o002
+                or (stat.st_mode & 0o020 and not group_users.issubset(trusted_users))):
+            raise ValueError('Diretório ancestral não confiável para configuração privada.')
+    return path
+
+
+def runtime_config(values, identity=False):
+    keys: list[str] = list(RUNTIME_KEYS)
+    if identity:
+        if any(not values.get(k) for k in IDENTITY_KEYS if k != 'RM_JWT_KEY_ID'):
+            raise ValueError('Configuração de identidade/TLS incompleta.')
+        values = dict(values, RM_JWT_KEY_ID=values.get('RM_JWT_KEY_ID', 'v1'))
+        previous, previous_id = values.get('RM_JWT_PREVIOUS_SECRET', ''), values.get('RM_JWT_PREVIOUS_KEY_ID', '')
+        if (len(values['RM_JWT_SECRET'].encode()) < 64
+                or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', values['RM_JWT_KEY_ID'])
+                or bool(previous) != bool(previous_id)
+                or (previous and (len(previous.encode()) < 64 or previous == values['RM_JWT_SECRET']
+                    or previous_id == values['RM_JWT_KEY_ID'] or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', previous_id)))):
+            raise ValueError('Configuração de chaves JWT inválida.')
+        try:
+            if len(base64.b64decode(values['RM_EMAIL_SECRET'], validate=True)) != 32:
+                raise ValueError()
+        except ValueError:
+            raise ValueError('Chave de comunicação inválida.') from None
+        if values['SERVER_SSL_KEY_STORE_TYPE'] != 'PKCS12' or not values['SERVER_SSL_KEY_STORE'].startswith('file:/'):
+            raise ValueError('TLS exige certificado PKCS12 privado local.')
+        private_runtime_path(values['SERVER_SSL_KEY_STORE'][5:])
+        private_runtime_path(values['RM_TLS_TRUST_CERTIFICATE'])
+        private_runtime_path(values['RM_EMAIL_CAPTURE_DIRECTORY'], directory=True)
+        keys.extend(IDENTITY_KEYS)
+        if previous:
+            keys.extend(('RM_JWT_PREVIOUS_SECRET', 'RM_JWT_PREVIOUS_KEY_ID'))
+    if any(not isinstance(values.get(key), str) or not re.fullmatch(r'[A-Za-z0-9_:/+.@=-]+', values[key]) for key in keys):
+        raise ValueError('Valor de runtime inválido; configuração não será exibida.')
+    return ''.join(f'{key}={values[key]}\n' for key in keys)
+
+
+def artifact_has_identity(jar):
+    with zipfile.ZipFile(jar) as archive:
+        return 'BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class' in archive.namelist()
+
+
+def require_foundation_artifact(jar):
+    if artifact_has_identity(jar):
+        raise ValueError('Gate de fundação não aprova identidade; matriz integrada da Sprint01 obrigatória.')
+
+
+def runtime_transport(jar, environ):
+    secure = b'SERVER_SSL_KEY_STORE' in environ
+    if artifact_has_identity(jar) and not secure:
+        raise ValueError('Artefato de identidade exige HTTPS, sem fallback HTTP.')
+    if secure:
+        certificate = environ.get(b'RM_TLS_TRUST_CERTIFICATE')
+        if not certificate:
+            raise ValueError('Verificação HTTPS exige certificado de confiança explícito.')
+        trust = private_runtime_path(os.fsdecode(certificate))
+        context = ssl.create_default_context(cafile=str(trust))
+        return 'https://127.0.0.1:8088', context
+    return 'http://127.0.0.1:8088', None
+
+
+def durable_artifact(job, root, repo):
+    """Gate do job e igualdade da fonte compilável, inclusive Angular."""
+    job = job.resolve()
+    if not job.is_relative_to(root.resolve() / 'builds'):
+        raise ValueError('Job deve pertencer ao diretório privado de builds.')
+    gate = json.loads((job / 'gate.json').read_text())
+    result = json.loads((job / 'result.json').read_text())
+    request = json.loads((job / 'request.json').read_text())
+    jar = job / 'app.jar'
+    if (not re.fullmatch(r'[0-9a-f]{40}', gate.get('git_sha', ''))
+            or gate.get('checks') != 'backend+frontend' or result.get('exit_code') != 0
+            or result.get('release_gate') is not True or result.get('git_sha') != gate['git_sha']
+            or request.get('git_sha') != gate['git_sha']
+            or result.get('artifact_sha256') != gate.get('artifact_sha256')
+            or artifact_hash(jar) != gate.get('artifact_sha256')):
+        raise ValueError('Job sem resultado/gate/hash correspondentes.')
+    clean_sha(job / 'checkout', gate['git_sha'])
+    def source(base):
+        files = []
+        for name in ('backend/src/main', 'frontend/src'):
+            directory = base / name
+            if not directory.is_dir():
+                raise ValueError('Fonte compilável ausente.')
+            files.extend(p for p in directory.rglob('*') if p.is_file())
+        files.extend(base / name for name in ('backend/pom.xml', 'frontend/package.json',
+                     'frontend/package-lock.json', 'frontend/angular.json',
+                     'frontend/tsconfig.json', 'frontend/tsconfig.app.json'))
+        return {str(p.relative_to(base)): artifact_hash(p) for p in files}
+    if source(repo) != source(job / 'checkout'):
+        raise ValueError('Fonte compilável difere do artefato; novo build necessário.')
+    return jar, gate
 
 
 def migration_fingerprint(jar):
@@ -86,6 +198,35 @@ def atomic_json(path, data):
 
 def systemctl(*args):
     subprocess.run(['systemctl', '--user', *args], check=True)
+
+
+def assert_no_hml_maintenance(root):
+    """Lock evita simultaneidade; ledger impede outro deploy entre os ciclos."""
+    for name in ('state.json', 'database-swap.json'):
+        for path in (root / 'maintenance-releases').glob('*/' + name):
+            record = json.loads(path.read_text())
+            if record.get('stage') == 'hml' and record.get('state') == 'identidade-aceita':
+                verify_hml_acceptance(path.parent)
+            elif record.get('stage') != 'hml' or record.get('state') != 'original-restaurado':
+                raise ValueError('Manutenção de homologação pendente; validar/retornar antes de outro deploy.')
+
+
+def verify_hml_acceptance(attempt):
+    """Aceitação só libera o ledger quando todos os registros foram confirmados."""
+    receipt_path = private_runtime_path(str(attempt / 'acceptance.json'))
+    receipt = json.loads(receipt_path.read_text())
+    state = json.loads((attempt / 'state.json').read_text())
+    swap = json.loads((attempt / 'database-swap.json').read_text())
+    evidence = private_runtime_path(str(attempt / 'identity-evidence.json'))
+    digest = artifact_hash(receipt_path)
+    if (receipt.get('approved') is not True or receipt.get('stage') != 'hml'
+            or receipt.get('attempt') != str(attempt)
+            or receipt.get('evidence_sha256') != artifact_hash(evidence)
+            or any(r.get('state') != 'identidade-aceita' or r.get('acceptance_sha256') != digest
+                   for r in (state, swap))
+            or any(receipt.get(k) != state.get(k) for k in ('git_sha', 'artifact_sha256'))
+            or any(receipt.get(k) != swap.get(k) for k in ('original_oid', 'candidate_oid'))):
+        raise ValueError('Manutenção com aceitação incompleta/divergente; reconciliar antes de deploy.')
 
 
 def verify_listener(pid, port=8088):
@@ -175,10 +316,11 @@ def verify(root, expected_sha=None):
         raise ValueError('Runtime recebeu credencial de migração.')
     if environ.get(b'RM_DB_USER') != b'rm_hml_app' or environ.get(b'RM_RELEASE_SHA') != sha.encode():
         raise ValueError('Identidade de runtime divergente.')
-    with urllib.request.urlopen('http://127.0.0.1:8088/actuator/health', timeout=3) as response:
+    origin, context = runtime_transport(jar, environ)
+    with urllib.request.urlopen(origin + '/actuator/health', context=context, timeout=3) as response:
         if json.load(response) != {'status': 'UP'}:
             raise ValueError('Health não aprovado.')
-    with urllib.request.urlopen('http://127.0.0.1:8088/', timeout=3) as response:
+    with urllib.request.urlopen(origin + '/', context=context, timeout=3) as response:
         if b'<app-root>' not in response.read():
             raise ValueError('Shell Angular não servido.')
     current_pid = int(subprocess.check_output(['systemctl', '--user', 'show', UNIT, '--property=MainPID', '--value'], text=True))

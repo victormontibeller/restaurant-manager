@@ -5,7 +5,7 @@
 
 [Índice da documentação](README.md)
 
-**Status:** fundação técnica validada em 2026-11-04; PR #2 aberto, integração em main pendente. [Evidência dos critérios](evidencias/sprint-00-ciclo-3.md). Não representa conclusão do produto.
+**Status:** fundação técnica validada e PR #2 mesclado em 2026-11-04. Merge `fa9e595bd3bb3f1d768a279ac25ee03243c12fb9` conferido no GitHub e remoto; árvore igual ao head aprovado. Revisão independente e dois checks CI aprovados antes do merge. [Evidência dos critérios](evidencias/sprint-00-ciclo-3.md). Não representa conclusão do produto nem novo deploy.
 
 Os resultados verificáveis estão no checkpoint e nas evidências. Itens compostos permanecem abertos enquanto qualquer requisito estiver pendente.
 

@@ -7,7 +7,22 @@ import org.flywaydb.core.Flyway;
 /** Massa exclusiva de integração, sem DROP/TRUNCATE nem limpeza de homologação. */
 final class TestDatabase {
     private TestDatabase() {}
+    static final class Preparation {
+        @FunctionalInterface interface Task { void run() throws Exception; }
+        private boolean prepared;
+        synchronized void run(Task validate, Task prepare) throws Exception {
+            validate.run();
+            if (!prepared) {
+                prepare.run();
+                prepared = true;
+            }
+        }
+    }
+    private static final Preparation PREPARATION = new Preparation();
     static void prepare() throws Exception {
+        PREPARATION.run(TestDatabase::verifyTarget, TestDatabase::migrateAndSeed);
+    }
+    private static void verifyTarget() throws Exception {
         String url = System.getenv("RM_DB_URL");
         if (!"jdbc:postgresql://127.0.0.1:55432/rm_test".equals(url)
                 || !"rm_test_owner".equals(System.getenv("RM_MIGRATION_USER"))
@@ -23,6 +38,9 @@ final class TestDatabase {
                 throw new IllegalStateException("Conexão efetiva não autorizada.");
             }
         }
+    }
+    private static void migrateAndSeed() throws Exception {
+        String url = System.getenv("RM_DB_URL");
         migrate("public", "public");
         for (String letter : new String[]{"a", "b"}) {
             String schema = "t_" + letter.repeat(32);

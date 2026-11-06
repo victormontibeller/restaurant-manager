@@ -34,9 +34,114 @@ Suspensão comercial não deve abandonar pedidos já pagos, atendimentos abertos
 
 ## Diretrizes de implementação
 
+### Incremento disponível da Sprint 01
+
+O provisionamento local usa processo privilegiado separado, não bean/runtime HTTP. `--provisionar` lê arquivo privado 0600, reserva UUID/domínio/plano/auditoria em uma transação, migra somente o schema interno derivado do UUID e confirma unidade/Administrador/ativação em outra transação. O plano guarda BCrypt custo 12, não senha em claro; repetição divergente de dados ou senha conflita. `--retomar-provisionamento UUID` conclui a reserva persistida em novo processo. Erro preserva reserva, registra SQLState/código sanitizado e não publica empresa incompleta. Ambos compartilham advisory lock com o migrador global; chamada sem lock real é recusada.
+
+O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. O provisionador aceita `dev`/`test`; o opt-in restrito de hml e seus gates estão descritos adiante. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. Identidade SaaS segue [Segurança](04_SECURITY.md); solicitação HTTP, suspensão comercial e despacho assistido estão descritos abaixo. O [checkpoint](25_EXECUTION_STATUS.md) identifica os artefatos e resultados efetivamente implantados, sem transferir aprovação entre incrementos.
+
+JDBC atende à infraestrutura privilegiada de provisionamento/migração e ao registro
+público explícito da identidade SaaS, fora do EntityManager que exige tenant já
+provisionado. O serviço SaaS utiliza apenas credencial runtime e transação própria;
+não herda credenciais de DDL. Persistência empresarial continua JPA/Hibernate.
+Bootstrap não concede poderes SaaS a uma sessão empresarial nem libera DDL HTTP.
+
 - Nas requisições empresariais, resolva o tenant por domínio confiável cadastrado antes de autenticar. JWT, sessão, recurso e unidade devem corresponder ao contexto. Plataforma usa contexto público separado; webhooks validam o provedor e resolvem tenant pelo mapeamento interno de conta/recurso. Nunca derive um schema diretamente de entrada arbitrária.
 - Separe o contexto público da plataforma do contexto empresarial. Limpe contexto de tenant e conexão do pool em sucesso, erro e cancelamento; falha de resolução não pode cair em outro tenant.
 - Inclua tenant/unidade no escopo de caches, arquivos privados, jobs, eventos em tempo real e idempotência. Listagens, exportações e relatórios também precisam de autorização.
+
+## Estado comercial — retomada ciclo 3
+
+O candidato permite ao operador SaaS alternar somente `ATIVO` e `SUSPENSO`, com
+versão esperada, motivo obrigatório de até 240 caracteres e confirmação recente
+da senha. `PROVISIONANDO`/`FALHOU` não podem ser ativados por essa rota. Mudança
+repetida, versão antiga ou transição sem mudança retornam 409: consultar o estado
+atual antes de enviar nova decisão, sem retry automático da escrita.
+
+Usuário e sessão SaaS são revalidados sob locks antes da empresa; após esperar
+a empresa, o prazo de sessão/reautenticação é conferido novamente. Estado, versão
+e auditoria de operador/sessão/antes/depois/motivo confirmam na mesma transação.
+Auditoria permanece após expurgo técnico da sessão; runtime não pode alterá-la.
+
+Suspensão comercial não é revogação de segurança. O resolvedor continua aceitando
+o domínio de empresa `SUSPENSO`, mantendo login, recuperação e consultas/gestão
+empresariais existentes, sem conceder acesso a outro tenant. Empresas incompletas
+continuam indisponíveis. Não há pedidos/recebimentos implementados neste candidato:
+o bloqueio transacional de novas vendas e a conclusão/reconciliação de pedidos
+existentes deverão consumir essa política nas Sprints 03–04, com testes próprios.
+Não alegar esse gate demonstrado por alteração de um estado cadastral.
+
+UI consulta a empresa por UUID, confirma senha, informa efeito e exige nova
+consulta após resposta incerta/conflito. Consulta exata também sincroniza o cartão
+da lista quando presente. [Contrato](api/plataforma.yaml); resultados e limitações
+na [evidência do ciclo 3](evidencias/sprint-01-retomada-ciclo-3.md).
+
+## Solicitação SaaS de provisionamento — retomada ciclo 4
+
+O candidato acrescenta API/UI para solicitar, listar, consultar e retomar
+provisionamento, sem credencial owner ou DDL no HTTP. A intenção UUID guarda
+autor, dados normalizados e BCrypt; consulta não retorna e-mail/senha/hash/schema.
+Mesmo autor/payload/senha reutiliza o resultado; divergência retorna 409. Domínio
+local e UUID são reservados também contra o CLI legado, usando o mesmo advisory
+lock do migrador. Se o processo privilegiado estiver ocupado, a API não espera
+a migration mantendo locks: rejeita com 409 e preserva a intenção para consulta.
+
+`SOLICITADO` é uma fila persistida, não empresa ativa. O comando privilegiado
+`--processar-solicitacao UUID` reserva/migra/ativa pelo mecanismo existente e
+confirma `CONCLUIDO`; falha sanitizada resulta em `FALHOU`. A retomada HTTP exige
+versão e reautenticação, audita e recoloca em `SOLICITADO`. Não altera payload nem
+senha. Queda entre ativação e confirmação é reconciliável sem duplicar usuário
+ou unidade e sem reativar empresa suspensa depois. Não há retry infinito de falha.
+
+O worker deste incremento é uma invocação explícita por UUID, não um agendamento
+instalado. Despacho automático permanece limitado a dev/test; hml usa somente o
+fluxo assistido e os gates operacionais descritos adiante. Não confundir a jornada
+E2E que chama o CLI real com um timer de homologação ativo.
+
+Na retomada ciclo 6, `scripts/provisioning_queue.py` acrescenta despacho por lote
+fora do HTTP. Consulta os UUIDs `SOLICITADO` mais antigos, chama o mesmo CLI e
+confere solicitação, empresa e domínio após cada execução. Não reimplementa a
+reserva/ativação em Python e não retoma `FALHOU` automaticamente. O lock local
+serializa com build/deploy/E2E; o advisory lock Java continua protegendo contra
+outros migradores/provisionadores. Uma intenção ainda pendente após tentativa
+interrompe o lote e pausa novas tentativas até diagnóstico/`--resume` técnico.
+O banco mantém a intenção e o CLI reconcilia sua reexecução; o despacho não
+adiciona estado de negócio em memória. Não é promessa de execução exatamente uma
+vez. Homologação permanece recusada. Instalação/ensaio efetivo e limites ficam
+no checkpoint; [operação da fila](22_PRODUCTION_RUNBOOK.md#fila-operacional).
+
+UI conserva somente o UUID de resultado incerto em memória por operador/origem,
+inclusive entre logout/login na mesma página. Campos/senha precisam ser
+reinformados para replay; fechar/recarregar perde esse rascunho, com aviso. Consulta
+exata permite reconciliar um UUID guardado privadamente. Respostas de sessões
+anteriores/instâncias destruídas não podem limpar intenção nem encerrar login novo.
+[Contrato](api/provisionamento.yaml); [evidência](evidencias/sprint-01-retomada-ciclo-4.md).
+
+## Opt-in técnico de homologação — ciclo 11
+
+Atualização de execução do ciclo 11: o CLI privilegiado passa a admitir hml
+fictícia SOMENTE com `RM_HML_PROVISIONING_ENABLED=true` explícito do operador,
+depois dos gates de manutenção. Continua exigindo URL/porta/banco/roles exatos,
+conexão efetiva e advisory lock; produção permanece recusada. O opt-in não é
+exportado ao HTTP e não é uma prova de gate aprovado. O despachante automático
+`provisioning_queue.py` permanece limitado a dev/test. A disponibilidade efetiva
+do novo binário e o provisionamento real hml devem ser conferidos no checkpoint.
+
+### Despacho assistido por UUID — ciclo 15
+
+`scripts/hml_provisioning.py` acrescenta uma invocação operacional explícita de
+uma solicitação SaaS em hml fictícia. Exige opt-in, mesmo backend/artefato servido,
+ensaio de manutenção aprovado e vínculo ao banco candidato por OID. Não instala
+timer nem habilita hml no despachante automático dev/test. A solicitação deve
+usar domínio `.localhost` e Administrador `@example.invalid`.
+
+O processo registra intenção antes do CLI, confere empresa/domínio após sua
+execução e preserva cada tentativa. Retomada técnica exige `--resume` para o
+mesmo UUID, artefato e banco; conclusão já confirmada é reconciliada sem executar
+Java novamente. Estado `FALHOU` continua exigindo retomada versionada pela API/UI.
+Esse comando não promove release nem substitui a jornada integrada de
+provisionamento. Testes de coordenação não são homologação real; consultar o
+[runbook](22_PRODUCTION_RUNBOOK.md#despacho-assistido-hml) e checkpoint.
 
 ## Documentos relacionados
 

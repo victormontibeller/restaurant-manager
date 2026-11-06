@@ -26,9 +26,17 @@ class MigrationBoundaryTest {
 
     @Test void migradorReaplicaSemDuplicarERegistraTodosOsSchemas() throws Exception {
         TestDatabase.prepare();
+        var expected = new java.util.ArrayList<String>(java.util.List.of("public", "t_template"));
+        try (var connection = DriverManager.getConnection(System.getenv("RM_DB_URL"),
+                System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"));
+             var statement = connection.createStatement();
+             var rows = statement.executeQuery("select schema_name from public.empresa order by schema_name")) {
+            while (rows.next()) expected.add(rows.getString(1));
+        }
+        assertThat(expected).contains(FundacaoTest.A, FundacaoTest.B);
         var first = Migrations.run(System.getenv());
         var second = Migrations.run(System.getenv());
-        assertThat(first).containsExactly("public", "t_template", FundacaoTest.A, FundacaoTest.B);
+        assertThat(first).containsExactlyElementsOf(expected);
         assertThat(second).isEqualTo(first);
     }
 
@@ -98,7 +106,7 @@ class MigrationBoundaryTest {
             try (var rows = statement.executeQuery("select checksum from public.flyway_schema_history where version='1'")) {
                 rows.next(); checksum = rows.getInt(1);
             }
-            var validator = new SchemaCompatibility(runtime, "rm_test_app", "test");
+            var validator = new SchemaCompatibility(runtime, "rm_test_app", "test", false);
             try {
                 statement.executeUpdate("update public.flyway_schema_history set checksum=0 where version='1'");
                 assertThatThrownBy(validator::afterPropertiesSet)

@@ -22,9 +22,9 @@ Para cada sprint: vincular requisitos a cenários, registrar testes executados/r
 
 ## Como acompanhar as sprints
 
-Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. Todas estão **não iniciadas**, sem duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
+Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. A fundação foi integrada; Sprint 01 tem implementação/validação técnica concluídas em homologação fictícia, mas sua integração em main aguarda o proprietário no PR #3. Sprints 02–05 não iniciaram, conforme o checkpoint. Não há duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
 
-A execução pelo Hermes segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). Avança entre tarefas/sprints sem nova confirmação, usando branches encadeadas por incremento, push e deploy automático em homologação após os gates. Isso não autoriza merge em `main` ou produção nem permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
+A execução pelo Hermes segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). A delimitação vigente de 2026-11-06 encerra somente implementação/validação da Sprint 01 e prepara o handoff Codex/Mac. O PR #3 permanece aberto para revisão e integração em `main` pelo proprietário; Sprints 02–05 não serão iniciadas nesta execução. Cada próxima sprint deve partir da main integrada, em branch dedicada. Sem commit direto, merge pelo agente, auto-merge ou force push. Homologação fictícia permanece autorizada após validação, produção não. Nenhuma autorização permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
 
 ## Rastreabilidade mínima da revisão
 

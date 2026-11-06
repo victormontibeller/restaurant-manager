@@ -28,10 +28,44 @@ class ReleaseGuardsTest(unittest.TestCase):
 
     def test_runtime_nao_recebe_migracao_nem_chaves_arbitrarias(self):
         self.values['SPRING_APPLICATION_JSON'] = 'qualquer'
+        self.values['RM_HML_PROVISIONING_ENABLED'] = 'true'
         result = runtime_config(self.values)
         self.assertNotIn('MIGRATION', result)
         self.assertNotIn('SPRING', result)
+        self.assertNotIn('RM_HML_PROVISIONING_ENABLED', result)
         self.assertIn('RM_DB_USER=rm_hml_app\n', result)
+
+    def test_deploy_comum_recusa_manutencao_pendente_antes_de_ler_build(self):
+        import runpy
+        attempt = self.root / 'maintenance-releases' / ('a' * 32)
+        attempt.mkdir(parents=True)
+        (attempt / 'state.json').write_text(json.dumps({'stage': 'hml', 'state': 'health-aprovado-e2e-pendente'}))
+        with patch.dict(os.environ, RM_HOME=str(self.root)), patch('sys.argv', ['deploy-hml.py']), patch('subprocess.check_output', return_value=''):
+            with self.assertRaisesRegex(ValueError, 'Manutenção'):
+                runpy.run_path(str(Path(__file__).parent / 'deploy-hml.py'), run_name='__main__')
+
+    def test_aceitacao_parcial_nao_libera_deploy(self):
+        attempt = self.root / 'maintenance-releases' / ('a' * 32)
+        attempt.mkdir(parents=True, mode=0o700)
+        evidence=attempt/'identity-evidence.json';evidence.write_text('{}');evidence.chmod(0o600)
+        receipt=dict(approved=True,stage='hml',attempt=str(attempt),git_sha='b'*40,
+                     artifact_sha256='c'*64,original_oid='1',candidate_oid='2',
+                     evidence_sha256=artifact_hash(evidence))
+        file=attempt/'acceptance.json';file.write_text(json.dumps(receipt));file.chmod(0o600)
+        state=dict(stage='hml',state='identidade-aceita',acceptance_sha256=artifact_hash(file),
+                   git_sha=receipt['git_sha'],artifact_sha256=receipt['artifact_sha256'])
+        swap=dict(stage='hml',state='identidade-aceita',acceptance_sha256=artifact_hash(file),
+                  original_oid='1',candidate_oid='2')
+        for name,value in [('state.json',state),('database-swap.json',swap)]:
+            (attempt/name).write_text(json.dumps(value))
+        release_support.assert_no_hml_maintenance(self.root)
+        for key,value in [('state','clone-pronto'),('candidate_oid','3'),('acceptance_sha256','d'*64)]:
+            (attempt/'database-swap.json').write_text(json.dumps(dict(swap,**{key:value})))
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                release_support.assert_no_hml_maintenance(self.root)
+        (attempt/'database-swap.json').write_text(json.dumps(swap))
+        evidence.write_text('{"alterado":true}')
+        with self.assertRaises(ValueError):release_support.assert_no_hml_maintenance(self.root)
 
     def test_config_publica_recusada(self):
         self.save()
@@ -55,6 +89,111 @@ class ReleaseGuardsTest(unittest.TestCase):
     def test_config_valida(self):
         self.save()
         self.assertEqual(private_config(self.config), self.values)
+
+    def identity_values(self):
+        import base64
+        certificate = self.root / 'localhost.p12'
+        certificate.write_bytes(b'fixture-unitaria-nao-certificado-real')
+        certificate.chmod(0o600)
+        trust = self.root / 'localhost.pem'
+        trust.write_bytes(b'fixture-unitaria-nao-certificado-real')
+        trust.chmod(0o600)
+        capture = self.root / 'capture'
+        capture.mkdir(mode=0o700)
+        return dict(self.values, RM_JWT_SECRET='a' * 64, RM_JWT_KEY_ID='v1',
+                    RM_EMAIL_SECRET=base64.b64encode(b'b' * 32).decode(),
+                    RM_EMAIL_CAPTURE_DIRECTORY=str(capture),
+                    SERVER_SSL_KEY_STORE='file:' + str(certificate),
+                    SERVER_SSL_KEY_STORE_PASSWORD='placeholder', SERVER_SSL_KEY_STORE_TYPE='PKCS12',
+                    RM_TLS_TRUST_CERTIFICATE=str(trust))
+
+    def test_runtime_identidade_preserva_apenas_contrato_explicito(self):
+        values = self.identity_values()
+        values['SPRING_APPLICATION_JSON'] = 'nao-exportar'
+        values['RM_RECOVERY_TEST'] = 'true'
+        result = runtime_config(values, identity=True)
+        for key in ('RM_JWT_SECRET', 'RM_JWT_KEY_ID', 'RM_EMAIL_SECRET',
+                    'RM_EMAIL_CAPTURE_DIRECTORY', 'SERVER_SSL_KEY_STORE',
+                    'SERVER_SSL_KEY_STORE_PASSWORD', 'SERVER_SSL_KEY_STORE_TYPE', 'RM_TLS_TRUST_CERTIFICATE'):
+            self.assertIn(key + '=' + values[key] + '\n', result)
+        for key in ('RM_MIGRATION_PASSWORD', 'RM_MIGRATION_USER', 'SPRING_APPLICATION_JSON', 'RM_RECOVERY_TEST'):
+            self.assertNotIn(key + '=', result)
+
+    def test_runtime_identidade_falha_fechado_sem_segredos_ou_tls(self):
+        values = self.identity_values()
+        for key in ('RM_JWT_SECRET', 'RM_EMAIL_SECRET', 'RM_EMAIL_CAPTURE_DIRECTORY',
+                    'SERVER_SSL_KEY_STORE', 'SERVER_SSL_KEY_STORE_PASSWORD', 'SERVER_SSL_KEY_STORE_TYPE'):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                runtime_config({k: v for k, v in values.items() if k != key}, identity=True)
+
+    def test_runtime_identidade_recusa_chaves_e_arquivos_inseguros(self):
+        values = self.identity_values()
+        invalid = [dict(RM_JWT_SECRET='curta'), dict(RM_EMAIL_SECRET='invalida'),
+                   dict(RM_JWT_KEY_ID='../../arquivo'), dict(RM_JWT_PREVIOUS_KEY_ID='v0'),
+                   dict(RM_JWT_PREVIOUS_SECRET='c' * 64),
+                   dict(RM_JWT_PREVIOUS_KEY_ID='v1', RM_JWT_PREVIOUS_SECRET='c' * 64),
+                   dict(RM_JWT_PREVIOUS_KEY_ID='v0', RM_JWT_PREVIOUS_SECRET='a' * 64),
+                   dict(SERVER_SSL_KEY_STORE='https://example.invalid/certificado'),
+                   dict(SERVER_SSL_KEY_STORE_TYPE='JKS'), dict(RM_JWT_SECRET='a' * 64 + '\nRM_STAGE=prod')]
+        for replacement in invalid:
+            with self.subTest(keys=list(replacement)), self.assertRaises(ValueError):
+                runtime_config(dict(values, **replacement), identity=True)
+        (self.root / 'localhost.p12').chmod(0o644)
+        with self.assertRaises(ValueError):
+            runtime_config(values, identity=True)
+
+    def test_runtime_identidade_preserva_par_de_rotacao(self):
+        values = dict(self.identity_values(), RM_JWT_PREVIOUS_KEY_ID='v0', RM_JWT_PREVIOUS_SECRET='c' * 64)
+        result = runtime_config(values, identity=True)
+        self.assertIn('RM_JWT_PREVIOUS_KEY_ID=v0\n', result)
+        self.assertIn('RM_JWT_PREVIOUS_SECRET=' + 'c' * 64 + '\n', result)
+
+    def test_caminho_em_pai_gravavel_por_terceiros_e_recusado(self):
+        shared = self.root / 'shared'
+        shared.mkdir(mode=0o777)
+        shared.chmod(0o777)
+        file = shared / 'private'
+        file.write_bytes(b'fixture')
+        file.chmod(0o600)
+        with self.assertRaises(ValueError):
+            release_support.private_runtime_path(str(file))
+
+    def test_caminho_privado_nao_disfarca_origem_com_segmento_pai(self):
+        report = self.root / 'report'
+        report.mkdir(mode=0o700)
+        other = self.root / 'other'
+        other.mkdir(mode=0o700)
+        image = other / 'capture.png'
+        image.write_bytes(b'fixture-nao-imagem-real')
+        image.chmod(0o600)
+        self.assertEqual(release_support.private_runtime_path(str(image)), image)
+        for value, directory in ((report / '..' / 'other' / image.name, False),
+                                 (report / '..' / 'other', True)):
+            with self.subTest(directory=directory), self.assertRaises(ValueError):
+                release_support.private_runtime_path(str(value), directory=directory)
+
+    def test_identidade_nao_pode_ser_verificada_em_http(self):
+        jar = self.root / 'identity.jar'
+        with zipfile.ZipFile(jar, 'w') as archive:
+            archive.writestr('BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class', b'fixture')
+        with self.assertRaises(ValueError):
+            release_support.runtime_transport(jar, {})
+        with self.assertRaises(ValueError):
+            release_support.runtime_transport(jar, {b'SERVER_SSL_KEY_STORE': b'file:/ausente'})
+        with self.assertRaises(ValueError):
+            release_support.require_foundation_artifact(jar)
+
+    def test_grupo_com_terceiros_nao_pode_substituir_configuracao(self):
+        from types import SimpleNamespace
+        directory = self.root / 'group'
+        directory.mkdir(mode=0o770)
+        directory.chmod(0o770)
+        file = directory / 'private'
+        file.write_bytes(b'fixture')
+        file.chmod(0o600)
+        with patch('release_support.grp.getgrgid', return_value=SimpleNamespace(gr_mem=['terceiro'])):
+            with self.assertRaises(ValueError):
+                release_support.private_runtime_path(str(file))
 
     def test_compatibilidade_nao_confunde_codigo_com_migration(self):
         def artifact(name, sql, code):
