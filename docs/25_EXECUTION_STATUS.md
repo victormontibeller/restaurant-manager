@@ -1,43 +1,52 @@
 # Checkpoint de execução
 
-## Refatoração de camadas Java — em andamento, 2026-11-06
+## Refatoração de camadas Java — validação local concluída, 2026-11-06
 
-Proprietário solicitou padronizar todo o backend com imports explícitos,
-nomes simples e camadas dentro de cada domínio; entrega no próprio PR #5.
-Checkout inicialmente limpo em `b8deed087671123316ad86fcb92d056cf97b24b3`,
-branch `codex/sprint-02-catalogo-pwa`. A CI desse head foi aprovada em
-[push](https://github.com/victormontibeller/restaurant-manager/actions/runs/42298639403) e
-[PR](https://github.com/victormontibeller/restaurant-manager/actions/runs/42298647461);
-essa evidência não aprova a refatoração em curso.
+Todo o backend organizado com imports explícitos, nomes simples e camadas
+minúsculas dentro de cada domínio. DTOs compartilhados em arquivos próprios,
+entidades encapsuladas e pacotes técnicos separados; carrinho sem repository.
+Arquitetura e padrões canônicos atualizados. Contratos HTTP, mensagens,
+validações, transações, locks, recursos, migrations e frontend preservados.
+Guardas reconhecem os caminhos antigo/novo da configuração JWT e exigem HTTPS;
+a exceção histórica de login continua recusando a reorganização ampla.
 
-Trabalho dividido por domínio, com integração, contratos, migrations e
-checkpoint sob coordenação única. DTOs compartilhados são extraídos e acessos
-entre pacotes ajustados preservando encapsulamento e comportamento. Migrations
-e contratos HTTP permanecem iguais. Guardas de release reconhecem os caminhos
-antigo e novo da configuração JWT, mantendo a exigência de HTTPS e a exceção
-histórica de login restrita.
-
-Cinco testes direcionados dos guardas aprovados localmente. A primeira rodada
-de 25 testes usou temporário com ancestral não confiável e encontrou quatro
-erros de caminho e uma restrição de socket do sandbox; não é resultado aprovado.
-Reexecução direcionada no temporário privado correto passou. Compilação
-integrada de aplicação/testes aprovada; build Angular/PWA, formatação, tipos,
-13 probes e nove combinações de templates aprovados novamente. Recursos,
-migrations e frontend permanecem iguais ao head anterior. Backend/PostgreSQL:
-**262 testes/35 XML aprovados**, sem falha, erro ou skip. Suíte Python local:
-163 testes executados, zero falhas e 15 erros pela ausência de `/proc` no macOS;
-esses erros não são aprovados e a suíte completa será conferida no Ubuntu da CI.
+Implementação `062b344c7c6653d9783de288abd6bf7f7277e47b`, sobre
+`b8deed087671123316ad86fcb92d056cf97b24b3`, na branch
+`codex/sprint-02-catalogo-pwa`, para revisão no
+[PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5).
+Novo `git fetch origin` confirmou `main` em
+`19dff9d625d03cdba9d23bf023e88846743dec03`. Integração e checkpoint sob
+coordenação única; revisões independentes por domínio concluídas.
 
 Novo candidato SHA-256
-`f4c942c7e79b01537d068acb0ec195e4d4b70e7f8cdbce5253fe8ce5b770fecb`;
-253 fontes da aplicação conferidos sem alteração após o build. Runtime HTTPS
-local iniciado com esse JAR, PID/hash/TLS e captura por tenant conferidos.
-Dez contas fictícias novas preparadas para verificação de e-mail consumível,
-sem alterar contas existentes ou quotas. Matriz de 295 pares em execução;
-CI do novo head ainda pendente. Nenhum novo commit/push desta refatoração até
-este ponto.
-Linux/Hermes, homologação, dispositivos físicos e piloto continuam pendentes;
-sem merge ou deploy.
+`f4c942c7e79b01537d068acb0ec195e4d4b70e7f8cdbce5253fe8ce5b770fecb`.
+**262 testes backend/35 XML e 295 pares únicos de navegador aprovados novamente**,
+sem falha, erro, skip, retry ou flaky nas seleções finais. São 59 cenários nos
+cinco projetos, 65 lotes, no mesmo JAR; 253 fontes e PID conferidos antes/depois.
+Cinco pares PWA usam atualização controlada e 75 isolam falha de transporte.
+API de negócio, autenticação e PostgreSQL reais; quotas não foram redefinidas.
+
+Compilação integrada, build Angular/PWA, formatação, tipos, 13 probes e nove
+combinações de templates aprovados. Cinco testes direcionados de guardas
+aprovados. Python completo no Mac: 163 testes executados, zero falhas e 15 erros
+por ausência de `/proc`; esse resultado local não é aprovação da suíte.
+A execução completa no Ubuntu, junto aos checks de push/PR, deve ser conferida
+no SHA final publicado nos
+[checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/5/checks);
+a descrição do PR registra os links e resultados do head, sem herdar a CI antiga.
+
+Oitenta capturas abertas, com a limitação preexistente dos selects nativos
+WebKit pequenos preservada e registrada. Diff, links e scanners conferidos;
+sem valores privados encontrados no checkout/JAR. Falhas de preparação,
+reexecuções, contagens e limites estão na
+[evidência da refatoração](evidencias/refatoracao-camadas-java-2026-11-06.md).
+
+Runtime HTTPS local e PostgreSQL temporários encerrados, portas 8089/55432 sem
+listener; banco, fixtures e relatórios privados preservados. **Linux/Hermes,
+homologação, UI29/UI31 com worker/gates reais, 50 smokes, restore, dispositivos
+físicos e piloto continuam pendentes.** Nenhum merge ou deploy. Próximo passo:
+revisão do PR e, quando solicitado, reconciliação do ambiente Linux antes da
+homologação do novo release.
 
 ## Sprint 2 — publicada para revisão, 2026-11-06
 

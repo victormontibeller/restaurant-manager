@@ -89,6 +89,9 @@ aplicável passaram no candidato integrado identificado na evidência abaixo,
 com homologação Linux separada e pendente.
 
 [Evidência integrada local, falhas/reexecuções e limites](evidencias/sprint-02-local-2026-11-06.md).
+Após a padronização das camadas Java no PR #5, os 262 testes backend e os
+295 pares de navegador foram executados novamente no novo artefato, conforme
+a [evidência da refatoração](evidencias/refatoracao-camadas-java-2026-11-06.md).
 
 ## Critérios de aceite
 

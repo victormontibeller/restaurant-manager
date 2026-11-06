@@ -9,6 +9,11 @@ PWA e 75 pares com injeção de falha de transporte isolada. As APIs de negócio
 usam PostgreSQL real. O [checkpoint](../25_EXECUTION_STATUS.md) identifica
 artefato, processos encerrados e homologação deliberadamente pendente.
 
+A [refatoração das camadas Java](refatoracao-camadas-java-2026-11-06.md)
+reexecutou os mesmos 262 testes backend e 295 pares no novo JAR. É a validação
+local vigente do PR #5; a execução anterior permanece como histórico e não é
+somada às contagens atuais.
+
 | Cenário | Famílias | Superfícies e prova |
 | --- | --- | --- |
 | S02-UI03 | T02–T05/T20–T21, X05/X12/X14 | Categoria/produto/mídia/adicional/combo/oferta; vitrine e busca; prévia R$ 46; linhas distintas, cálculo, mudança de preço, reconfirmação, indisponibilidade, rede e troca de unidade |
