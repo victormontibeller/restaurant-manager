@@ -168,111 +168,122 @@ test('S01-UI41: seleção do perfil de convite persiste até aceite e login', as
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
 });
 
-test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem duplicação', async ({
-  page,
-}) => {
-  await admin(page);
-  const email = crypto.randomUUID() + '@example.invalid';
-  await page.getByLabel('E-mail do funcionário convidado').fill(email);
+test.describe('Fronteira de rede S01-UI18', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
 
-  // Perde a resposta depois de confirmar a criação no servidor.
-  let id = '';
-  await page.route(
-    '**/api/v1/equipe/convites',
-    async (route) => {
-      if (route.request().method() !== 'POST') {
-        await route.continue();
-        return;
-      }
-      const real = await route.fetch();
-      expect(real.status()).toBe(200);
-      id = (await real.json()).id;
-      await route.fulfill({
-        status: 502,
-        contentType: 'text/html',
-        body: '<html>Falha após commit real</html>',
-      });
-    },
-    { times: 1 },
-  );
-  const falha = page.waitForResponse(
-    (r) => r.url().endsWith('/equipe/convites') && r.status() === 502,
-  );
-  await page.getByRole('button', { name: 'Criar convite', exact: true }).click();
-  await falha;
-  await expect(page.getByRole('alert')).toContainText('Resultado incerto.');
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+  test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem duplicação', async ({
+    page,
+  }) => {
+    await admin(page);
+    const email = crypto.randomUUID() + '@example.invalid';
+    await page.getByLabel('E-mail do funcionário convidado').fill(email);
 
-  // Mantém a mesma página: pendência é memória segregada por conta, não storage.
-  await page.getByLabel('E-mail', { exact: true }).fill(auth.email);
-  await page.getByLabel('Senha', { exact: true }).fill(auth.senha);
-  const login = page.waitForResponse(
-    (r) => r.url().endsWith('/auth/login') && r.request().method() === 'POST',
-  );
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  expect((await login).status()).toBe(200);
-  await expect(
-    page.getByRole('heading', { name: 'Convites de funcionários', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Convite com resultado pendente' }),
-  ).toContainText(id);
+    // Perde a resposta depois de confirmar a criação no servidor.
+    let id = '';
+    await page.route(
+      '**/api/v1/equipe/convites',
+      async (route) => {
+        if (route.request().method() !== 'POST') {
+          await route.continue();
+          return;
+        }
+        const real = await route.fetch();
+        expect(real.status()).toBe(200);
+        id = (await real.json()).id;
+        await route.fulfill({
+          status: 502,
+          contentType: 'text/html',
+          body: '<html>Falha após commit real</html>',
+        });
+      },
+      { times: 1 },
+    );
+    const falha = page.waitForResponse(
+      (r) => r.url().endsWith('/equipe/convites') && r.status() === 502,
+    );
+    await page.getByRole('button', { name: 'Criar convite', exact: true }).click();
+    await falha;
+    await expect(page.getByRole('alert')).toContainText('Resultado incerto.');
+    await expect(
+      page.getByRole('button', { name: 'Gerenciar acessos', exact: true }),
+    ).toBeDisabled();
+    await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
 
-  // Reenvia a intenção original e confere que existe somente um convite.
-  await confirmarIdentidade(page);
-  const retry = page.waitForResponse(
-    (r) => r.url().endsWith('/equipe/convites') && r.request().method() === 'POST',
-  );
-  await page.getByRole('button', { name: 'Reenviar mesma intenção', exact: true }).click();
-  const response = await retry;
-  expect(response.status()).toBe(200);
-  expect((await response.json()).id).toBe(id);
-  await expect(
-    page.getByRole('button', { name: 'Reenviar mesma intenção', exact: true }),
-  ).toHaveCount(0);
-  await page.getByRole('button', { name: 'Recarregar convites', exact: true }).click();
-  await expect(page.getByRole('heading', { name: email, exact: true })).toHaveCount(1);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    page.viewportSize()!.width,
-  );
+    // Mantém a mesma página: pendência é memória segregada por conta, não storage.
+    await page.getByLabel('E-mail', { exact: true }).fill(auth.email);
+    await page.getByLabel('Senha', { exact: true }).fill(auth.senha);
+    const login = page.waitForResponse(
+      (r) => r.url().endsWith('/auth/login') && r.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+    expect((await login).status()).toBe(200);
+    await expect(
+      page.getByRole('heading', { name: 'Convites de funcionários', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Convite com resultado pendente' }),
+    ).toContainText(id);
 
-  // A massa acumulada alonga unidades e convites. Preservar os controles e o
-  // resultado desta intenção em capturas distintas, não em um PNG ilimitado.
-  const convites = page.locator('app-convites');
-  await page
-    .getByRole('heading', { name: 'Convites de funcionários', exact: true })
-    .scrollIntoViewIfNeeded();
-  await page.screenshot({ path: test.info().outputPath('convites-contexto.png'), fullPage: false });
-  await convites
-    .locator('form')
-    .first()
-    .screenshot({ path: test.info().outputPath('convites-reautenticacao.png') });
-  // Mesmo já visível, centralizar o campo inclui perfil/início das unidades no desktop.
-  await page
-    .getByLabel('E-mail do funcionário convidado')
-    .evaluate((element) => element.scrollIntoView({ block: 'center' }));
-  await page.screenshot({
-    path: test.info().outputPath('convites-cadastro-viewport.png'),
-    fullPage: false,
+    // Reenvia a intenção original e confere que existe somente um convite.
+    await confirmarIdentidade(page);
+    const retry = page.waitForResponse(
+      (r) => r.url().endsWith('/equipe/convites') && r.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Reenviar mesma intenção', exact: true }).click();
+    const response = await retry;
+    expect(response.status()).toBe(200);
+    expect((await response.json()).id).toBe(id);
+    await expect(
+      page.getByRole('button', { name: 'Reenviar mesma intenção', exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: 'Recarregar convites', exact: true }).click();
+    await expect(page.getByRole('heading', { name: email, exact: true })).toHaveCount(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      page.viewportSize()!.width,
+    );
+
+    // A massa acumulada alonga unidades e convites. Preservar os controles e o
+    // resultado desta intenção em capturas distintas, não em um PNG ilimitado.
+    const convites = page.locator('app-convites');
+    await page
+      .getByRole('heading', { name: 'Convites de funcionários', exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: test.info().outputPath('convites-contexto.png'),
+      fullPage: false,
+    });
+    await convites
+      .locator('form')
+      .first()
+      .screenshot({ path: test.info().outputPath('convites-reautenticacao.png') });
+    // Mesmo já visível, centralizar o campo inclui perfil/início das unidades no desktop.
+    await page
+      .getByLabel('E-mail do funcionário convidado')
+      .evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await page.screenshot({
+      path: test.info().outputPath('convites-cadastro-viewport.png'),
+      fullPage: false,
+    });
+    await page.getByRole('button', { name: 'Criar convite', exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: test.info().outputPath('convites-criar-viewport.png'),
+      fullPage: false,
+    });
+    await convites
+      .locator('form')
+      .filter({ has: page.getByLabel('Identificador do convite') })
+      .screenshot({ path: test.info().outputPath('convites-consulta.png') });
+    await convites
+      .getByRole('article')
+      .filter({ has: page.getByRole('heading', { name: email, exact: true }) })
+      .screenshot({ path: test.info().outputPath('convites.png') });
+    await page
+      .getByRole('navigation', { name: 'Páginas de convites', exact: true })
+      .screenshot({ path: test.info().outputPath('convites-paginacao.png') });
+    await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
   });
-  await page.getByRole('button', { name: 'Criar convite', exact: true }).scrollIntoViewIfNeeded();
-  await page.screenshot({
-    path: test.info().outputPath('convites-criar-viewport.png'),
-    fullPage: false,
-  });
-  await convites
-    .locator('form')
-    .filter({ has: page.getByLabel('Identificador do convite') })
-    .screenshot({ path: test.info().outputPath('convites-consulta.png') });
-  await convites
-    .getByRole('article')
-    .filter({ has: page.getByRole('heading', { name: email, exact: true }) })
-    .screenshot({ path: test.info().outputPath('convites.png') });
-  await page
-    .getByRole('navigation', { name: 'Páginas de convites', exact: true })
-    .screenshot({ path: test.info().outputPath('convites-paginacao.png') });
-  await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
 });
 
 test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro', async ({ page }) => {

@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { CriacaoPendenteService } from './criacao-pendente.service';
+import { FuncionamentoUnidadeComponent } from './funcionamento.component';
 
 interface Unidade {
   id: string;
@@ -12,11 +13,12 @@ interface Unidade {
 
 @Component({
   selector: 'app-unidades',
+  imports: [FuncionamentoUnidadeComponent],
   template: `
     <section aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="unidades-titulo">Configurações de unidades</h2>
       <p>Somente o Administrador configura unidades. Inativar remove a unidade da lista pública e dos acessos operacionais, sem apagar o cadastro ou seus vínculos.</p>
-      <p>Horários, canais, regiões e parâmetros de pedidos ainda não estão disponíveis.</p>
+      <p>Configure horários e canais em cada unidade. Regiões e parâmetros de pedidos ainda não estão disponíveis.</p>
       <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar unidades</button>
       <form (submit)="confirmar($event, senha)">
         <label for="unidade-senha">Confirme sua senha</label>
@@ -100,6 +102,12 @@ interface Unidade {
             >Unidade ativa</label>
             <button [disabled]="ocupado()">Salvar unidade</button>
           </form>
+          <app-funcionamento-unidade
+            [unidadeId]="u.id"
+            [nome]="u.nome"
+            [bloqueado]="ocupado() || !!pendente()"
+            (bloqueio)="bloquearFuncionamento($event)"
+          />
         </article>
       } @empty {
         <p>Nenhuma unidade nesta página.</p>
@@ -255,6 +263,11 @@ export class UnidadesComponent implements OnInit {
 
   mudarPagina(delta: number): void {
     void this.executar(() => this.listar(Math.max(0, this.pagina() + delta)));
+  }
+
+  bloquearFuncionamento(ocupado: boolean): void {
+    this.ocupado.set(ocupado);
+    this.bloqueio.emit(ocupado || !!this.pendente());
   }
 
   private async executar(action: () => Promise<void>): Promise<void> {

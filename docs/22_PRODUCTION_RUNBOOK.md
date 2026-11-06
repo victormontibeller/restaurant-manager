@@ -41,7 +41,7 @@ Registrar tip integrado, release candidato, SHA observado no serviço e último 
 
 O ambiente de homologação desta execução usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. Inventário e versões efetivamente observados ficam no checkpoint e registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
 
-Topologia proposta: Caddy entrega build Angular e encaminha API HTTPS para Spring em loopback; PostgreSQL acessível somente por canais autorizados; serviços systemd com usuário dedicado, restart controlado e limites; mídia em diretório persistente fora dos releases. Hermes executa procedimentos documentados, mas a aplicação não depende de conversa/sessão do agente para funcionar.
+Topologia proposta: Caddy entrega build Angular e encaminha API HTTPS para Spring em loopback; PostgreSQL acessível somente por canais autorizados; serviços systemd com usuário dedicado, restart controlado e limites; mídia inicialmente prevista em diretório persistente fora dos releases. Na implementação da Sprint 2, as imagens públicas limitadas ficam no próprio PostgreSQL, conforme o [ADR 0002](adr/0002-midia-publica-transacional.md); diretórios de mídia privada/externa permanecem futuros. Hermes executa procedimentos documentados, mas a aplicação não depende de conversa/sessão do agente para funcionar.
 
 O banco de produção ficará no servidor Linux, separado dos bancos de desenvolvimento/testes/homologação mesmo quando compartilharem host. Não publicar a porta PostgreSQL na Internet. Só escolher túnel, redirecionamento de portas ou outro ingresso após validar IP público/CGNAT e disponibilidade real. Domínio, DNS, TLS e callbacks dos provedores devem funcionar antes da homologação externa correspondente.
 
@@ -500,6 +500,12 @@ restart, reset/reuso de código e preservação de outras contas. Esses JWTs/men
 são criados APÓS restore: não demonstram recuperação de tokens/outbox pré-backup.
 Mídia ainda não existe neste incremento. Não aprova X15, backup externo, manutenção,
 deploy ou recuperação integral de chaves; execução e resultados ficam no checkpoint.
+
+Na Sprint 2, as imagens normalizadas do catálogo ficam em `bytea` no schema
+empresarial: o dump consistente inclui bytes, hashes e referências. No restore,
+conferir essas referências e hashes em duas empresas; o simples armazenamento
+transacional não substitui o ensaio. Nenhum restore Linux foi realizado nesta
+etapa local.
 
 Backup deve abranger banco, mídias necessárias e recuperação de configuração/chaves por processo seguro separado. Banco e mídias precisam formar um ponto recuperável consistente: adotar snapshot coordenado/quiescência ou mídia imutável/versionada com retenção e inventário compatíveis com o backup do banco. Uma cópia posterior dos arquivos, sem controle de alterações concorrentes, não atende a esse requisito. Registrar o ponto de recuperação e verificar referências de mídia no restore. Agendamento, criptografia, destino externo, retenção, RPO, RTO e responsável são pendências. Backup no mesmo disco não basta como único mecanismo de recuperação.
 

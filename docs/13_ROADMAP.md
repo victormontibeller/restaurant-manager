@@ -7,7 +7,7 @@
 
 ## Organização e evidência
 
-As sprints abaixo são incrementos de escopo, sem promessa de duração. Estimar calendário depois de conhecer capacidade, disponibilidade do restaurante e retorno dos provedores. Todas começam como **não iniciadas**. Dependências externas podem ser investigadas cedo, mas não podem ser marcadas como concluídas por um mock.
+As sprints abaixo são incrementos de escopo, sem promessa de duração. Estimar calendário depois de conhecer capacidade, disponibilidade do restaurante e retorno dos provedores. O estado atual de cada sprint fica no seu plano e no checkpoint. Dependências externas podem ser investigadas cedo, mas não podem ser marcadas como concluídas por um mock.
 
 | Sprint | Foco | Depende de | Resultado demonstrável |
 | --- | --- | --- | --- |
@@ -22,9 +22,9 @@ Para cada sprint: vincular requisitos a cenários, registrar testes executados/r
 
 ## Como acompanhar as sprints
 
-Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. A fundação e a Sprint 01 foram integradas em `main`; o merge do PR #3 foi confirmado em `b50b9d1`. A revisão pré-Sprint 2 no Mac tem evidências próprias e não herda automaticamente a aprovação do candidato histórico de homologação. Sprints 02–05 não iniciaram, conforme o checkpoint. Não há duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
+Cada sprint possui arquivo próprio com status, entregáveis, dependências e critérios de aceite. A fundação, a Sprint 01 e a revisão pré-Sprint 2 foram integradas em `main`; o merge do PR #4 foi confirmado em `19dff9d` (consultar SHA completo no checkpoint). A revisão no Mac tem evidências próprias e não herda automaticamente a aprovação do candidato histórico de homologação. A Sprint 02 teve implementação e testes locais concluídos por orientação do proprietário em 2026-11-06, com homologação pendente; Sprints 03–05 não iniciaram. Não há duração fixada. Ao implementar, registrar resultados e limitações no arquivo correspondente; a regra vigente permanece no documento do assunto. Relatos históricos não substituem a especificação atual nem provam homologação externa.
 
-A execução pelo Hermes segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). A delimitação vigente de 2026-11-06 encerra somente implementação/validação da Sprint 01 e prepara o handoff Codex/Mac. O proprietário integrou o PR #3 em 2026-11-06. A revisão atual corrige a base, sem iniciar Sprints 02–05. Cada próxima sprint deve partir da main integrada, em branch dedicada. Sem commit direto, merge pelo agente, auto-merge ou force push. Homologação fictícia permanece autorizada após validação, produção não. Nenhuma autorização permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
+A execução segue o [guia](24_AGENT_EXECUTION.md) e mantém o [checkpoint](25_EXECUTION_STATUS.md). A missão anterior do Hermes terminou na Sprint 01/handoff. A orientação atual permite desenvolvimento local da Sprint 02, mantendo o acesso Linux para depois e os gates de homologação pendentes. Cada próxima sprint parte da main integrada, em branch dedicada. Sem commit direto, merge pelo agente, auto-merge ou force push. Produção não faz parte desta execução. Nenhuma autorização permite marcar critérios sem evidência. A [matriz final](26_TEST_STRATEGY.md) é obrigatória para o fechamento técnico; piloto real tem condições separadas.
 
 ## Rastreabilidade mínima da revisão
 

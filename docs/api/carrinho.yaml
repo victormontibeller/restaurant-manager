@@ -1,0 +1,337 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — cálculo de carrinho
+  version: 0.2.0
+  description: Cálculo público sem persistência de pedido, reserva ou confirmação
+    de pagamento. Tenant resolvido pelo domínio. Snapshot consistente no PostgreSQL.
+    Dinheiro BRL calculado no servidor; não aceita preços/totais no payload. Não aceita
+    cotação confirmável com canal fechado. Respostas no-store.
+paths:
+  "/api/v1/carrinho/calcular":
+    post:
+      operationId: calcularCarrinho
+      security: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Resumo"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Calcular"
+      description: 'Primeiro cálculo pede confirmação. Reenviar a revisão vista recalcula:
+        somente revisão igual retorna requerConfirmacao=false. Hash inclui composição,
+        preço e versões efetivas, nunca relógio. Mudança exige confirmação explícita;
+        revisão é comparador, não autorização ou pedido. IDs de linha únicos; configurações
+        distintas ficam separadas. Mesma opção em entradas distintas soma limites
+        de grupo/opção. R$ 30 + 2 × (R$ 5 + R$ 3) = R$ 46 por combo; quantidade comercial
+        multiplica após componentes. Opção indisponível é rejeitada sem substituição;
+        alternativa válida preserva venda. Total cobre itens, sem taxa/gorjeta/desconto.
+        Offline não confirma; payload com preço/usuário/campo extra retorna 400.'
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Erro:
+      type: object
+      additionalProperties: false
+      required:
+      - codigo
+      - mensagem
+      - correlacao
+      properties:
+        codigo:
+          type: string
+        mensagem:
+          type: string
+        correlacao:
+          type: string
+    SelecaoAdicional:
+      type: object
+      additionalProperties: false
+      required:
+      - adicionalId
+      - quantidade
+      properties:
+        adicionalId:
+          type: string
+          format: uuid
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 10
+    Escolha:
+      type: object
+      additionalProperties: false
+      required:
+      - grupoId
+      - opcaoId
+      - quantidade
+      - adicionais
+      properties:
+        grupoId:
+          type: string
+          format: uuid
+        opcaoId:
+          type: string
+          format: uuid
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 20
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SelecaoAdicional"
+          maxItems: 20
+    Linha:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - produtoId
+      - quantidade
+      - adicionais
+      - escolhas
+      properties:
+        id:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 99
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SelecaoAdicional"
+          maxItems: 20
+        escolhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Escolha"
+          maxItems: 200
+    Calcular:
+      type: object
+      additionalProperties: false
+      required:
+      - unidadeId
+      - canal
+      - linhas
+      properties:
+        unidadeId:
+          type: string
+          format: uuid
+        canal:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+        linhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Linha"
+          maxItems: 50
+          minItems: 1
+        revisaoAnterior:
+          type:
+          - string
+          - 'null'
+          pattern: "^[a-f0-9]{64}$"
+    SnapshotAdicional:
+      type: object
+      additionalProperties: false
+      required:
+      - adicionalId
+      - nome
+      - quantidade
+      - precoUnitario
+      - total
+      properties:
+        adicionalId:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 10
+        precoUnitario:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        total:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+    SnapshotEscolha:
+      type: object
+      additionalProperties: false
+      required:
+      - grupoId
+      - grupo
+      - opcaoId
+      - produtoId
+      - nome
+      - quantidade
+      - acrescimo
+      - adicionais
+      - total
+      properties:
+        grupoId:
+          type: string
+          format: uuid
+        grupo:
+          type: string
+          minLength: 1
+          maxLength: 120
+        opcaoId:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 20
+        acrescimo:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SnapshotAdicional"
+          maxItems: 20
+        total:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+    SnapshotLinha:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - produtoId
+      - nome
+      - tipo
+      - quantidade
+      - precoBase
+      - precoUnitario
+      - subtotal
+      - adicionais
+      - escolhas
+      properties:
+        id:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        tipo:
+          type: string
+          enum:
+          - SIMPLES
+          - COMBO
+        quantidade:
+          type: integer
+          minimum: 1
+          maximum: 99
+        precoBase:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        precoUnitario:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+        subtotal:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SnapshotAdicional"
+          maxItems: 20
+        escolhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SnapshotEscolha"
+          maxItems: 200
+    Resumo:
+      type: object
+      additionalProperties: false
+      required:
+      - unidadeId
+      - canal
+      - moeda
+      - revisao
+      - requerConfirmacao
+      - linhas
+      - subtotal
+      - total
+      properties:
+        unidadeId:
+          type: string
+          format: uuid
+        canal:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+        moeda:
+          type: string
+          const: BRL
+        revisao:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        requerConfirmacao:
+          type: boolean
+        linhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SnapshotLinha"
+          maxItems: 50
+          minItems: 1
+        subtotal:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+        total:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]*)\\.[0-9]{2}$"
+  responses:
+    Erro:
+      description: 400 estrutura/parâmetro, 401 sessão, 403 ação, 404 recurso alheio/inexistente,
+        409 conflito, 413 tamanho, 415 tipo HTTP ou 422 regra. Sem detalhes internos.
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/Erro"

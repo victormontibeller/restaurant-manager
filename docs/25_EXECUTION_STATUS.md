@@ -1,5 +1,106 @@
 # Checkpoint de execução
 
+## Sprint 2 — implementação e testes locais concluídos, 2026-11-06
+
+Atendida a orientação de concluir a Sprint 2 localmente, preservando a divisão
+por domínio e deixando Linux/homologação pendentes. Branch
+`codex/sprint-02-catalogo-pwa`, baseada no merge do PR #4
+`19dff9d625d03cdba9d23bf023e88846743dec03`; novo `git fetch origin` confirmou
+`origin/main` nessa base. Alterações sem commit/push, merge ou deploy.
+
+Funcionamento, catálogo/ofertas, adicionais/combos, mídia, favoritos, carrinho
+calculado pelo servidor e PWA implementados. Controller → Service → Repository,
+DTOs e pastas por domínio preservados; contratos e fontes canônicas atualizados.
+V13–V16 aplicadas somente no PostgreSQL local exclusivo `rm_test` (18.4), com
+roles de migração/runtime distintas. Mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md).
+
+Candidato final SHA-256:
+`b74888550192ac9fbaa3662ee982e8ab7bbba832981b90890f2c3a5e587326a5`.
+**262 testes backend/35 XML e 295 pares únicos de navegador aprovados**, sem
+falha, erro, skip, retry ou flaky na seleção final. São 59 cenários nos cinco
+projetos, incluindo regressão da fundação e Sprint 1 aplicável localmente.
+Cinco pares são a fronteira controlada de atualização PWA; 75 isolam injeção
+de falha de transporte. API de negócio, autorização e PostgreSQL são reais.
+Build Angular/PWA, formatação, typecheck, 13 scripts de lógica e nove combinações
+de templates simulados aprovados. Revisão visual: 50 capturas finais, com
+limites de viewport, controles nativos e aparelhos físicos registrados.
+
+Falhas originais e reexecuções preservadas, sem somar tentativas. O fonte da
+aplicação, JAR e PID permaneceram iguais durante a matriz final. Correções de
+instrumentação posteriores não mudaram a aplicação. Contagens por família,
+correções funcionais, arquivos de evidência e limites estão na
+[evidência integrada](evidencias/sprint-02-local-2026-11-06.md) e no
+[inventário](evidencias/cobertura.md).
+
+Configuração privada e uma senha fictícia expostas em saídas de ferramentas
+foram renovadas, com recusa das credenciais antigas e revogação das sessões.
+Owner, outras bases e quotas preservados; nenhum segredo no Git. Runtime HTTPS
+e PostgreSQL temporários encerrados, portas 8089/55432 sem listener; banco,
+fixtures e relatórios privados preservados. Não reutilizar JAR anterior contra
+V13–V16 sem verificar compatibilidade.
+
+**Pendência deliberada:** Linux/Hermes não acessado nem alterado. UI29/UI31
+(worker/gates reais, dez combinações), 50 smokes, restore e matriz do novo
+release em homologação continuam pendentes. A CI conferida é a da base PR #4;
+estas alterações locais ainda não têm CI própria. Instalação física/PWA e
+piloto não estão aprovados. Próximo passo externo: retomar acesso Linux,
+reconciliar estado real e cumprir os gates do novo release quando autorizado.
+
+## Sprint 2 — preparação e primeiro incremento local, 2026-11-06
+
+PR #4 conferido no GitHub como **integrado** pelo proprietário: merge
+`19dff9d625d03cdba9d23bf023e88846743dec03`, head revisado
+`c5a183a0161c65da25a33199749efdf82d859b9b`. `git fetch origin` confirmou
+`origin/main` no merge, com árvore igual ao head revisado. Checkout inicialmente
+limpo; branch local `codex/sprint-02-catalogo-pwa` criada dessa base.
+Nenhum merge, exclusão de branch ou alteração de histórico pelo agente.
+
+CI do SHA revisado aprovada nos runs
+[push 42266479753](https://github.com/victormontibeller/restaurant-manager/actions/runs/42266479753) e
+[pull request 42266489123](https://github.com/victormontibeller/restaurant-manager/actions/runs/42266489123).
+Logs do segundo confirmam 161 testes Python aprovados no Ubuntu e 186 backend,
+zero falhas/erros/skip, além de formatação, typecheck, probes/templates, builds
+e auditorias. São execuções repetidas da mesma suíte, não conjuntos somáveis.
+Isso resolve a execução desses testes Python em Linux na CI, sem apagar os
+15 erros históricos de `/proc` no Mac nem comprovar o ambiente do Hermes.
+
+O acesso SSH configurado respondeu com recusa de autenticação. Não foi possível
+reler release, bancos ou processos do servidor. O proprietário orientou deixar
+esse acesso para depois e concentrar no desenvolvimento local da aplicação.
+Sem nova conexão, deploy, migration ou reativação de supervisor no Linux.
+UI29/UI31 com worker/gates reais (10 combinações), 50 smokes e matriz integrada
+do novo release permanecem pendentes. Último release **documentado**, sem nova
+verificação: `95d278eebb275521ead3299fbb12f067f6e2419c`, JAR
+`bb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d`.
+
+P05/P06/P12/P13 confirmadas pelo proprietário no [registro central](00_PROJECT_VISION.md#premissas-propostas).
+[Plano da Sprint 2](16_SPRINT_02.md) dividido em seis incrementos; arquitetura
+reconciliada com as pastas reais. S02-01 começa por horários/canais em `unidades`,
+com configuração administrativa, disponibilidade pública e migration tenant
+V13. Incremento implementado e validado localmente; nenhum entregável completo
+da sprint ou novo release de homologação aprovado. Alterações sem commit/push.
+
+Validação final: 208 testes backend/29 XML, zero falha/erro/skip; formatação,
+typecheck/build Angular, 10 probes de lógica e 9 combinações de templates reais
+aprovados. No candidato local de SHA-256
+`f46863929bc69fe5f7da32876798e1024c7812f7efcb99d110aefbbc2d5ebb67`, passaram
+10 pares novos S02-UI01/02 e 20 da fundação nos cinco projetos, sem falha, skip,
+flaky ou retry. São 30 pares do mesmo JAR, não a matriz integrada de homologação.
+Quatro capturas inspecionadas em 360/768/desktop; limites e falhas/reexecuções
+preservados na [evidência do incremento](evidencias/sprint-02-funcionamento-2026-11-06.md).
+
+PostgreSQL 18.4 local exclusivo do projeto iniciado em loopback:55432; identidade
+SQL `rm_test` e roles `rm_test_owner`/`rm_test_app` conferidas antes da migration.
+Credenciais/evidências permanecem no diretório privado rotulado `sprint02-local`.
+V13 aplicada somente em `rm_test`. Runtime HTTPS e PostgreSQL temporários
+encerrados após as verificações; fixtures, logs e banco preservados fora do Git.
+Não iniciar JAR anterior contra V13 sem conferir compatibilidade.
+
+Próximo incremento local: S02-02, categorias/produtos e preço/disponibilidade
+por unidade, reutilizando a política de ações. Quando o acesso Linux for
+retomado, reconciliar seu estado real e fechar os gates pendentes antes de
+atribuir aceite de homologação ao novo release.
+
 ## Publicação da revisão pré-Sprint 2 — 2026-11-06 (PR aberto para revisão)
 
 Commit `367a5ef381f09645aaebf90e4be481434ae1dbd1` criado e publicado em

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "ng build",
+    "build": "ng build && node ../scripts/build-pwa.cjs",
     "start": "ng serve --host 127.0.0.1",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc -p tsconfig.e2e.json",
     "test:logic": "node ../scripts/test-frontend.cjs",

@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+
+// O worker pode impedir page.route no WebKit. Esta prova injeta falha na leitura
+// real; o bloqueio é exclusivo deste cenário, sem substituir a cobertura PWA.
+test.use({ serviceWorkers: 'block' });
+
 const fixture = JSON.parse(fs.readFileSync(process.env['RM_AUTH_FIXTURE']!, 'utf8')) as {
   email: string;
   senha: string;

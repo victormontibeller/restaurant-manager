@@ -38,14 +38,20 @@ Regras detalhadas sem uma decisão anterior explícita são especificações pro
 | D13 | Regras, validações e segurança no backend; frontend oferece usabilidade e portabilidade. SDKs têm preferência quando existem e atendem à necessidade. |
 | D14 | Entregar a documentação antes da aplicação. Repositório público, sem credenciais ou dados reais nos exemplos. |
 | D15 | Nesta execução autorizada em 2026-11-03, Hermes usa diretamente o provedor `openai-codex` com autenticação atual, sem instalar Codex CLI nem alterar credenciais. Documentos e checkpoint permitem retomada sem depender do chat. |
-| D16 | Delimitação vigente de 2026-11-06: Hermes termina somente implementação/validação da Sprint 01 e prepara passagem para Codex/Mac. Mantém branch `hermes/...` e PR aberto para revisão/merge pelo proprietário após gates reais; não inicia Sprints 02–05. Sem commit direto, merge pelo agente, auto-merge ou force push. Homologação fictícia é autônoma; produção permanece fora do escopo. Substitui o avanço integral autorizado em 2026-11-03. |
+| D16 | Delimitação da missão Hermes de 2026-11-06: Hermes termina somente implementação/validação da Sprint 01 e prepara passagem para Codex/Mac. Mantém branch `hermes/...` e PR aberto para revisão/merge pelo proprietário após gates reais; não inicia Sprints 02–05. Sem commit direto, merge pelo agente, auto-merge ou force push. Homologação fictícia é autônoma; produção permanece fora do escopo. Substitui o avanço integral autorizado em 2026-11-03. |
 | D17 | Combos permitem personalização de componentes. Preço base mais acréscimos das escolhas e adicionais; cada combo completo é uma unidade comercial para cancelamento, sem cancelamento isolado de componentes. |
 | D18 | Ao final, executar validação completa de todas as telas/jornadas do escopo e níveis de acesso, com positivos/negativos, isolamento, concorrência, recuperação e mobile; corrigir falhas e entregar relatório por cenário ligado ao release real de homologação. |
+
+Continuidade local autorizada em 2026-11-06: após a integração do PR #4, o proprietário orientou desenvolver a Sprint 2 no Mac, deixando o acesso Linux para depois. Isso amplia o trabalho local descrito no [guia](24_AGENT_EXECUTION.md), sem reativar a missão anterior do Hermes nem aprovar gates pendentes de homologação.
 
 D12 e D16 foram atualizadas em 2026-11-02 para execução principal no Linux e publicação autônoma em homologação. Isso não autoriza reutilizar banco de produção ou de outro projeto. A política e a retomada estão no [guia de execução](24_AGENT_EXECUTION.md); a cobertura final de D18 está na [estratégia de testes](26_TEST_STRATEGY.md).
 
 <a id="premissas-propostas"></a>
 ## Premissas propostas para detalhamento
+
+Em 2026-11-06, o proprietário confirmou P05, P06, P12 e P13 para a Sprint 2.
+O aceite valida essas escolhas de produto; não comprova implementação nem
+homologação. As demais premissas mantêm seus registros e prazos próprios.
 
 | ID | Proposta de planejamento | Validar até |
 | --- | --- | --- |
@@ -53,15 +59,15 @@ D12 e D16 foram atualizadas em 2026-11-02 para execução principal no Linux e p
 | P02 | O executor inventaria o Linux, seleciona e registra versões suportadas/compatíveis de Java/Spring/Angular/Node/PostgreSQL e SDKs, fixando build/locks. Java 21 é candidato por familiaridade, sem fixação antecipada ou troca automática de ferramentas globais. | Sprint 0 |
 | P03 | Massa fictícia com pelo menos duas empresas, uma delas com duas unidades, e funcionário autorizado em somente uma dessas filiais, para testar ambas as fronteiras. | Sprint 0 |
 | P04 | Login por e-mail/senha, convite de funcionários, verificação/recuperação por e-mail; access token curto em memória e refresh rotativo em cookie seguro. | Sprint 1 |
-| P05 | Catálogo da empresa compartilhado, com preço, disponibilidade e horários por unidade; cliente escolhe unidade antes de montar o pedido. | Sprint 2 |
-| P06 | Favoritos pessoais e sugestões curadas, sem recomendação por IA. As escolhas de personalização, preço e unidade de cancelamento dos combos foram resolvidas em D17; os limites de opções/adicionais são configurados pelo restaurante. | Sprint 2 |
+| P05 | Catálogo da empresa compartilhado, com preço, disponibilidade e horários por unidade; cliente escolhe unidade antes de montar o pedido. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |
+| P06 | Favoritos pessoais e sugestões curadas, sem recomendação por IA. As escolhas de personalização, preço e unidade de cancelamento dos combos foram resolvidas em D17; os limites de opções/adicionais são configurados pelo restaurante. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |
 | P07 | Regiões por faixas de CEP, taxa fixa, pedido mínimo e horários por unidade. Sem roteirização ou mapa do entregador. | Sprint 4 |
 | P08 | Mercado Pago conectado por OAuth e checkout hospedado como primeira modalidade; confirmar produto, recursos disponíveis no SDK e habilitação das contas. | Sprint 0: viabilidade; Sprint 4: escolha e homologação |
 | P09 | API e Angular na mesma origem; proxy Caddy, serviços systemd e mídia persistente. Builds/testes em área e processos de desenvolvimento separados dos releases/serviços de produção, mesmo no Linux compartilhado; recursos e concorrência precisam de medição. | Sprint 0: desenho; Sprint 5: ambiente real |
 | P10 | Atualizações operacionais via SSE autenticado com alternativa por polling; jobs duráveis no PostgreSQL, inicialmente no mesmo processo da API. | Sprint 0: desenho; Sprint 3: validação |
 | P11 | Provisionamento assistido e cobrança da assinatura SaaS administrada manualmente no piloto; venda do restaurante separada da receita SaaS. | Sprint 1 |
-| P12 | BRL como moeda inicial; instantes em UTC e fuso por unidade. Sem descontos livres, gorjeta ou taxa de serviço automática na primeira entrega. | Sprint 2 |
-| P13 | Sem pedidos offline: cache apenas de shell e conteúdo público permitido; operações precisam de confirmação do servidor. | Sprint 2 |
+| P12 | BRL como moeda inicial; instantes em UTC e fuso por unidade. Sem descontos livres, gorjeta ou taxa de serviço automática na primeira entrega. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |
+| P13 | Sem pedidos offline: cache apenas de shell e conteúdo público permitido; operações precisam de confirmação do servidor. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |
 
 ## Documentos relacionados
 

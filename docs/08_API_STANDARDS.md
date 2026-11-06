@@ -45,6 +45,20 @@ separadas da matriz E2E e dos testes de escrita/concorrência.
 Contratos parciais: [configuração administrativa de unidades](api/unidades.yaml), com idempotência de criação, versão de edição, paginação e erros; [recuperação de senha](api/recuperacao.yaml), com CSRF, resposta neutra, consumo único e limites; [cadastro verificado de cliente](api/cadastro.yaml), no candidato do ciclo 10, sem atribuição pública de perfil/unidades nem senha anterior à prova de e-mail. Não representam OpenAPI completo das demais famílias.
 
 - DTOs, OpenAPI, tipos Angular e exemplos de consumo devem evoluir juntos. Não exponha entidades JPA como contratos HTTP.
+- Inteiros não aceitam truncamento de valores fracionários e enums não aceitam
+  ordinais numéricos. Payloads assim são rejeitados como estrutura inválida.
+
+Contrato da Sprint 2: [horários/canais e disponibilidade pública de unidades](api/funcionamento-unidades.yaml),
+com versão própria, agenda semanal, consulta no fuso da unidade e escrita
+administrativa reautenticada. Validação local e homologação são registradas
+separadamente no checkpoint.
+
+Contratos adicionais da Sprint 2: [catálogo e favoritos](api/catalogo.yaml),
+[cálculo do carrinho](api/carrinho.yaml) e [mídia pública](api/midias.yaml).
+Preços de entrada são texto decimal BRL, configurações são versionadas e
+o cálculo público não cria pedido, reserva ou pagamento. Escritas de catálogo
+revalidam ação/sessão após aguardar o lock do agregado. Favoritos pertencem ao
+cliente autenticado, sem identificador de proprietário no payload.
 
 Contrato adicional do ciclo 11: [convites de funcionários](api/convites.yaml), com intenção durável, consulta por UUID, revogação e aceite público protegido por CSRF. Candidato em validação, sem publicação em homologação.
 

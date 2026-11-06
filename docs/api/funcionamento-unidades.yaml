@@ -1,0 +1,162 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — horários e canais das unidades
+  version: 0.1.0
+  description: >-
+    Incremento local da Sprint 2. Tenant resolvido pelo domínio cadastrado.
+    Configuração exclusiva do Administrador; PUT exige reautenticação vigente.
+    Disponibilidade pública é calculada pelo servidor no fuso da unidade;
+    não reserva produtos, cria atendimento nem confirma pedidos.
+paths:
+  /api/v1/configuracoes/unidades/{id}/funcionamento:
+    parameters:
+      - $ref: '#/components/parameters/UnidadeId'
+    get:
+      operationId: consultarFuncionamentoAdministrativo
+      security: [{empresarial: []}]
+      responses:
+        '200':
+          description: Configuração atual; ausência inicial equivale à versão zero e listas vazias
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Configuracao'}
+        default: {$ref: '#/components/responses/Erro'}
+    put:
+      operationId: alterarFuncionamentoUnidade
+      security: [{empresarial: []}]
+      description: >-
+        Substitui canais e janelas atomicamente. Ordem é normalizada; alteração
+        equivalente não incrementa versão nem auditoria. Versão antiga retorna
+        409; após resposta perdida, consultar antes de reenviar. A versão é
+        própria do funcionamento. versaoUnidade deve corresponder ao cadastro
+        consultado, impedindo salvar com fuso ou situação da unidade desatualizados.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Alterar'}
+      responses:
+        '200':
+          description: Configuração e versão atuais
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Configuracao'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/unidades/{id}/funcionamento:
+    parameters:
+      - $ref: '#/components/parameters/UnidadeId'
+    get:
+      operationId: consultarDisponibilidadePublica
+      security: []
+      description: >-
+        Somente unidade ativa no tenant resolvido. Unidade inexistente, alheia
+        ou inativa retorna 404. Não recebe instante de cálculo do cliente.
+        Sem configuração, os três canais aparecem desabilitados e fechados.
+      responses:
+        '200':
+          description: Horários e disponibilidade no instante consultado, sem dados administrativos
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Disponibilidade'}
+        default: {$ref: '#/components/responses/Erro'}
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    UnidadeId:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  schemas:
+    Canal:
+      type: string
+      enum: [DELIVERY, RETIRADA, MESA]
+    Horario:
+      type: object
+      additionalProperties: false
+      required: [canal, diaSemana, inicio, fim]
+      properties:
+        canal: {$ref: '#/components/schemas/Canal'}
+        diaSemana: {type: integer, minimum: 1, maximum: 7, description: Dia de início; segunda 1 e domingo 7}
+        inicio: {type: string, pattern: '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$'}
+        fim:
+          type: string
+          pattern: '^(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)$'
+          description: >-
+            Fim exclusivo; anterior ao início encerra no dia seguinte.
+            24:00 é o fim do dia. Igual ao início é inválido.
+    Alterar:
+      type: object
+      additionalProperties: false
+      required: [versao, versaoUnidade, canais, horarios]
+      properties:
+        versao: {type: integer, format: int64, minimum: 0}
+        versaoUnidade: {type: integer, format: int64, minimum: 0}
+        canais:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/Canal'}
+        horarios:
+          type: array
+          maxItems: 84
+          description: Sem sobreposição no mesmo canal, inclusive entre semanas; desabilitar canal preserva janelas
+          items: {$ref: '#/components/schemas/Horario'}
+    Configuracao:
+      type: object
+      additionalProperties: false
+      required: [unidadeId, versao, versaoUnidade, fuso, canais, horarios]
+      properties:
+        unidadeId: {type: string, format: uuid}
+        versao: {type: integer, format: int64, minimum: 0}
+        versaoUnidade: {type: integer, format: int64, minimum: 0}
+        fuso: {type: string, description: Fuso cadastral usado para interpretar esta agenda}
+        canais:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/Canal'}
+        horarios:
+          type: array
+          maxItems: 84
+          items: {$ref: '#/components/schemas/Horario'}
+    Disponibilidade:
+      type: object
+      additionalProperties: false
+      required: [unidadeId, nome, fuso, consultadoEm, canais, horarios]
+      properties:
+        unidadeId: {type: string, format: uuid}
+        nome: {type: string}
+        fuso: {type: string}
+        consultadoEm: {type: string, format: date-time}
+        canais:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: object
+            additionalProperties: false
+            required: [canal, habilitado, aberto]
+            properties:
+              canal: {$ref: '#/components/schemas/Canal'}
+              habilitado: {type: boolean}
+              aberto: {type: boolean}
+        horarios:
+          type: array
+          maxItems: 84
+          items: {$ref: '#/components/schemas/Horario'}
+  responses:
+    Erro:
+      description: >-
+        400 estrutura, canal, dia, formato ou limite inválidos; 401 sessão
+        ausente/inválida ou incompatível com tenant; 403 perfil ou reautenticação
+        ausente; 404 domínio/empresa indisponível ou unidade inexistente/alheia/
+        inativa no público; 409 versão desatualizada; 422 início igual ao fim ou
+        sobreposição de horários.
+      content:
+        application/json:
+          schema: {$ref: './unidades.yaml#/components/schemas/Erro'}

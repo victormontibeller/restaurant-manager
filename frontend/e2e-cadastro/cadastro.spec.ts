@@ -168,67 +168,79 @@ test('S01-UI14: cadastro inválido, validação de senha, foco e offline', async
     page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
   ).toBeVisible();
 });
-test('S01-UI15: resposta perdida no cadastro é reconciliada pelo login', async ({ page }) => {
-  const email = crypto.randomUUID() + '@example.invalid',
-    senha = crypto.randomUUID();
-  await abrir(page);
-  const codigo = await solicitar(page, email);
-  await preencher(page, codigo, senha);
-  await page.route(
-    '**/api/v1/auth/cadastro/confirmar',
-    async (route) => {
-      const real = await route.fetch();
-      expect(real.status()).toBe(204);
-      await route.abort('failed');
-    },
-    { times: 1 },
-  );
-  const perda = page.waitForEvent('requestfailed', (r) =>
-    r.url().endsWith('/auth/cadastro/confirmar'),
-  );
-  await page.getByRole('button', { name: 'Verificar e criar conta', exact: true }).click();
-  await perda;
-  await expect(page.getByRole('alert')).toContainText(
-    'A resposta não chegou. A conta pode ter sido criada.',
-  );
-  await expect(
-    page.getByText('Conta criada com e-mail verificado. Volte ao login para entrar.', {
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  await login(page, email, senha);
-  await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+test.describe('Fronteira de rede S01-UI15', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI15: resposta perdida no cadastro é reconciliada pelo login', async ({ page }) => {
+    const email = crypto.randomUUID() + '@example.invalid',
+      senha = crypto.randomUUID();
+    await abrir(page);
+    const codigo = await solicitar(page, email);
+    await preencher(page, codigo, senha);
+    await page.route(
+      '**/api/v1/auth/cadastro/confirmar',
+      async (route) => {
+        const real = await route.fetch();
+        expect(real.status()).toBe(204);
+        await route.abort('failed');
+      },
+      { times: 1 },
+    );
+    const perda = page.waitForEvent('requestfailed', (r) =>
+      r.url().endsWith('/auth/cadastro/confirmar'),
+    );
+    await page.getByRole('button', { name: 'Verificar e criar conta', exact: true }).click();
+    await perda;
+    await expect(page.getByRole('alert')).toContainText(
+      'A resposta não chegou. A conta pode ter sido criada.',
+    );
+    await expect(
+      page.getByText('Conta criada com e-mail verificado. Volte ao login para entrar.', {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await login(page, email, senha);
+    await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+  });
 });
-test('S01-UI16: erro HTML do intermediário após commit mantém resultado incerto', async ({
-  page,
-}) => {
-  const email = crypto.randomUUID() + '@example.invalid',
-    senha = crypto.randomUUID();
-  await abrir(page);
-  const codigo = await solicitar(page, email);
-  await preencher(page, codigo, senha);
-  await page.route(
-    '**/api/v1/auth/cadastro/confirmar',
-    async (route) => {
-      const real = await route.fetch();
-      expect(real.status()).toBe(204);
-      await route.fulfill({
-        status: 502,
-        contentType: 'text/html',
-        body: '<html>Falha do intermediário fictício</html>',
-      });
-    },
-    { times: 1 },
-  );
-  const falha = page.waitForResponse(
-    (r) => r.url().endsWith('/auth/cadastro/confirmar') && r.status() === 502,
-  );
-  await page.getByRole('button', { name: 'Verificar e criar conta', exact: true }).click();
-  await falha;
-  await expect(page.getByRole('alert')).toContainText(
-    'A resposta não chegou. A conta pode ter sido criada.',
-  );
-  await expect(page.getByRole('alert')).not.toContainText('JSON');
-  await login(page, email, senha);
-  await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+test.describe('Fronteira de rede S01-UI16', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI16: erro HTML do intermediário após commit mantém resultado incerto', async ({
+    page,
+  }) => {
+    const email = crypto.randomUUID() + '@example.invalid',
+      senha = crypto.randomUUID();
+    await abrir(page);
+    const codigo = await solicitar(page, email);
+    await preencher(page, codigo, senha);
+    await page.route(
+      '**/api/v1/auth/cadastro/confirmar',
+      async (route) => {
+        const real = await route.fetch();
+        expect(real.status()).toBe(204);
+        await route.fulfill({
+          status: 502,
+          contentType: 'text/html',
+          body: '<html>Falha do intermediário fictício</html>',
+        });
+      },
+      { times: 1 },
+    );
+    const falha = page.waitForResponse(
+      (r) => r.url().endsWith('/auth/cadastro/confirmar') && r.status() === 502,
+    );
+    await page.getByRole('button', { name: 'Verificar e criar conta', exact: true }).click();
+    await falha;
+    await expect(page.getByRole('alert')).toContainText(
+      'A resposta não chegou. A conta pode ter sido criada.',
+    );
+    await expect(page.getByRole('alert')).not.toContainText('JSON');
+    await login(page, email, senha);
+    await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+  });
 });

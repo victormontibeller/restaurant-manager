@@ -10,6 +10,9 @@ import { ConvitesComponent } from '../acessos/convites.component';
 import { ConvitePendenteService } from '../acessos/convite-pendente.service';
 import { VerificacaoComponent } from './verificacao.component';
 import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
+import { GestaoCatalogoComponent } from '../catalogo/gestao-catalogo.component';
+import { CatalogoPendenteService } from '../catalogo/catalogo-pendente.service';
+import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
 
 @Component({
   selector: 'app-identidade',
@@ -22,6 +25,7 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
     ConvitesComponent,
     VerificacaoComponent,
     EventosUnidadeComponent,
+    GestaoCatalogoComponent,
   ],
   template: `
     <section
@@ -35,7 +39,7 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
         @if (!pessoa.emailVerificado) {
           <p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p>
         }
-        <p>Acesso empresarial autenticado. As jornadas operacionais ainda estão em desenvolvimento.</p>
+        <p>Acesso autenticado. Os recursos disponíveis respeitam seu perfil e suas unidades.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
         @if (pessoa.perfil !== 'CLIENTE') {
           <button
@@ -46,6 +50,12 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
           @if (acompanhar()) {
             <app-eventos-unidade/>
           }
+          <button
+            type="button"
+            (click)="configuracao.set('catalogo')"
+            [disabled]="configuracaoBloqueada()"
+            [attr.aria-pressed]="configuracao() === 'catalogo'"
+          >Gerenciar catálogo</button>
         }
         @if (pessoa.perfil === 'ADMINISTRADOR') {
           <nav aria-label="Configurações da empresa">
@@ -72,9 +82,12 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
             <app-acessos (bloqueio)="configuracaoBloqueada.set($event)"/>
           } @else if (configuracao() === 'convites') {
             <app-convites (bloqueio)="configuracaoBloqueada.set($event)"/>
-          } @else {
+          } @else if (configuracao() === 'unidades') {
             <app-unidades (bloqueio)="configuracaoBloqueada.set($event)"/>
           }
+        }
+        @if (pessoa.perfil !== 'CLIENTE' && configuracao() === 'catalogo') {
+          <app-gestao-catalogo (bloqueio)="configuracaoBloqueada.set($event)"/>
         }
       } @else if (verificacao()) {
         <app-verificacao (voltar)="voltarAoLogin()"/>
@@ -183,6 +196,8 @@ export class IdentidadeComponent {
   private readonly elemento: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly pendencias = inject(CriacaoPendenteService);
   private readonly convitesPendentes = inject(ConvitePendenteService);
+  private readonly catalogoPendente = inject(CatalogoPendenteService);
+  private readonly midiaPendente = inject(MidiaPendenteService);
   readonly ocupado = signal(true);
   readonly erro = signal('');
   readonly aviso = signal('');
@@ -192,7 +207,7 @@ export class IdentidadeComponent {
   readonly convite = signal(false);
   readonly verificacao = signal(false);
   readonly acompanhar = signal(false);
-  readonly configuracao = signal<'acessos' | 'unidades' | 'convites'>('acessos');
+  readonly configuracao = signal<'acessos' | 'unidades' | 'convites' | 'catalogo'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
@@ -256,8 +271,15 @@ export class IdentidadeComponent {
     const pessoa = this.sessao.identidade();
     const pendente = !!(pessoa && this.pendencias.daConta(pessoa.usuarioId)());
     const convite = !!(pessoa && this.convitesPendentes.daConta(pessoa.usuarioId)());
-    this.configuracaoBloqueada.set(pendente || convite);
-    this.configuracao.set(pendente ? 'unidades' : convite ? 'convites' : 'acessos');
+    const catalogo = !!(
+      pessoa &&
+      (this.catalogoPendente.daConta(pessoa.usuarioId)() ||
+        this.midiaPendente.daConta(pessoa.usuarioId)())
+    );
+    this.configuracaoBloqueada.set(pendente || convite || catalogo);
+    this.configuracao.set(
+      pendente ? 'unidades' : convite ? 'convites' : catalogo ? 'catalogo' : 'acessos',
+    );
   }
 
   abrirFormulario(area: 'recuperacao' | 'cadastro' | 'convite' | 'verificacao'): void {

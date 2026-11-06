@@ -2,20 +2,29 @@ import { Component, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { IdentidadeComponent } from './app/identidade/identidade.component';
 import { PlataformaComponent } from './app/plataforma/plataforma.component';
+import { VitrineComponent } from './app/catalogo/vitrine.component';
+import { PwaComponent } from './app/pwa/pwa.component';
+import { DisponibilidadeComponent } from './app/unidades/disponibilidade.component';
 
 @Component({
   selector: 'app-root',
-  imports: [IdentidadeComponent, PlataformaComponent],
+  imports: [
+    IdentidadeComponent,
+    PlataformaComponent,
+    DisponibilidadeComponent,
+    PwaComponent,
+    VitrineComponent,
+  ],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
     <header>
       <span class="marca">Restaurant Manager</span>
-      <span class="selo">Homologação · dados fictícios</span>
+      <span class="selo">Ambiente de testes · dados fictícios</span>
     </header>
     <main id="conteudo">
       <p class="eyebrow">AMBIENTE EM CONSTRUÇÃO</p>
-      <h1>Uma base segura para a operação do restaurante.</h1>
-      <p>Identidade empresarial em desenvolvimento. Catálogo e pedidos ainda não estão disponíveis.</p>
+      <h1>O cardápio do seu restaurante, na sua unidade.</h1>
+      <p>Escolha a unidade, conheça o cardápio e configure seu carrinho. Pedidos e pagamentos estarão disponíveis nas próximas etapas.</p>
       <section aria-labelledby="saude">
         <h2 id="saude">Conexão com o sistema</h2>
         <p role="status" aria-live="polite">{{ mensagem() }}</p>
@@ -24,11 +33,14 @@ import { PlataformaComponent } from './app/plataforma/plataforma.component';
       @if (plataforma) {
         <app-plataforma/>
       } @else {
+        <app-disponibilidade/>
+        <app-vitrine/>
         <app-identidade/>
       }
+      <app-pwa/>
       <section aria-labelledby="escopo">
         <h2 id="escopo">O que você pode testar agora</h2>
-        <p>Abertura da interface, navegação por teclado e conexão real com a API e o PostgreSQL.</p>
+        <p>Catálogo, horários, favoritos e cálculo do carrinho com dados fictícios.</p>
         <p>Nenhum pedido ou pagamento é aceito nesta versão. Não utilize dados pessoais reais.</p>
       </section>
     </main>

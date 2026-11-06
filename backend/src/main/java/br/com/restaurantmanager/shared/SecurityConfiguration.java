@@ -39,11 +39,18 @@ public class SecurityConfiguration {
     @Bean @Order(2)
     SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper, TenantFilter tenants, IdentidadeService identities) throws Exception {
         return common(http, mapper, tenants)
-                .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/", "/index.html", "/*.js", "/*.css", "/favicon.ico", "/api/v1/status", "/api/v1/unidades", "/actuator/health").permitAll()
+                .csrf(c -> c.ignoringRequestMatchers("/api/v1/carrinho/calcular"))
+                .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/", "/index.html", "/*.js", "/*.css", "/favicon.ico", "/manifest.webmanifest", "/icons/*.png", "/api/v1/status", "/api/v1/unidades", "/api/v1/unidades/*/funcionamento", "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/catalogo", "/api/v1/catalogo/*", "/api/v1/midias/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/carrinho/calcular").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/gestao/catalogo/categorias", "/api/v1/gestao/catalogo/produtos", "/api/v1/gestao/catalogo/produtos/*", "/api/v1/gestao/catalogo/produtos/*/unidades/*", "/api/v1/operacao/catalogo", "/api/v1/gestao/midias/*", "/api/v1/clientes/me/favoritos").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/gestao/catalogo/categorias", "/api/v1/gestao/catalogo/produtos", "/api/v1/gestao/midias/*").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/gestao/catalogo/categorias/*", "/api/v1/gestao/catalogo/produtos/*", "/api/v1/gestao/catalogo/produtos/*/unidades/*", "/api/v1/clientes/me/favoritos/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/clientes/me/favoritos/*").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/configuracoes/acessos", "/api/v1/equipe", "/api/v1/acessos/efetivos", "/api/v1/operacao/unidades", "/api/v1/operacao/unidades/*", "/api/v1/operacao/unidades/*/eventos").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/acessos", "/api/v1/equipe/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/configuracoes/unidades", "/api/v1/configuracoes/unidades/*", "/api/v1/equipe/convites", "/api/v1/equipe/convites/*").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/unidades/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/configuracoes/unidades", "/api/v1/configuracoes/unidades/*", "/api/v1/configuracoes/unidades/*/funcionamento", "/api/v1/equipe/convites", "/api/v1/equipe/convites/*").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/configuracoes/unidades/*", "/api/v1/configuracoes/unidades/*/funcionamento").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reautenticar", "/api/v1/configuracoes/unidades", "/api/v1/equipe/convites", "/api/v1/equipe/convites/*/revogar").authenticated().anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
                     try {

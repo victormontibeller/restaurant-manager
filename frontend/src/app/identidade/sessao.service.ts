@@ -76,6 +76,22 @@ export class SessaoService {
   }
 
   async api<T = void>(path: string, method = 'GET', body?: object): Promise<T> {
+    return this.enviar<T>(path, method, body ? JSON.stringify(body) : undefined, {
+      'Content-Type': 'application/json',
+    });
+  }
+
+  async upload<T>(path: string, arquivo: FormData): Promise<T> {
+    // O navegador define o boundary do multipart; não definir Content-Type manualmente.
+    return this.enviar<T>(path, 'POST', arquivo);
+  }
+
+  private async enviar<T>(
+    path: string,
+    method: string,
+    body?: BodyInit,
+    headers: Record<string, string> = {},
+  ): Promise<T> {
     if (!this.access) throw new Error('Entre novamente para continuar.');
     const geracao = this.geracao;
     let response: Response;
@@ -86,8 +102,8 @@ export class SessaoService {
         credentials: 'same-origin',
         cache: 'no-store',
         signal: AbortSignal.timeout(10000),
-        headers: { Authorization: 'Bearer ' + this.access, 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
+        headers: { ...headers, Authorization: 'Bearer ' + access },
+        body,
       });
     } catch {
       throw new Error(

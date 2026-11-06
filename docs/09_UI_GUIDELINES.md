@@ -28,6 +28,28 @@
 - Não confirme pedido ou pagamento offline. Service worker não deve armazenar tokens, respostas privadas ou operações de escrita para envio automático.
 - Guardas de rota e visibilidade refletem permissões; a API continua responsável por garanti-las. Evite retornar dados que o perfil não precisa.
 
+## Política implementada na Sprint 2
+
+A PWA guarda somente os arquivos estáticos públicos enumerados pelo build:
+HTML, JavaScript/CSS com hash, manifesto e ícones. Cada origem tem seu cache;
+nenhuma API, imagem de catálogo, consulta de saúde, resposta autenticada ou
+escrita entra nele. Navegação offline usa apenas o shell, sem persistir a
+query string. Carrinho, credencial e intenções pendentes ficam em memória;
+recarregar a página descarta esses rascunhos.
+
+Uma nova versão espera consentimento ou fechamento das abas anteriores. O
+botão de atualização informa que recarregará a aba e pede confirmação para
+descartar formulários/carrinho não salvos. Outra aba não é recarregada
+automaticamente. Duas versões anteriores dos assets permitem manter abas
+já abertas durante a transição. Instalação depende do suporte do navegador;
+emulação local não comprova instalação em aparelho físico.
+
+A vitrine permite consulta de unidade fechada, mas a composição confirmável
+depende de funcionamento atual e recálculo pelo servidor. Resumo expira após
+60 segundos ou mudança de rede/itens. Troca de unidade/canal informa o impacto
+e exige consentimento para esvaziar o carrinho antes de consultar o novo
+contexto. A confirmação do resumo não é aceite de pedido.
+
 ## Documentos relacionados
 
 - [Jornadas do produto](01_PRD.md)

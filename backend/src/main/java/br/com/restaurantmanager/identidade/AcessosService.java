@@ -101,10 +101,21 @@ public class AcessosService {
             if(unidade==null||unidadesDo(user).stream().noneMatch(u->u.id().equals(unidade))) throw inexistente();
         } else if(unidade!=null) throw invalido("Ação de escopo empresarial não recebe unidade.");
     }
-    private Usuario funcionario(IdentidadeAtual ator) {
+    @Transactional(propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void autorizarCliente(IdentidadeAtual ator) {
+        repository.politica(false);
+        if (!usuarioAtual(ator).perfil.equals("CLIENTE")) throw negado();
+    }
+
+    private Usuario usuarioAtual(IdentidadeAtual ator) {
         if(ator==null||!ator.empresaId().equals(IdentidadeService.empresaAtual())) throw AuthFailure.invalid();
         var session=repository.sessao(ator.sessaoId()); var user=repository.usuario(ator.usuarioId());
         if(session==null||!session.usuarioId.equals(ator.usuarioId())||!session.valida(Instant.now())||user==null||!user.ativo) throw AuthFailure.invalid();
+        return user;
+    }
+
+    private Usuario funcionario(IdentidadeAtual ator) {
+        Usuario user = usuarioAtual(ator);
         if(!user.perfil.equals("ADMINISTRADOR")&&!PERFIS.contains(user.perfil)) throw negado();
         return user;
     }

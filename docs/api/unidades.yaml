@@ -6,7 +6,8 @@ info:
     Contrato parcial da Sprint 01. Tenant resolvido pelo domínio cadastrado.
     Exige sessão empresarial de Administrador atual. POST/PUT exigem senha
     confirmada nos últimos cinco minutos por POST /api/v1/auth/reautenticar.
-    Não implementa horários, canais, regiões nem suspensão comercial.
+    Horários e canais têm contrato separado em funcionamento-unidades.yaml.
+    Não implementa regiões nem suspensão comercial.
 security:
   - empresarial: []
 paths:

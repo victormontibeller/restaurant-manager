@@ -151,55 +151,65 @@ test('S01-UI26: suspensão e reativação exigem confirmação sem bloquear cons
     await restaurar(page, token);
   }
 });
-test('S01-UI27: resposta perdida reconcilia detalhe e cartão sem repetir a escrita', async ({
-  page,
-}) => {
-  const token = await entrar(page);
-  try {
-    await localizarCartao(page);
-    await consultar(page);
-    await confirmar(page);
-    const antes = await page.request.get(url, { headers: { Authorization: 'Bearer ' + token } });
-    const original = (await antes.json()) as { versao: number };
-    let escritas = 0;
-    await page.route(
-      '**' + url + '/estado',
-      async (route) => {
-        escritas++;
-        const r = await route.fetch();
-        expect(r.status()).toBe(200);
-        await route.fulfill({
-          status: 502,
-          contentType: 'text/html',
-          body: 'Resposta perdida no intermediário de teste',
-        });
-      },
-      { times: 1 },
-    );
-    await alterar(page, 502);
-    await expect(page.getByRole('alert')).toContainText('A alteração pode ter sido aplicada');
-    await expect(
-      page.getByRole('button', { name: 'Aplicar estado comercial', exact: true }),
-    ).toBeDisabled();
-    await consultar(page);
-    await expect(page.getByTestId('empresa-estado')).toContainText('SUSPENSO');
-    await expect(page.getByRole('article').filter({ hasText: empresa.id })).toContainText(
-      'Estado: SUSPENSO',
-    );
-    expect(escritas).toBe(1);
-    expect(
-      (
-        await page.request.put(url + '/estado', {
-          headers: { Authorization: 'Bearer ' + token },
-          data: { versao: original.versao, estado: 'SUSPENSO', motivo: 'Reenvio da versão antiga' },
-        })
-      ).status(),
-    ).toBe(409);
-    await alterar(page);
-    await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');
-  } finally {
-    await restaurar(page, token);
-  }
+test.describe('Fronteira de rede S01-UI27', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI27: resposta perdida reconcilia detalhe e cartão sem repetir a escrita', async ({
+    page,
+  }) => {
+    const token = await entrar(page);
+    try {
+      await localizarCartao(page);
+      await consultar(page);
+      await confirmar(page);
+      const antes = await page.request.get(url, { headers: { Authorization: 'Bearer ' + token } });
+      const original = (await antes.json()) as { versao: number };
+      let escritas = 0;
+      await page.route(
+        '**' + url + '/estado',
+        async (route) => {
+          escritas++;
+          const r = await route.fetch();
+          expect(r.status()).toBe(200);
+          await route.fulfill({
+            status: 502,
+            contentType: 'text/html',
+            body: 'Resposta perdida no intermediário de teste',
+          });
+        },
+        { times: 1 },
+      );
+      await alterar(page, 502);
+      await expect(page.getByRole('alert')).toContainText('A alteração pode ter sido aplicada');
+      await expect(
+        page.getByRole('button', { name: 'Aplicar estado comercial', exact: true }),
+      ).toBeDisabled();
+      await consultar(page);
+      await expect(page.getByTestId('empresa-estado')).toContainText('SUSPENSO');
+      await expect(page.getByRole('article').filter({ hasText: empresa.id })).toContainText(
+        'Estado: SUSPENSO',
+      );
+      expect(escritas).toBe(1);
+      expect(
+        (
+          await page.request.put(url + '/estado', {
+            headers: { Authorization: 'Bearer ' + token },
+            data: {
+              versao: original.versao,
+              estado: 'SUSPENSO',
+              motivo: 'Reenvio da versão antiga',
+            },
+          })
+        ).status(),
+      ).toBe(409);
+      await alterar(page);
+      await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');
+    } finally {
+      await restaurar(page, token);
+    }
+  });
 });
 test('S01-UI28: versão concorrente e consulta offline exigem reconciliação explícita', async ({
   page,

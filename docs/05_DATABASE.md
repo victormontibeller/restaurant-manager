@@ -70,6 +70,20 @@ Escolhas de combo são snapshots vinculados à configuração da linha; não sã
 - Armazenar hash de segredo de recuperação/sessão quando não for necessário recuperar seu valor; tokens de provedor que precisam ser reutilizados exigem cifragem e chave externa ao banco.
 - Separar dados fictícios de dados reais. Retenção, anonimização e exclusão serão definidas com responsáveis antes do piloto, preservando os registros necessários conforme o processo aplicável.
 
+## Persistência da Sprint 2
+
+V13 acrescenta funcionamento/horários da unidade. V14 acrescenta categorias,
+produtos, ofertas, favoritos, revisão e auditoria do catálogo. Adicionais e
+grupos/opções são configuração JSONB do agregado Produto: limites estruturais
+no banco, validação de referências e dinheiro no serviço sob lock de escrita,
+sem exclusão física de componentes. Preço da oferta é `numeric(8,2)`.
+
+V15 publica mídia imutável em `bytea`, com tamanho/hash, cota e auditoria na
+mesma transação. V16 liga produto e mídia por FK no próprio schema. A escolha
+e seus limites estão no [ADR 0002](adr/0002-midia-publica-transacional.md).
+Cotação usa snapshot PostgreSQL consistente e devolve composição/valores;
+persistência do pedido continua pertencendo à próxima sprint.
+
 ## Dados, testes e migrações
 
 - Use PostgreSQL real nos testes que comprovam schema, constraints, locks e concorrência. Mocks não demonstram isolamento ou homologação financeira.

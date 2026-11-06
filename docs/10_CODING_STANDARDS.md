@@ -23,8 +23,9 @@ A preferência por SDKs e o isolamento de credenciais estão em [Integrações](
 
 ### Legibilidade e organização Angular
 
-- Preserve a divisão por domínio: `identidade`, `acessos`, `unidades` e
-  `plataforma`. Componentes, serviços e tipos relacionados permanecem próximos;
+- Preserve a divisão por domínio: `identidade`, `acessos`, `unidades`,
+  `plataforma`, `catalogo`, `carrinho` e `pwa`. Componentes, serviços e tipos
+  relacionados permanecem próximos;
   novas pastas ou abstrações compartilhadas precisam de consumidores reais.
 - Separe declarações, métodos e etapas de uma jornada com linhas em branco.
   Evite acumular várias instruções na mesma linha. Comentários explicam uma

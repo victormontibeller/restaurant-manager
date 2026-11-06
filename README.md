@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação e Sprint 01 integradas em `main` pelo PR #3 (`b50b9d1`). Há identidade empresarial/SaaS, cadastro/verificação/recuperação, convites, unidades/equipe, matriz, acompanhamento e exportação cadastrais. A [revisão pré-Sprint 2](docs/evidencias/revisao-pre-sprint-02-2026-11-06.md) registra correções e validação local no Mac; os gates Linux e a homologação dessas correções permanecem pendentes. Catálogo, pedidos e pagamentos não estão disponíveis. Versões, resultados e próximos passos ficam no [checkpoint](docs/25_EXECUTION_STATUS.md) e no [handoff Mac](docs/27_HANDOFF_CODEX_MAC.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação, Sprint 01 e revisão pré-Sprint 2 integradas em `main` pelos PRs #3 e #4. A CI da revisão passou; sua homologação operacional continua pendente. A Sprint 2 tem implementação e testes locais concluídos de horários, catálogo, combos, mídia, favoritos, cálculo do carrinho e PWA, conforme o [plano](docs/16_SPRINT_02.md); sua homologação permanece pendente. A organização por domínio foi preservada. Pedidos e pagamentos pertencem às próximas sprints. Versões, testes e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -80,14 +80,26 @@ Formulários/foco/erros locais: `node scripts/test_identity_forms.cjs`.
 Usa os componentes/templates Angular reais com API fictícia em memória, não E2E.
 O probe JIT de formulários testa o handler de retorno; emissão de `output()`
 no template compilado é verificada pelos E2E. `scripts/test-profile-templates.sh`
-executa ambos os probes nos três motores durante o build.
+executa os probes de perfil, identidade e funcionamento nos três motores durante o build.
 Exige browser Playwright instalado; `RM_TEMPLATE_BROWSER=chromium|firefox|webkit`
 seleciona o motor, Chromium por padrão. A configuração privada de browsers/libs
 é a mesma do E2E; WebKit aceita o wrapper local em `RM_WEBKIT_EXECUTABLE`.
 
+Na Sprint 2 local, as suítes `playwright.funcionamento.config.ts`,
+`playwright.catalogo.config.ts` e `playwright.pwa.config.ts` exigem HTTPS
+`sprint02.localhost`, `rm_test` e relatórios privados. Funcionamento usa
+`RM_SCHEDULE_FIXTURE` (`email`/`senha`). Catálogo usa `RM_CATALOG_FIXTURE` com
+Administrador, IDs de duas unidades e contas dos cinco perfis configuráveis
+e dois clientes; veja a validação de campos em `frontend/e2e-catalogo/apoio.ts`.
+Massa própria e limites de login devem ser planejados antes da execução.
+Para o service worker no Chromium com certificado local privado, a suíte PWA
+aceita `RM_TEST_TLS_SPKI`, SHA-256 em base64 da chave pública desse certificado.
+A exceção fica restrita a essa chave no navegador de testes; não altera TLS
+da aplicação nem a configuração de homologação.
+
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
-Hermes usa o provedor `openai-codex` autenticado atual. O escopo vigente de 2026-11-06 limita esta execução ao fechamento da Sprint 01 e passagem para Codex/Mac, sem iniciar Sprints 02–05. O PR #3 já foi integrado pelo proprietário; a revisão Mac preserva esse limite de escopo. Produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade; o shell da fundação não atende esse fechamento. Guia e checkpoint permitem retomar sem depender do histórico.
+A missão anterior do Hermes encerrou a Sprint 01 e preparou a passagem para Codex/Mac. Em 2026-11-06, o proprietário confirmou as premissas e orientou desenvolver a Sprint 2 localmente, deixando o acesso Linux para depois. Homologação exige seus gates; produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade. O [guia](docs/24_AGENT_EXECUTION.md) e o checkpoint registram a autorização e a retomada.
 
 ### Provisionamento local em desenvolvimento/testes
 

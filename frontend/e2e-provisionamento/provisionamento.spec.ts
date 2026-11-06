@@ -143,50 +143,58 @@ test('S01-UI29: operador solicita e worker real ativa empresa sem impersonação
     .getByTestId('provisionamento-detalhe')
     .screenshot({ path: test.info().outputPath('provisionamento-concluido.png') });
 });
-test('S01-UI30: resposta perdida conserva UUID entre logout e consulta sem duplicar', async ({
-  page,
-}) => {
-  const fixture = credenciais();
-  await entrar(page);
-  await confirmar(page);
-  const p = await preencher(page);
-  let escritas = 0;
-  page.on('request', (r) => {
-    if (r.url().endsWith(base) && r.method() === 'POST') escritas++;
+test.describe('Fronteira de rede S01-UI30', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI30: resposta perdida conserva UUID entre logout e consulta sem duplicar', async ({
+    page,
+  }) => {
+    const fixture = credenciais();
+    await entrar(page);
+    await confirmar(page);
+    const p = await preencher(page);
+    let escritas = 0;
+    page.on('request', (r) => {
+      if (r.url().endsWith(base) && r.method() === 'POST') escritas++;
+    });
+    await page.route(
+      '**' + base,
+      async (route) => {
+        if (route.request().method() !== 'POST') {
+          await route.continue();
+          return;
+        }
+        const r = await route.fetch();
+        expect(r.status()).toBe(202);
+        await route.fulfill({
+          status: 502,
+          contentType: 'text/html',
+          body: 'Resposta perdida no intermediário de teste',
+        });
+      },
+      { times: 1 },
+    );
+    await enviar(page, 502);
+    await expect(page.getByRole('alert')).toContainText('A escrita pode ter sido aplicada');
+    await expect(page.getByRole('alert')).toBeFocused();
+    await page.getByRole('button', { name: 'Sair da plataforma', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Entrar na plataforma', exact: true }),
+    ).toBeEnabled();
+    // A mesma página preserva apenas a intenção por operador, não o payload/senha.
+    await page.getByLabel('E-mail do operador').fill(fixture.email);
+    await page.getByLabel('Senha do operador', { exact: true }).fill(fixture.senha);
+    await page.getByRole('button', { name: 'Entrar na plataforma', exact: true }).click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Consulta atualizada.' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('provisionamento-intencao')).toHaveText(p.id);
+    await consultar(page, p.id, 'SOLICITADO');
+    expect(escritas).toBe(1);
+    expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   });
-  await page.route(
-    '**' + base,
-    async (route) => {
-      if (route.request().method() !== 'POST') {
-        await route.continue();
-        return;
-      }
-      const r = await route.fetch();
-      expect(r.status()).toBe(202);
-      await route.fulfill({
-        status: 502,
-        contentType: 'text/html',
-        body: 'Resposta perdida no intermediário de teste',
-      });
-    },
-    { times: 1 },
-  );
-  await enviar(page, 502);
-  await expect(page.getByRole('alert')).toContainText('A escrita pode ter sido aplicada');
-  await expect(page.getByRole('alert')).toBeFocused();
-  await page.getByRole('button', { name: 'Sair da plataforma', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Entrar na plataforma', exact: true }),
-  ).toBeEnabled();
-  // A mesma página preserva apenas a intenção por operador, não o payload/senha.
-  await page.getByLabel('E-mail do operador').fill(fixture.email);
-  await page.getByLabel('Senha do operador', { exact: true }).fill(fixture.senha);
-  await page.getByRole('button', { name: 'Entrar na plataforma', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Consulta atualizada.' })).toBeVisible();
-  await expect(page.getByTestId('provisionamento-intencao')).toHaveText(p.id);
-  await consultar(page, p.id, 'SOLICITADO');
-  expect(escritas).toBe(1);
-  expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 });
 test('S01-UI31: falha de ativação é visível e retomada versionada conclui sem duplicar', async ({
   page,
