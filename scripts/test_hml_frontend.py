@@ -294,6 +294,7 @@ class FrontendReplacementTest(unittest.TestCase):
         ops.artifact = new
         ops.rehearsal = root / 'rehearsal.json'
         ops.rehearsal.write_text('{}')
+        ops.rehearsal.chmod(0o600)
         ops.db = dict(candidate_oid='123', original_oid='456', ledger_sha256='d' * 64)
         ops.database = Mock(return_value=ops.db)
         ops.verify_runtime_configuration = Mock()

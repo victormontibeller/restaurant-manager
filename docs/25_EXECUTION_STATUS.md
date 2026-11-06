@@ -2,6 +2,13 @@
 
 ## Incremento — ciclo31, 2026-11-06
 
+Atualização05:48Z: d0150b8 publicado/PR3 OPEN draft e corpo relidos. CI falhou
+nos dois checks por fixture de ensaio sem0600 sobumask022. Reproduzido localmente
+com Python3.12; corrigida permissão da fixture,158testes passaram sem relaxar
+guardas. Publicação/CI corretivas ainda pendentes neste registro. Worker31
+aprovou UI18×5 e segue identidade;14capturas de convites inspecionadas. Não é
+gate global nem novo deploy.
+
 Escopo SOMENTE Sprint01 e handoffMac; PR3 aberto, sem merge/produção/02–05.
 Git/CI5cce633, hml97d75b0 UP/PID754824 e OIDs16389/135836/16392 conferidos;
 original hml bloqueado/zero conexões. Três documentos locais30 preservados.

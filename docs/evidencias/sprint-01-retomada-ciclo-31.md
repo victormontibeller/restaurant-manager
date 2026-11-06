@@ -64,8 +64,14 @@ Provas executadas:
   Essa janela exige reconciliação explícita; `recover` não a resolve sozinho.
 - Recuperação de disco simulada preservou histórico/baseline e voltou ao
   predecessor imediato mesmo com novo JAR corrompido. Não é ensaio systemd real.
--19testes focados e158regressões Python passaram. Comparação dos JARs reais
+- 19testes focados e158regressões Python passaram. Comparação dos JARs reais
   aprovou o opt-in sem tocar em serviço/banco.
+
+CI d0150b8 falhou nos dois checks antes do backend: a fixture de ensaio do
+teste novo era criada sem0600 explícito. A umask local restrita ocultava o
+defeito; reprodução com Python3.12/umask022 falhou no mesmo preflight. Correção
+fixa0600 na fixture, sem relaxar a guarda de produção.158testes passaram com
+Python3.12/umask022. Resultado CI do commit corretivo ainda deve ser conferido.
 
 ## Matriz do novo artefato
 
@@ -77,8 +83,12 @@ promove baseline. Limite informado de quatro horas, unidade própria com
 `KillMode=control-group` conferido pelo próprio worker e externamente, para
 recolher descendentes quando encerrar. Pode atravessar ciclos sem relançamento.
 
-Na consulta inicial deste registro, executa convites-foco; nenhum resultado
-consolidado observado. Recolher JSONs/capturas antes de afirmar aprovação.
+UI18 passou as cinco combinações sem falha/skip/flaky/retry; família identidade
+está em execução na consulta05:46Z. Não é aprovação da matriz inteira.
+Quatorze capturas de convites mobile/desktop foram inspecionadas com limites:
+cartão, contexto, reautenticação, cadastro com perfil inteiro, ação de criar,
+consulta e paginação. Viewports/componente não equivalem à página inteira.
+Materialização de notas/hashes segue privada; não presumir cobertura futura.
 Manutenção, atualização/retorno binário nativos, smokes e aceitação do novo JAR
 continuam pendentes. Não repetir provisionamento assistido28 nem restaurar o
 banco anterior à identidade.
