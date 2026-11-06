@@ -63,6 +63,63 @@ class FrontendReplacementTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 require_login_startup_change(old, new)
 
+    def test_opt_in_composto_aceita_chunks_alterados_adicionados_removidos(self):
+        from hml_frontend import require_login_startup_frontend_change
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            old, new = self.login_jars(directory, {'BOOT-INF/classes/static/main-novo.js': b'novo'})
+            with zipfile.ZipFile(old, 'a') as archive:
+                archive.writestr('BOOT-INF/classes/static/styles.css', b'anterior')
+            with zipfile.ZipFile(new) as archive:
+                entries = {n: archive.read(n) for n in archive.namelist()}
+            entries.pop('BOOT-INF/classes/static/index.html')
+            entries['BOOT-INF/classes/static/novo.html'] = b'novo frontend'
+            entries['BOOT-INF/classes/static/styles.css'] = b'alterado'
+            with zipfile.ZipFile(new, 'w') as archive:
+                for name, value in entries.items():
+                    archive.writestr(name, value)
+            with self.assertRaises(ValueError):
+                require_same_backend(old, new)
+            with self.assertRaises(ValueError):
+                require_login_startup_change(old, new)
+            require_login_startup_frontend_change(old, new)
+
+    def test_opt_in_composto_recusa_backend_incompleto_extra_e_zip_ambiguo(self):
+        from hml_frontend import require_login_startup_frontend_change
+        prefix = 'BOOT-INF/classes/'
+        package = prefix + 'br/com/restaurantmanager/identidade/'
+        changes = [
+            ('change', 'BOOT-INF/lib/sdk.jar', b'alterado'),
+            ('change', 'META-INF/MANIFEST.MF', b'novo'),
+            ('change', prefix + 'db/migration/public/V1.sql', b'alterado'),
+            ('change', package + 'JwtConfiguration.class', b'alterado'),
+            ('change', prefix + 'application.yml', b'configuracao arbitraria'),
+            ('change', package + 'Usuario.class', b'entidade anterior'),
+            ('change', prefix + 'static-alheio/novo.class', b'novo'),
+            ('remove', 'BOOT-INF/lib/sdk.jar', None),
+            ('duplicate', prefix + 'static/index.html', b'duplicado'),
+            ('duplicate', 'BOOT-INF/lib/sdk.jar', b'duplicado'),
+            ('remove-static', '', None),
+        ]
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            for action, name, value in changes:
+                with self.subTest(action=action, name=name):
+                    old, new = self.login_jars(directory)
+                    with zipfile.ZipFile(new) as archive:
+                        entries = {n: archive.read(n) for n in archive.namelist()}
+                    if action == 'change':
+                        entries[name] = value
+                    elif action == 'remove':
+                        entries.pop(name)
+                    elif action == 'remove-static':
+                        entries = {n: v for n, v in entries.items() if not n.startswith(prefix + 'static/')}
+                    with zipfile.ZipFile(new, 'w') as archive:
+                        for key, content in entries.items():
+                            archive.writestr(key, content)
+                        if action == 'duplicate':
+                            archive.writestr(name, value)
+                    with self.assertRaises(ValueError):
+                        require_login_startup_frontend_change(old, new)
+
     def test_modo_legado_aceito_modo_desconhecido_recusado(self):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
             ops = self.disk_operations(Path(directory))
@@ -96,6 +153,11 @@ class FrontendReplacementTest(unittest.TestCase):
                     marker.rmdir()
 
     def test_encadeamento_explicito_preserva_historico_e_retorna_anterior_imediato(self):
+        for mode in ('login-startup', 'login-startup-frontend'):
+            with self.subTest(mode=mode):
+                self.check_chained_replacement(mode)
+
+    def check_chained_replacement(self, mode):
         with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory, ExitStack() as stack:
             ops = self.disk_operations(Path(directory))
             stack.enter_context(patch('hml_frontend.clean_sha', return_value='e' * 40))
@@ -113,19 +175,21 @@ class FrontendReplacementTest(unittest.TestCase):
             stack.enter_context(patch('hml_frontend.durable_artifact', return_value=(ops.artifact, next_gate)))
             stack.enter_context(patch('hml_frontend.validate_rehearsal'))
             stack.enter_context(patch('hml_frontend.validate_runtime'))
-            guard = stack.enter_context(patch('hml_frontend.require_login_startup_change'))
+            function = ('require_login_startup_change' if mode == 'login-startup'
+                        else 'require_login_startup_frontend_change')
+            guard = stack.enter_context(patch('hml_frontend.' + function))
             original = Path.read_bytes
             def contents(path):
                 return b'RM_STAGE=hml\0' if str(path) == '/proc/123/environ' else original(path)
             stack.enter_context(patch.object(Path, 'read_bytes', contents))
-            ops.mode = 'login-startup'
+            ops.mode = mode
             ops.preflight()
             guard.assert_called_once_with(ops.old_release / 'app.jar', ops.artifact)
             self.assertEqual(ops.old_state['git_sha'], 'b' * 40)
             ops.prepare()
             assert ops.archive is not None
             self.assertEqual((ops.archive / 'journal.json').read_bytes(), prior)
-            self.assertEqual(ops.record['mode'], 'login-startup')
+            self.assertEqual(ops.record['mode'], mode)
             ops.install()
             # O retorno não depende de o novo JAR ainda estar íntegro.
             (ops.release / 'app.jar').write_bytes(b'corrompido')

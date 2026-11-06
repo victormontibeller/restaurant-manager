@@ -8,12 +8,27 @@ Preparação iniciada em 2026-11-06; **não é declaração de Sprint concluída
 O checkpoint registra o resultado mais recente. Escopo vigente: fechar somente
 Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta execução.
 
-Resumo vigente do ciclo32: a correção da consulta fria tem quatro partidas
-aprovadas; sua matriz integrada31 ainda estava em andamento. A revisão encontrou
+Resumo vigente ciclo33: worker32 revisado e iniciado, aguardando o build95
+existente. Opt-in composto login+frontend implementado/testado/revisado, sem
+alteração do produto nem reconstrução. Nenhuma troca nativa nova; matriz95,
+manutenção, visual e smokes/aceitação continuam pendentes.
+[Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
+
+Resumo histórico do ciclo32: a correção da consulta fria tem quatro partidas
+aprovadas e sua matriz integrada31 terminou com215pares únicos conferidos.
+Correção acessível publicada em95d278e, ambos checksCI aprovados. Build nativo
+95 ativo na última consulta, ainda sem resultado; novo workerE2E preparado mas
+não iniciado. A revisão encontrou
 uma lacuna adicional de associação acessível dos erros de código/reautenticação.
 Correção Angular e probes passaram, mas novo artefato/E2E e gates operacionais
 continuam pendentes. Não confundir os resultados históricos abaixo com aceite
 do código posterior. [Evidência32](evidencias/sprint-01-retomada-ciclo-32.md).
+
+O modo operacional `login-startup` não aceita frontend diferente. O novo
+`login-startup-frontend` mantém a delimitação backend e permite static;
+comparação dos JARs reais e gates operacionais continuam obrigatórios.
+Não retornar ao banco anterior à identidade. Nenhuma operação nativa nova
+foi executada32 nem aprovada antecipadamente no ciclo33.
 
 - Repositório: `victormontibeller/restaurant-manager`.
 - Branch: `hermes/sprint-01-identidade-acessos`; PR **#3**, base `main`.

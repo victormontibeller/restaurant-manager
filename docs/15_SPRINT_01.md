@@ -9,7 +9,21 @@
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
 eventos cadastrais, exportação mínima e provisionamento assistido.
 
+Atualização ciclo33: worker32 revisado/iniciado e aguarda o build95 existente,
+sem repetir artefato ou matriz31. Composição restrita login+frontend implementada,
+testada e revisada; não é troca nativa nem aprovação da Sprint. Manutenção,
+matriz/visual95, smokes e aceitação continuam pendentes.
+[Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
+
 Atualização ciclo32: revisão dos sete critérios identificou erro sem associação
+ao campo. Publicado95d278e, ambos checksCI aprovados. Matriz31 terminou com215
+pares únicos conferidos, mas pertence ao JAR5cce633; build novo95 está ativo e
+sem gate final observado. Worker32 preparado, NÃO iniciado. Correção Angular
+com vermelho/verde cobre códigos públicos e senhas de reautenticação;
+probes nos três motores e typecheck passaram. Não promover candidato
+intermediário. [Evidência32](evidencias/sprint-01-retomada-ciclo-32.md).
+
+Registro inicial ciclo32: revisão dos sete critérios identificou erro sem associação
 ao campo. Correção Angular com vermelho/verde cobre códigos públicos e senhas
 de reautenticação, sem alterar backend/timeouts. Probes nos três motores e
 typecheck passaram; E2E ampliados e novo artefato ainda pendentes. Matriz31

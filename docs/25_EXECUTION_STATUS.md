@@ -1,5 +1,67 @@
 # Checkpoint de execução
 
+## Incremento — ciclo33, 2026-11-06
+
+Escopo somente Sprint01/handoffMac. Git/PR3 OPEN draft/head95d278e e ambos
+checksCI aprovados conferidos; cinco documentos herdados preservados. Hml97d75b0
+UP/PID754824, rm_test16389 e clone135836/baseline449ce3c conferidos. Build95
+preservado; na consulta07:12Z ainda sem resultado final,56 testes completos em
+seteXML sem falha/erro/skip. Isso NÃO é gate aprovado.
+
+Worker32 revisado independentemente e iniciado07:08:43Z, MainPID850944, unidade
+própria/control-group/limite5h/cleanup90s conferidos. Plano215 exato. Aguarda o
+build95 existente; não interromper/duplicar. Matriz ainda NÃO aprovada.
+
+Opt-in composto `login-startup-frontend` implementado no script existente,
+preservando modos anteriores e três entradas backend/YAML exato. Dois vermelhos
+pertinentes,21focados/160Python aprovados; revisão independente sem bloqueador.
+São provas de coordenação/disco/ZIP com serviços simulados, NÃO troca nativa.
+Positivo de alteração static ampliado depois da revisão; nenhum código de
+produto/backend/toolchain mudou, não exige reconstruir95.
+
+Próximo: recolher build/matriz, comparar JARs reais e concluir revisão visual,
+manutenção/troca compatível/smokes/aceitação. Não repetir empresa assistida28
+nem retornar banco pré-identidade. Sem deploy/promoção/merge/STOP; Mac não
+verificado,02–05 fora do escopo. [Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
+
+## Encerramento — ciclo32, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado recebido após preparar o worker32;
+depois somente escritas obrigatórias de handoff, sem novas verificações.
+Sprint01 NÃO concluída. Sem deploy, promoção, merge, STOP ou CONCLUSAO.json.
+
+Publicado95d278e/PR3 OPEN draft/base main; remoto/head/corpo relidos. Ambos
+checksCI aprovados; log confirma175backend sem falha/erro/skip e158Python.
+Matriz31 recolhida às06:54Z:215pares únicos, dez parcelas, todos JSONs/hashes/
+estatísticas/coberturas conferidos; worker encerrado e candidato recolhido.
+Build anterior5cce633 recontado:24XML/175backend sem falha/erro/skip. Não repetir.
+
+Build único95d278e lançado depois de conferir término/candidato/locks/banco/CI,
+em checkout imutável e unidade independente. Última consulta06:55:42Z:
+MainPID846026/active, sem result.json; probes em execução. NÃO interromper nem
+reconstruir. O novo Angular ainda não possui gate nativo/E2E consolidado.
+Worker32 finito foi ESCRITO, mas NÃO iniciado antes do aviso; não existe
+aprovação futura. Script/caminhos/limites propostos estão no STATUS privado.
+
+Registro visual privado32:56imagens,26principais/20complementos/10adicionais,
+origens/hashes conferidos. São capturas do JAR31; layouts inspecionados com
+limites de componente/viewport, sem aprovar a lacuna semântica corrigida no
+Angular posterior. Registro mantém aceitação falsa e bloqueios explícitos.
+
+Hml97d75b0 UP/PID754824 e baseline449ce3c preservados na última verificação;
+originalOID16392 bloqueado/zero conexões, clone135836 e rm_test16389 conferidos.
+Dev também conferido via conexão efetiva. Nenhuma releitura após o aviso.
+Modo login-startup existente NÃO aceita mudança simultânea de frontend;
+caminho composto ainda precisa de implementação/revisão/teste antes da troca.
+Terceira revisão recusada pelo limite2/2; não houve alteração dessa guarda.
+Nunca retornar banco pré-identidade nem repetir empresa assistida28.
+
+Próximo: recolher build95 sem repetir; revisar/iniciar o worker32 preparado
+quando gates permitirem, executar matriz do novo artefato e concluir operação
+compatível/manutenção/smokes/aceitação. Documentos finais permanecem LOCAIS após
+o push95; corpoPR remoto ainda registra snapshot anterior ao término31.
+Mac não verificado;02–05 fora do escopo. O fim desta chamada não encerra a missão.
+
 ## Incremento — ciclo32, 2026-11-06
 
 Escopo somente Sprint01/handoff Mac. Git/PR3 OPEN draft/head b5448c7 e ambos

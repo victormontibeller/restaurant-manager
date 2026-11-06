@@ -403,7 +403,8 @@ Essa delimitação não verifica a semântica do bytecode: revisão da fonte,
 build/testes do novo artefato e compatibilidade das escritas continuam obrigatórios.
 Não serve para futuras mudanças Java, de configuração ou de banco.
 
-Somente esse opt-in pode encadear sobre uma troca concluída ainda não aceita,
+Esse opt-in e sua composição explícita com frontend, descrita abaixo, podem
+encadear sobre uma troca concluída ainda não aceita,
 conferindo seu recibo contra o candidato atual. Arquiva o journal anterior e
 registra o modo; `recover` usa o modo persistido, não aceita sua reinterpretação
 pela CLI e retorna ao binário imediatamente anterior no mesmo clone. Journals
@@ -419,6 +420,23 @@ restabelecer o registro ativo. Não tratar a ausência como “nenhuma troca” 
 reexecutar automaticamente. A CLI `recover` não resolve essa janela sozinha.
 Testes com disco/serviços simulados cobrem a recusa; a execução nativa da nova
 troca só pode ser declarada após os gates e o resultado registrado no checkpoint.
+
+### Composição restrita com frontend — ciclo33
+
+`--mode login-startup-frontend` admite o mesmo incremento de login acima junto
+das mudanças em `BOOT-INF/classes/static/`, incluindo chunks adicionados ou
+removidos pelo Angular. Duplicatas ZIP são recusadas antes de filtrar static.
+Todas as entradas restantes precisam coincidir, exceto exatamente as três
+entradas delimitadas acima; a configuração YAML continua exigindo a adição
+byte a byte, com âncora única. Migrations, bibliotecas e metadados permanecem
+idênticos. O modo `login-startup` original continua exigindo frontend idêntico;
+o default `frontend` continua exigindo backend idêntico.
+
+Não é um deploy Java genérico nem dispensa revisão de fonte, build, ensaio de
+manutenção e matriz do artefato final. Reutiliza o journal e a recuperação da
+mesma operação: preserva histórico, clone e baseline, retornando somente ao
+binário imediatamente anterior. Testes simulados da composição não comprovam
+troca nativa; consultar o checkpoint para o resultado operacional efetivo.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade

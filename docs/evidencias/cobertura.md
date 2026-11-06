@@ -2,6 +2,12 @@
 
 ## Estado vigente — ciclo32, 2026-11-06
 
+Consolidação final: matriz31 aprovada em215pares únicos do JAR5cce633, sem
+falha/skip/retry/flaky, recibos reabertos. Revisão visual tem56imagens com
+origem/hash, mas permanece bloqueada para aceitação por lacuna semântica do
+artefato antigo.95d278e publicado/CI aprovada; build nativo ativo, E2E novo ainda
+não iniciado. Não transferir cobertura ao Angular posterior.
+
 Correção de associação de erros por campo em Angular, com provas vermelho/verde
 isoladas nos três motores. UI04/UI11/UI14/UI19/UI21/UI26/UI29 foram ampliados;
 E2E do novo código ainda pendente. A matriz31 continua no JAR5cce633, sem

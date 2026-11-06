@@ -70,3 +70,32 @@ Não retornar ao banco anterior à identidade nem repetir a empresa assistida28.
 Sprint01 continua aberta. Manutenção do candidato final, atualização/retorno
 binários compatíveis, smokes, revisão visual final e aceitação ainda são gates.
 PR #3 permanece aberto; Sprints02–05 fora do escopo. Setup Mac não verificado.
+
+## Consolidação e encerramento da chamada
+
+Publicado `95d278eebb275521ead3299fbb12f067f6e2419c`; PR3 OPEN/draft e corpo
+relidos. Ambos checksCI passaram; log confirma175backend sem falha/erro/skip
+e158Python. Matriz31 recolhida às06:54Z:215pares únicos em dez parcelas,
+JSONs/hashes/estatísticas/coberturas reabertos. Worker encerrado e candidato
+recolhido, hml antes/depois idêntica. Isso é prova do JAR5cce633, não do95.
+
+Revisão visual32 materializou56imagens do JAR31:26principais,20complementos e
+dez adicionais. As seis imagens de formulários públicos foram inspecionadas
+mobile/desktop, com recortes mobile adicionais; dez de plataforma e quatro de
+estado/provisionamento completaram os alvos. Componentes/viewports não foram
+chamados de páginas completas. Origem/hash e forma do inventário conferidos;
+aceitação continua falsa por lacuna semântica do candidato e gates operacionais.
+
+Build único95 iniciou após término31, CI, locks livres e banco/candidato
+conferidos. Às06:55:42Z estava ativo/MainPID846026, sem resultado consolidado.
+Não reconstruir/interromper. Worker32 foi preparado mas NÃO lançado antes do
+aviso efetivo de orçamento; não inferir E2E ou resultado posterior.
+
+O caminho operacional atual `login-startup` preserva frontend byte a byte;
+o novo candidato altera ambos. Uma operação composta delimitada ainda precisa
+ser revisada/testada; nenhuma guarda foi afrouxada neste ciclo. Terceira revisão
+delegada foi recusada pelo limite2/2, não substituída por aprovação.
+
+Após o aviso, somente checkpoint/STATUS obrigatórios foram escritos. Não houve
+deploy, promoção, merge ou conclusão. Estes registros posteriores ao push ficam
+locais; o corpo remoto do PR ainda contém o snapshot anterior ao término31.

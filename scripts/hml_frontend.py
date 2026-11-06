@@ -1,7 +1,8 @@
 """Substituição restrita de candidato hml ainda não aceito.
 
 Por padrão backend é idêntico, exceto static/. Opt-in login-startup admite
-somente o incremento delimitado da consulta de login. Não migra nem restaura
+somente o incremento delimitado da consulta de login; login-startup-frontend
+combina esse mesmo incremento com static/. Não migra nem restaura
 banco. Falha retorna somente o binário anterior no MESMO clone, nunca o baseline
 pré-identidade. Recuperação explícita conserva o journal e todos os artefatos.
 """
@@ -25,7 +26,7 @@ from release_support import (UNIT, artifact_hash, clean_sha, durable_artifact, i
                              migration_fingerprint, previous_artifact, private_runtime_path,
                              systemctl, verify, wait_for_release, artifact_has_identity)
 
-MODES = ('frontend', 'login-startup')
+MODES = ('frontend', 'login-startup', 'login-startup-frontend')
 
 
 def require(condition, message):
@@ -45,6 +46,10 @@ def require_same_backend(old, new):
 
 
 def require_login_startup_change(old, new):
+    _require_login_startup_change(old, new, allow_frontend=False)
+
+
+def _require_login_startup_change(old, new, *, allow_frontend):
     """Exceção delimitada ao incremento revisado; não é deploy genérico Java."""
     require(artifact_has_identity(old) and artifact_has_identity(new), 'Identidade ausente.')
     def entries(path):
@@ -52,7 +57,8 @@ def require_login_startup_change(old, new):
             names = archive.namelist()
             require(len(names) == len(set(names)), 'Entradas ZIP duplicadas.')
             require(any(n.startswith('BOOT-INF/classes/static/') for n in names), 'Frontend ausente.')
-            return {n: archive.read(n) for n in names}
+            return {n: archive.read(n) for n in names
+                    if not (allow_frontend and n.startswith('BOOT-INF/classes/static/'))}
     before, after = entries(old), entries(new)
     require(before.keys() == after.keys(), 'Entradas adicionadas/removidas fora do incremento de login.')
     config = 'BOOT-INF/classes/application.yml'
@@ -67,6 +73,10 @@ def require_login_startup_change(old, new):
             and after[config] == before[config].replace(anchor, anchor + addition),
             'Configuração fora do incremento delimitado de login.')
     require(migration_fingerprint(old) == migration_fingerprint(new), 'Migrations divergentes.')
+
+
+def require_login_startup_frontend_change(old, new):
+    _require_login_startup_change(old, new, allow_frontend=True)
 
 
 def record_mode(record):
@@ -162,7 +172,8 @@ class Replacement:
         if self.directory.exists():
             self.load(allow_returned=True)
             require(self.record['state'] == 'anterior-restaurado'
-                    or (requested_mode == 'login-startup' and self.record['state'] == 'concluido'),
+                    or (requested_mode in ('login-startup', 'login-startup-frontend')
+                        and self.record['state'] == 'concluido'),
                     'Troca já registrada; recuperar antes de novo candidato.')
             current = json.loads(private_runtime_path(str(self.attempt / 'state.json')).read_text())
             verify_frontend_record(self.attempt, current)
@@ -184,7 +195,9 @@ class Replacement:
         require(self.old_service == (self.attempt / 'candidate.service').read_text()
                 and previous_artifact(self.root, self.old_service) == self.old_release / 'app.jar',
                 'Unidade não corresponde ao candidato anterior.')
-        guard = require_same_backend if self.mode == 'frontend' else require_login_startup_change
+        guard = {'frontend': require_same_backend,
+                 'login-startup': require_login_startup_change,
+                 'login-startup-frontend': require_login_startup_frontend_change}[self.mode]
         guard(self.old_release / 'app.jar', artifact)
         environ = dict(x.split(b'=', 1) for x in Path('/proc/%s/environ' % self.before['pid']).read_bytes().split(b'\0') if b'=' in x)
         validate_runtime(self.before, self.old_state, environ)
