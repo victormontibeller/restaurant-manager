@@ -9,10 +9,12 @@
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
 eventos cadastrais, exportação mínima e provisionamento assistido.
 
-Atualização ciclo33: worker32 revisado/iniciado e aguarda o build95 existente,
-sem repetir artefato ou matriz31. Composição restrita login+frontend implementada,
-testada e revisada; não é troca nativa nem aprovação da Sprint. Manutenção,
-matriz/visual95, smokes e aceitação continuam pendentes.
+Atualização ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip.
+Worker32 aprovou UI18×5 e identidade45,50pares únicos conferidos; eventos em
+execução.32capturas95 inspecionadas e vinculadas, revisão integral ainda pendente.
+Composição restrita login+frontend implementada/testada/revisada e conferida
+nos JARs reais; não é troca nativa nem aprovação da Sprint. Manutenção,
+restante da matriz/visual95, smokes e aceitação continuam pendentes.
 [Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
 
 Atualização ciclo32: revisão dos sete critérios identificou erro sem associação

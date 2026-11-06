@@ -48,8 +48,25 @@ mantida, além de adicionar/remover chunks, sem mudar a implementação.
 
 ## Pendências
 
-Recolher build e matriz95, revisar capturas do novo artefato, comparar JARs
-reais, executar manutenção/troca compatível e smokes, consolidar aceitação e
+Atualização07:42Z:01e2724 publicado/PR3 OPEN draft, remoto/corpo relidos;
+ambos checksCI passaram com175backend/160Python no log. Build95 terminou
+07:24:15Z exit0/gate true.24XML/175backend sem falha/erro/skip recontados;
+hashbb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d.
+Unidade de build encerrada, sem reconstrução. Nos JARs reais97→95, modos
+anteriores recusaram e composto aceitou;95 é idêntico5cce633 fora de static.
+Fonte operacional01 limpa/compatível e três contas/chaves da fixture conferidas.
+Não é execução de manutenção/troca, que continua pendente.
+
+Matriz32 passou UI18×5 e identidade45,50pares únicos sem falha/skip/retry/flaky,
+com JSONs/hashes/stats/cobertura reabertos. Eventos em execução; resultado global
+ainda não observado.32capturas do95 inspecionadas e vinculadas,10principais/
+12complementos/10adicionais. Matrizmobile revista em quatro recortes sobrepostos,
+desktop em dois; nome longo em input e limites de cartão/viewport explicitados.
+Recortes não são testes adicionais. Revisão integral e aceitação permanecem
+falsas, sem inferir fechamento das demais superfícies.
+
+Recolher o restante da matriz95 e revisar suas capturas, sem repetir o build
+aprovado; executar manutenção/troca compatível e smokes, consolidar aceitação e
 sete critérios reais. Não repetir provisionamento assistido28 nem atribuir
 matriz31 ao Angular95. Setup Mac não executado/verificado. Sprint01 aberta;
 nenhum gate foi reduzido e nenhuma promoção foi declarada.

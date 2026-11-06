@@ -1,6 +1,15 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo32, 2026-11-06
+## Estado vigente — ciclo33, 2026-11-06
+
+Build95 aprovado,24XML/175backend sem falha/erro/skip. Matriz32 conferiu50pares
+únicos no mesmo95 (UI18×5 e identidade45); eventos em execução, sem gate global.
+32capturas95 inspecionadas com limites e vínculo:10principais/12complementos/
+10adicionais. Não somar matriz31 nem suas capturas ao candidato novo.
+Composição operacional conferida nos JARs reais, ainda sem manutenção/troca
+nativa95. [Evidência33](sprint-01-retomada-ciclo-33.md).
+
+## Registro anterior — ciclo32, 2026-11-06
 
 Consolidação final: matriz31 aprovada em215pares únicos do JAR5cce633, sem
 falha/skip/retry/flaky, recibos reabertos. Revisão visual tem56imagens com

@@ -8,10 +8,13 @@ Preparação iniciada em 2026-11-06; **não é declaração de Sprint concluída
 O checkpoint registra o resultado mais recente. Escopo vigente: fechar somente
 Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta execução.
 
-Resumo vigente ciclo33: worker32 revisado e iniciado, aguardando o build95
-existente. Opt-in composto login+frontend implementado/testado/revisado, sem
-alteração do produto nem reconstrução. Nenhuma troca nativa nova; matriz95,
-manutenção, visual e smokes/aceitação continuam pendentes.
+Resumo vigente ciclo33: build95 aprovado,24XML/175backend sem falha/erro/skip;
+hashbb07902c10444312a5bdd8c165efce8278d213de0d11f00d4242cddc8237706d.
+Worker32 aprovou50pares únicos (UI18×5+identidade45) e segue eventos.32capturas
+novas inspecionadas/vinculadas; revisão integral continua pendente. Opt-in
+composto publicado01e2724/CI aprovada, conferido nos JARs reais, sem reconstrução.
+Nenhuma troca nativa nova; restante da matriz95, manutenção e smokes/aceitação
+continuam pendentes.
 [Evidência33](evidencias/sprint-01-retomada-ciclo-33.md).
 
 Resumo histórico do ciclo32: a correção da consulta fria tem quatro partidas
