@@ -1,4 +1,5 @@
 import {Injectable,signal} from '@angular/core';
+import {ApiFailure} from '../identidade/sessao.service';
 
 export interface EmpresaSaas {id:string;nome:string;estado:string;versao:number;dominios:string[];}
 export interface SolicitacaoSaas {id:string;nome:string;host:string;estado:string;versao:number;ultimaFalha:string|null;}
@@ -72,7 +73,8 @@ export class PlataformaSessaoService {
   }
   private async erro(r:Response):Promise<Error>{
     let mensagem='Não foi possível confirmar a operação. Confira a conexão e tente novamente.';
-    if(r.status<500)try{const b=await r.json() as {mensagem?:unknown};if(typeof b.mensagem==='string')mensagem=b.mensagem;}catch{/* Resposta de intermediário não é contrato de erro. */}
-    return new Error(mensagem);
+    let codigo='';
+    if(r.status<500)try{const b=await r.json() as {mensagem?:unknown;codigo?:unknown};if(typeof b.mensagem==='string')mensagem=b.mensagem;if(typeof b.codigo==='string')codigo=b.codigo;}catch{/* Resposta de intermediário não é contrato de erro. */}
+    return new ApiFailure(r.status,mensagem,codigo);
   }
 }

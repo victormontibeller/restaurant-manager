@@ -11,7 +11,7 @@ interface Convite {id:string;email:string;perfil:string;unidades:string[];estado
       <p>Somente contas novas. Não converte clientes nem reativa funcionários. O destinatário verifica o e-mail e define a própria senha. Validade: quinze minutos.</p>
       <p>Ambiente fictício: captura privada, sem envio real de e-mail. Administrador cobre todas as unidades; demais perfis sem vínculos não acessam unidades.</p>
       <form (submit)="reautenticar($event,senha)"><label for="senha-convite-admin">Confirme sua senha para convidar</label>
-        <input #senha id="senha-convite-admin" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
+        <input #senha id="senha-convite-admin" type="password" autocomplete="current-password" required maxlength="72" [attr.aria-describedby]="senhaInvalida()?'erro-convites-admin':null" [attr.aria-invalid]="senhaInvalida()?true:null" [disabled]="ocupado()">
         <button [disabled]="ocupado()">Confirmar identidade para convites</button>
       </form>
       @if(pendente();as p){
@@ -32,7 +32,7 @@ interface Convite {id:string;email:string;perfil:string;unidades:string[];estado
           <button [disabled]="ocupado()||!carregado()">Criar convite</button>
         </form>
       }
-      @if(erro()){<p #alerta role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
+      @if(erro()){<p #alerta id="erro-convites-admin" role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
       @if(aviso()){<p role="status">{{aviso()}}</p>}
       <form (submit)="buscar($event,id.value)"><label for="id-convite">Identificador do convite</label><input #id id="id-convite" required [disabled]="ocupado()"><button [disabled]="ocupado()">Consultar convite</button></form>
       @if(encontrado();as c){<p role="status">{{c.id}} · {{c.email}} · {{c.perfil}} · {{c.estado}}</p>}
@@ -52,6 +52,7 @@ export class ConvitesComponent implements OnInit {
   readonly perfil=signal('COZINHA');readonly vinculos=signal<string[]>([]);
   readonly unidades=signal<Unidade[]>([]);readonly lista=signal<Convite[]>([]);readonly encontrado=signal<Convite|null>(null);
   readonly pagina=signal(0);readonly carregado=signal(false);readonly ocupado=signal(false);readonly erro=signal('');readonly aviso=signal('');readonly bloqueio=output<boolean>();
+  readonly senhaInvalida=signal(false);
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   ngOnInit():void {void this.carregar(0);}
   @HostListener('window:beforeunload',['$event']) aoSair(event:BeforeUnloadEvent):void {if(this.pendente()){event.preventDefault();event.returnValue='';}}
@@ -82,8 +83,8 @@ export class ConvitesComponent implements OnInit {
   });}
   async revogar(id:string):Promise<void>{await this.executar(async()=>{const c=await this.sessao.api<Convite>('/api/v1/equipe/convites/'+id+'/revogar','POST',{});this.lista.update(v=>v.map(x=>x.id===id?c:x));this.aviso.set('Revogação confirmada. Mensagens já capturadas podem permanecer, mas o código não autoriza aceite.');});}
   private async executar(acao:()=>Promise<void>):Promise<void>{
-    if(this.ocupado())return;this.ocupado.set(true);this.bloqueio.emit(true);this.erro.set('');this.aviso.set('');
-    try{await acao();}catch(error){this.erro.set(error instanceof Error?error.message:'Resultado não confirmado. Consulte o identificador.');setTimeout(()=>this.alerta?.nativeElement.focus());}
+    if(this.ocupado())return;this.ocupado.set(true);this.bloqueio.emit(true);this.erro.set('');this.aviso.set('');this.senhaInvalida.set(false);
+    try{await acao();}catch(error){this.senhaInvalida.set(error instanceof ApiFailure&&error.status===422&&error.codigo==='CONFIRMACAO_INVALIDA');this.erro.set(error instanceof Error?error.message:'Resultado não confirmado. Consulte o identificador.');setTimeout(()=>this.alerta?.nativeElement.focus());}
     finally{this.ocupado.set(false);this.bloqueio.emit(!!this.pendente());}
   }
 }

@@ -72,8 +72,11 @@ test('S01-UI14: cadastro inválido, validação de senha, foco e offline',async(
   await expect(page.getByRole('alert')).toContainText('Código inválido, expirado ou já utilizado.');
   await expect(page.getByLabel('Senha da nova conta',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Confirmar senha da nova conta',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código de cadastro',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código de cadastro',{exact:true})).toHaveAccessibleDescription(/Código inválido, expirado ou já utilizado\./);
   await context.setOffline(true);await page.getByLabel('E-mail do cadastro').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código de cadastro',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
+  await expect(page.getByLabel('Código de cadastro',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await context.setOffline(false);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.getByLabel('Código de cadastro',{exact:true}).fill('');
   await page.screenshot({path:test.info().outputPath('cadastro-mobile.png'),fullPage:true});

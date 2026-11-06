@@ -16,10 +16,10 @@ import {ApiFailure,SessaoService} from './sessao.service';
       <p>O código só funciona nesta empresa, expira em quinze minutos após a solicitação e pode ser usado uma vez.</p>
       <form (submit)="confirmar($event,codigo)">
         <label for="codigo-verificacao">Código de verificação</label>
-        <input #codigo id="codigo-verificacao" type="password" autocomplete="off" required minlength="43" maxlength="43" pattern="[A-Za-z0-9_-]{43}" [disabled]="ocupado()">
+        <input #codigo id="codigo-verificacao" type="password" autocomplete="off" required minlength="43" maxlength="43" pattern="[A-Za-z0-9_-]{43}" [attr.aria-describedby]="codigoInvalido()?'erro-verificacao':null" [attr.aria-invalid]="codigoInvalido()?true:null" [disabled]="ocupado()">
         <button type="submit" [disabled]="ocupado()">Confirmar verificação</button>
       </form>
-      @if(erro()){<p #alerta role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
+      @if(erro()){<p #alerta id="erro-verificacao" role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
       @if(aviso()){<p #resultado role="status" tabindex="-1">{{aviso()}}</p>}
       <button type="button" (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
     </section>
@@ -31,6 +31,7 @@ export class VerificacaoComponent {
   readonly voltar=output<void>();
   readonly ocupado=signal(false);
   readonly erro=signal('');
+  readonly codigoInvalido=signal(false);
   readonly aviso=signal('');
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   @ViewChild('resultado') resultado?:ElementRef<HTMLElement>;
@@ -46,9 +47,10 @@ export class VerificacaoComponent {
       codigo.value='';this.sucesso('E-mail verificado. Sua senha e seu perfil foram preservados.');
     } catch(error){this.falha(error,true);}finally{this.ocupado.set(false);}
   }
-  private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');}
+  private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');this.codigoInvalido.set(false);}
   private sucesso(texto:string):void{this.aviso.set(texto);setTimeout(()=>this.resultado?.nativeElement.focus());}
   private falha(error:unknown,confirmacao:boolean):void {
+    this.codigoInvalido.set(confirmacao&&error instanceof ApiFailure&&error.status===422&&error.codigo==='VERIFICACAO_INVALIDA');
     const rede=error instanceof TypeError||(error instanceof ApiFailure&&error.status>=500)||(error instanceof Error&&['TimeoutError','AbortError'].includes(error.name));
     this.erro.set(rede?(confirmacao?'A resposta não chegou. O e-mail pode ter sido verificado. Volte ao login e confira na conta antes de solicitar outro código.':'Sem conexão. A solicitação não foi confirmada; confira a captura antes de repetir.'):(error instanceof Error?error.message:'Não foi possível concluir a operação.'));
     setTimeout(()=>this.alerta?.nativeElement.focus());

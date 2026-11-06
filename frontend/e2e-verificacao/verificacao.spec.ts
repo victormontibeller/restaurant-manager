@@ -55,8 +55,11 @@ test('S01-UI21: código inválido, erro de rede, teclado e layout',async({page,c
   await abrir(page);await page.getByLabel('Código de verificação',{exact:true}).fill('A'.repeat(43));
   await page.getByRole('button',{name:'Confirmar verificação',exact:true}).click();
   await expect(page.getByRole('alert')).toContainText('Código inválido, expirado ou já utilizado.');await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Código de verificação',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código de verificação',{exact:true})).toHaveAccessibleDescription(/Código inválido, expirado ou já utilizado\./);
   await context.setOffline(true);await page.getByLabel('E-mail da conta existente').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código de verificação',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
+  await expect(page.getByLabel('Código de verificação',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await context.setOffline(false);await page.getByLabel('Código de verificação',{exact:true}).fill('');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.screenshot({path:test.info().outputPath('verificacao-mobile.png'),fullPage:true});

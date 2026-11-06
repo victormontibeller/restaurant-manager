@@ -18,7 +18,7 @@ import {senhaEmBranco} from './senha';
       <p>O código recebido só funciona nesta empresa, expira em quinze minutos após a solicitação e pode ser usado uma vez. Se já possui conta, volte ao login ou recupere sua senha.</p>
       <form (submit)="confirmar($event,codigo,senha,confirmacao)">
         <label for="codigo-cadastro">Código de cadastro</label>
-        <input #codigo id="codigo-cadastro" type="password" autocomplete="off" required minlength="43" maxlength="43" pattern="[A-Za-z0-9_-]{43}" [disabled]="ocupado()">
+        <input #codigo id="codigo-cadastro" type="password" autocomplete="off" required minlength="43" maxlength="43" pattern="[A-Za-z0-9_-]{43}" [attr.aria-describedby]="campoErro()==='codigo'?'erro-cadastro':null" [attr.aria-invalid]="campoErro()==='codigo'?true:null" [disabled]="ocupado()">
         <label for="senha-cadastro">Senha da nova conta</label>
         <input #senha id="senha-cadastro" type="password" autocomplete="new-password" required minlength="12" maxlength="72" [attr.aria-describedby]="campoErro()==='senha'?'regra-cadastro erro-cadastro':'regra-cadastro'" [attr.aria-invalid]="campoErro()==='senha'?true:null" [disabled]="ocupado()">
         <p id="regra-cadastro">Use pelo menos 12 caracteres e no máximo 72 bytes. Caracteres acentuados podem ocupar mais de um byte.</p>
@@ -38,7 +38,7 @@ export class CadastroComponent {
   readonly voltar=output<void>();
   readonly ocupado=signal(false);
   readonly erro=signal('');
-  readonly campoErro=signal<'senha'|'confirmacao'|null>(null);
+  readonly campoErro=signal<'codigo'|'senha'|'confirmacao'|null>(null);
   readonly aviso=signal('');
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
   @ViewChild('resultado') resultado?:ElementRef<HTMLElement>;
@@ -62,6 +62,7 @@ export class CadastroComponent {
   private iniciar():void{this.ocupado.set(true);this.erro.set('');this.aviso.set('');this.campoErro.set(null);}
   private sucesso(texto:string):void{this.aviso.set(texto);setTimeout(()=>this.resultado?.nativeElement.focus());}
   private falha(error:unknown,confirmacao:boolean):void {
+    if(confirmacao&&error instanceof ApiFailure&&error.status===422&&error.codigo==='CADASTRO_INVALIDO')this.campoErro.set('codigo');
     const rede=error instanceof TypeError||(error instanceof ApiFailure&&error.status>=500)||(error instanceof Error&&['TimeoutError','AbortError'].includes(error.name));
     this.erro.set(rede?(confirmacao?'A resposta não chegou. A conta pode ter sido criada. Volte ao login e confira antes de solicitar outro código.':'Sem conexão. A solicitação não foi confirmada; confira a captura antes de repetir.'):(error instanceof Error?error.message:'Não foi possível concluir a operação.'));
     setTimeout(()=>this.alerta?.nativeElement.focus());

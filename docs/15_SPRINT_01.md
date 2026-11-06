@@ -7,7 +7,24 @@
 
 **Status:** em andamento desde 2026-11-04; não concluída. Há implementação
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
-eventos cadastrais, exportação mínima e provisionamento assistido. A homologação
+eventos cadastrais, exportação mínima e provisionamento assistido.
+
+Atualização ciclo32: revisão dos sete critérios identificou erro sem associação
+ao campo. Correção Angular com vermelho/verde cobre códigos públicos e senhas
+de reautenticação, sem alterar backend/timeouts. Probes nos três motores e
+typecheck passaram; E2E ampliados e novo artefato ainda pendentes. Matriz31
+preservada, mas não aprova o Angular posterior. Não promover candidato
+intermediário. [Evidência32](evidencias/sprint-01-retomada-ciclo-32.md).
+
+Atualização ciclo31: consulta de login5cce633 interpretada no startup, com
+vermelho/verde e quatro partidas frias UI18 aprovadas. Build nativo conferido:
+24XML/175backend sem falha/erro/skip. Matriz nova em execução,50pares únicos
+conferidos; não transferir os285 do JAR anterior. Opt-in de atualização binária
+delimitada implementado/testado, ainda sem execução nativa. Manutenção,
+smokes/aceitação e sete critérios permanecem abertos até consolidação.
+[Evidência31](evidencias/sprint-01-retomada-ciclo-31.md).
+
+A homologação
 serve o candidato97d75b0 desde o ciclo28, sem promoção do baseline449ce3c. A matriz6cd8a86 passou
 215 combinações, mas sua exportação foi reprovada visualmente por sucesso antigo
 após nova falha. Não promover esse artefato nem transferir suas provas ao Angular

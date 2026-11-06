@@ -33,10 +33,14 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await page.getByLabel('Confirme sua senha').fill('senha-incorreta');
   await confirmarResposta(page,'/auth/reautenticar','POST',422,()=>page.getByRole('button',{name:'Confirmar identidade'}).click());
   await expect(page.getByRole('alert')).toHaveText('Senha de confirmação inválida.');
+  await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Confirme sua senha')).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirme sua senha')).toHaveAccessibleDescription('Senha de confirmação inválida.');
   await expect(kitchen).not.toBeChecked();
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
   await confirmarResposta(page,'/auth/reautenticar','POST',204,()=>page.getByRole('button',{name:'Confirmar identidade'}).click());
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
+  await expect(page.getByLabel('Confirme sua senha')).not.toHaveAttribute('aria-invalid','true');
   await confirmarResposta(page,'/configuracoes/acessos','PUT',200,()=>page.getByRole('button',{name:'Salvar permissões'}).click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   const reload=Promise.all(['/configuracoes/acessos','/equipe?pagina=0','/operacao/unidades'].map(path=>

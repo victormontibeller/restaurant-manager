@@ -1,6 +1,29 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo 27, 2026-11-05 local
+## Estado vigente — ciclo32, 2026-11-06
+
+Correção de associação de erros por campo em Angular, com provas vermelho/verde
+isoladas nos três motores. UI04/UI11/UI14/UI19/UI21/UI26/UI29 foram ampliados;
+E2E do novo código ainda pendente. A matriz31 continua no JAR5cce633, sem
+interrupção/duplicação, e não aprova a aplicação alterada. Não houve deploy nem
+promoção. [Evidência32](sprint-01-retomada-ciclo-32.md); o checkpoint registra
+as contagens e fases observadas, sem converter gates pendentes em aprovação.
+
+## Histórico — ciclo31, 2026-11-06
+
+JAR5cce633/hash2db5ed4a:24XML/175backend sem falha/erro/skip; quatro partidas
+frias UI18 passaram nos dois motores antes falhos, com diagnóstico HQL no startup.
+Matriz integrada nova em execução:50pares únicos conferidos (UI18×5 e
+identidade45), eventos e demais famílias ainda pendentes. Revisão visual parcial
+materializada:10principais/12complementos/10adicionais,32imagens com origem/hash.
+Isso não aprova matriz inteira, promoção ou Sprint. [Evidência31](sprint-01-retomada-ciclo-31.md).
+
+Hml continua97d75b0; sua matriz285, manutenção e provisionamento assistido do
+ciclo28 são provas históricas desse JAR, não do backend novo. Não reconstruir
+5cce633 por scripts/docs. Estado posterior e gates no
+[checkpoint](../25_EXECUTION_STATUS.md); famílias futuras abaixo não foram reduzidas.
+
+## Histórico — ciclo 27, 2026-11-05 local
 
 Às 02:31Z de 2026-11-06, 150 pares únicos aprovados no JAR 97d75b0:
 25 focos, 45 identidade, 45 eventos, 15 verificação e 20 cadastro. Recibos,

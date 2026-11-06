@@ -15,7 +15,7 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     import {IdentidadeComponent} from './src/app/identidade/identidade.component';
     import {ApiFailure,SessaoService} from './src/app/identidade/sessao.service';
     const calls=[];
-    const command=async(...args)=>{calls.push(args);if(window.failure)throw new ApiFailure(window.failure,'Código inválido, expirado ou já utilizado.');};
+    const command=async(...args)=>{calls.push(args);if(window.failure)throw await SessaoService.prototype['erroComando'](new Response(JSON.stringify({codigo:window.failureCode,mensagem:'Código inválido, expirado ou já utilizado.'}),{status:window.failure}));};
     const mock={identidade:signal(null),restaurar:async()=>{},recuperar:command,cadastrar:command,aceitarConvite:command,verificarEmail:command};
     bootstrapApplication(IdentidadeComponent,{providers:[{provide:SessaoService,useValue:mock}]}).then(app=>window.fixture={app,calls});
   `,resolveDir:repo+'/frontend',sourcefile:'identity-forms-probe.ts'},bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',tsconfigRaw:{compilerOptions:{experimentalDecorators:true}},logLevel:'silent'});
@@ -30,10 +30,10 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     const page=await browser.newPage({viewport:{width:360,height:800}});
     page.on('pageerror',error=>errors.push(error.message));
     const forms=[
-      {name:'Recuperar senha',code:'codigo-recuperacao',password:'nova-senha',confirm:'confirmar-senha',submit:'Alterar senha',rule:'regra-senha'},
-      {name:'Criar conta de cliente',code:'codigo-cadastro',password:'senha-cadastro',confirm:'confirmacao-cadastro',submit:'Verificar e criar conta',rule:'regra-cadastro'},
-      {name:'Aceitar convite de funcionário',code:'codigo-convite',password:'senha-convite',confirm:'confirmacao-convite',submit:'Verificar e aceitar convite',rule:'regra-convite'},
-      {name:'Verificar e-mail existente',code:'codigo-verificacao',submit:'Confirmar verificação'},
+      {name:'Recuperar senha',code:'codigo-recuperacao',errorCode:'RECUPERACAO_INVALIDA',password:'nova-senha',confirm:'confirmar-senha',submit:'Alterar senha',rule:'regra-senha'},
+      {name:'Criar conta de cliente',code:'codigo-cadastro',errorCode:'CADASTRO_INVALIDO',password:'senha-cadastro',confirm:'confirmacao-cadastro',submit:'Verificar e criar conta',rule:'regra-cadastro'},
+      {name:'Aceitar convite de funcionário',code:'codigo-convite',errorCode:'CONVITE_INVALIDO',password:'senha-convite',confirm:'confirmacao-convite',submit:'Verificar e aceitar convite',rule:'regra-convite'},
+      {name:'Verificar e-mail existente',code:'codigo-verificacao',errorCode:'VERIFICACAO_INVALIDA',submit:'Confirmar verificação'},
     ];
     for(const form of forms){
       await page.goto('http://127.0.0.1:'+server.address().port);await page.addScriptTag({content:built.outputFiles[0].text});
@@ -85,6 +85,21 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
         assert.equal(await page.evaluate(()=>window.fixture.calls.length),2);
         assert.equal(await page.evaluate(()=>window.fixture.calls.at(-1).at(-1).senha),'  Senha fictícia 123  ');
       }
+      // O código estável do backend identifica o campo; status/mensagem sozinhos não.
+      for(const [status,errorCode,invalid] of [[422,form.errorCode,true],[422,'OUTRO_ERRO',false],[429,form.errorCode,false],[503,form.errorCode,false]]){
+        await code.fill('A'.repeat(43));
+        if(form.password){await page.locator('#'+form.password).fill('Senha fictícia 123');await page.locator('#'+form.confirm).fill('Senha fictícia 123');}
+        await page.evaluate(({status,errorCode})=>{window.failure=status;window.failureCode=errorCode;},{status,errorCode});
+        await button.click();await expect(page.getByRole('alert')).toBeFocused();
+        if(invalid){
+          try{await expect(code).toHaveAttribute('aria-invalid','true',{timeout:1000});await expect(code).toHaveAccessibleDescription('Código inválido, expirado ou já utilizado.');}
+          catch{failures.push(form.name+': código recusado sem associação ao campo');}
+        }else{await expect(code).not.toHaveAttribute('aria-invalid','true');await expect(code).not.toHaveAttribute('aria-describedby');}
+      }
+      await code.fill('A'.repeat(43));
+      if(form.password){await page.locator('#'+form.password).fill('Senha fictícia 123');await page.locator('#'+form.confirm).fill('Senha fictícia 123');}
+      await page.evaluate(()=>window.failure=0);await button.click();await expect(page.getByRole('status')).toBeFocused();
+      await expect(code).not.toHaveAttribute('aria-invalid','true');await expect(code).toHaveValue('');
       for(const width of [360,768,1280]){
         await page.setViewportSize({width,height:800});
         assert(await page.evaluate(()=>document.documentElement.scrollWidth)<=width,'Overflow '+form.name);

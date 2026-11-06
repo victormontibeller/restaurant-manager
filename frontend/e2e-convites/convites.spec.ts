@@ -117,7 +117,15 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   await page.getByRole('button',{name:'Sair da conta',exact:true}).click();
 });
 test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',async({page})=>{
-  await admin(page);const email=crypto.randomUUID()+'@example.invalid';const {codigo}=await criar(page,email);
+  await admin(page);
+  await page.getByLabel('Confirme sua senha para convidar',{exact:true}).fill('incorreta');
+  const invalid=page.waitForResponse(r=>r.url().endsWith('/auth/reautenticar')&&r.request().method()==='POST');
+  await page.getByRole('button',{name:'Confirmar identidade para convites',exact:true}).click();expect((await invalid).status()).toBe(422);
+  await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Confirme sua senha para convidar',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Confirme sua senha para convidar',{exact:true})).toHaveAccessibleDescription('Senha de confirmação inválida.');
+  await confirmarIdentidade(page);await expect(page.getByLabel('Confirme sua senha para convidar',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  const email=crypto.randomUUID()+'@example.invalid';const {codigo}=await criar(page,email);
   await page.getByRole('button',{name:'Recarregar convites',exact:true}).click();await page.getByRole('button',{name:'Revogar convite de '+email,exact:true}).click();
   await expect(page.getByRole('status').filter({hasText:'Revogação confirmada'})).toBeVisible();await page.getByRole('button',{name:'Sair da conta',exact:true}).click();await abrirAceite(page);
   await preencher(page,codigo,crypto.randomUUID());await page.getByLabel('Confirmar senha de funcionário').fill(crypto.randomUUID());await page.getByRole('button',{name:'Verificar e aceitar convite',exact:true}).click();
@@ -135,6 +143,8 @@ test('S01-UI19: revogação nega aceite, valida senha e mantém foco no erro',as
   await expect(page.getByRole('alert')).toContainText('Convite inválido, expirado, revogado ou já utilizado.');await expect(page.getByRole('alert')).toBeFocused();
   await expect(page.getByLabel('Senha da conta de funcionário',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Confirmar senha de funcionário',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código do convite',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código do convite',{exact:true})).toHaveAccessibleDescription(/Convite inválido, expirado, revogado ou já utilizado\./);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);await page.getByLabel('Código do convite').fill('');
   await page.screenshot({path:test.info().outputPath('aceite-negado.png'),fullPage:true});await page.getByRole('button',{name:'Voltar ao login',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.getByLabel('E-mail',{exact:true})).toBeFocused();
 });

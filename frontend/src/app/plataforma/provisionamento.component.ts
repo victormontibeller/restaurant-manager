@@ -1,5 +1,6 @@
 import {Component,DestroyRef,ElementRef,HostListener,ViewChild,inject,signal} from '@angular/core';
 import {PlataformaSessaoService,PedidoProvisionamento,SolicitacaoSaas} from './plataforma-sessao.service';
+import {ApiFailure} from '../identidade/sessao.service';
 
 @Component({
   selector:'app-provisionamento',
@@ -7,10 +8,10 @@ import {PlataformaSessaoService,PedidoProvisionamento,SolicitacaoSaas} from './p
   template:`<section aria-labelledby="provisionamento-titulo" [attr.aria-busy]="ocupado()">
     <h3 id="provisionamento-titulo">Provisionar restaurante</h3>
     <p>Somente ambiente fictício local. A solicitação não ativa a empresa: o processo privilegiado aplica migrações e cria a unidade e o Administrador. Sem envio real de e-mail.</p>
-    @if(erro()){<p role="alert" tabindex="-1" #alerta>{{erro()}}</p>}
+    @if(erro()){<p id="erro-provisionamento" role="alert" tabindex="-1" #alerta>{{erro()}}</p>}
     <p role="status">{{mensagem()}}</p>
     <form (submit)="confirmar($event,confirmacao)">
-      <label for="prov-confirmacao">Senha do operador para provisionamento</label><input #confirmacao id="prov-confirmacao" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
+      <label for="prov-confirmacao">Senha do operador para provisionamento</label><input #confirmacao id="prov-confirmacao" type="password" autocomplete="current-password" required maxlength="72" [attr.aria-describedby]="erro()&&senhaInvalida()?'erro-provisionamento':null" [attr.aria-invalid]="erro()&&senhaInvalida()?true:null" [disabled]="ocupado()">
       <button [disabled]="ocupado()">Confirmar acesso ao provisionamento</button>
     </form>
     <form #cadastro (submit)="solicitar($event,cadastro)">
@@ -47,6 +48,7 @@ export class ProvisionamentoComponent {
   readonly id=signal(this.sessao.intencaoProvisionamento()||crypto.randomUUID());
   readonly pendente=signal(!!this.sessao.intencaoProvisionamento());readonly confirmada=signal(false);
   readonly ocupado=signal(false);readonly erro=signal('');readonly mensagem=signal('');readonly reconsultar=signal(false);
+  readonly senhaInvalida=signal(false);
   readonly selecionada=signal<SolicitacaoSaas|null>(null);readonly pedidos=signal<SolicitacaoSaas[]>([]);readonly pagina=signal(0);
   private readonly ator=this.sessao.usuarioId();
   private destruido=false;
@@ -56,6 +58,7 @@ export class ProvisionamentoComponent {
   private atual():boolean{return !this.destruido&&this.sessao.autenticado()&&this.sessao.usuarioId()===this.ator;}
   private falhar(error:unknown,incerto=false):void{
     if(!this.atual())return;
+    this.senhaInvalida.set(error instanceof ApiFailure&&error.status===422&&error.codigo==='CONFIRMACAO_INVALIDA');
     const texto=error instanceof TypeError?'Sem conexão.':error instanceof Error&&['AbortError','TimeoutError'].includes(error.name)?'Resposta não recebida no prazo.':error instanceof Error?error.message:'Não foi possível concluir.';
     this.erro.set(texto+(incerto?' A escrita pode ter sido aplicada. Consulte pelo identificador antes de repetir.':''));setTimeout(()=>this.alerta?.nativeElement.focus());
   }

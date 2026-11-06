@@ -8,6 +8,13 @@ Preparação iniciada em 2026-11-06; **não é declaração de Sprint concluída
 O checkpoint registra o resultado mais recente. Escopo vigente: fechar somente
 Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta execução.
 
+Resumo vigente do ciclo32: a correção da consulta fria tem quatro partidas
+aprovadas; sua matriz integrada31 ainda estava em andamento. A revisão encontrou
+uma lacuna adicional de associação acessível dos erros de código/reautenticação.
+Correção Angular e probes passaram, mas novo artefato/E2E e gates operacionais
+continuam pendentes. Não confundir os resultados históricos abaixo com aceite
+do código posterior. [Evidência32](evidencias/sprint-01-retomada-ciclo-32.md).
+
 - Repositório: `victormontibeller/restaurant-manager`.
 - Branch: `hermes/sprint-01-identidade-acessos`; PR **#3**, base `main`.
 - Correção de produto publicada e CI aprovada:
@@ -210,6 +217,12 @@ Nunca reutilizar fixture/conta de hml para preparar o Mac.
 E2E requer browsers nativos instalados pelo CLI Playwright do próprio checkout,
 HTTPS, massa `rm_test`, fixtures e diretórios privados definidos. Usar as
 configurações específicas existentes; `playwright.convites.config.ts` e filtro
-`S01-UI18:` delimitam o bloqueio atual. Relatórios locais não devem sobrescrever
+`S01-UI18:` delimitam a investigação histórica de login frio. As jornadas
+alteradas no ciclo32 também precisam ser executadas no artefato correspondente.
+`RM_REPORT_DIR` deve apontar para diretório privado externo ao checkout;
+`RM_BASE_URL` deve ser a origem HTTPS da massa local e `RM_AUTH_FIXTURE` o arquivo
+privado das contas preparadas. A configuração de identidade exige host
+`c4.localhost`; as demais famílias têm suas próprias guardas e fixtures. Esses
+nomes são contratos existentes, não configuração Mac já criada. Relatórios locais não devem sobrescrever
 evidências do Linux. Registrar sistema, SHA, JAR/hash, banco e resultados reais
 antes de afirmar que o ambiente Mac está validado.

@@ -45,7 +45,15 @@ function processar(id:string,falhar=false):void{
   fs.writeFileSync(test.info().outputPath('worker-'+(falhar?'falha':'sucesso')+'.log'),r.stdout+r.stderr,{mode:0o600});expect(r.status).toBe(0);
 }
 test('S01-UI29: operador solicita e worker real ativa empresa sem impersonação',async({page})=>{
-  await entrar(page);await confirmar(page);const p=await preencher(page);await enviar(page);await expect(page.getByLabel('Senha inicial do Administrador')).toHaveValue('');
+  await entrar(page);
+  await page.getByLabel('Senha do operador para provisionamento').fill('incorreta');
+  const invalid=page.waitForResponse(r=>r.url().endsWith('/plataforma/auth/reautenticar')&&r.request().method()==='POST');
+  await page.getByRole('button',{name:'Confirmar acesso ao provisionamento',exact:true}).click();expect((await invalid).status()).toBe(422);
+  await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByLabel('Senha do operador para provisionamento')).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Senha do operador para provisionamento')).toHaveAccessibleDescription('Senha de confirmação inválida.');
+  await confirmar(page);await expect(page.getByLabel('Senha do operador para provisionamento')).not.toHaveAttribute('aria-invalid','true');
+  const p=await preencher(page);await enviar(page);await expect(page.getByLabel('Senha inicial do Administrador')).toHaveValue('');
   processar(p.id);await consultar(page,p.id,'CONCLUIDO');
   const destino=new URL(page.url());destino.hostname=p.host;destino.search='';destino.pathname='/api/v1/unidades';
   const unidades=await page.request.get(destino.toString());expect(unidades.status()).toBe(200);expect(await unidades.text()).toContain('Unidade UI inicial');

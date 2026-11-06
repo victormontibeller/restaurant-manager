@@ -71,7 +71,11 @@ CI d0150b8 falhou nos dois checks antes do backend: a fixture de ensaio do
 teste novo era criada sem0600 explícito. A umask local restrita ocultava o
 defeito; reprodução com Python3.12/umask022 falhou no mesmo preflight. Correção
 fixa0600 na fixture, sem relaxar a guarda de produção.158testes passaram com
-Python3.12/umask022. Resultado CI do commit corretivo ainda deve ser conferido.
+Python3.12/umask022. Commit corretivo b5448c74bfe88877124bbe59b71f90377d4cc09f
+publicado; ambos checksCI passaram. Log confirma175backend sem falha/erro/skip
+e158Python. Checkout operacional imutável compatível com o JAR5cce633 conferido;
+nenhuma reconstrução. Fixture existente de manutenção foi conferida contra o
+novo runtime, sem imprimir segredos nem criar contas; ensaio ainda não iniciado.
 
 ## Matriz do novo artefato
 
@@ -83,12 +87,18 @@ promove baseline. Limite informado de quatro horas, unidade própria com
 `KillMode=control-group` conferido pelo próprio worker e externamente, para
 recolher descendentes quando encerrar. Pode atravessar ciclos sem relançamento.
 
-UI18 passou as cinco combinações sem falha/skip/flaky/retry; família identidade
-está em execução na consulta05:46Z. Não é aprovação da matriz inteira.
+UI18 passou as cinco combinações e identidade as45;50pares únicos, sem
+falha/skip/flaky/retry, JSONs/hashes/cobertura reabertos às05:58Z. Famíliaeventos
+está em execução. Não é aprovação da matriz inteira.
 Quatorze capturas de convites mobile/desktop foram inspecionadas com limites:
 cartão, contexto, reautenticação, cadastro com perfil inteiro, ação de criar,
 consulta e paginação. Viewports/componente não equivalem à página inteira.
-Materialização de notas/hashes segue privada; não presumir cobertura futura.
+Mais oito principais de login/matriz/equipe/unidades e dez adicionais de
+reautenticação/proteção/Salvar/edição/paginação foram inspecionados. A matriz
+mobile foi vista em quatro recortes sobrepostos; nome longo de unidade fica
+parcial no input de linha única, mas integral no título. Materialização privada
+conferiu32imagens:10principais/12complementos/10adicionais. Não presumir cobertura
+das famílias futuras ou páginas inteiras a partir de componentes.
 Manutenção, atualização/retorno binário nativos, smokes e aceitação do novo JAR
 continuam pendentes. Não repetir provisionamento assistido28 nem restaurar o
 banco anterior à identidade.
@@ -100,3 +110,21 @@ zero conexões. rm_testOID16389 conferido. Baseline449ce3c não promovido.
 Trabalho documental herdado preservado. PR3 aberto/draft; sem merge, produção,
 STOP ou conclusão global. Escopo somente Sprint01 e handoffMac;02–05 não
 iniciadas. Setup Mac não executado/verificado.
+
+## Encerramento da chamada
+
+Aviso efetivo de orçamento recebido após consulta06:08:23Z; depois somente
+handoff obrigatório. Worker31 continua emeventos,50pares consolidados, sem
+resultado global observado. Não foi interrompido nem duplicado. Quatro imagens
+de eventos/exportação inspecionadas posteriormente têm notas privadas salvas;
+vínculo ao recibo final da família ainda pendente, não somado à revisão32.
+
+Preflight real somente leitura recusou ensaio do JAR anterior para atualizar
+o backend; hashes de unidade/journals/baseline e runtime antes/depois idênticos.
+Não é execução nativa da troca. Fonte operacionalb5448c7 e fixture existente
+conferidas, mas manutenção/troca/smokes/aceitação continuam pendentes.
+
+Head publicadob5448c7 e ambos checksCI aprovados. Estes registros documentais
+posteriores ficam locais; corpoPR atualizado foi preparado, ainda não reenviado.
+Preservar trabalho e último runtime saudável. Nenhuma nova verificação após
+o aviso, nenhum STOP/conclusão global ou avanço para02–05.

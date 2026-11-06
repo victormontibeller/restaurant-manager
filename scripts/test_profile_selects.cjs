@@ -10,10 +10,13 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
 (async()=>{
   const built=await build({stdin:{contents:`
     import '@angular/compiler';
+    import {signal} from '@angular/core';
     import {bootstrapApplication} from '@angular/platform-browser';
     import {AcessosComponent} from './src/app/acessos/acessos.component';
     import {ConvitesComponent} from './src/app/acessos/convites.component';
     import {SessaoService} from './src/app/identidade/sessao.service';
+    import {PlataformaComponent} from './src/app/plataforma/plataforma.component';
+    import {PlataformaSessaoService} from './src/app/plataforma/plataforma-sessao.service';
     const roles=['ADMINISTRADOR','GERENTE','ATENDIMENTO','CAIXA','COZINHA','EXPEDICAO'];
     const team=roles.map((perfil,i)=>({id:'f'+i,email:'p'+i+'@example.invalid',perfil,ativo:true,versao:0,unidades:[]}));
     const units=Array.from({length:100},(_,i)=>({id:'u'+i,nome:'Filial '+i}));
@@ -21,6 +24,7 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     const matrix={versao:0,acoes:[{codigo:'UNIDADE_CONSULTAR',descricao:'Consultar unidade',escopo:'UNIDADE',dependencia:null}],perfis:Object.fromEntries(roles.slice(1).map(r=>[r,[]]))};
     const mock={identidade:()=>({usuarioId:'ficticio'}),api:async(path,method='GET',body)=>{
       if(method!=='GET')writes.push({path,method,body:structuredClone(body)});
+      if(path.endsWith('/auth/reautenticar')&&window.confirmFailure)throw await SessaoService.prototype['erroComando'](new Response(JSON.stringify({codigo:window.confirmCode,mensagem:'Senha de confirmação inválida.'}),{status:window.confirmFailure}));
       if(path.includes('/configuracoes/acessos')){
         if(window.failLoad)throw new Error('Falha fictícia de consulta.');
         if(method==='PUT'){matrix.perfis[body.perfil]=[...body.acoes];matrix.versao++;}
@@ -37,13 +41,17 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
       if(path.includes('/operacao/unidades'))return structuredClone(units);
       return [];
     },atualizarIdentidade:async()=>{}};
-    bootstrapApplication(window.kind==='convites'?ConvitesComponent:AcessosComponent,{providers:[{provide:SessaoService,useValue:mock}]}).then(app=>{window.fixture={appRef:app,app:app.components[0],team,roles,writes};});
+    const company={id:'00000000-0000-0000-0000-000000000001',nome:'Fictícia',estado:'ATIVO',versao:0,dominios:[]};
+    const platform={autenticado:signal(true),usuarioId:signal('ficticio'),restaurar:async()=>{},empresas:async()=>[company],empresa:async()=>company,intencaoProvisionamento:()=>'',reautenticar:async()=>{
+      if(window.confirmFailure)throw await PlataformaSessaoService.prototype['erro'](new Response(JSON.stringify({codigo:window.confirmCode,mensagem:'Senha de confirmação inválida.'}),{status:window.confirmFailure}));
+    }};
+    bootstrapApplication(window.kind==='plataforma'?PlataformaComponent:window.kind==='convites'?ConvitesComponent:AcessosComponent,{providers:[{provide:SessaoService,useValue:mock},{provide:PlataformaSessaoService,useValue:platform}]}).then(app=>{window.fixture={appRef:app,app:app.components[0],team,roles,writes};});
   `,resolveDir:repo+'/frontend',sourcefile:'profile-template-probe.ts'},bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',tsconfigRaw:{compilerOptions:{experimentalDecorators:true}},logLevel:'silent'});
   const name=process.env.RM_TEMPLATE_BROWSER||'chromium';
   assert.ok(['chromium','firefox','webkit'].includes(name));
   const browser=await playwright[name].launch(name==='webkit'&&process.env.RM_WEBKIT_EXECUTABLE?{executablePath:process.env.RM_WEBKIT_EXECUTABLE}:{});
   const styles=fs.readFileSync(repo+'/frontend/src/styles.css','utf8');
-  const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<style>'+styles+'</style><main><section>'+(req.url==='/convites'?'<app-convites></app-convites>':'<app-acessos></app-acessos>')+'</section></main>');});
+  const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<style>'+styles+'</style><main><section>'+(req.url==='/plataforma'?'<app-plataforma></app-plataforma>':req.url==='/convites'?'<app-convites></app-convites>':'<app-acessos></app-acessos>')+'</section></main>');});
   try{
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     const origin='http://127.0.0.1:'+server.address().port;
@@ -64,6 +72,22 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     await page.goto(origin);await page.addScriptTag({content:built.outputFiles[0].text});
     await page.waitForFunction(()=>window.fixture&&document.querySelectorAll('article').length===6);
     await stable(page);
+    const checkConfirmation=async(target,label,button)=>{
+      const confirmation=target.getByLabel(label,{exact:true});
+      for(const [status,code,invalid] of [[422,'CONFIRMACAO_INVALIDA',true],[422,'OUTRO_ERRO',false],[429,'CONFIRMACAO_INVALIDA',false],[503,'CONFIRMACAO_INVALIDA',false]]){
+        await confirmation.fill('Senha fictícia');
+        await target.evaluate(({status,code})=>{window.confirmFailure=status;window.confirmCode=code;},{status,code});
+        await target.getByRole('button',{name:button,exact:true}).click();await stable(target);
+        await expect(target.getByRole('alert')).toBeFocused();await expect(confirmation).toHaveValue('');
+        if(invalid){await expect(confirmation).toHaveAttribute('aria-invalid','true');await expect(confirmation).toHaveAccessibleDescription('Senha de confirmação inválida.');}
+        else{await expect(confirmation).not.toHaveAttribute('aria-invalid','true');await expect(confirmation).not.toHaveAttribute('aria-describedby');}
+      }
+      await target.evaluate(()=>window.confirmFailure=0);await confirmation.fill('Senha fictícia');
+      await target.getByRole('button',{name:button,exact:true}).click();await stable(target);
+      await expect(target.getByRole('alert')).toHaveCount(0);
+      await expect(confirmation).not.toHaveAttribute('aria-invalid','true');
+    };
+    await checkConfirmation(page,'Confirme sua senha','Confirmar identidade');
     // A lista mostra o resumo; vínculos são montados só para o funcionário aberto.
     await expect(page.locator('article input[type=checkbox]')).toHaveCount(6);
     const kitchenCard=page.locator('article').nth(4);
@@ -149,6 +173,7 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     await invitation.addScriptTag({content:built.outputFiles[0].text});
     await invitation.waitForFunction(()=>window.fixture&&window.fixture.app.instance.carregado());
     await stable(invitation);
+    await checkConfirmation(invitation,'Confirme sua senha para convidar','Confirmar identidade para convites');
     await invitation.getByLabel('Perfil do convite').selectOption('GERENTE');
     await invitation.evaluate(()=>window.fixture.app.instance.pendente.set({id:'fixture',email:'convite@example.invalid',perfil:'GERENTE',unidades:[],incerta:true}));
     await invitation.getByRole('button',{name:'Reenviar mesma intenção'}).waitFor();
@@ -166,6 +191,13 @@ const {expect}=require(repo+'/frontend/node_modules/@playwright/test');
     await invitation.getByRole('button',{name:'Recarregar convites'}).click();
     await stable(invitation);
     await expect(invitation.locator('article')).toContainText('GERENTE');
+    const platform=await browser.newPage({viewport:{width:360,height:800}});platform.on('pageerror',error=>errors.push(error.message));
+    await platform.goto(origin+'/plataforma');await platform.evaluate(()=>window.kind='plataforma');
+    await platform.addScriptTag({content:built.outputFiles[0].text});await stable(platform);
+    await platform.getByLabel('Identificador da empresa',{exact:true}).fill('00000000-0000-0000-0000-000000000001');
+    await platform.getByRole('button',{name:'Consultar estado comercial',exact:true}).click();await stable(platform);
+    await checkConfirmation(platform,'Senha de confirmação do operador','Confirmar senha SaaS');
+    await checkConfirmation(platform,'Senha do operador para provisionamento','Confirmar acesso ao provisionamento');
     assert.deepEqual(errors,[]);
     console.log('Perfis iniciais, recarga, payloads de equipe/matriz/convite e leitura posterior coerentes. API fictícia: não é E2E.');
   }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

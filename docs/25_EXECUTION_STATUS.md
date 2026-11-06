@@ -1,6 +1,68 @@
 # Checkpoint de execução
 
+## Incremento — ciclo32, 2026-11-06
+
+Escopo somente Sprint01/handoff Mac. Git/PR3 OPEN draft/head b5448c7 e ambos
+checks CI aprovados conferidos. Quatro documentos herdados preservados.
+Worker31 não foi interrompido nem duplicado; às06:40Z, sete parcelas aprovadas,
+plataforma em execução, resultado global ainda pendente. JAR5cce633 preservado.
+
+Revisão independente encontrou erro sem associação ao campo. Vermelhos reais
+em componentes Angular com transporte fictício; correção abrange quatro códigos
+públicos e quatro reautenticações. Usa HTTP422/código do contrato, não mensagem;
+rede/quota/5xx não invalidam campos e login continua neutro. Probes nos três
+motores, typecheck/regressões/scanner aprovados. Comando agregado expirou300s
+no último probe WebKit; somente esse probe foi reexecutado e passou. Não chamar
+a execução interrompida de aprovada nem probes de E2E.
+
+Segunda revisão independente sem bloqueador estático; limites de cobertura
+registrados. UI04/UI11/UI14/UI19/UI21/UI26/UI29 ampliados, execução pendente.
+Angular alterado exige novo build; a matriz31 não o aprova. Recolher trabalhador
+antes de build único consolidado, sem fazer manutenção/troca intermediária.
+Hml97d75b0 UP/PID754824, clone135836 e baseline449ce3c conferidos às06:40Z;
+rm_test16389 ocupado pelo candidato, sem manutenção pendente. Sem deploy/merge.
+[Evidência32](evidencias/sprint-01-retomada-ciclo-32.md). Sprint01 NÃO concluída.
+
+## Encerramento — ciclo31, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado após consulta06:08:23Z; depois
+somente escritas obrigatórias de handoff. Sprint01 NÃO concluída. Sem deploy,
+promoção, merge, STOP ou CONCLUSAO.json. Publicadob5448c7/PR3 OPEN draft e
+ambos checksCI aprovados/relidos; log175backend/158Python conferido.
+
+Worker31 preservado/MainPID815130, candidato815189. Última consulta06:08:23Z:
+faseeventos,50pares únicos consolidados (UI18×5 e identidade45), sem resultado
+global observado. Não interromper/duplicar nem lançar manutenção/build concorrente.
+Build5cce633, ensaiofrio4 e visual32 não devem ser repetidos sem causa concreta.
+Quatro imagens adicionais de eventos/exportação inspecionadas; notas privadas
+salvas, vínculo ao resultado da família ainda pendente. Não contá-las como gate.
+
+Preflight real somente leitura recusou ensaio de manutenção do JAR97 para o
+novo backend; unidade/runtime/journals/baseline ficaram inalterados. Operação
+binária nova permanece NÃO executada. Fonte operacional imutávelb5448c7 e
+fixturecompatível prontas; comandos/fontes no STATUS/checkpoint privados.
+
+Hml97d75b0 UP/PID754824 e OIDs preservados na última verificação anterior ao
+aviso, sem nova consulta posterior. Documentos finais deSprint01/cobertura/
+evidência31/checkpoint permanecem LOCAIS apósb5448c7; preservar/publicar sem
+rebuild. CorpoPR remoto ainda precede correçãoCI/resultados posteriores; texto
+privado atualizado preparado, NÃO reenviado. Mac não verificado;02–05 fora
+do escopo. Próximo: recolher matriz31 e visual, depois manutenção/troca/smokes/
+aceitação do novo JAR conforme gates, nunca restaurar banco pré-identidade.
+
 ## Incremento — ciclo31, 2026-11-06
+
+Atualização05:58Z: publicado b5448c7/PR3 OPEN draft, ambos checksCI aprovados;
+log confirma175backend sem falha/erro/skip e158Python. Checkout operacional
+imutável b5448c7 compatível com JAR5cce633 conferido, sem rebuild. Fixtureexistente
+de manutenção tem mesmas três contas/chaves/TLS do novo runtime, conferidos sem
+imprimir segredos; ensaio NÃO iniciado enquanto matriz está ativa.
+
+Worker31 consolidou50pares únicos (UI18×5+identidade45), JSON/hash/cobertura
+reabertos; faseeventos.32PNGinspecionados e materializados:10principais,
+12complementos e10adicionais. Matrizmobile revista em quatro recortes sobrepostos;
+limitesdecomponentes e nome longo noinput explicitados. Demais famílias/visual
+continuam pendentes; não somar diagnóstico frio à contagem integrada.
 
 Atualização05:48Z: d0150b8 publicado/PR3 OPEN draft e corpo relidos. CI falhou
 nos dois checks por fixture de ensaio sem0600 sobumask022. Reproduzido localmente

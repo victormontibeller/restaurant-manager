@@ -69,8 +69,11 @@ test('S01-UI11: validação, código inválido, teclado e rede indisponível',as
   await expect(page.getByRole('alert')).toContainText('Código inválido, expirado ou já utilizado.');
   await expect(page.getByLabel('Nova senha',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await expect(page.getByLabel('Confirmar nova senha',{exact:true})).not.toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código de recuperação',{exact:true})).toHaveAttribute('aria-invalid','true');
+  await expect(page.getByLabel('Código de recuperação',{exact:true})).toHaveAccessibleDescription(/Código inválido, expirado ou já utilizado\./);
   await context.setOffline(true);await page.getByLabel('E-mail da recuperação').fill(crypto.randomUUID()+'@example.invalid');
   await page.getByRole('button',{name:'Solicitar código',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Sem conexão.');
+  await expect(page.getByLabel('Código de recuperação',{exact:true})).not.toHaveAttribute('aria-invalid','true');
   await context.setOffline(false);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.getByLabel('Código de recuperação',{exact:true}).fill('');
   await page.screenshot({path:test.info().outputPath('recuperacao-mobile.png'),fullPage:true});

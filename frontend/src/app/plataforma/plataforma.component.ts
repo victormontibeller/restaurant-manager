@@ -1,4 +1,5 @@
 import {Component,ElementRef,ViewChild,effect,inject,signal} from '@angular/core';
+import {ApiFailure} from '../identidade/sessao.service';
 
 import {EmpresaSaas,PlataformaSessaoService} from './plataforma-sessao.service';
 import {ProvisionamentoComponent} from './provisionamento.component';
@@ -11,7 +12,7 @@ import {ProvisionamentoComponent} from './provisionamento.component';
     <section aria-labelledby="plataforma-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="plataforma-titulo">Administração SaaS</h2>
       <p>Acesso separado das contas dos restaurantes. Somente metadados de empresas; sem acesso a clientes, pedidos ou pagamentos.</p>
-      @if(erro()){<p role="alert" tabindex="-1" #alerta>{{erro()}}</p>}
+      @if(erro()){<p id="erro-plataforma" role="alert" tabindex="-1" #alerta>{{erro()}}</p>}
       @if(!sessao.autenticado()){
         <form (submit)="entrar($event,emailInput.value,senhaInput)">
           <label for="saas-email">E-mail do operador</label><input #emailInput id="saas-email" name="email" type="email" autocomplete="username" required maxlength="254" [disabled]="ocupado()||saidaPendente()">
@@ -33,7 +34,7 @@ import {ProvisionamentoComponent} from './provisionamento.component';
             <p data-testid="empresa-estado">{{empresa.nome}} · {{empresa.estado}} · versão {{empresa.versao}}</p>
             @if(empresa.estado==='ATIVO'||empresa.estado==='SUSPENSO'){
               <form (submit)="confirmar($event,confirmacaoSenha)">
-                <label for="saas-confirmacao">Senha de confirmação do operador</label><input #confirmacaoSenha id="saas-confirmacao" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
+                <label for="saas-confirmacao">Senha de confirmação do operador</label><input #confirmacaoSenha id="saas-confirmacao" type="password" autocomplete="current-password" required maxlength="72" [attr.aria-describedby]="erro()&&senhaInvalida()?'erro-plataforma':null" [attr.aria-invalid]="erro()&&senhaInvalida()?true:null" [disabled]="ocupado()">
                 <button [disabled]="ocupado()">Confirmar senha SaaS</button>
               </form>
               <form (submit)="alterar($event,empresa,motivo.value)">
@@ -64,6 +65,7 @@ export class PlataformaComponent {
   readonly sessao=inject(PlataformaSessaoService);
   readonly ocupado=signal(false);readonly saidaPendente=signal(false);readonly erro=signal('');readonly mensagem=signal('');
   readonly empresas=signal<EmpresaSaas[]>([]);readonly pagina=signal(0);
+  readonly senhaInvalida=signal(false);
   readonly selecionada=signal<EmpresaSaas|null>(null);readonly consultaObrigatoria=signal(false);
   private geracao=0;
   @ViewChild('alerta') alerta?:ElementRef<HTMLElement>;
@@ -105,6 +107,7 @@ export class PlataformaComponent {
       if(geracao!==this.geracao||!this.sessao.autenticado())return;
       this.selecionada.set(atual);this.empresas.update(lista=>lista.map(e=>e.id===atual.id?atual:e));this.mensagem.set('Estado comercial atualizado. Acesso empresarial preservado.');
     }catch(e){
+      this.senhaInvalida.set(false);
       this.consultaObrigatoria.set(true);this.mensagem.set('Resultado da escrita não reconciliado. Consulte a empresa antes de tentar novamente.');
       this.erro.set((e instanceof Error&&!(e instanceof TypeError)?e.message+' ':'')+'A alteração pode ter sido aplicada. Consulte o estado pelo identificador; não há reenvio automático.');setTimeout(()=>this.alerta?.nativeElement.focus());
     }finally{this.ocupado.set(false);}
@@ -114,5 +117,5 @@ export class PlataformaComponent {
     if(geracao!==this.geracao||!this.sessao.autenticado())return;
     this.empresas.set(empresas);this.pagina.set(pagina);this.mensagem.set(empresas.length?'Consulta atualizada.':'Nenhuma empresa nesta página.');
   }
-  private falhar(e:unknown):void{this.erro.set(e instanceof TypeError?'Sem conexão. Nenhuma operação foi confirmada.':e instanceof Error&&['TimeoutError','AbortError'].includes(e.name)?'A resposta não chegou no prazo. Consulte o estado antes de repetir.':e instanceof Error?e.message:'Não foi possível concluir.');setTimeout(()=>this.alerta?.nativeElement.focus());}
+  private falhar(e:unknown):void{this.senhaInvalida.set(e instanceof ApiFailure&&e.status===422&&e.codigo==='CONFIRMACAO_INVALIDA');this.erro.set(e instanceof TypeError?'Sem conexão. Nenhuma operação foi confirmada.':e instanceof Error&&['TimeoutError','AbortError'].includes(e.name)?'A resposta não chegou no prazo. Consulte o estado antes de repetir.':e instanceof Error?e.message:'Não foi possível concluir.');setTimeout(()=>this.alerta?.nativeElement.focus());}
 }

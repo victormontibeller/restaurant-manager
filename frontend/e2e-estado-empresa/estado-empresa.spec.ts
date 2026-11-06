@@ -53,7 +53,11 @@ test('S01-UI26: suspensão e reativação exigem confirmação sem bloquear cons
     await consultar(page);await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');
     await alterar(page,403);await expect(page.getByRole('alert')).toContainText('Confirme sua senha');await expect(page.getByRole('alert')).toBeFocused();
     await consultar(page);await confirmar(page,'incorreta',422);await expect(page.getByRole('alert')).toContainText('Senha de confirmação inválida');await expect(page.getByLabel('Senha de confirmação do operador')).toHaveValue('');
+    await expect(page.getByRole('alert')).toBeFocused();
+    await expect(page.getByLabel('Senha de confirmação do operador')).toHaveAttribute('aria-invalid','true');
+    await expect(page.getByLabel('Senha de confirmação do operador')).toHaveAccessibleDescription('Senha de confirmação inválida.');
     await confirmar(page);await alterar(page);await expect(page.getByTestId('empresa-estado')).toContainText('SUSPENSO');
+    await expect(page.getByLabel('Senha de confirmação do operador')).not.toHaveAttribute('aria-invalid','true');
     const business=new URL(page.url());business.hostname='c4.localhost';business.pathname='/api/v1/unidades';business.search='';
     expect((await page.request.get(business.toString())).status()).toBe(200);
     await alterar(page);await expect(page.getByTestId('empresa-estado')).toContainText('ATIVO');

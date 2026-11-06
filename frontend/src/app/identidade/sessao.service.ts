@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 export interface Identidade { usuarioId: string; perfil: string; emailVerificado: boolean; }
 interface Access { accessToken: string; expiresIn: number; }
 export class ApiFailure extends Error {
-  constructor(readonly status:number,mensagem:string) {super(mensagem);}
+  constructor(readonly status:number,mensagem:string,readonly codigo='') {super(mensagem);}
 }
 
 @Injectable({ providedIn: 'root' })
@@ -76,13 +76,15 @@ export class SessaoService {
   }
   private async erroComando(response:Response):Promise<ApiFailure> {
     let mensagem='Não foi possível confirmar o resultado da operação.';
+    let codigo='';
     if(response.status<500){
       try {
-        const body=await response.json() as {mensagem?:unknown};
+        const body=await response.json() as {mensagem?:unknown;codigo?:unknown};
         if(typeof body.mensagem==='string')mensagem=body.mensagem;
+        if(typeof body.codigo==='string')codigo=body.codigo;
       } catch { /* Intermediário pode devolver HTML; não expor erro técnico de parsing. */ }
     }
-    return new ApiFailure(response.status,mensagem);
+    return new ApiFailure(response.status,mensagem,codigo);
   }
   private limpar(): void { this.geracao++; clearTimeout(this.renewalTimer); this.access = null; this.identidade.set(null); }
   private async receber(response: Response,geracao=this.geracao): Promise<void> {

@@ -1,5 +1,5 @@
 import {Component,ElementRef,OnInit,ViewChild,inject,output,signal} from '@angular/core';
-import {SessaoService} from '../identidade/sessao.service';
+import {ApiFailure,SessaoService} from '../identidade/sessao.service';
 interface Acao {codigo:string;descricao:string;escopo:string;dependencia:string|null}
 interface Matriz {versao:number;acoes:Acao[];perfis:Record<string,string[]>}
 interface Unidade {id:string;nome:string}
@@ -15,10 +15,10 @@ interface Funcionario {id:string;email:string;perfil:string;ativo:boolean;versao
       <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar acessos</button>
       <form (submit)="confirmar($event,senha)">
         <label for="confirmar-senha">Confirme sua senha</label>
-        <input #senha id="confirmar-senha" type="password" autocomplete="current-password" required maxlength="72" [disabled]="ocupado()">
+        <input #senha id="confirmar-senha" type="password" autocomplete="current-password" required maxlength="72" [attr.aria-describedby]="senhaInvalida()?'erro-acessos':null" [attr.aria-invalid]="senhaInvalida()?true:null" [disabled]="ocupado()">
         <button [disabled]="ocupado()">Confirmar identidade</button>
       </form>
-      @if(erro()) {<p #alerta role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
+      @if(erro()) {<p #alerta id="erro-acessos" role="alert" tabindex="-1" class="erro">{{erro()}}</p>}
       @if(aviso()) {<p aria-live="polite">{{aviso()}}</p>}
       @if(matriz();as m) {
         <label for="perfil-acesso">Perfil operacional</label>
@@ -84,6 +84,7 @@ export class AcessosComponent implements OnInit {
   readonly busca=signal('');
   readonly ocupado=signal(false);
   readonly erro=signal('');
+  readonly senhaInvalida=signal(false);
   readonly aviso=signal('');
   readonly pagina=signal(0);
   readonly funcionarioExpandido=signal<string|null>(null);
@@ -112,7 +113,7 @@ export class AcessosComponent implements OnInit {
   paginaAnterior():void{void this.carregar(Math.max(0,this.pagina()-1));}
   proximaPagina():void{void this.carregar(this.pagina()+1);}
   private async executar(action:()=>Promise<void>):Promise<void>{
-    if(this.ocupado())return;this.ocupado.set(true);this.bloqueio.emit(true);this.erro.set('');this.aviso.set('');
-    try{await action();}catch(error){this.erro.set(error instanceof Error?error.message:'Não foi possível concluir. Recarregue para conferir o resultado.');setTimeout(()=>this.alerta?.nativeElement.focus());}finally{this.ocupado.set(false);this.bloqueio.emit(false);}
+    if(this.ocupado())return;this.ocupado.set(true);this.bloqueio.emit(true);this.erro.set('');this.aviso.set('');this.senhaInvalida.set(false);
+    try{await action();}catch(error){this.senhaInvalida.set(error instanceof ApiFailure&&error.status===422&&error.codigo==='CONFIRMACAO_INVALIDA');this.erro.set(error instanceof Error?error.message:'Não foi possível concluir. Recarregue para conferir o resultado.');setTimeout(()=>this.alerta?.nativeElement.focus());}finally{this.ocupado.set(false);this.bloqueio.emit(false);}
   }
 }
