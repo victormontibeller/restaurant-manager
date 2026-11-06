@@ -1,11 +1,17 @@
 # Checkpoint de execução
 
-## Publicação da revisão pré-Sprint 2 — 2026-11-06 (preparada)
+## Publicação da revisão pré-Sprint 2 — 2026-11-06 (PR aberto para revisão)
 
-O usuário autorizou commit, push e abertura de PR para revisão, mantendo as
-pendências Linux/homologação. Branch `codex/revisao-pre-sprint-02`, base remota
-`b50b9d1` conferida novamente; nenhuma Sprint 2 iniciada. Esta entrega reúne as
-correções funcionais e o incremento de legibilidade descritos abaixo.
+Commit `367a5ef381f09645aaebf90e4be481434ae1dbd1` criado e publicado em
+`origin/codex/revisao-pre-sprint-02`. [PR #4](https://github.com/victormontibeller/restaurant-manager/pull/4)
+aberto para revisão, sem draft, com base `main` (`b50b9d1`) e branch de origem
+conferidas no GitHub. Esta entrega reúne as correções funcionais e o incremento
+de legibilidade descritos abaixo; este registro documental acompanha o PR.
+
+Publicação autorizada pelo usuário. Scanner de links/segredos, diff preparado e
+`format:check` aprovados antes do commit. A publicação não repetiu as suítes de
+aplicação já registradas. Acompanhar a CI no SHA exato do head do PR; não herdar
+aprovação de commits anteriores nem confundir CI com homologação operacional.
 
 A publicação do código não aprova o novo release. Permanecem pendentes a suíte
 operacional no Linux (161 testes no Mac, com 15 erros ligados a `/proc`), UI29/UI31

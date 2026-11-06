@@ -2,7 +2,7 @@
 
 [Índice](../README.md) · [Sprint 1](../15_SPRINT_01.md) · [Checkpoint](../25_EXECUTION_STATUS.md)
 
-**Situação:** revisão local concluída; entrega para revisão autorizada, com Linux e homologação pendentes.
+**Situação:** revisão local concluída e publicada no [PR #4](https://github.com/victormontibeller/restaurant-manager/pull/4); Linux e homologação permanecem pendentes.
 
 ## Escopo e base
 
@@ -247,8 +247,13 @@ conforme a decisão do usuário. Sprint 2 permanece não iniciada.
 
 ## Publicação para revisão — 2026-11-06
 
-Após concluir as verificações locais, o usuário autorizou commit, push e abertura
-de PR. A entrega reúne as correções funcionais e a melhoria de legibilidade,
-com o estado de publicação registrado no [checkpoint](../25_EXECUTION_STATUS.md).
-Linux, UI29/UI31, smokes e matriz integrada de homologação continuam pendentes;
-abrir o PR não aprova esses critérios nem inicia a Sprint 2.
+Após autorização do usuário, as alterações foram commitadas em `367a5ef` e
+enviadas para `origin/codex/revisao-pre-sprint-02`. O [PR #4](https://github.com/victormontibeller/restaurant-manager/pull/4)
+foi aberto para revisão, com base em `main`, reunindo as correções funcionais e
+a melhoria de legibilidade. Metadados e head foram conferidos no GitHub.
+O [checkpoint](../25_EXECUTION_STATUS.md) registra a publicação e a retomada.
+
+Scanner de links/segredos, diff preparado e `format:check` passaram antes do
+commit. A CI deve ser conferida para o head exato do PR. Linux, UI29/UI31,
+smokes e matriz integrada de homologação continuam pendentes; abrir o PR não
+aprova esses critérios nem inicia a Sprint 2. Nenhum merge ou deploy realizado.
