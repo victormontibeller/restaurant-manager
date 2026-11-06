@@ -1,6 +1,6 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo23, 2026-11-05
+## Estado vigente — ciclo24, 2026-11-05
 
 Matriz S01-UI01–43 concluída em23:13:50Z no artefato96769ac/hash50a2a604:
 215pares únicos nos cinco projetos, sem falha/skip/flaky/retry. Recibos,
@@ -8,13 +8,16 @@ relatórios, hashes e cobertura foram reabertos e conferidos. Inclui exportaçã
 eventos, vínculos, convites e provisionamento; as falhas históricas abaixo não
 descrevem essa rodada. Não somar execuções antigas ao total dessa matriz.
 
-O head0094839 contém correções posteriores de foco/erro por campo, incluindo
-senha em branco. CI aprovada com174backend sem falha/erro/skip e probes nos três
-motores; build nativo/E2E novos ainda pendentes nesta atualização. A matriz do
+O candidato6cd8a86 contém correções posteriores de foco/erro por campo, incluindo
+senha em branco, e isola a massa do teste de retenção que falhou no build36e49e7.
+CI e build durável aprovados com174backend sem falha/erro/skip. Worker24 passou
+vinte pares dos focosUI11/UI14/UI19/UI21 nos cinco projetos, sem skip/flaky/retry;
+matriz restante em execução. Seis de26capturas visuais inspecionadas e vinculadas
+por origem/hash. Não é aprovação global nem smoke hml novo. A matriz do
 96769ac NÃO aprova o Angular novo. Hml permanece3cd4eeb, baseline449ce3c.
 Fundação/smoke/assistido/manutenção/revisão visual do candidato final ainda são
 gates abertos. Nenhuma família T ou cenário X incompleto foi convertido em
-aprovado. [Evidência atual](sprint-01-retomada-ciclo-23.md).
+aprovado. [Evidência atual](sprint-01-retomada-ciclo-24.md).
 
 ## Histórico — ciclo14
 

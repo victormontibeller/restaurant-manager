@@ -7,8 +7,21 @@ CI0094839 e hml3cd4eeb UP/PID399982 conferidos. Nenhuma suíte pesada ativa.
 Correção herdada de RetencaoIdentidadeTest revisada independentemente: sem
 bloqueador identificado; schemas exclusivos preservam contagens e concorrência.
 XML focado relido: seis testes, zero falha/erro/skip. Scanner310 e diff passaram.
-Publicação e build consolidado ainda pendentes neste registro; não reutilizar
-gate falho36e49e7 nem atribuir matriz96769ac ao Angular novo. Sprint01 aberta.
+Publicado6cd8a86/PR3 OPEN draft e ambos checksCI aprovados. Build único terminou
+00:09:29Z de2026-11-06: gate/hash conferidos,23XML/174backend sem falha/erro/skip,
+147Python e Angular/auditorias aprovados. Hash6e73242aa79e52847b2cfd3380d4974aa3cb1b9a5264b8a1b219a9b312cefebd.
+Todas378entradas não-static são idênticas às do JARhml3cd4eeb; isso não aprova
+deploy. Worker24 passou20focos(UI11/UI14/UI19/UI21×5), zero falha/skip/flaky/retry.
+Às00:19Z executa identidade; resultado global ainda pendente. Seis de26capturas
+visuais inspecionadas com notas/origem/hash conferidos; restante pendente.
+Plano215 conferido, reentrada recusada sem alterar progresso. Não repetir build,
+focos aprovados nem lançar suíte concorrente. Manutenção foi retirada do wrapper após revisão
+identificar cancelamento inseguro; etapa separada, NÃO executada. Limite4h do
+worker anunciado, sem teto da missão. Identidades SQL/OIDs hml conferidos;
+baseline preservado. AGENTS novamente bloqueado, sem contorno.
+Não reutilizar gate falho36e49e7 nem atribuir matriz96769ac ao Angular novo.
+Sprint01 aberta;02–05 não iniciadas. Fontes documentais posteriores não alteram
+o artefato nem exigem reconstrução. [Evidências](evidencias/sprint-01-retomada-ciclo-24.md).
 
 
 ## Encerramento — ciclo23, 2026-11-05

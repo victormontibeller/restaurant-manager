@@ -5,20 +5,24 @@
 
 [Índice da documentação](README.md)
 
-**Status:** em andamento desde 2026-11-04. Há implementação empresarial e SaaS,
-convites/verificação/recuperação, matriz/equipe/unidades, eventos cadastrais e fila
-de provisionamento. No ciclo 13, manutenção/retorno reais permitiram instalar o
-candidato de identidade em hml, com dois tenants, A1/A2, nove contas empresariais
-e operador SaaS. Smoke API aprovado; no ciclo15, fundação20 e smoke de identidade50
-combinações passaram no JAR servido. A regressão herdada terminou com duas falhas
-de captura, não aprovada integralmente; correções/exportação seguem em candidato novo.
-O baseline da fundação permanece preservado e não foi promovido. Não concluída:
-gates integrados, revisão visual e aceitação definitiva do release continuam
-pendentes. Resultados, limites dos ensaios e SHAs no [checkpoint](25_EXECUTION_STATUS.md).
+**Status:** em andamento desde 2026-11-04; não concluída. Há implementação
+empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
+eventos cadastrais, exportação mínima e provisionamento assistido. A homologação
+serve o candidato3cd4eeb, sem promoção do baseline449ce3c. A matriz96769ac passou
+215combinações, mas não aprova as correções posteriores de formulários. O build
+intermediário36e49e7 falhou em teste com massa compartilhada; o ajuste isolado
+6cd8a86 passou em teste focado, CI e build nativo com174backend sem falhas.
+Vinte combinações de formulários passaram no novo JAR; a matriz restante segue
+em execução. Essas parcelas não aprovam a regressão inteira.
+Manutenção, troca do frontend, jornada assistida hml, smokes, revisão visual e
+aceitação do candidato final permanecem pendentes. Estado atual, resultados e
+limites no [checkpoint](25_EXECUTION_STATUS.md).
 
 Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
-HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID;
-agendamento/homologação e demais critérios permanecem pendentes.
+HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID.
+O despacho automático por lote existe para dev/test; em hml, a operação segue
+o fluxo assistido da [fonte de tenancy](06_MULTI_TENANT.md#despacho-assistido-por-uuid--ciclo-15),
+cujo ensaio integrado ainda está pendente. Não há timer automático hml instalado.
 [Evidência](evidencias/sprint-01-retomada-ciclo-4.md).
 A retomada ciclo 3 acrescenta suspensão e
 reativação comercial versionadas na API/UI, em validação; não implementa pedidos
@@ -48,6 +52,27 @@ eventos de pedidos futuros nem encerra o gate integrado. [Evidência](evidencias
 Sprint 0; validar P04/P11 e durações de sessão. Captura local atende testes de e-mail; uso real exige provedor e domínio do [registro do piloto](23_PILOT_IMPLEMENTATION.md#registro-externo).
 
 ## Critérios de aceite
+
+### Rastreabilidade para o fechamento
+
+Esta tabela indica onde procurar as provas, não aprova testes pendentes nem
+converte nomes de métodos em evidência de execução. O gate final deve reler os
+resultados do mesmo candidato e conferir também o runtime de homologação.
+
+| Critério abaixo | Suítes e jornadas correspondentes |
+| --- | --- |
+| Isolamento de tenant/unidade, escrita, exportação e eventos | AcessosTest, IdentidadeTest; S01-UI33–40/UI42–43 |
+| Contexto após erro/cancelamento/job e falha fechada | FundacaoTest, PoolIsolationTest, TenantConnectionFailureTest, RetencaoIdentidadeJobTest |
+| Revogação de ação/vínculo com JWT válido | AcessosTest; S01-UI33/UI35–40/UI43 |
+| Refresh/login/recuperação/logout, cookies/CSRF e quotas | IdentidadeTest, PlataformaTest, RecuperacaoTest, CadastroClienteTest, ConvitesTest, VerificacaoEmailTest; S01-UI01–03/UI10–25 |
+| Matriz concorrente e último Administrador | AcessosTest; S01-UI04/UI35 |
+| Provisionamento interrompido/migrations | ProvisionamentoTest, SolicitacaoProvisionamentoTest, MigrationBoundaryTest; S01-UI29–31 e ensaio assistido hml |
+| Mobile, erros por campo e foco | S01-UI02/UI04/UI11/UI14/UI19/UI21 e revisão visual mobile/desktop; probes isolados não substituem E2E |
+
+Persistir auditoria de acessos não entrega sua consulta UI/API. A superfície
+T22 continua pendente no [inventário](evidencias/cobertura.md), assim como as
+jornadas operacionais futuras. O fechamento desta sprint não encerra essas
+famílias nem dispensa sua implementação e matriz final.
 
 - [ ] Pelo menos duas empresas com IDs/e-mails semelhantes, uma delas com duas unidades, demonstram isolamento em listagem, detalhe, alteração, exportação e evento. Funcionário autorizado em uma filial é impedido de consultar, alterar e receber eventos da outra filial da mesma empresa; trocar domínio/ID/claim não concede acesso.
 - [ ] Reutilizar conexão/thread após erro, cancelamento ou job não mantém schema anterior. Host desconhecido, tenant incompatível e sessão revogada falham fechado.
