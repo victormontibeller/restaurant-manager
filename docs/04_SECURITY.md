@@ -26,7 +26,7 @@ JWT de mesa só tem a capacidade do atendimento/participante ativo. Código temp
 
 ### Incremento empresarial da Sprint 01
 
-Implementado no ciclo 4, ainda não implantado em homologação: access JWT HS256 de 5 minutos, emissor `restaurant-manager`, audiência exclusiva `restaurant-manager-empresa`, IDs imutáveis de usuário/empresa/sessão. A chave privada `RM_JWT_SECRET` exige pelo menos 64 bytes, gerados aleatoriamente fora do Git. Testes usam chave efêmera própria; runtime falha sem chave. A rotação iniciada no ciclo 7 e revisada no ciclo 8 está descrita abaixo; publicação e resultados estão no checkpoint, não no release servido.
+Contrato implementado: access JWT HS256 de 5 minutos, emissor `restaurant-manager`, audiência exclusiva `restaurant-manager-empresa`, IDs imutáveis de usuário/empresa/sessão. A chave privada `RM_JWT_SECRET` exige pelo menos 64 bytes, gerados aleatoriamente fora do Git. Testes usam chave efêmera própria; runtime falha sem chave. A rotação iniciada no ciclo 7 e revisada no ciclo 8 está descrita abaixo. O [checkpoint](25_EXECUTION_STATUS.md) distingue fonte, artefato testado, candidato servido e baseline aceito; os títulos por ciclo registram a origem dos incrementos, não seu estado atual de implantação.
 
 Sessão tem prazo absoluto de 12 horas. Refresh aleatório de 256 bits fica em cookie HttpOnly/Secure/SameSite Strict, host-only, path `/api/v1/auth`; banco guarda apenas SHA-256, histórico de consumo e vínculo à sessão. Refresh é serializado por lock da sessão e relê consumo após adquirir o lock. Reutilização revoga a família em transação confirmada, inclusive se o access JWT ainda for válido. Logout e inativação são conferidos no servidor em cada autenticação.
 
@@ -34,7 +34,7 @@ Login/refresh/logout têm chain separada com CSRF obrigatório mesmo quando rece
 
 Tentativas persistem no PostgreSQL: por empresa, 5 por e-mail e 100 por endereço de origem em janela de 15 minutos. Origem bloqueada é rejeitada antes de consumir limite de qualquer conta. Endereço vem da conexão, sem confiar em Forwarded; proxy futuro precisa de política explícita antes de ativar confiança. BCrypt custo 12, resposta inválida genérica, limite de 72 bytes. A retenção técnica de sessões/limitadores do ciclo 8 está descrita abaixo; não é uma política jurídica de retenção de dados.
 
-Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Reautenticação sensível, equipe existente/matriz e unidades foram acrescentadas nos ciclos 5–6 conforme [Acessos](11_ACCESS_CONTROL.md); recuperação e cadastro de cliente estão descritos abaixo. Identidade SaaS, convites e eventos continuam pendentes.
+Contratos disponíveis: `POST /api/v1/auth/login` (`email`, `senha`); `POST /api/v1/auth/refresh`; `POST /api/v1/auth/logout`; `GET /api/v1/auth/me`. Campos desconhecidos são recusados. Todas as rotas empresariais resolvem domínio antes do contexto de segurança. JWT empresarial não autentica plataforma. Reautenticação sensível, equipe/matriz, unidades e eventos cadastrais estão em [Acessos](11_ACCESS_CONTROL.md); recuperação, cadastro, convites, verificação e identidade SaaS estão descritos abaixo. Contrato implementado não equivale à aprovação integrada da Sprint.
 
 - JWT deve ser validado quanto a assinatura, algoritmo permitido, emissor, audiência, expiração e sessão ativa. Permissões atuais são verificadas no servidor; não dependem de um JWT antigo expirar.
 - Para a proposta web, mantenha access token em memória e refresh token em cookie HttpOnly/Secure, com rotação, revogação e proteção CSRF nos endpoints que usam cookies. Não grave tokens em localStorage/sessionStorage.
@@ -52,7 +52,7 @@ A claim `iat` precisa existir no payload assinado original, antes da conversão 
 
 Procedimento proposto para rotação normal: preparar segredo novo fora do Git, preservar segredo/id anteriores como par de verificação, mudar ativa/id e reiniciar somente o serviço autorizado. Após a última emissão pela chave anterior, aguardar pelo menos cinco minutos de validade mais a tolerância de relógio do validador (60 segundos), conferir os emissores e retirar o par anterior em outra publicação. Não manter chave comprometida por conveniência: removê-la imediatamente invalida seus access tokens; revogação de sessões é operação distinta. Não reutilizar IDs para chaves diferentes.
 
-Compatibilidade: tokens dos builds anteriores usam o identificador automático Nimbus, não `v1`. Este candidato os rejeita por padrão e exige renovação; ainda não existe autenticação implantada em homologação. Para uma transição futura sem invalidação, cadastrar explicitamente o identificador real antigo no par anterior. Não alegar rotação operacional ensaiada apenas por testes com contextos locais. Parâmetros e segredos reais não foram alterados neste ciclo.
+Compatibilidade histórica: tokens dos builds anteriores à rotação usam o identificador automático Nimbus, não `v1`. O contrato novo os rejeita por padrão e exige renovação. Para uma transição sem invalidação, cadastrar explicitamente o identificador real antigo no par anterior. Não alegar rotação operacional ensaiada apenas por testes com contextos locais. O registro desse incremento não representa alteração de segredos do ambiente.
 
 ## Retenção técnica de identidade — ciclo 8
 
@@ -62,11 +62,11 @@ O worker consulta somente schemas registrados `ATIVO`/`SUSPENSO`, em páginas de
 
 Agendamento interno: primeira execução após um minuto, depois dez minutos após o término. Até dez lotes por empresa/ciclo permitem recuperar acúmulo sem monopolizar indefinidamente o worker; lote final cheio gera aviso de backlog. Isso não promete prazo máximo de exclusão nem capacidade operacional sem medição. Falhas isoladas preservam a transação e são retomadas pelo predicado persistido no ciclo seguinte, com diagnóstico por tenant técnico e tipo, sem conteúdo da exceção. Não há chamada externa ou fila em memória necessária à recuperação.
 
-`rm.auth.retencao-agendada=false` desliga apenas o agendamento, utilizado pela suíte que chama o serviço diretamente. A migration V6 concede DELETE somente nas três tabelas técnicas e adiciona índices de seleção; runtime continua sem DDL. Implantação em homologação depende do gate de manutenção/backup das migrations, ainda pendente. Testes de concorrência reais e testes unitários de coordenação estão separados nas [evidências do ciclo 8](evidencias/sprint-01-ciclo-8.md).
+`rm.auth.retencao-agendada=false` desliga apenas o agendamento, utilizado pela suíte que chama o serviço diretamente. A migration V6 concede DELETE somente nas três tabelas técnicas e adiciona índices de seleção; runtime continua sem DDL. Implantação exige os gates de manutenção/backup aplicáveis ao artefato, registrados no checkpoint. Testes de concorrência reais e testes unitários de coordenação estão separados nas [evidências do ciclo 8](evidencias/sprint-01-ciclo-8.md).
 
 ## Recuperação de senha — candidato do ciclo 9
 
-Incremento em validação, não implantado em homologação. A solicitação persiste uma mensagem cifrada e responde `202` com texto neutro, sem consultar a existência da conta no caminho síncrono. O worker consulta a conta dentro do tenant; desconhecida/inativa é ignorada sem envio. Limites persistidos: três solicitações por e-mail e trinta por origem em quinze minutos, aplicáveis também a contas inexistentes. A confirmação tem limite próprio de trinta por origem. Ambas as rotas exigem o CSRF real, inclusive quando recebem Bearer.
+A solicitação persiste uma mensagem cifrada e responde `202` com texto neutro, sem consultar a existência da conta no caminho síncrono. O worker consulta a conta dentro do tenant; desconhecida/inativa é ignorada sem envio. Limites persistidos: três solicitações por e-mail e trinta por origem em quinze minutos, aplicáveis também a contas inexistentes. A confirmação tem limite próprio de trinta por origem. Ambas as rotas exigem o CSRF real, inclusive quando recebem Bearer.
 
 Código aleatório de 256 bits, representado por 43 caracteres base64url, expira quinze minutos após a solicitação. A tabela de verificação contém somente SHA-256. Consumo serializado com a política empresarial altera BCrypt, invalida os demais códigos do usuário, revoga todas as sessões e registra auditoria/aviso na mesma transação. Não altera perfil/unidades, não verifica e-mail implicitamente nem autentica automaticamente. O horário de validade deve ser conferido depois dos locks; concorrência e regressões ficam nas evidências, não são presumidas por este contrato.
 
@@ -90,9 +90,9 @@ Somente após apresentar o código aleatório de 256 bits, válido por quinze mi
 
 Cadastro e recuperação confirmam o limitador por origem em transação curta separada, antes de adquirir a política empresarial. Mesmo uma confirmação rejeitada consome a quota; origem bloqueada não espera o lock empresarial. Só depois, em outra transação limitada a dez segundos, política/código/estado são revalidados. Não manter uma conexão de transação externa enquanto essas fases executam. Erro na mutação reverte usuário, código e auditoria, não a quota já contabilizada.
 
-O navegador não armazena código/senha nem coloca código na URL. Perda de resposta, timeout ou HTTP 5xx após confirmação são resultado incerto: conferir login antes de nova solicitação. Corpo HTML de intermediário não expõe erro de parsing. Código consumido não concede segunda criação; confirmação não reativa nem converte conta existente. Verificação de contas preexistentes de funcionários e convites permanecem pendentes.
+O navegador não armazena código/senha nem coloca código na URL. Perda de resposta, timeout ou HTTP 5xx após confirmação são resultado incerto: conferir login antes de nova solicitação. Corpo HTML de intermediário não expõe erro de parsing. Código consumido não concede segunda criação; confirmação não reativa nem converte conta existente. Verificação de contas preexistentes e convites têm contratos próprios abaixo.
 
-V9 acrescenta a tabela de códigos de cadastro com hash, e-mail, expiração e consumo, mais tipos próprios da outbox. Expurgo remove até cem códigos por ciclo/tenant cuja expiração passou há mais de 24 horas; o transporte conserva os limites de captura existentes. [OpenAPI de cadastro](api/cadastro.yaml). Implementação em validação, não implantada em homologação; evidências e limitações ficam no checkpoint.
+V9 acrescenta a tabela de códigos de cadastro com hash, e-mail, expiração e consumo, mais tipos próprios da outbox. Expurgo remove até cem códigos por ciclo/tenant cuja expiração passou há mais de 24 horas; o transporte conserva os limites de captura existentes. [OpenAPI de cadastro](api/cadastro.yaml). Evidências, implantação e limitações ficam no checkpoint.
 
 ## Convites de funcionários — candidato do ciclo 11
 
@@ -100,11 +100,11 @@ Administrador com sessão e reautenticação atuais cria uma intenção UUID com
 
 Código aleatório de 256 bits, hash SHA-256 exclusivo e validade de quinze minutos desde a criação; mensagem cifrada na mesma transação, somente captura fictícia. Aceite público exige CSRF e quota própria por origem antes da política empresarial, como cadastro/recuperação. Após os locks, revalida prazo, consumo, revogação, autor original ainda Administrador ativo, unidades ativas e ausência de conta. Cria o funcionário verificado com senha definida pelo destinatário, vínculos exatos e auditoria; revoga outros convites para o endereço. Não converte clientes, reativa usuários nem cria sessão automática. Logout do autor não revoga seu convite; rebaixamento/inativação impedem o aceite enquanto vigentes.
 
-Revogação administrativa é idempotente e não recolhe capturas já preparadas. Convite aceito exige gerenciar o funcionário. Expurgo limpa até cem hashes expirados há mais de 24 horas, preservando a intenção/payload para retries. UI conserva intenção incerta em memória por origem/conta, inclusive ao sair/entrar na mesma página; não grava códigos, senhas ou tokens em storage/URL. Recarregar/fechar perde o rascunho e emite aviso: consulta exata por UUID permite reconciliar manualmente. [Contrato](api/convites.yaml). Testes efetivamente executados ficam no checkpoint; não implantado em homologação. Verificação de funcionários preexistentes permanece pendente.
+Revogação administrativa é idempotente e não recolhe capturas já preparadas. Convite aceito exige gerenciar o funcionário. Expurgo limpa até cem hashes expirados há mais de 24 horas, preservando a intenção/payload para retries. UI conserva intenção incerta em memória por origem/conta, inclusive ao sair/entrar na mesma página; não grava códigos, senhas ou tokens em storage/URL. Recarregar/fechar perde o rascunho e emite aviso: consulta exata por UUID permite reconciliar manualmente. [Contrato](api/convites.yaml). Testes efetivamente executados e implantação ficam no checkpoint; verificação de contas preexistentes é um fluxo separado, descrito abaixo.
 
 ## Verificação de contas existentes — retomada de 2026-11-04
 
-Novo candidato em validação, ainda não implantado em homologação. Solicitação
+Solicitação
 pública recebe somente e-mail e responde `202` neutro. Conta inexistente, inativa
 ou já verificada é ignorada pelo worker, não consultada no caminho síncrono.
 Limites próprios de três solicitações por endereço e trinta por origem a cada
@@ -123,11 +123,11 @@ UI pública informa captura fictícia, código único, erro/foco e resultado inc
 após perda da resposta orienta conferir o indicador ao entrar, sem afirmar sucesso.
 Não armazena código no navegador nem o coloca na URL. Expurgo limitado remove
 códigos cuja expiração passou há mais de 24 horas. [OpenAPI](api/verificacao.yaml).
-Este incremento não entrega identidade SaaS ou homologação externa de e-mail.
+Esse fluxo não concede identidade SaaS nem representa homologação externa de e-mail.
 
 ## Identidade SaaS — incremento da retomada, ciclo 2
 
-Em validação, não implantado em homologação. Operador usa cadastro e sessões
+Operador usa cadastro e sessões
 exclusivos em `public`, fora do EntityManager empresarial. O serviço usa transação
 JDBC explícita e recusa contexto empresarial/transação ambiente. Não existe
 impersonação nem concessão implícita de Administrador de restaurante.
@@ -170,7 +170,7 @@ suspensão/reativação comercial conforme [Tenancy](06_MULTI_TENANT.md). Escrit
 usam Bearer SaaS, não autenticação por cookie; confirmação de senha vale cinco
 minutos e limita cinco tentativas por operador em quinze minutos. Senha inválida
 retorna 422 sem invalidar login; quota persistida retorna 429. Provisionamento
-pela UI e as demais condições de T28 continuam pendentes.
+pela UI tem contrato próprio em [Tenancy](06_MULTI_TENANT.md#solicitação-saas-de-provisionamento--retomada-ciclo-4); a cobertura integrada de T28 permanece no checkpoint.
 
 ## Referências relacionadas
 

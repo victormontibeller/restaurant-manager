@@ -1,6 +1,17 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo25, 2026-11-05 local
+## Estado vigente — ciclo 27, 2026-11-05 local
+
+Às 02:31Z de 2026-11-06, 150 pares únicos aprovados no JAR 97d75b0:
+25 focos, 45 identidade, 45 eventos, 15 verificação e 20 cadastro. Recibos,
+hashes e cobertura reabertos. Restante da matriz em execução; nenhuma aprovação
+global presumida. Reteste UI18×5 aguarda término do worker, sem novo build.
+Revisão visual tem 22 superfícies/layouts principais e complementos vinculados;
+um complemento de convites continua reprovado por enquadramento até o reteste.
+Manutenção/troca/assistido/smokes/aceitação pendentes. Não transferir matriz do
+6cd8a86 ao Angular corrigido. [Evidência](sprint-01-retomada-ciclo-27.md).
+
+## Histórico — ciclo25, 2026-11-05 local
 
 Worker24 preservado no6cd8a86:65pares únicos aprovados (20focos e45identidade),
 demais famílias ainda em execução neste registro. Origem/hash das14capturas

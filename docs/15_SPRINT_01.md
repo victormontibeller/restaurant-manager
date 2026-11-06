@@ -68,7 +68,7 @@ resultados do mesmo candidato e conferir também o runtime de homologação.
 | Isolamento de tenant/unidade, escrita, exportação e eventos | AcessosTest, IdentidadeTest; S01-UI33–40/UI42–43 |
 | Contexto após erro/cancelamento/job e falha fechada | FundacaoTest, PoolIsolationTest, TenantConnectionFailureTest, RetencaoIdentidadeJobTest |
 | Revogação de ação/vínculo com JWT válido | AcessosTest; S01-UI33/UI35–40/UI43 |
-| Refresh/login/recuperação/logout, cookies/CSRF e quotas | IdentidadeTest, PlataformaTest, RecuperacaoTest, CadastroClienteTest, ConvitesTest, VerificacaoEmailTest; S01-UI01–03/UI10–25 |
+| Refresh/login/recuperação/logout, cookies/CSRF e quotas | IdentidadeTest, AcessosTest (login simultâneo), PlataformaTest, RecuperacaoTest, CadastroClienteTest, ConvitesTest, VerificacaoEmailTest; S01-UI01–03/UI10–25 |
 | Matriz concorrente e último Administrador | AcessosTest; S01-UI04/UI35 |
 | Provisionamento interrompido/migrations | ProvisionamentoTest, SolicitacaoProvisionamentoTest, MigrationBoundaryTest; S01-UI29–31 e ensaio assistido hml |
 | Mobile, erros por campo e foco | S01-UI02/UI04/UI11/UI14/UI19/UI21 e revisão visual mobile/desktop; probes isolados não substituem E2E |

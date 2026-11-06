@@ -38,7 +38,7 @@ Suspensão comercial não deve abandonar pedidos já pagos, atendimentos abertos
 
 O provisionamento local usa processo privilegiado separado, não bean/runtime HTTP. `--provisionar` lê arquivo privado 0600, reserva UUID/domínio/plano/auditoria em uma transação, migra somente o schema interno derivado do UUID e confirma unidade/Administrador/ativação em outra transação. O plano guarda BCrypt custo 12, não senha em claro; repetição divergente de dados ou senha conflita. `--retomar-provisionamento UUID` conclui a reserva persistida em novo processo. Erro preserva reserva, registra SQLState/código sanitizado e não publica empresa incompleta. Ambos compartilham advisory lock com o migrador global; chamada sem lock real é recusada.
 
-O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. Nesta etapa só `dev`/`test` são aceitos pelo provisionador; `hml` permanece bloqueado até manutenção/backup/retorno das novas migrations serem demonstrados. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. A retomada acrescenta identidade SaaS e consulta de metadados em validação, conforme [Segurança](04_SECURITY.md). Provisionamento HTTP permanece pendente; suspensão comercial está descrita abaixo.
+O comando não migra public nem todas as empresas implicitamente: migrations globais são pré-requisito explícito do release. O provisionador aceita `dev`/`test`; o opt-in restrito de hml e seus gates estão descritos adiante. Runtime valida schemas ATIVO/SUSPENSO; empresa incompleta falha fechado no resolvedor sem impedir startup das ativas. Identidade SaaS segue [Segurança](04_SECURITY.md); solicitação HTTP, suspensão comercial e despacho assistido estão descritos abaixo. O [checkpoint](25_EXECUTION_STATUS.md) identifica os artefatos e resultados efetivamente implantados, sem transferir aprovação entre incrementos.
 
 JDBC atende à infraestrutura privilegiada de provisionamento/migração e ao registro
 público explícito da identidade SaaS, fora do EntityManager que exige tenant já
@@ -94,9 +94,9 @@ senha. Queda entre ativação e confirmação é reconciliável sem duplicar usu
 ou unidade e sem reativar empresa suspensa depois. Não há retry infinito de falha.
 
 O worker deste incremento é uma invocação explícita por UUID, não um agendamento
-instalado. O provisionamento continua limitado a dev/test; homologação e execução
-automática da fila dependem do gate operacional de manutenção/backup. Não
-confundir a jornada E2E que chama o CLI real com um worker de homologação ativo.
+instalado. Despacho automático permanece limitado a dev/test; hml usa somente o
+fluxo assistido e os gates operacionais descritos adiante. Não confundir a jornada
+E2E que chama o CLI real com um timer de homologação ativo.
 
 Na retomada ciclo 6, `scripts/provisioning_queue.py` acrescenta despacho por lote
 fora do HTTP. Consulta os UUIDs `SOLICITADO` mais antigos, chama o mesmo CLI e

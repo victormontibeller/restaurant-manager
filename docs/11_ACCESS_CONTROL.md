@@ -67,9 +67,9 @@ CRUD não cobre automaticamente ações de negócio. `pedido.editar` não permit
 
 ## Incremento da Sprint 01 — ciclo 5
 
-Implementados no candidato de desenvolvimento: catálogo explícito `Acao`, seeds aditivos por migration, matriz dos cinco perfis com dependências de consulta, versão/conflito e auditoria antes/depois; listagem paginada e edição dos funcionários existentes; perfil, unidades e inativação com revogação durável. Convites/criação de funcionários ainda não estão entregues. O ciclo 6 acrescenta a configuração de unidades descrita abaixo; resultados e release efetivamente servido ficam no checkpoint.
+Implementados: catálogo explícito `Acao`, seeds aditivos por migration, matriz dos cinco perfis com dependências de consulta, versão/conflito e auditoria antes/depois; listagem paginada e edição dos funcionários existentes; perfil, unidades e inativação com revogação durável. Configuração de unidades, convites e eventos cadastrais estão descritos abaixo. Resultados por artefato e release efetivamente servido ficam no [checkpoint](25_EXECUTION_STATUS.md); estes contratos não aprovam a Sprint.
 
-Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`, revalidam ator/sessão e protegem o último Administrador. A política central adquire lock compartilhado dentro da transação do caso de uso e consulta vínculos/permissões atuais. Consumidores futuros precisam chamar essa política e validar recurso/estado/projeções; enumerar uma ação NÃO implementa pedido, catálogo ou finanças. Eventos ainda não existem e sua revogação permanece pendente.
+Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`, revalidam ator/sessão e protegem o último Administrador. A política central adquire lock compartilhado dentro da transação do caso de uso e consulta vínculos/permissões atuais. Consumidores futuros precisam chamar essa política e validar recurso/estado/projeções; enumerar uma ação NÃO implementa pedido, catálogo ou finanças. O acompanhamento cadastral abaixo aplica essa política; eventos operacionais de pedidos continuam fora deste incremento.
 
 UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizontal obrigatória. Edições sensíveis exigem confirmação explícita da senha na sessão, válida por cinco minutos. Resultado de testes e limitações ficam no checkpoint; não inferir homologação a partir deste contrato.
 
@@ -159,8 +159,9 @@ Trocar unidade, encerrar sessão ou destruir a tela descarta respostas pendentes
 Download usa URL temporária revogada após acionamento, sem token em URL/storage.
 A UI diferencia arquivo solicitado ao navegador de download efetivamente salvo.
 Não exporta histórico, equipe, contatos ou dados financeiros. Este escopo não
-antecipa relatórios da Sprint04. Testes de lógica passaram; E2E/UI42–43 e build
-do novo Angular permanecem pendentes, conforme checkpoint.
+antecipa relatórios da Sprint04. O checkpoint registra testes de lógica,
+E2E/UI42–43, build e revisão visual do artefato correspondente; aprovação de uma
+versão anterior não aprova o Angular alterado.
 
 ## Referências relacionadas
 

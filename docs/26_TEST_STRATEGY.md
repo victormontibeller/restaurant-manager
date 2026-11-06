@@ -1,7 +1,7 @@
 # Estratégia de testes e validação completa
 
 > **Escopo:** testes durante o desenvolvimento, critérios para homologação automática e validação final de telas, jornadas e níveis de acesso.
-> **Situação:** plano obrigatório de validação; aplicação e suítes ainda não implementadas. Nenhum cenário abaixo representa teste já executado.
+> **Situação:** plano obrigatório de validação, com implementação e suítes em andamento. A presença de um cenário abaixo não comprova execução; resultados por artefato ficam no [inventário de cobertura](evidencias/cobertura.md) e no [checkpoint](25_EXECUTION_STATUS.md).
 
 [Índice da documentação](README.md)
 

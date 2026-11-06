@@ -1,5 +1,64 @@
 # Checkpoint de execução
 
+## Retomada — ciclo27, 2026-11-05 local
+
+[Evidência e limites](evidencias/sprint-01-retomada-ciclo-27.md).
+Atualização 02:31Z: 150 pares únicos aprovados e conferidos; recuperação em
+execução. Registro visual materializado: 48 imagens, 22 principais; complemento
+desktop de convites permanece reprovado até reteste. Manutenção/troca pendentes.
+Recusa de reentrada do worker27 exercitada sem alterar claim/progresso. Fontes
+canônicas corrigem estados históricos contraditórios, sem mudar gates ou produto.
+
+Git/PR3 OPEN draft/head d1dc30b conferidos; os dois checks CI passaram.
+Hml3cd4eeb UP/PID399982, baseline449ce3c e OIDs preservados; dev/test/hml
+relidos em loopback com roles distintos. Build97d75b0/hash/fonte e23XML/174backend
+sem falha/erro/skip conferidos; NÃO reconstruir por alterações de teste/docs.
+
+Worker26 preservado:70pares únicos aprovados, relatórios/hashes/cobertura
+reabertos (25focos+45identidade). Eventos e demais famílias ainda em execução.
+Worker27 finito aguarda26 e executará SOMENTE UI18×5 no mesmo JAR, em fonte
+imutáveld1dc30b. Claim exclusivo, locks e limite4h conferidos; não é coordenador
+nem faz deploy/build/merge. Substituir parcela antiga, não somar duplicatas.
+
+Duas revisões independentes somente leitura não identificaram bloqueador novo
+nos scripts operacionais/reteste. Não aprovam execução futura. Registro visual
+herdado materializado:42imagens,16principais; complemento desktop de convites
+continua reprovado até reteste/inspeção. Dois componentes de eventos foram
+inspecionados neste ciclo, ainda sem vínculo ao recibo final da família.
+Manutenção/troca/assistido/smokes/aceitação e revisão restante pendentes.
+Sprint01 aberta;02–05 não iniciadas. AGENTS bloqueado pelo executor, sem contorno.
+
+## Encerramento — ciclo26, 2026-11-05 local
+
+Aviso efetivo de orçamento quase esgotado recebido após gravar as notas visuais
+de identidade; depois somente handoff obrigatório. Missão NÃO concluída.
+Nenhum merge/deploy/promoção/CONCLUSAO.json, nenhum worker interrompido/duplicado.
+
+Publicado d1dc30bff06932ef9421793e02a4e36c21ac3798; remoto/PR3 OPEN/draft/base main
+relidos. CI7c8982f passou nos dois checks após UMA reexecução do download Ubuntu
+lento/cancelado. Ambos checks do d1dc30b ainda IN_PROGRESS na última consulta
+02:03:11Z; não presumir aprovação posterior. Ajuste de enquadramento UI18 passou
+typecheck, mas reexecução ainda pendente; não altera produto nem exige rebuild.
+
+Build97d75b0 aprovado/hash conferido,23XML/174backend sem falha/erro/skip; fonte
+7c8982f compatível e378 entradas não-static iguais ao JARhml. NÃO reconstruir.
+Worker26/MainPID712879, candidato716860, fonte imutável7c8982f preservados.
+25 pares focados aprovados, JSON/hash/cobertura reabertos; identidade permanece
+em execução na última consulta, sem resultado global aprovado. Recolher antes de
+outra suíte/manutenção. Após término, repetir SOMENTE UI18×5 com enquadramento
+d1dc30b no mesmo JAR e substituir essa parcela, sem somar duplicatas.
+
+Registro visual privado materializado tem34 imagens com hash/origem conferidos:
+oito principais, vinte complementos e seis adicionais de vínculos. Um complemento
+desktop de convites está REPROVADO por enquadramento. Oito notas posteriores de
+login/acessos/equipe/unidades foram gravadas após inspeção, mas ainda aguardam
+vínculo ao relatório final de identidade; não presumir cobertura futura. Restante
+da revisão/matriz, manutenção/troca/assistido/smokes/aceitação continuam pendentes.
+Hml3cd4eeb UP/PID399982 e baseline449ce3c preservados na última verificação;
+nenhuma releitura após aviso. STATUS/checkpoint privados registram fontes,
+processos, resultados e próximo comando. Sprint01 aberta;02–05 não iniciadas.
+Este handoff público fica local após o último push. AGENTS bloqueado, sem contorno.
+
 ## Retomada — ciclo26, 2026-11-05 local
 
 Atualização01:59Z:25 pares focados passaram sem falha/skip/flaky/retry; restante
