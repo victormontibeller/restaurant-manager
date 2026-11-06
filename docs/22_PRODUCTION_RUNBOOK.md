@@ -331,6 +331,14 @@ visual automaticamente. Parcelas explicitamente aprovadas de um worker cuja
 fase posterior falhou podem ser consideradas isoladamente no MESMO artefato;
 hash dos resultados e fonte são obrigatórios. Isso não aprova a fase falha.
 
+Quando convites e plataforma usam capturas delimitadas, cada revisão inclui
+`complements` com caminho, SHA-256, aprovação e nota de inspeção de cada imagem
+complementar exigida em `VISUAL_COMPLEMENTS`. O consolidador confere também
+esses arquivos, sua origem no cenário/projeto aprovado e ausência de duplicatas.
+O cartão/viewport principal sozinho não aprova controles fora dele. Em convites,
+o início do cadastro e a ação de criar ao fim das unidades têm capturas próprias;
+não gerar imagem vertical ilimitada nem inferir inspeção de partes não vistas.
+
 `identity_acceptance.py --attempt <TENTATIVA_HML> --bundle <MANIFESTO_PRIVADO>`
 refaz essa conferência sob lock, valida OIDs/política/runtime e publica apenas
 o baseline das funcionalidades de identidade disponíveis. Preserva baseline

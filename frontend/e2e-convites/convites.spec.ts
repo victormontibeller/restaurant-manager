@@ -108,6 +108,8 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   await convites.locator('form').first().screenshot({path:test.info().outputPath('convites-reautenticacao.png')});
   await page.getByLabel('E-mail do funcionário convidado').scrollIntoViewIfNeeded();
   await page.screenshot({path:test.info().outputPath('convites-cadastro-viewport.png'),fullPage:false});
+  await page.getByRole('button',{name:'Criar convite',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:test.info().outputPath('convites-criar-viewport.png'),fullPage:false});
   await convites.locator('form').filter({has:page.getByLabel('Identificador do convite')}).screenshot({path:test.info().outputPath('convites-consulta.png')});
   await convites.getByRole('article').filter({has:page.getByRole('heading',{name:email,exact:true})}).screenshot({path:test.info().outputPath('convites.png')});
   await page.getByRole('navigation',{name:'Páginas de convites',exact:true}).screenshot({path:test.info().outputPath('convites-paginacao.png')});

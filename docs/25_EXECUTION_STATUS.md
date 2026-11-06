@@ -1,5 +1,60 @@
 # Checkpoint de execução
 
+## Retomada — ciclo26, 2026-11-05 local
+
+Worker24 terminou em 2026-11-06T01:19:12Z:215 pares únicos aprovados, todos os
+JSON/hashes/contagens reabertos. A reprovação visual da exportação permanece;
+não promover6cd8a86 nem transferir sua matriz. PR3/head97d75b0 OPEN/draft e ambos
+checksCI aprovados. Hml3cd4eeb UP/PID399982; bancos/roles/OIDs segregados conferidos.
+Build único97d75b0 iniciado em fonte privada limpa, sem descartar checkpoint
+local. Unidade independente/locks/resultado privado; não repetir durante execução.
+
+Revisão independente encontrou ação Criar convite fora das capturas e complementos
+sem vínculo obrigatório no consolidador. Captura adicional incluída; seis negativos
+reproduziram ausência de validação. Ajuste no consolidador existente exige nomes,
+notas, hashes e origem dos complementos de convites/plataforma.149 testes Python,
+typecheck e scanner passaram. Não é aprovação visual/E2E. Alterações somente em
+testes/scripts/docs não exigem reconstruir o JAR em execução. Novo E2E deve usar
+fonte imutável posterior, primeiro focosUI42/UI35/UI18/UI24/UI26, depois restante
+sem duplicatas. Manutenção/troca/assistido/smokes/aceitação permanecem pendentes.
+Segunda revisão reproduziu origem falsa por segmento `..` em caminhos privados.
+Negativos de arquivo/diretório falharam antes da correção; a guarda comum passa a
+recusar esses caminhos, sem normalizá-los silenciosamente. Regressão final:150
+testes Python aprovados, scanner e diff limpos. Plano do worker conferido por
+AST contra specs/filtros:25 focos+190 restantes,215 pares únicos. AGENTS novamente
+bloqueado pelo executor, sem contorno. Sprint01 aberta;02–05 não
+iniciadas. Nenhum merge/deploy/promoção ou CONCLUSAO.json.
+
+## Encerramento — ciclo25, 2026-11-05 local
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta01:16:12Z;
+depois somente handoff obrigatório. Missão NÃO concluída. Sem merge, deploy,
+promoção ou CONCLUSAO.json; nenhum worker interrompido/duplicado.
+
+Head97d75b09b5b783b18104812cf67fb2e18afdf76a publicado e relido no PR3 OPEN
+draft/base main. CI6f623bd aprovada nos dois checks,174backend/147Python no log.
+No97d75b0, um check passou e outro ainda executava na última consulta; não
+presumir aprovação posterior. Correção de exportação tem teste vermelho/verde
+e probe Angular real nos três motores com API FICTÍCIA. Alterações posteriores
+de capturas UI18/UI24/UI26 passaram typecheck, mas E2E novo segue pendente.
+
+Worker24/MainPID678986 preservado com candidato683930: última fase01:16Z é
+provisionamento,12parcelas registradas e nenhum resultado final observado.
+Até01:10Z,185pares únicos tiveram relatórios/hashes/cobertura reabertos; a
+parcela posterior de estado comercial registrou15aprovações, ainda sem releitura
+independente do JSON neste encerramento. Não lançar suíte/build concorrente.
+
+Revisão visual REPROVOU sucesso antigo na exportação do6cd8a86; a correção está
+no código posterior. Não promover esse candidato nem transferir sua matriz ao
+novo Angular. Restantes inspeções foram parciais, com recortes e limites privados.
+Nenhum build novo foi iniciado. Próximo: recolher24, conferir CI/head e iniciar
+UM build durável do97d75b0 consolidado quando candidato/locks estiverem livres;
+validar focosUI42/UI35/UI18/UI24/UI26 e regressão do novo JAR. Manutenção/troca/
+assistido/smokes/aceitação permanecem pendentes. Hml3cd4eeb UP/PID399982 na última
+verificação, baseline449ce3c preservado. Sprint01 aberta;02–05 não iniciadas.
+STATUS e checkpoint privados registram caminhos e comandos. Este handoff fica
+local após o push. AGENTS protegido pelo executor, sem contorno.
+
 ## Incremento — ciclo25, 2026-11-05 local
 
 Atualização01:10Z:6f623bd publicado, PR3/head/corpo relidos, ambos checksCI

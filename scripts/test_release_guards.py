@@ -158,6 +158,20 @@ class ReleaseGuardsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_support.private_runtime_path(str(file))
 
+    def test_caminho_privado_nao_disfarca_origem_com_segmento_pai(self):
+        report = self.root / 'report'
+        report.mkdir(mode=0o700)
+        other = self.root / 'other'
+        other.mkdir(mode=0o700)
+        image = other / 'capture.png'
+        image.write_bytes(b'fixture-nao-imagem-real')
+        image.chmod(0o600)
+        self.assertEqual(release_support.private_runtime_path(str(image)), image)
+        for value, directory in ((report / '..' / 'other' / image.name, False),
+                                 (report / '..' / 'other', True)):
+            with self.subTest(directory=directory), self.assertRaises(ValueError):
+                release_support.private_runtime_path(str(value), directory=directory)
+
     def test_identidade_nao_pode_ser_verificada_em_http(self):
         jar = self.root / 'identity.jar'
         with zipfile.ZipFile(jar, 'w') as archive:

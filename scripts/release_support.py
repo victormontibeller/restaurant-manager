@@ -45,7 +45,7 @@ def private_config(path):
 def private_runtime_path(value, directory=False):
     path = Path(value)
     repo = Path(__file__).resolve().parents[1]
-    if (not path.is_absolute() or path.is_symlink() or not path.exists()
+    if (not path.is_absolute() or '..' in path.parts or path.is_symlink() or not path.exists()
             or path.stat().st_uid != os.getuid() or path.stat().st_mode & 0o077
             or path.resolve().is_relative_to(repo)
             or (not path.is_dir() if directory else not path.is_file())):

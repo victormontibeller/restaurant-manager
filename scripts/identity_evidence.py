@@ -32,6 +32,12 @@ VISUAL_TARGETS = dict(login=('S01-UI01', 'login.png'), cadastro=('S01-UI14', 'ca
     exportacao=('S01-UI42', 'exportacao.png'),
     **{'estado-empresa': ('S01-UI26', 'estado-comercial-mobile.png'),
        'provisionamento': ('S01-UI29', 'provisionamento-concluido.png')})
+VISUAL_COMPLEMENTS = {
+    'convites': ('convites-contexto.png', 'convites-reautenticacao.png',
+        'convites-cadastro-viewport.png', 'convites-criar-viewport.png',
+        'convites-consulta.png', 'convites-paginacao.png'),
+    'plataforma': ('saas-erro.png', 'saas-estado-consulta.png',
+        'saas-metadados.png', 'saas-paginacao.png')}
 
 
 def require(condition, message):
@@ -81,9 +87,17 @@ def validate_visual(entries):
     keys = [(e['surface'], e['layout']) for e in entries]
     require(set(keys) == expected and len(keys) == len(expected),
             'Revisão visual deve cobrir cada superfície em mobile e desktop.')
-    require(len({str(Path(e['path']).resolve()) for e in entries}) == len(entries),
-            'Não reutilizar a mesma captura para outra superfície/layout.')
+    images = list(entries)
     for entry in entries:
+        complements = entry.get('complements', [])
+        names = [Path(e['path']).name for e in complements]
+        required = VISUAL_COMPLEMENTS.get(entry['surface'], ())
+        require(set(names) == set(required) and len(names) == len(required),
+                'Complementos visuais ausentes, duplicados ou desconhecidos.')
+        images.extend(complements)
+    require(len({str(Path(e['path']).resolve()) for e in images}) == len(images),
+            'Não reutilizar a mesma captura para outra superfície/layout.')
+    for entry in images:
         require(entry.get('approved') is True and isinstance(entry.get('notes'), str)
                 and entry['notes'].strip() and re.fullmatch('[0-9a-f]{64}', entry.get('sha256', ''))
                 and Path(entry['path']).is_absolute(), 'Inspeção visual incompleta.')
@@ -93,15 +107,31 @@ def validate_database_binding(receipt, database):
     require(receipt.get('database') == database, 'Smoke pertence a outro banco/tentativa ou não registrou OIDs.')
 
 
-def validate_visual_origin(entry, directory, coverage):
+def validate_visual_origin(entry, directory, coverage, *, complement=False):
     image = Path(entry['path'])
     scenario, filename = VISUAL_TARGETS[entry['surface']]
     projects = ('chromium-mobile',) if entry['layout'] == 'mobile' else (
         'chromium-desktop', 'firefox-desktop', 'webkit-desktop')
-    require(image.is_relative_to(directory / 'artifacts') and image.name == filename
+    filenames = VISUAL_COMPLEMENTS.get(entry['surface'], ()) if complement else (filename,)
+    require(image.is_relative_to(directory / 'artifacts') and image.name in filenames
             and scenario + '-' in image.parent.name
             and any(image.parent.name.endswith('-' + p) and (p, scenario) in coverage for p in projects),
             'Captura não corresponde à superfície, cenário e projeto aprovados.')
+
+
+def validate_visual_files(visual, image_roots):
+    validate_visual(visual)
+    for entry in visual:
+        for image_entry, complement in [(entry, False)] + [
+                (dict(e, surface=entry['surface'], layout=entry['layout']), True)
+                for e in entry.get('complements', [])]:
+            image = private_runtime_path(image_entry['path'])
+            origins = [(directory, covered) for directory, covered in image_roots
+                       if image.is_relative_to(directory / 'artifacts')]
+            require(len(origins) == 1 and image.suffix == '.png'
+                    and artifact_hash(image) == image_entry['sha256'],
+                    'Captura não pertence aos resultados revisados ou foi alterada.')
+            validate_visual_origin(image_entry, *origins[0], complement=complement)
 
 
 def check_bundle(bundle, root, repo):
@@ -159,13 +189,7 @@ def check_bundle(bundle, root, repo):
     rehearsal_path = private_runtime_path(manifest['maintenance'])
     validate_rehearsal(json.loads(rehearsal_path.read_text()), gate)
     visual = manifest['visual']
-    validate_visual(visual)
-    for entry in visual:
-        image = private_runtime_path(entry['path'])
-        origins = [(directory, covered) for directory, covered in image_roots if image.is_relative_to(directory / 'artifacts')]
-        require(len(origins) == 1 and image.suffix == '.png' and artifact_hash(image) == entry['sha256'],
-                'Captura não pertence aos resultados revisados ou foi alterada.')
-        validate_visual_origin(entry, *origins[0])
+    validate_visual_files(visual, image_roots)
     totals = dict(tests=0, failures=0, errors=0, skipped=0)
     xmls = sorted((job / 'checkout/backend/target/surefire-reports').glob('TEST-*.xml'))
     require(bool(xmls), 'Resultados backend ausentes.')

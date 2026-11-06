@@ -1,6 +1,8 @@
 """Evidências sintéticas destas unidades não aprovam release real."""
 import copy
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 from identity_evidence import collect_coverage, validate_binding, validate_visual, EXPECTED
 
 
@@ -13,6 +15,70 @@ def report(keys):
 
 
 class IdentityEvidenceTest(unittest.TestCase):
+    def visual_entries(self):
+        from identity_evidence import SURFACES
+        complements = {
+            'convites': ('convites-contexto.png', 'convites-reautenticacao.png',
+                'convites-cadastro-viewport.png', 'convites-criar-viewport.png',
+                'convites-consulta.png', 'convites-paginacao.png'),
+            'plataforma': ('saas-erro.png', 'saas-estado-consulta.png',
+                'saas-metadados.png', 'saas-paginacao.png')}
+        entries = [{'surface': s, 'layout': layout, 'approved': True,
+                    'path': '/private/'+s+'-'+layout+'.png', 'sha256': 'a' * 64,
+                    'notes': 'Fixture unitária; não houve inspeção real.'}
+                   for s in SURFACES for layout in ('mobile', 'desktop')]
+        for entry in entries:
+            entry['complements'] = [dict(path='/private/'+entry['layout']+'/'+name,
+                sha256='b' * 64, approved=True, notes='Fixture sintética.')
+                for name in complements.get(entry['surface'], ())]
+        return entries
+
+    def test_complementos_visuais_exigem_cobertura_e_inspecao(self):
+        entries = self.visual_entries()
+        validate_visual(entries)
+        for mutation in ('ausente', 'duplicado', 'reprovado', 'sem-hash', 'sem-nota', 'arquivo-errado'):
+            changed = copy.deepcopy(entries)
+            entry = next(e for e in changed if e['surface'] == 'convites')
+            if mutation == 'ausente': entry['complements'].pop()
+            elif mutation == 'duplicado': entry['complements'].append(entry['complements'][0])
+            elif mutation == 'reprovado': entry['complements'][0]['approved'] = False
+            elif mutation == 'sem-hash': entry['complements'][0]['sha256'] = ''
+            elif mutation == 'sem-nota': entry['complements'][0]['notes'] = ''
+            else: entry['complements'][0]['path'] = '/private/inventado.png'
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                validate_visual(changed)
+
+    def test_complementos_verificam_arquivo_hash_e_origem(self):
+        from identity_evidence import validate_visual_files, VISUAL_TARGETS
+        directory = Path('/private/report')
+        entries = self.visual_entries()
+        covered = []
+        for entry in entries:
+            scenario, filename = VISUAL_TARGETS[entry['surface']]
+            project = 'chromium-' + entry['layout']
+            folder = directory / 'artifacts' / (scenario + '-fixture-' + project)
+            entry['path'] = str(folder / filename)
+            for extra in entry['complements']:
+                extra['path'] = str(folder / Path(extra['path']).name)
+                extra['sha256'] = 'a' * 64
+            covered.append((project, scenario))
+        with patch('identity_evidence.private_runtime_path', side_effect=Path), \
+                patch('identity_evidence.artifact_hash', return_value='a' * 64) as digest:
+            validate_visual_files(entries, [(directory, covered)])
+            self.assertEqual(digest.call_count, 46)
+            for mutation in ('hash', 'cenario', 'layout', 'fora-relatorio', 'arquivo-ausente'):
+                changed = copy.deepcopy(entries)
+                extra = next(e for e in changed if e['surface'] == 'convites')['complements'][0]
+                if mutation == 'hash': extra['sha256'] = 'b' * 64
+                elif mutation == 'cenario': extra['path'] = extra['path'].replace('S01-UI18', 'S01-UI19')
+                elif mutation == 'layout': extra['path'] = extra['path'].replace('chromium-mobile', 'chromium-tablet')
+                elif mutation == 'fora-relatorio': extra['path'] = extra['path'].replace('/private/report/', '/private/outro/')
+                else:
+                    digest.side_effect = lambda p: (_ for _ in ()).throw(FileNotFoundError()) if str(p) == extra['path'] else 'a' * 64
+                with self.subTest(mutation=mutation), self.assertRaises((ValueError, FileNotFoundError)):
+                    validate_visual_files(changed, [(directory, covered)])
+                digest.side_effect = None
+
     def test_cobertura_exata_sem_somar_duplicatas(self):
         keys = sorted(EXPECTED)
         self.assertEqual(collect_coverage([report(keys[:30]), report(keys[30:])]), keys)
@@ -48,11 +114,7 @@ class IdentityEvidenceTest(unittest.TestCase):
                 validate_binding(dict(receipt, **{key: value}), gate)
 
     def test_visual_nao_aceita_flag_sem_capturas_ou_surface_pendente(self):
-        from identity_evidence import SURFACES
-        entries = [{'surface': s, 'layout': layout, 'approved': True,
-                    'path': '/private/'+s+'-'+layout+'.png', 'sha256': 'a' * 64,
-                    'notes': 'Fixture unitária; não houve inspeção real.'}
-                   for s in SURFACES for layout in ('mobile', 'desktop')]
+        entries = self.visual_entries()
         validate_visual(entries)
         for invalid in ([], entries[:-1], entries + entries[:1],
                         [dict(e, approved=False) for e in entries],
