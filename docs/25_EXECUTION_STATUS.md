@@ -1,5 +1,88 @@
 # Checkpoint de execução
 
+## Retomada — ciclo 28, 2026-11-06
+
+Atualização03:29Z: ensaio assistido hml passou de verdade às03:27:45Z: UI202,
+CLI/ativação, read-backCONCLUIDO, replay/conflito, reconciliação sem executar
+Java novamente, login/unidade única/negativos do novo tenant. SQL posterior
+confirmou solicitação/empresa/domínio. Unidade inactive/MainPID0/cgroup ausente,
+locks livres e hashes da fixture/baseline conferidos; captura mobile inspecionada.
+Não repetir seed/ensaio concluído. Smoke50 está em execução no mesmo97 com
+fixture ampliada. [Evidência28](evidencias/sprint-01-retomada-ciclo-28.md).
+
+Atualização03:26Z: UI18×5 passou sem skip/retry/flaky; JSON/hash/cobertura
+relidos. Instabilidade27 permanece explicitamente não resolvida, não apagada.
+Inspeção dos14PNG novos materializada com26principais/20complementos e215pares
+únicos do MESMO JAR, substituindo somente UI18 antigo. Gate de release continua
+false; não confundir revisão visual com fechamento da instabilidade.
+
+Troca restrita concluída03:22:15Z: hml agora serve97d75b0/hash34e207ff,
+UP/PID754824, com OIDs135836/16392 e baseline449ce3c preservados. Nove contas
+empresariais revalidadas via login/me/logout, fixture nova privada ligada ao97.
+Fundação hml passou20combinações/5projetos às03:25Z; resultados/hash/OIDs relidos.
+Ensaio assistido iniciou em unidade própria/control-group, sem --resume e com
+estado novo. Revisão independente apontou limites de timeout/fixture/retomada:
+mitigação desta execução é conferir unidade/cgroup após saída, hash da fixture
+contra recibo API antes/depois e recusar repetição sem reconciliação. Ainda sem
+resultado observado. Smoke50 e aceitação continuam pendentes; nenhum merge.
+
+Git/PR3 OPEN draft/head85a724e e ambos checksCI aprovados conferidos; alteração
+local de encerramento27 preservada. Worker27 terminou com três aprovações e
+duas falhas UI18, sem skip/retry/flaky. Firefox enviou reautenticação, abortada
+perto do limite HTTP de dez segundos; WebKit esgotou o orçamento global antes
+do segundo login. Revisão independente dos traces não identificou submit/blur
+perdido. Contenção externa é hipótese, não causa comprovada; não ampliar timeout
+nem reconstruir. Capturas de cadastro Chromium enquadram o perfil corrigido,
+mas isso não aprova o reteste inteiro.
+
+Ensaio de manutenção97 REAL terminou03:12:23Z, aprovado/exit0:3997tabelas,
+33588linhas, clone equivalente, migrador Java0, três partidas nativas, contas e
+negativos por fase, falha SQL injetada após DDL confirmado e retorno integral.
+OIDoriginal16389 retornado/ativo; candidato197994 preservado/bloqueado. Unidade
+encerrada/MainPID0 e OIDs relidos. Hml3cd4eeb UP/PID399982 não mudou; baseline
+449ce3c preservado. NÃO repetir este ensaio/build sem necessidade demonstrada.
+
+Worker28 finito executa somente UI18×5 no MESMO JAR/fonte d1dc30b, com diagnóstico
+HTTP sem corpos/cabeçalhos e vmstat privado. Limite25min informado antes do início;
+não é outro coordenador. Ainda sem resultado consolidado neste registro. Recolher
+antes de troca/suíte; preservar a falha27 e não chamar retry de correção.
+Troca hml/assistido/smokes/aceitação ainda pendentes; Sprint01 aberta,02–05 não
+iniciadas. Nenhum merge/promoção/CONCLUSAO.json.
+
+## Encerramento — ciclo 27, 2026-11-05 local
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta 02:54:33Z;
+depois somente handoff obrigatório. Missão NÃO concluída. Nenhum merge, deploy,
+promoção ou CONCLUSAO.json; trabalhadores preservados, sem duplicação de build.
+
+Publicado 85a724e731b8e64e0a5b1a033aed25183d60b29a; remoto/PR3 OPEN draft/base
+main relidos. Ambos checks CI passaram e corpo remoto foi atualizado/conferido.
+Mudanças documentais alinham contratos existentes, sem alterar produto ou gates.
+Scanner de 313 arquivos, links, âncora nova e diff passaram. AGENTS bloqueado
+pelo executor; não contornado. Este handoff posterior fica local.
+
+Worker26 terminou 02:50:34Z: 215 pares únicos aprovados em 13 parcelas, todos
+JSONs/hashes/estatísticas/coberturas reabertos. Unidade inactive/MainPID0.
+Build97d75b0 e fonte de aplicação compatível preservados; NÃO reconstruir.
+Worker27/MainPID733810 iniciou reteste SOMENTE UI18×5 em fonte imutável d1dc30b,
+no mesmo JAR. Às 02:54:33Z estava em convites-foco, sem resultado final observado.
+Recolher antes de outra suíte/manutenção; não inferir aprovação posterior.
+
+Registro visual materializado contém 52 imagens com origem/hash conferidos:
+26 principais, 20 complementos e seis adicionais de vínculos. Um complemento
+desktop de convites permanece reprovado até reteste/inspeção. Todas as demais
+notas registram o escopo efetivamente visto, sem alegar páginas inteiras quando
+há somente componente. Materializador privado27 preparado, NÃO executado;
+notas do novo UI18 ainda ausentes. Não chamar contagem de aprovação global.
+
+Manutenção do JAR97 NÃO iniciada antes do aviso. Após recolher UI18, executar o
+script existente em unidade independente, sem timeout externo que corte cleanup;
+ensaio histórico durou cerca de sete a oito minutos. Depois troca restrita,
+assistido, smokes e aceitação continuam pendentes. Hml3cd4eeb UP/PID399982
+verificada no encerramento26 às 02:50:34Z; baseline449ce3c/OIDs preservados.
+Nenhuma nova verificação após o aviso. STATUS/checkpoint privados identificam
+fontes, unidades, resultados e próximo comando. Sprint01 aberta;02–05 não iniciadas.
+
 ## Retomada — ciclo27, 2026-11-05 local
 
 [Evidência e limites](evidencias/sprint-01-retomada-ciclo-27.md).

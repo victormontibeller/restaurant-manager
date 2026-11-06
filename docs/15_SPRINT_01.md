@@ -8,25 +8,33 @@
 **Status:** em andamento desde 2026-11-04; não concluída. Há implementação
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
 eventos cadastrais, exportação mínima e provisionamento assistido. A homologação
-serve o candidato3cd4eeb, sem promoção do baseline449ce3c. A matriz6cd8a86 passou
+serve o candidato97d75b0 desde o ciclo28, sem promoção do baseline449ce3c. A matriz6cd8a86 passou
 215 combinações, mas sua exportação foi reprovada visualmente por sucesso antigo
 após nova falha. Não promover esse artefato nem transferir suas provas ao Angular
 corrigido. A correção6f623bd foi consolidada no build97d75b0, aprovado com174
-testes backend sem falha/erro/skip. No ciclo26,25 combinações focadas de exportação,
-vínculos, convites, plataforma e estado comercial passaram no novo JAR; a matriz
-restante está em execução. Exportação corrigida foi inspecionada mobile/desktop;
-um complemento desktop de convites não enquadra o perfil inteiro. Ajuste somente
-de captura, sem mudança de produto, aguarda reexecução de UI18 no MESMO JAR.
-Não reconstruir nem repetir os demais cenários por esse ajuste. [Defeito anterior](evidencias/sprint-01-retomada-ciclo-25.md).
-Manutenção, troca do frontend, jornada assistida hml, smokes, revisão visual e
-aceitação do candidato final permanecem pendentes. Estado atual, resultados e
+testes backend sem falha/erro/skip. A matriz26 terminou com215combinações
+aprovadas no novo JAR. Exportação corrigida foi inspecionada mobile/desktop;
+ajuste do enquadramento de convites mostrou o perfil inteiro em Chromium, mas
+o reteste27 falhou emFirefox/WebKit por esperas HTTP/orçamento global. Não
+aprovar a rodada nem ampliar timeout sem diagnóstico. O reteste28 instrumentado
+passou as cinco combinações no MESMO JAR/fonte, sem reconstruir nem repetir as
+outras famílias. A instabilidade anterior continua explicitamente pendente.
+[Defeito anterior](evidencias/sprint-01-retomada-ciclo-25.md).
+O ensaio de manutenção97 passou no ciclo28, com clone/retorno e verificações
+reais de aplicação. A troca do frontend foi conferida, nove contas empresariais
+foram revalidadas por API e a fundação hml passou20combinações. Jornada assistida
+hml executada e aprovada no ciclo28, com read-back independente e reconciliação
+sem reexecutar Java. Smoke das dez identidades está em execução; aceitação
+permanece pendente. A revisão visual
+materializada contém26capturas principais/20complementos, sem aprovar a
+instabilidade. [Evidência28](evidencias/sprint-01-retomada-ciclo-28.md). Estado atual, resultados e
 limites no [checkpoint](25_EXECUTION_STATUS.md).
 
 Itens compostos permanecem abertos. A retomada ciclo 4 acrescenta solicitação
 HTTP/UI, consulta e retomada de provisionamento, com worker CLI separado por UUID.
 O despacho automático por lote existe para dev/test; em hml, a operação segue
 o fluxo assistido da [fonte de tenancy](06_MULTI_TENANT.md#despacho-assistido-por-uuid--ciclo-15),
-cujo ensaio integrado ainda está pendente. Não há timer automático hml instalado.
+cujo ensaio integrado passou no ciclo28. Não há timer automático hml instalado.
 [Evidência](evidencias/sprint-01-retomada-ciclo-4.md).
 A retomada ciclo 3 acrescenta suspensão e
 reativação comercial versionadas na API/UI, em validação; não implementa pedidos
