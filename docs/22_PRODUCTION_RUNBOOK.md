@@ -367,7 +367,8 @@ real; o checkpoint informa se o comando foi efetivamente aprovado.
 anterior para liberar o deploy. Exige build e ensaio do novo SHA/hash, fonte limpa,
 unidade/runtime conhecidos e igualdade byte a byte de TODAS as entradas dos JARs
 fora de `BOOT-INF/classes/static/`. Não ignora metadados, bibliotecas ou migrations.
-Mudança no backend exige outro procedimento, não flexibilização dessa comparação.
+O modo padrão continua recusando qualquer mudança de backend. A exceção
+delimitada abaixo não libera deploy genérico de Java nem altera essa comparação.
 
 A preparação fica privada e só publica seu marcador depois de persistir journal
 e arquivos de retorno. Mantém banco/OIDs, chaves/runtime, original bloqueado e
@@ -387,6 +388,37 @@ journal anterior em histórico privado; não apaga tentativas. Sobras de prepara
 antes do marcador não alteram serviço e não são aprovação. Conferir estado real
 após interrupção. Testes de coordenação/disco usam serviços simulados; resultado
 nativo e limitações permanecem no checkpoint. A matriz integral continua obrigatória.
+
+### Opt-in delimitado para a consulta de login — ciclo31
+
+`hml_frontend.py replace --mode login-startup --attempt <TENTATIVA_HML>
+--job <JOB> --rehearsal <RESULTADO_MANUTENCAO>` reutiliza a mesma operação e
+recuperação binária para o incremento que antecipa a interpretação HQL.
+Exige dois artefatos de identidade com exatamente as mesmas entradas ZIP;
+somente `Usuario.class`, `IdentidadeRepository.class` e `application.yml`
+podem diferir. A configuração aceita exclusivamente a adição revisada de
+`hibernate.query.startup_check: true` com seu comentário. Frontend, dependências,
+metadados, migrations SQL e demais recursos ficam byte a byte iguais.
+Essa delimitação não verifica a semântica do bytecode: revisão da fonte,
+build/testes do novo artefato e compatibilidade das escritas continuam obrigatórios.
+Não serve para futuras mudanças Java, de configuração ou de banco.
+
+Somente esse opt-in pode encadear sobre uma troca concluída ainda não aceita,
+conferindo seu recibo contra o candidato atual. Arquiva o journal anterior e
+registra o modo; `recover` usa o modo persistido, não aceita sua reinterpretação
+pela CLI e retorna ao binário imediatamente anterior no mesmo clone. Journals
+antigos sem modo continuam sendo `frontend`; modo desconhecido é recusado.
+Build/ensaio do novo SHA/hash, OIDs, chaves/runtime, locks e baseline preservados
+continuam obrigatórios. Não restaurar o banco anterior à identidade.
+
+Interrupção entre arquivar o journal e publicar seu sucessor não altera o
+serviço, mas deixa uma pendência: ausência do journal ativo com histórico ou
+preparação bloqueia nova troca, smoke, provisionamento e aceitação. Conservar
+todos os arquivos; reconciliar journal, unidade, hashes e estado real antes de
+restabelecer o registro ativo. Não tratar a ausência como “nenhuma troca” nem
+reexecutar automaticamente. A CLI `recover` não resolve essa janela sozinha.
+Testes com disco/serviços simulados cobrem a recusa; a execução nativa da nova
+troca só pode ser declarada após os gates e o resultado registrado no checkpoint.
 
 <a id="backups-e-continuidade"></a>
 ## Backups, restauração e continuidade

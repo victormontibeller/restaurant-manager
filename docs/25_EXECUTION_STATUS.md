@@ -1,5 +1,60 @@
 # Checkpoint de execução
 
+## Incremento — ciclo31, 2026-11-06
+
+Escopo SOMENTE Sprint01 e handoffMac; PR3 aberto, sem merge/produção/02–05.
+Git/CI5cce633, hml97d75b0 UP/PID754824 e OIDs16389/135836/16392 conferidos;
+original hml bloqueado/zero conexões. Três documentos locais30 preservados.
+Build único5cce633 recontado:24XML/175backend, zero falha/erro/skip; gate/hash
+conferidos. Nenhuma reconstrução.
+
+Worker frio30 terminou05:36:19Z, quatro aprovações Firefox/WebKit/Firefox/WebKit,
+zero retry/skip/flaky. JSONs/hashes/JFR relidos; unidade inactive/MainPID0,
+hml antes/depois idêntica. HQL observada no startup; primeiro login entre3414
+e5681ms no navegador. Evidência fundamenta a correção do custo HQL frio, não
+uma garantia global de desempenho nem explicação de toda latência histórica27.
+
+Opt-in `login-startup` implementado na operação existente de troca binária,
+limitado às três entradas revisadas do JAR, sem liberar deploy Java genérico.
+Default frontend preservado; chain conserva journal e retorna binário anterior
+imediato no MESMO clone. Revisão independente encontrou janela sem journal:
+dois negativos reproduzidos; guarda passa a recusar continuação com histórico/
+preparação órfãos.19focados/158Python passaram, comparação dos JARs reais passou.
+São testes de coordenação, NÃO troca nativa executada.
+
+Worker finito31 iniciado05:39:49Z, unidade própria/control-group/limite4h informado.
+Plano215pares conferido contra specs; fonte imutável do job5cce633. Sem deploy,
+promoção ou build. Última fase observada:prontidão, candidatoPID815189, sem
+resultado E2E consolidado. Não duplicar/interromper. Recolher resultado, revisar
+capturas; manutenção/troca/smokes/aceitação do novo artefato continuam pendentes.
+[Evidência31](evidencias/sprint-01-retomada-ciclo-31.md). Sprint01 NÃO concluída.
+
+## Encerramento — ciclo 30, 2026-11-06
+
+Aviso efetivo de orçamento quase esgotado recebido após consulta05:21:20Z;
+depois somente escritas obrigatórias de handoff. Sprint01 NÃO concluída.
+Publicado5cce633/PR3 OPEN draft, ambos checksCI aprovados e corpo relido.
+Documentação posterior permanece LOCAL; preservar sem atribuir CI a futuroSHA.
+
+Build único5cce633 terminou05:21:11.830724Z, exit0/release_gate=true,
+hash2db5ed4a9c167a7f356da21b792a602e84d160435b18a7e44e4134ab9d0933d6.
+Recibo real recolhido; XMLs completos ainda não recontados após término.
+Última contagem parcial anterior:19XML/144testes sem falha/erro/skip;
+175backend é a contagem CI confirmada, não reconsolidação local presumida.
+NÃO reconstruir o artefato por estas mudanças documentais.
+
+Worker finito30 preservado/MainPID795983; após o build iniciou primeiro
+candidatoPID803519, fase cycle30-cold-1-prontidao às05:21:20Z. Ainda nenhum
+resultado UI18 observado. Não interromper nem duplicar suíte/manutenção/build.
+STATUS/checkpoint privados contêm caminhos, plano de quatro partidas e limites.
+Recolher resultado e analisar primeiro login/JFR antes de afirmar resolução.
+
+Hml97d75b0 UP/PID754824 e originalOID16392 bloqueado/zero conexões na última
+conferência anterior; sem nova verificação após aviso. Baseline449ce3c
+preservado. Sem deploy, promoção, merge, STOP ou CONCLUSAO.json;02–05 fora
+do escopo, Macnãoverificado. Upgrade de backend no clone atual permanece
+pendente: a troca restrita de frontend não é elegível, não contornar guardas.
+
 ## Incremento — ciclo 30, 2026-11-06
 
 Retomada conferiu PR3 OPEN/draft/heada94e475 e ambos checksCI aprovados;
@@ -18,6 +73,18 @@ HQL comprovada de desempenho frio ainda pendente. Revisão/build novo e ensaio
 UI18 finito ainda necessários; matriz/manutenção anteriores não aprovam
 automaticamente produto alterado. Sprint01 aberta, sem promoção/merge/STOP.
 Missão SOMENTE Sprint01 e handoffMac;02–05 fora desta execução.
+
+Atualização05:13Z: publicado5cce633 e PR3 OPEN/draft/base main/head/corpo relidos.
+Ambos checksCI passaram; log confirma175backend/152Python, zero falha/erro/skip
+no backend. Build nativo único permanece ativo, sem gate final;88testes em13XML
+completos na consulta, NÃO total aprovado. Worker finito aguarda esse build e
+fará quatro partidas frias Firefox/WebKit/Firefox/WebKit sem login prévio.
+Limites informados:45min de espera +30min de ensaio, unidade80min/control-group.
+Reentrada recusada, claim/progresso preservados. Não duplicar nem interromper.
+JAR anterior teve build de1471,578s; o novo ainda não concluiu na consulta.
+Hml97/UP/PID754824 e originalOID16392 bloqueado/zero conexões reconferidos;
+rm_dev_app também conferido emrm_dev/loopback55432. A troca restrita de frontend
+NÃO aceita backend diferente; preservar dados e guardas, sem deploy improvisado.
 
 ## Encerramento — ciclo 29, 2026-11-06
 

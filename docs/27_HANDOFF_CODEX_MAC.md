@@ -10,8 +10,11 @@ Sprint 01; Sprints 02–05 serão continuadas pelo proprietário, fora desta exe
 
 - Repositório: `victormontibeller/restaurant-manager`.
 - Branch: `hermes/sprint-01-identidade-acessos`; PR **#3**, base `main`.
-- Implementação/testes da guarda de aceitação publicados e CI aprovada:
-  `a94e475f7dec9c49a4dca40978880c0cb052f8c4`. O head documental posterior deve ser consultado
+- Correção de produto publicada e CI aprovada:
+  `5cce633e515d76346da3b534e7f9ce3697a65eb3`. A consulta de login agora é
+  interpretada no startup; não está no JAR de homologação abaixo.
+  A guarda de aceitação foi entregue em `a94e475f7dec9c49a4dca40978880c0cb052f8c4`.
+  O head documental posterior deve ser consultado
   com o comando abaixo, não inferido a partir deste snapshot.
 - Aplicação servida em homologação:
   `97d75b09b5b783b18104812cf67fb2e18afdf76a`.
@@ -69,6 +72,29 @@ antes das amostras BCrypt; próxima investigação deve cobrir a primeira
 autenticação em processo novo, sem aquecimento exclusivo do teste ou aumento
 cego de timeout. Resultado e limites em
 [evidência29](evidencias/sprint-01-retomada-ciclo-29.md).
+
+No ciclo30, a mesma consulta HQL virou named query validada no startup.
+Teste vermelho/verde e dez regressões de identidade passaram (11 ao todo);
+ambos checks CI do5cce633 passaram, com175backend e152Python no log conferido.
+Build nativo único e ensaio frio de quatro partidas estão identificados no
+checkpoint; consultar resultados antes de iniciar outro trabalho pesado.
+Isso ainda não fecha UI18. Não alterar timeouts/criptografia nem aquecer apenas
+a fixture. [Evidência30](evidencias/sprint-01-retomada-ciclo-30.md).
+
+No ciclo31, as quatro partidas frias passaram sem retry/skip/flaky. Primeiro
+login no navegador: 3414, 3433, 5681 e 4006ms; JFR calibrado registrou HQL no
+startup, sem amostras desse parser nas autenticações observadas. Ausência de
+amostras não prova ausência de custo. A correção tem causa e prova delimitadas;
+não explica automaticamente toda lentidão histórica de navegação/reautenticação.
+Regressão integrada do novo JAR continua necessária. Build local recontado:
+24XML/175backend, zero falha/erro/skip, sem reconstrução.
+
+O novo backend não é uma troca somente de frontend. O modo padrão permanece
+restrito; o opt-in `login-startup` aceita apenas as três entradas do incremento
+revisado, preserva o clone e retorna somente o binário imediatamente anterior.
+Detalhes e limites no [runbook](22_PRODUCTION_RUNBOOK.md). Implementação/testes
+de coordenação não são execução nativa: troca e manutenção do novo JAR ainda
+pendentes neste registro. Não retornar o banco pré-identidade.
 
 A aceitação de baseline e o fechamento dos sete critérios da Sprint dependem
 da resolução fundamentada desse achado e dos gates restantes. O consolidador

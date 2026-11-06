@@ -59,3 +59,28 @@ Próximo: revisão independente, build identificado único, ensaio frio finito d
 UI18 sem login prévio e regressões afetadas. Resultados posteriores ficam no
 checkpoint, sem sucesso futuro presumido. Sprint01 permanece aberta, PR3 draft;
 sem promoção, merge, STOP ou avanço para02–05.
+
+## Resultado ao encerrar a chamada
+
+Incremento publicado em5cce633e515d76346da3b534e7f9ce3697a65eb3; remoto/PR3
+OPEN/draft/base main e corpo relidos. Ambos checksCI passaram; log conferido
+contém175backend sem falha/erro/skip e152Python. Scanner318/links/diff passaram.
+
+Build nativo único terminou05:21:11.830724Z, exit0/release_gate=true, hash
+2db5ed4a9c167a7f356da21b792a602e84d160435b18a7e44e4134ab9d0933d6.
+Recibo recolhido, mas XMLs completos não recontados após o término; última
+contagem parcial era144casos/19XML, todos sem falha/erro/skip. Não atribuir
+automaticamente a contagem CI ao inventário local final.
+
+Ensaio finito iniciou primeiro candidato após liberar o build; às05:21:20Z
+aguardava prontidão e não tinha resultadoUI18. Quatro partidas previstas,
+Firefox/WebKit/Firefox/WebKit, sem login de aquecimento ou retry até verde.
+Reentrada recusada sem alterar progresso. Limites informados antes do início:
+45min aguardando build,30min ensaio e unidade80min/control-group.
+
+Aviso efetivo de orçamento encerrou novas verificações; trabalhadores preservados.
+Não repetir build/matriz antiga. Recolher ensaio e analisar causa/latência;
+depois regressões e gates do novo artefato. A atualização Java não satisfaz a
+guarda de backend idêntico da troca de frontend: caminho seguro de atualização
+no MESMO clone ainda pendente. Nenhum deploy improvisado ou restauração de
+banco pré-identidade. Documentos finais posteriores ao push permanecem locais.

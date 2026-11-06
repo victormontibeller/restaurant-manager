@@ -6,12 +6,165 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 import zipfile
+from contextlib import ExitStack
 
-from hml_frontend import Replacement, require_same_backend, replace_frontend, recover_frontend, verify_frontend_record
+from hml_frontend import (Replacement, require_same_backend, require_login_startup_change,
+                          replace_frontend, recover_frontend, verify_frontend_record)
 from release_support import artifact_hash
 
 
 class FrontendReplacementTest(unittest.TestCase):
+    def login_jars(self, directory, extra=None):
+        prefix = 'BOOT-INF/classes/'
+        package = prefix + 'br/com/restaurantmanager/identidade/'
+        files = {prefix + 'db/migration/public/V1.sql': b'SELECT 1;',
+                 prefix + 'static/index.html': b'frontend preservado',
+                 prefix + 'application.yml': b'      hibernate.jdbc.time_zone: UTC\n',
+                 package + 'Usuario.class': b'entidade anterior',
+                 package + 'IdentidadeRepository.class': b'consulta anterior',
+                 package + 'JwtConfiguration.class': b'jwt preservado',
+                 'BOOT-INF/lib/sdk.jar': b'biblioteca preservada'}
+        changed = dict(files)
+        changed[package + 'Usuario.class'] = b'entidade com named query'
+        changed[package + 'IdentidadeRepository.class'] = b'createNamedQuery'
+        changed[prefix + 'application.yml'] += (
+            '      # Compila/valida a HQL nomeada no startup, não no primeiro login.\n'
+            '      hibernate.query.startup_check: true\n').encode()
+        changed.update(extra or {})
+        paths = []
+        for name, entries in [('old.jar', files), ('new.jar', changed)]:
+            path = Path(directory) / name
+            with zipfile.ZipFile(path, 'w') as archive:
+                for key, value in entries.items():
+                    archive.writestr(key, value)
+            paths.append(path)
+        return paths
+
+    def test_opt_in_login_aceita_so_correcao_delimitada(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            old, new = self.login_jars(directory)
+            with self.assertRaises(ValueError):
+                require_same_backend(old, new)
+            require_login_startup_change(old, new)
+
+    def test_opt_in_login_recusa_mudancas_fora_do_incremento(self):
+        entries = ['BOOT-INF/lib/sdk.jar', 'BOOT-INF/classes/static/index.html',
+                   'BOOT-INF/classes/db/migration/public/V1.sql',
+                   'BOOT-INF/classes/db/migration/callback.conf',
+                   'BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class',
+                   'BOOT-INF/classes/application.yml', 'META-INF/MANIFEST.MF']
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            for entry in entries:
+                with self.subTest(entry=entry), self.assertRaises(ValueError):
+                    require_login_startup_change(*self.login_jars(directory, {entry: b'alterado'}))
+            old, new = self.login_jars(directory)
+            with zipfile.ZipFile(new, 'a') as archive:
+                archive.writestr('BOOT-INF/lib/sdk.jar', b'biblioteca preservada')
+            with self.assertRaises(ValueError):
+                require_login_startup_change(old, new)
+
+    def test_modo_legado_aceito_modo_desconhecido_recusado(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            ops = self.disk_operations(Path(directory))
+            with patch('hml_frontend.clean_sha', return_value='e' * 40):
+                ops.prepare()
+            ops.complete(dict(served_sha='b' * 40))
+            path = ops.directory / 'journal.json'
+            record = json.loads(path.read_text())
+            record.pop('mode')
+            path.write_text(json.dumps(record))
+            verify_frontend_record(ops.attempt, ops.gate)
+            ops.load()
+            self.assertEqual(ops.mode, 'frontend')
+            record['mode'] = 'desconhecido'
+            path.write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, 'Modo'):
+                verify_frontend_record(ops.attempt, ops.gate)
+            with self.assertRaisesRegex(ValueError, 'Modo'):
+                ops.load()
+
+    def test_journal_ausente_com_historico_ou_preparacao_falha_fechado(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            attempt = Path(directory)
+            verify_frontend_record(attempt, {})  # Sem qualquer troca: legado válido.
+            for name in ('frontend-history-' + 'a' * 32, 'frontend-preparing-' + 'b' * 32):
+                with self.subTest(name=name):
+                    marker = attempt / name
+                    marker.mkdir()
+                    with self.assertRaisesRegex(ValueError, 'reconciliar'):
+                        verify_frontend_record(attempt, {})
+                    marker.rmdir()
+
+    def test_encadeamento_explicito_preserva_historico_e_retorna_anterior_imediato(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory, ExitStack() as stack:
+            ops = self.disk_operations(Path(directory))
+            stack.enter_context(patch('hml_frontend.clean_sha', return_value='e' * 40))
+            stack.enter_context(patch('hml_frontend.systemctl'))
+            ops.prepare()
+            ops.install()
+            observed = dict(served_sha=ops.gate['git_sha'], artifact_sha256=ops.gate['artifact_sha256'], pid=123)
+            ops.complete(observed)
+            with self.assertRaisesRegex(ValueError, 'Troca já registrada'):
+                ops.preflight()
+            prior = (ops.directory / 'journal.json').read_bytes()
+            next_gate = dict(ops.gate, git_sha='f' * 40)
+            ops.job = ops.root / 'job'
+            stack.enter_context(patch('hml_frontend.verify', return_value=observed))
+            stack.enter_context(patch('hml_frontend.durable_artifact', return_value=(ops.artifact, next_gate)))
+            stack.enter_context(patch('hml_frontend.validate_rehearsal'))
+            stack.enter_context(patch('hml_frontend.validate_runtime'))
+            guard = stack.enter_context(patch('hml_frontend.require_login_startup_change'))
+            original = Path.read_bytes
+            def contents(path):
+                return b'RM_STAGE=hml\0' if str(path) == '/proc/123/environ' else original(path)
+            stack.enter_context(patch.object(Path, 'read_bytes', contents))
+            ops.mode = 'login-startup'
+            ops.preflight()
+            guard.assert_called_once_with(ops.old_release / 'app.jar', ops.artifact)
+            self.assertEqual(ops.old_state['git_sha'], 'b' * 40)
+            ops.prepare()
+            assert ops.archive is not None
+            self.assertEqual((ops.archive / 'journal.json').read_bytes(), prior)
+            self.assertEqual(ops.record['mode'], 'login-startup')
+            ops.install()
+            # O retorno não depende de o novo JAR ainda estar íntegro.
+            (ops.release / 'app.jar').write_bytes(b'corrompido')
+            ops.load()
+            stack.enter_context(patch('hml_frontend.subprocess.check_output', return_value='0'))
+            stack.enter_context(patch('hml_frontend.wait_for_release', return_value=observed))
+            recover_frontend(ops)
+            self.assertEqual(json.loads((ops.root / 'candidate.json').read_text())['git_sha'], 'b' * 40)
+            self.assertEqual(json.loads((ops.directory / 'journal.json').read_text())['state'], 'anterior-restaurado')
+            self.assertEqual((ops.archive / 'journal.json').read_bytes(), prior)
+            self.assertEqual((ops.root / 'healthy.json').read_text(), 'baseline original')
+
+    def test_interrupcao_entre_renames_nao_para_servico_e_bloqueia_continuacao(self):
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            ops = self.disk_operations(Path(directory))
+            with patch('hml_frontend.clean_sha', return_value='e' * 40), patch('hml_frontend.systemctl'):
+                ops.prepare()
+                ops.install()
+                ops.complete(dict(served_sha='b' * 40))
+                unit_before = ops.unit.read_bytes()
+                journal_before = (ops.directory / 'journal.json').read_bytes()
+                ops.archive = ops.attempt / ('frontend-history-' + 'd' * 32)
+                original = Path.rename
+                def interrupted(path, target):
+                    if path.name.startswith('frontend-preparing-'):
+                        raise OSError('interrupção entre renames')
+                    return original(path, target)
+                with patch.object(Path, 'rename', interrupted), self.assertRaises(OSError):
+                    ops.prepare()
+            self.assertFalse(ops.directory.exists())
+            self.assertEqual(ops.unit.read_bytes(), unit_before)
+            self.assertEqual((ops.archive / 'journal.json').read_bytes(), journal_before)
+            with self.assertRaisesRegex(ValueError, 'reconciliar'):
+                verify_frontend_record(ops.attempt, ops.gate)
+            ops.stop = Mock()
+            with self.assertRaisesRegex(ValueError, 'reconciliar'):
+                replace_frontend(ops)
+            ops.stop.assert_not_called()
+
     def jars(self, directory, changes=None):
         files = {'BOOT-INF/classes/db/migration/public/V1.sql': b'SELECT 1;',
                  'BOOT-INF/classes/exemplo.class': b'class', 'BOOT-INF/lib/sdk.jar': b'sdk',

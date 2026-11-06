@@ -1,6 +1,7 @@
-"""Substituição restrita do frontend de candidato hml ainda não aceito.
+"""Substituição restrita de candidato hml ainda não aceito.
 
-Backend deve ser byte a byte idêntico, exceto static/. Não migra nem restaura
+Por padrão backend é idêntico, exceto static/. Opt-in login-startup admite
+somente o incremento delimitado da consulta de login. Não migra nem restaura
 banco. Falha retorna somente o binário anterior no MESMO clone, nunca o baseline
 pré-identidade. Recuperação explícita conserva o journal e todos os artefatos.
 """
@@ -22,7 +23,9 @@ from hml_maintenance import candidate_service, validate_rehearsal
 from maintenance_database import Admin, DatabaseSwap, durable_journal
 from release_support import (UNIT, artifact_hash, clean_sha, durable_artifact, install_artifact,
                              migration_fingerprint, previous_artifact, private_runtime_path,
-                             systemctl, verify, wait_for_release)
+                             systemctl, verify, wait_for_release, artifact_has_identity)
+
+MODES = ('frontend', 'login-startup')
 
 
 def require(condition, message):
@@ -41,11 +44,46 @@ def require_same_backend(old, new):
     require(migration_fingerprint(old) == migration_fingerprint(new), 'Migrations divergentes.')
 
 
+def require_login_startup_change(old, new):
+    """Exceção delimitada ao incremento revisado; não é deploy genérico Java."""
+    require(artifact_has_identity(old) and artifact_has_identity(new), 'Identidade ausente.')
+    def entries(path):
+        with zipfile.ZipFile(path) as archive:
+            names = archive.namelist()
+            require(len(names) == len(set(names)), 'Entradas ZIP duplicadas.')
+            require(any(n.startswith('BOOT-INF/classes/static/') for n in names), 'Frontend ausente.')
+            return {n: archive.read(n) for n in names}
+    before, after = entries(old), entries(new)
+    require(before.keys() == after.keys(), 'Entradas adicionadas/removidas fora do incremento de login.')
+    config = 'BOOT-INF/classes/application.yml'
+    package = 'BOOT-INF/classes/br/com/restaurantmanager/identidade/'
+    expected = {config, package + 'Usuario.class', package + 'IdentidadeRepository.class'}
+    require({n for n in before if before[n] != after[n]} == expected,
+            'Mudanças fora do incremento delimitado de login.')
+    anchor = b'      hibernate.jdbc.time_zone: UTC\n'
+    addition = ('      # Compila/valida a HQL nomeada no startup, não no primeiro login.\n'
+                '      hibernate.query.startup_check: true\n').encode()
+    require(before[config].count(anchor) == 1
+            and after[config] == before[config].replace(anchor, anchor + addition),
+            'Configuração fora do incremento delimitado de login.')
+    require(migration_fingerprint(old) == migration_fingerprint(new), 'Migrations divergentes.')
+
+
+def record_mode(record):
+    mode = record.get('mode', 'frontend')  # Journals anteriores ao opt-in.
+    require(mode in MODES, 'Modo de substituição desconhecido.')
+    return mode
+
+
 def verify_frontend_record(attempt, gate):
     directory = attempt / 'frontend-replacement'
     if not directory.exists():
+        require(not any(attempt.glob('frontend-history-*'))
+                and not any(attempt.glob('frontend-preparing-*')),
+                'Journal ativo ausente com histórico/preparação: reconciliar antes de continuar.')
         return
     record = json.loads(private_runtime_path(str(directory / 'journal.json')).read_text())
+    record_mode(record)
     require(record.get('state') in ('concluido', 'anterior-restaurado'), 'Troca de frontend ainda pendente.')
     expected = record['gate'] if record['state'] == 'concluido' else record['old_state']
     require(all(expected[k] == gate[k] for k in ('git_sha', 'artifact_sha256')), 'Recibo de frontend diverge do candidato.')
@@ -96,6 +134,7 @@ def recover_frontend(ops):
 
 
 class Replacement:
+    mode = 'frontend'
     job: Path
     rehearsal: Path
     record: dict[str, Any]
@@ -118,12 +157,19 @@ class Replacement:
                     ledger_sha256=artifact_hash(self.attempt / 'database-swap.json'))
 
     def preflight(self):
+        requested_mode = record_mode({'mode': self.mode})
         self.archive = None
         if self.directory.exists():
             self.load(allow_returned=True)
-            require(self.record['state'] == 'anterior-restaurado', 'Troca já registrada; recuperar antes de novo candidato.')
+            require(self.record['state'] == 'anterior-restaurado'
+                    or (requested_mode == 'login-startup' and self.record['state'] == 'concluido'),
+                    'Troca já registrada; recuperar antes de novo candidato.')
+            current = json.loads(private_runtime_path(str(self.attempt / 'state.json')).read_text())
+            verify_frontend_record(self.attempt, current)
             self.archive = self.attempt / ('frontend-history-' + uuid.uuid4().hex)
+        self.mode = requested_mode
         self.old_state = json.loads(private_runtime_path(str(self.attempt / 'state.json')).read_text())
+        verify_frontend_record(self.attempt, self.old_state)
         require(self.old_state.get('stage') == 'hml' and self.old_state.get('attempt') == str(self.attempt)
                 and self.old_state.get('state') == 'health-aprovado-e2e-pendente'
                 and not (self.attempt / 'acceptance-intent.json').exists(), 'Manutenção não elegível.')
@@ -138,7 +184,8 @@ class Replacement:
         require(self.old_service == (self.attempt / 'candidate.service').read_text()
                 and previous_artifact(self.root, self.old_service) == self.old_release / 'app.jar',
                 'Unidade não corresponde ao candidato anterior.')
-        require_same_backend(self.old_release / 'app.jar', artifact)
+        guard = require_same_backend if self.mode == 'frontend' else require_login_startup_change
+        guard(self.old_release / 'app.jar', artifact)
         environ = dict(x.split(b'=', 1) for x in Path('/proc/%s/environ' % self.before['pid']).read_bytes().split(b'\0') if b'=' in x)
         validate_runtime(self.before, self.old_state, environ)
         runtime = private_runtime_path(str(self.old_release / 'runtime.env'))
@@ -168,7 +215,8 @@ class Replacement:
         staging.mkdir(mode=0o700)
         durable_text(staging / 'previous.service', self.old_service)
         durable_text(staging / 'next.service', self.new_service)
-        self.record = dict(state='preparado', stage='hml', attempt=str(self.attempt), runner_sha=clean_sha(self.repo),
+        self.record = dict(state='preparado', stage='hml', mode=self.mode,
+                           attempt=str(self.attempt), runner_sha=clean_sha(self.repo),
                            old_state=self.old_state, old_candidate=self.old_candidate, gate=self.gate, database=self.db,
                            runtime_sha256=artifact_hash(runtime_path), old_service_sha256=artifact_hash(staging / 'previous.service'),
                            new_service_sha256=artifact_hash(staging / 'next.service'),
@@ -194,6 +242,7 @@ class Replacement:
 
     def load(self, allow_returned=False):
         self.record = json.loads(private_runtime_path(str(self.directory / 'journal.json')).read_text())
+        self.mode = record_mode(self.record)
         eligible = ('preparado', 'concluido', 'anterior-restaurado') if allow_returned else ('preparado', 'concluido')
         require(self.record.get('attempt') == str(self.attempt) and self.record.get('stage') == 'hml'
                 and self.record.get('state') in eligible, 'Troca não está pendente.')
@@ -291,7 +340,9 @@ def main():
     parser.add_argument('--attempt', type=Path, required=True)
     parser.add_argument('--job', type=Path)
     parser.add_argument('--rehearsal', type=Path)
+    parser.add_argument('--mode', choices=MODES)
     args = parser.parse_args()
+    require(args.action == 'replace' or args.mode is None, 'Recuperação usa somente o modo do journal.')
     root = Path(os.environ.get('RM_HOME', Path.home() / '.local/share/restaurant-manager')).resolve()
     repo = Path(__file__).resolve().parents[1]
     runner_sha = clean_sha(repo)
@@ -306,6 +357,7 @@ def main():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         ops = Replacement(root, repo, attempt, log)
         if args.action == 'replace':
+            ops.mode = args.mode or 'frontend'
             require(args.job is not None and args.rehearsal is not None, 'Job e ensaio obrigatórios.')
             ops.job, ops.rehearsal = cast(Path, args.job), cast(Path, args.rehearsal)
             replace_frontend(ops)
