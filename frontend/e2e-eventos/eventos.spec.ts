@@ -92,14 +92,24 @@ test('S01-UI42: exportação cadastral reconsulta o servidor, baixa JSON mínimo
   expect(download.suggestedFilename()).toBe('unidade-'+id+'.json');
   const file=await download.path();expect(file).not.toBeNull();
   expect(JSON.parse(fs.readFileSync(file!,'utf8'))).toEqual({unidade:{id,nome,fuso:'UTC',versao:'1'}});
+  const estado=page.locator('app-eventos-unidade').getByRole('status');
+  await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
   const downloads:string[]=[];page.on('download',d=>downloads.push(d.suggestedFilename()));
   // Falha de transporte, não substituição da resposta da API por dados prontos.
   await page.route('**/eventos?depois=-1',route=>route.abort('internetdisconnected'));
   await button.click();await expect(page.getByRole('alert')).toContainText('Nenhum arquivo foi gerado com dados antigos');
+  await expect(estado).toHaveText('Exportação não concluída.');
   await expect(page.getByRole('alert')).toBeFocused();expect(downloads).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await page.locator('app-eventos-unidade').screenshot({path:test.info().outputPath('exportacao.png')});
   await page.unroute('**/eventos?depois=-1');
+  const recuperado=page.waitForEvent('download');
+  const reconsulta=page.waitForResponse(r=>r.url().endsWith('/'+id+'/eventos?depois=-1')&&r.request().method()==='GET');
+  await button.click();expect((await reconsulta).status()).toBe(200);
+  const arquivoRecuperado=await (await recuperado).path();expect(arquivoRecuperado).not.toBeNull();
+  expect(JSON.parse(fs.readFileSync(arquivoRecuperado!,'utf8'))).toEqual({unidade:{id,nome,fuso:'UTC',versao:'1'}});
+  await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
+  await expect(page.getByRole('alert')).toHaveCount(0);expect(downloads).toEqual(['unidade-'+id+'.json']);
 });
 
 test('S01-UI43: exportação pendente revalida revogação e não baixa dados de outra filial',async({page,request})=>{

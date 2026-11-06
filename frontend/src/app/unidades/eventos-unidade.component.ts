@@ -76,7 +76,7 @@ export class EventosUnidadeComponent {
   async exportar():Promise<void>{
     const id=this.selecionada();const geracao=this.geracao;
     if(!id||!this.atual()||this.ocupado()||this.exportando()||!this.vigente(geracao))return;
-    clearTimeout(this.timer);this.exportando.set(true);this.erro.set('');
+    clearTimeout(this.timer);this.exportando.set(true);this.erro.set('');this.estado.set('Consultando para exportar…');
     try{
       // Nunca exportar o cache da tela: ação, sessão e vínculo são revalidados.
       const pagina=await this.sessao.api<Pagina>('/api/v1/operacao/unidades/'+encodeURIComponent(id)+'/eventos?depois=-1');
@@ -86,7 +86,7 @@ export class EventosUnidadeComponent {
     }catch(error){
       if(!this.vigente(geracao))return;
       if(error instanceof ApiFailure&&[401,403,404].includes(error.status))this.encerrarAcompanhamento();
-      else{this.erro.set('Não foi possível exportar o cadastro. Nenhum arquivo foi gerado com dados antigos. Tente novamente com conexão.');this.foco();}
+      else{this.estado.set('Exportação não concluída.');this.erro.set('Não foi possível exportar o cadastro. Nenhum arquivo foi gerado com dados antigos. Tente novamente com conexão.');this.foco();}
     }finally{
       if(this.vigente(geracao)){this.exportando.set(false);this.timer=setTimeout(()=>void this.consultar(geracao,id),5000);}
     }

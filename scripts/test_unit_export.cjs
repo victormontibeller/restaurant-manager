@@ -34,6 +34,17 @@ async function falhaOuRevogacaoNaoExportaCache(){
     if(status){assert.equal(c.atual(),null);assert.equal(c.selecionada(),'');}
   }
 }
+async function novaTentativaNaoMantemSucessoAnterior(){
+  const {c,files,setResponder}=await component();
+  await c.exportar();assert.equal(c.estado(),'Arquivo cadastral solicitado ao navegador.');
+  let reject;setResponder(()=>new Promise((_,r)=>reject=r));
+  const pending=c.exportar();assert.equal(c.estado(),'Consultando para exportar…');
+  reject(new Failure(0));await pending;
+  assert.equal(c.estado(),'Exportação não concluída.');assert.ok(c.erro());assert.equal(files.length,1);
+  setResponder(async()=>({unidade:{id:'A',nome:'Recuperada',fuso:'UTC',versao:'4'}}));
+  await c.exportar();assert.equal(c.estado(),'Arquivo cadastral solicitado ao navegador.');
+  assert.equal(c.erro(),'');assert.equal(files.length,2);assert.equal(files[1].unidade.versao,'4');
+}
 async function respostaAntigaNaoBaixaOutroContexto(){
   for(const change of ['troca','destruir','logout']){
     const {c,service,files,callbacks,setResponder}=await component();let finish;
@@ -56,6 +67,6 @@ async function arquivoMinimoLiberaUrlTemporaria(){
   assert.equal(links[0].download,'unidade-A.json');assert.equal(links[0].clicked,true);assert.equal(links[0].removed,true);
   callbacksTimer.forEach(fn=>fn());assert.deepEqual(revoked,['blob:fixture']);
 }
-(async()=>{let failed=0;for(const fn of [exportaSomenteLeituraAtualAutorizada,falhaOuRevogacaoNaoExportaCache,respostaAntigaNaoBaixaOutroContexto,duploCliqueNaoDuplicaDownload,arquivoMinimoLiberaUrlTemporaria]){
+(async()=>{let failed=0;for(const fn of [exportaSomenteLeituraAtualAutorizada,falhaOuRevogacaoNaoExportaCache,novaTentativaNaoMantemSucessoAnterior,respostaAntigaNaoBaixaOutroContexto,duploCliqueNaoDuplicaDownload,arquivoMinimoLiberaUrlTemporaria]){
  try{await fn();console.log(fn.name+': aprovado');}catch(error){failed++;console.error(fn.name+': '+error.message);}
 }process.exitCode=failed?1:0;})();

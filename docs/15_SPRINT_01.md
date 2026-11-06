@@ -12,8 +12,11 @@ serve o candidato3cd4eeb, sem promoção do baseline449ce3c. A matriz96769ac pas
 215combinações, mas não aprova as correções posteriores de formulários. O build
 intermediário36e49e7 falhou em teste com massa compartilhada; o ajuste isolado
 6cd8a86 passou em teste focado, CI e build nativo com174backend sem falhas.
-Vinte combinações de formulários passaram no novo JAR; a matriz restante segue
-em execução. Essas parcelas não aprovam a regressão inteira.
+Vinte combinações de formulários e45de identidade passaram no novo JAR; a matriz
+restante segue em execução. A revisão visual do ciclo25 reprovou sucesso antigo
+após falha de uma nova exportação. A correção dos estados passou em teste de
+lógica; novo build/E2E ainda pendentes. Não promover6cd8a86 nem transferir suas
+parcelas para o Angular corrigido. [Evidência](evidencias/sprint-01-retomada-ciclo-25.md).
 Manutenção, troca do frontend, jornada assistida hml, smokes, revisão visual e
 aceitação do candidato final permanecem pendentes. Estado atual, resultados e
 limites no [checkpoint](25_EXECUTION_STATUS.md).

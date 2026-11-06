@@ -1,5 +1,49 @@
 # Checkpoint de execução
 
+## Incremento — ciclo25, 2026-11-05 local
+
+Retomada conferiu Git/PR3 draft/CI5d9dbf8, hml3cd4eeb UP e bancos exclusivos.
+Worker24 preservado, sem reconstrução/interrupção:65pares únicos aprovados
+(20focos+45identidade), resultados/hashes/cobertura reabertos. Eventos e demais
+famílias ainda em execução; não inferir resultado global. Origem das14entradas
+visuais herdadas conferida. Baseline449ce3c e OIDs hml preservados.
+
+Revisão visual encontrou sucesso antigo após segunda exportação falha; capturas
+UI42 mobile/desktop REPROVADAS. Vermelho de lógica reproduzido; correção mínima
+dos estados pendente/falha, seis testes de exportação e quatro eventos verdes,
+typecheck passou. Revisão independente sem bloqueador. UI42 ampliado com
+recuperação real do download; execução nova ainda pendente. UI35 registra vínculo/
+ajuda e cartão recolhido em vez de screenshot32050px, mantendo assertivas.
+
+Correção Angular exige novo artefato; não promover6cd8a86 nem transferir sua matriz.
+Recolher worker24 e terminar inspeções antes do build consolidado. Manutenção/
+troca/assistido/smokes/aceitação continuam pendentes. Sem merge/deploy; Sprint01
+aberta,02–05 não iniciadas. AGENTS bloqueado pelo executor, sem contorno.
+[Evidências e limites](evidencias/sprint-01-retomada-ciclo-25.md).
+
+## Encerramento — ciclo24, 2026-11-05 local
+
+Aviso efetivo de orçamento quase esgotado após gravar revisões visuais; depois
+somente handoff obrigatório. Missão NÃO concluída. Head documental5d9dbf8
+publicado/relido no PR3 OPEN draft; ambos checksCI aprovados na consulta00:26Z.
+Sem merge, deploy, promoção ou CONCLUSAO.json. Sprint01 aberta;02–05 não iniciadas.
+
+Build único6cd8a86 aprovado:23XML/174backend sem falha/erro/skip, gate/hash
+conferidos. Fonte de aplicação do head documental compatível, NÃO reconstruir.
+Worker24/MainPID678986 mantém candidato683930 e continua identidade na última
+consulta. Vinte pares focados consolidados aprovados, sem skip/flaky/retry;
+console posterior tinha progresso em identidade, NÃO resultado global.
+Não interromper/duplicar suíte ou lançar manutenção enquanto estiver ativo.
+
+Registro visual privado contém14entradas inspecionadas: seis de formulários
+têm origem/hash/cobertura já conferidos; oito de login/acessos/equipe/unidades
+aguardam vínculo ao relatório final de identidade. Alguns alvos são componentes,
+não páginas inteiras; notas explicitam limites e recortes adicionais vistos.
+Restante visual/manutenção/troca/assistido/smokes/aceitação permanece pendente.
+Hml3cd4eeb UP/PID399982 na última verificação; baseline449ce3c preservado.
+STATUS/checkpoint privados identificam fontes, processos, logs e próximos comandos.
+Este handoff fica local posterior ao push; preservar sem atribuir teste futuro.
+
 ## Retomada — ciclo24, 2026-11-05
 
 Build36e49e7 e worker23 encerrados com falha, sem candidato novo. Git/PR3 draft,

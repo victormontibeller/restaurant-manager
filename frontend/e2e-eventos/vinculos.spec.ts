@@ -40,6 +40,10 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   await expect(editarUnidades).toHaveAttribute('aria-expanded','true');
   const link=card.getByLabel('Vínculo em unidade inativa · '+id);
   await expect(link).toBeChecked();await link.focus();await link.uncheck();await expect(link).toBeFocused();await link.check();
+  // A lista acumulada pode ter centenas de unidades. Registrar o vínculo
+  // exercitado, sem gerar uma imagem vertical ilimitada do editor inteiro.
+  await card.locator('label').filter({hasText:'Vínculo em unidade inativa · '+id}).screenshot({path:test.info().outputPath('vinculo-inativo-preservado.png')});
+  await card.getByText('Unidades inativas não concedem acesso.',{exact:false}).screenshot({path:test.info().outputPath('vinculo-inativo-ajuda.png')});
   await editarUnidades.click();await expect(link).toHaveCount(0);
   await editarUnidades.click();await expect(link).toBeChecked();
   await card.getByLabel('Ativo',{exact:true}).uncheck();
@@ -75,5 +79,8 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   saved=save();await card.getByRole('button',{name:'Salvar funcionário'}).click();expect((await saved).status()).toBe(200);
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await editarUnidades.click();await expect(editarUnidades).toHaveAttribute('aria-expanded','false');
+  await expect(card.getByRole('group',{name:'Unidades atribuídas'})).toHaveCount(0);
+  await expect(card.getByText('Vínculos nesta edição: 0.',{exact:false})).toBeVisible();
   await card.screenshot({path:test.info().outputPath('vinculo-inativo-revogado.png')});
 });

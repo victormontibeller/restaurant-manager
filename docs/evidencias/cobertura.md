@@ -1,6 +1,18 @@
 # Inventário rastreável de cobertura
 
-## Estado vigente — ciclo24, 2026-11-05
+## Estado vigente — ciclo25, 2026-11-05 local
+
+Worker24 preservado no6cd8a86:65pares únicos aprovados (20focos e45identidade),
+demais famílias ainda em execução neste registro. Origem/hash das14capturas
+herdadas conferidos. Revisão de exportação mobile/desktop reprovou mensagem de
+sucesso antiga após nova tentativa falha. Correção dos estados com vermelho/verde
+de lógica e typecheck; UI42 ampliado, novo E2E/build ainda pendentes. Não aceitar
+o6cd8a86 apesar de resultados automatizados verdes. UI35 terá capturas do vínculo,
+ajuda e cartão recolhido sem reduzir assertivas. [Evidência](sprint-01-retomada-ciclo-25.md).
+Manutenção/troca/assistido/smokes/aceitação permanecem abertos. Sprint01 não
+concluída; cobertura futuraT01–T28/X01–X15 não reduzida.
+
+## Histórico — ciclo24, 2026-11-05
 
 Matriz S01-UI01–43 concluída em23:13:50Z no artefato96769ac/hash50a2a604:
 215pares únicos nos cinco projetos, sem falha/skip/flaky/retry. Recibos,
