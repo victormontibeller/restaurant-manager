@@ -3,17 +3,29 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import br.com.restaurantmanager.identidade.EmailIdentidadeService;
-import br.com.restaurantmanager.identidade.CapturaEmail;
-import br.com.restaurantmanager.tenancy.TenantScope;
+
+import br.com.restaurantmanager.identidade.dtos.EntregaEmail;
+import br.com.restaurantmanager.identidade.infrastructure.CapturaEmail;
+import br.com.restaurantmanager.identidade.services.EmailIdentidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +36,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -35,18 +48,18 @@ class CadastroClienteTest {
     @Autowired CapturaEmail captura;
     private static final Path CAPTURA=criarDiretorio();
     @DynamicPropertySource static void propriedades(DynamicPropertyRegistry registry) {
-        byte[] key=new byte[32]; new java.security.SecureRandom().nextBytes(key);
+        byte[] key=new byte[32]; new SecureRandom().nextBytes(key);
         String encoded=Base64.getEncoder().encodeToString(key);
         registry.add("rm.email.secret",()->encoded);
         registry.add("rm.email.capture-directory",()->CAPTURA.toString());
     }
     private static Path criarDiretorio() {
         try { return Files.createTempDirectory(Path.of(System.getenv().getOrDefault("TMPDIR",System.getProperty("java.io.tmpdir"))),"rm-cadastro-"); }
-        catch(java.io.IOException error) { throw new IllegalStateException("Não foi possível preparar captura privada."); }
+        catch(IOException error) { throw new IllegalStateException("Não foi possível preparar captura privada."); }
     }
     @BeforeAll static void preparar() throws Exception { TestDatabase.prepare(); }
     private String email() { return UUID.randomUUID()+"@example.invalid"; }
-    private org.springframework.test.web.servlet.request.RequestPostProcessor csrf() throws Exception {
+    private RequestPostProcessor csrf() throws Exception {
         var response=mvc.perform(get("/api/v1/auth/csrf").header("Host","a.localhost")).andReturn().getResponse();
         var body=mapper.readTree(response.getContentAsString());
         return r->{r.setCookies(response.getCookie("__Host-RM_CSRF"));r.addHeader(body.get("headerName").asText(),body.get("token").asText());return r;};
@@ -63,8 +76,8 @@ class CadastroClienteTest {
     private int confirmar(String codigo,String senha,String host) throws Exception {
         return postJson("cadastro/confirmar",host,Map.of("codigo",codigo,"senha",senha)).getResponse().getStatus();
     }
-    private List<EmailIdentidadeService.Entrega> drenar() throws java.io.IOException {
-        var entregas=new ArrayList<EmailIdentidadeService.Entrega>();
+    private List<EntregaEmail> drenar() throws IOException {
+        var entregas=new ArrayList<EntregaEmail>();
         try(var scope=TenantScope.open(FundacaoTest.A)) {
             for(int i=0;i<100;i++) {
                 var entrega=emails.preparar(); if(entrega==null)return entregas;
@@ -75,7 +88,7 @@ class CadastroClienteTest {
     }
     private String codigo(String email) throws Exception {
         assertThat(solicitar(email).getResponse().getStatus()).isEqualTo(202);
-        for(var entrega:drenar()) if(entrega.conteudo().startsWith("Para: "+email.toLowerCase(java.util.Locale.ROOT)+"\n")) {
+        for(var entrega:drenar()) if(entrega.conteudo().startsWith("Para: "+email.toLowerCase(Locale.ROOT)+"\n")) {
             String texto=Files.readString(CAPTURA.resolve(FundacaoTest.A).resolve(entrega.id()+".txt"));
             return texto.lines().filter(l->l.startsWith("Código: ")).findFirst().orElseThrow().substring(8);
         }
@@ -83,7 +96,7 @@ class CadastroClienteTest {
     }
     private void sql(String template,Object...args) throws Exception {
         try(var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
             try(var s=c.prepareStatement(template.formatted(FundacaoTest.A))) {
                 for(int i=0;i<args.length;i++)s.setObject(i+1,args[i]); s.executeUpdate();
             }
@@ -103,7 +116,7 @@ class CadastroClienteTest {
         drenar();assertThat(contar("usuario","email=?",email)).isZero();
     }
     @Test void confirmaEmailECriaSomenteClienteSemSessaoOuUnidades() throws Exception {
-        String email=email(),senha=UUID.randomUUID().toString(),codigo=codigo(email.toUpperCase(java.util.Locale.ROOT));
+        String email=email(),senha=UUID.randomUUID().toString(),codigo=codigo(email.toUpperCase(Locale.ROOT));
         assertThat(confirmar(codigo,senha,"b.localhost")).isEqualTo(422);
         assertThat(confirmar(codigo,senha,"a.localhost")).isEqualTo(204);
         assertThat(contar("usuario","email=? and ativo and email_verificado and perfil='CLIENTE'",email)).isEqualTo(1);
@@ -144,11 +157,11 @@ class CadastroClienteTest {
         assertThat(contar("usuario","email=? and perfil='ADMINISTRADOR' and not ativo and not email_verificado and senha_hash='!'",email)).isEqualTo(1);
     }
     @Test void codigosDistintosConcorrentesCriamUmaContaEUmaAuditoria() throws Exception {
-        String email=email(),a=codigo(email),b=codigo(email);var barreira=new java.util.concurrent.CyclicBarrier(2);
-        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
-            var f1=executor.submit(()->{barreira.await(10,java.util.concurrent.TimeUnit.SECONDS);return confirmar(a,UUID.randomUUID().toString(),"a.localhost");});
-            var f2=executor.submit(()->{barreira.await(10,java.util.concurrent.TimeUnit.SECONDS);return confirmar(b,UUID.randomUUID().toString(),"a.localhost");});
-            assertThat(List.of(f1.get(30,java.util.concurrent.TimeUnit.SECONDS),f2.get(30,java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
+        String email=email(),a=codigo(email),b=codigo(email);var barreira=new CyclicBarrier(2);
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            var f1=executor.submit(()->{barreira.await(10,TimeUnit.SECONDS);return confirmar(a,UUID.randomUUID().toString(),"a.localhost");});
+            var f2=executor.submit(()->{barreira.await(10,TimeUnit.SECONDS);return confirmar(b,UUID.randomUUID().toString(),"a.localhost");});
+            assertThat(List.of(f1.get(30,TimeUnit.SECONDS),f2.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
         }
         assertThat(contar("usuario","email=?",email)).isEqualTo(1);
         assertThat(contar("cadastro_cliente","email=? and consumido_em is null",email)).isZero();
@@ -181,11 +194,11 @@ class CadastroClienteTest {
     }
     @Test void expiracaoEhRevalidadaAposEsperaPelaPolitica() throws Exception {
         String email=email(),code=codigo(email);
-        try(var executor=java.util.concurrent.Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
+        try(var executor=Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
             try(var s=c.createStatement()){s.execute("select id from "+FundacaoTest.A+".politica_acesso where id=1 for update");}
             var future=executor.submit(()->confirmar(code,UUID.randomUUID().toString(),"a.localhost"));
-            long limite=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);boolean esperando=false;
+            long limite=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);boolean esperando=false;
             while(System.nanoTime()<limite) {
                 try(var s=c.createStatement();var r=s.executeQuery("select exists(select 1 from pg_locks where not granted and transactionid in (select transactionid from pg_locks where pid=pg_backend_pid() and locktype='transactionid' and granted))")) {
                     r.next();if(r.getBoolean(1)){esperando=true;break;}
@@ -194,7 +207,7 @@ class CadastroClienteTest {
             }
             if(!esperando){c.rollback();throw new AssertionError("A confirmação não aguardou o lock observado.");}
             try(var s=c.prepareStatement("update "+FundacaoTest.A+".cadastro_cliente set expira_em=clock_timestamp() where email=?")){s.setString(1,email);s.executeUpdate();}
-            c.commit();assertThat(future.get(30,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(422);
+            c.commit();assertThat(future.get(30,TimeUnit.SECONDS)).isEqualTo(422);
         }
         assertThat(contar("usuario","email=?",email)).isZero();
     }
@@ -203,19 +216,19 @@ class CadastroClienteTest {
     }
     private void origemBloqueada(String rota) throws Exception {
         String origem="2001:db8:"+UUID.randomUUID().toString().substring(0,4)+"::2";
-        String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest((rota+"-confirmar:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest((rota+"-confirmar:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into %s.limite_login(chave,tentativas,inicio_em) values (?,30,now())",hash);
-        try(var executor=java.util.concurrent.Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
+        try(var executor=Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
             try(var s=c.createStatement()){s.execute("select id from "+FundacaoTest.A+".politica_acesso where id=1 for update");}
             var future=executor.submit(()->postJsonOrigem(rota+"/confirmar","a.localhost",Map.of("codigo","A".repeat(43),"senha",UUID.randomUUID().toString()),origem).getResponse().getStatus());
-            assertThat(future.get(3,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(429);
+            assertThat(future.get(3,TimeUnit.SECONDS)).isEqualTo(429);
             c.rollback();
         }
     }
     @Test void confirmacoesInvalidasConsomemQuotaAteOBloqueio() throws Exception {
         String origem="2001:db8:"+UUID.randomUUID().toString().substring(0,4)+"::4";
-        String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("cadastro-confirmar:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("cadastro-confirmar:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into %s.limite_login(chave,tentativas,inicio_em) values (?,29,now())",hash);
         var body=Map.<String,Object>of("codigo","A".repeat(43),"senha",UUID.randomUUID().toString());
         assertThat(postJsonOrigem("cadastro/confirmar","a.localhost",body,origem).getResponse().getStatus()).isEqualTo(422);
@@ -223,7 +236,7 @@ class CadastroClienteTest {
     }
     @Test void limitePorOrigemNaoConsomeQuotaDeOutroEndereco() throws Exception {
         String origem="2001:db8:"+UUID.randomUUID().toString().substring(0,4)+"::3",email=email();
-        String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("cadastro-origem:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("cadastro-origem:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into %s.limite_login(chave,tentativas,inicio_em) values (?,29,now())",hash);
         assertThat(postJsonOrigem("cadastro","a.localhost",Map.of("email",email()),origem).getResponse().getStatus()).isEqualTo(202);
         assertThat(postJsonOrigem("cadastro","a.localhost",Map.of("email",email),origem).getResponse().getStatus()).isEqualTo(429);

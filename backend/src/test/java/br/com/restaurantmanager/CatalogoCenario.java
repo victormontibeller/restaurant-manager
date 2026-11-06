@@ -5,12 +5,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Adicional;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Categoria;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Grupo;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Produto;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.TipoProduto;
-import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.catalogo.dtos.Adicional;
+import br.com.restaurantmanager.catalogo.dtos.Categoria;
+import br.com.restaurantmanager.catalogo.dtos.Grupo;
+import br.com.restaurantmanager.catalogo.dtos.Produto;
+import br.com.restaurantmanager.catalogo.models.TipoProduto;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.List;

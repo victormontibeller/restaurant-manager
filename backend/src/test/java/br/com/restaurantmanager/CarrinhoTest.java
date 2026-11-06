@@ -1,18 +1,18 @@
 package br.com.restaurantmanager;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static br.com.restaurantmanager.CatalogoCenario.OUTRA_UNIDADE;
 import static br.com.restaurantmanager.CatalogoCenario.UNIDADE;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import br.com.restaurantmanager.carrinho.ContratoCarrinho.Calcular;
-import br.com.restaurantmanager.carrinho.ContratoCarrinho.Escolha;
-import br.com.restaurantmanager.carrinho.ContratoCarrinho.Linha;
-import br.com.restaurantmanager.carrinho.ContratoCarrinho.SelecaoAdicional;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Adicional;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Grupo;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Opcao;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Produto;
-import br.com.restaurantmanager.unidades.CanalAtendimento;
+import br.com.restaurantmanager.carrinho.dtos.Calcular;
+import br.com.restaurantmanager.carrinho.dtos.Escolha;
+import br.com.restaurantmanager.carrinho.dtos.Linha;
+import br.com.restaurantmanager.carrinho.dtos.SelecaoAdicional;
+import br.com.restaurantmanager.catalogo.dtos.Adicional;
+import br.com.restaurantmanager.catalogo.dtos.Grupo;
+import br.com.restaurantmanager.catalogo.dtos.Opcao;
+import br.com.restaurantmanager.catalogo.dtos.Produto;
+import br.com.restaurantmanager.unidades.models.CanalAtendimento;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest

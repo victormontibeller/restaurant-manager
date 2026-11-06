@@ -3,7 +3,7 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.restaurantmanager.plataforma.ProvisionamentoCommand;
+import br.com.restaurantmanager.plataforma.commands.ProvisionamentoCommand;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;

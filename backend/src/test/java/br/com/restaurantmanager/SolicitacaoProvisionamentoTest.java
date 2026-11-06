@@ -6,12 +6,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.restaurantmanager.tenancy.Migrations;
-import br.com.restaurantmanager.plataforma.ProvisionamentoService;
+import br.com.restaurantmanager.plataforma.dtos.PedidoProvisionamento;
+import br.com.restaurantmanager.plataforma.services.ProvisionamentoService;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,20 +125,20 @@ class SolicitacaoProvisionamentoTest {
     }
     @Test void rejeitaPayloadDominioOuAutorDivergente() throws Exception {
         UUID id=UUID.randomUUID();var original=pedido(id);assertThat(criar(original).getResponse().getStatus()).isEqualTo(202);
-        for(String campo:java.util.List.of("nome","senha","email","unidade")) {
-            var outro=new java.util.HashMap<>(original);outro.put(campo,campo.equals("email")?"outro@example.invalid":"Outro valor válido");
+        for(String campo:List.of("nome","senha","email","unidade")) {
+            var outro=new HashMap<>(original);outro.put(campo,campo.equals("email")?"outro@example.invalid":"Outro valor válido");
             assertThat(criar(outro).getResponse().getStatus()).isEqualTo(409);
         }
-        var outro=new java.util.HashMap<>(original);outro.put("id",UUID.randomUUID());assertThat(criar(outro).getResponse().getStatus()).isEqualTo(409);
+        var outro=new HashMap<>(original);outro.put("id",UUID.randomUUID());assertThat(criar(outro).getResponse().getStatus()).isEqualTo(409);
         autenticar();assertThat(criar(original).getResponse().getStatus()).isEqualTo(409);
         assertThat(contar("select count(*) from public.auditoria_solicitacao_provisionamento where solicitacao_id=?",id)).isEqualTo(1);
     }
     @Test void entradasInvalidasEOrigemOuSessaoInvalidaNaoCriamSolicitacao() throws Exception {
-        for(String dominio:java.util.List.of("plataforma.localhost","a.localhost","novo.localhost:8089","novo.example.com")) {
-            var p=new java.util.HashMap<>(pedido(UUID.randomUUID()));p.put("host",dominio);
+        for(String dominio:List.of("plataforma.localhost","a.localhost","novo.localhost:8089","novo.example.com")) {
+            var p=new HashMap<>(pedido(UUID.randomUUID()));p.put("host",dominio);
             assertThat(criar(p).getResponse().getStatus()).isIn(400,409);
         }
-        var p=new java.util.HashMap<>(pedido(UUID.randomUUID()));p.put("schema","public");assertThat(criar(p).getResponse().getStatus()).isEqualTo(400);
+        var p=new HashMap<>(pedido(UUID.randomUUID()));p.put("schema","public");assertThat(criar(p).getResponse().getStatus()).isEqualTo(400);
         p.remove("schema");p.put("senha","curta");assertThat(criar(p).getResponse().getStatus()).isEqualTo(400);
         assertThat(consultar(UUID.randomUUID()).getResponse().getStatus()).isEqualTo(404);
         mvc.perform(get(BASE).header("Host",HOST)).andExpect(status().isUnauthorized());
@@ -143,20 +149,20 @@ class SolicitacaoProvisionamentoTest {
         assertThat(criar(pedido(UUID.randomUUID())).getResponse().getStatus()).isEqualTo(401);
     }
     @Test void criacoesSimultaneasMesmoIdTemUmaIntencao() throws Exception {
-        UUID id=UUID.randomUUID();var p=pedido(id);var barreira=new java.util.concurrent.CyclicBarrier(2);
+        UUID id=UUID.randomUUID();var p=pedido(id);var barreira=new CyclicBarrier(2);
         String primeiro=token;novaSessao();String segundo=token;
-        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
+        try(var executor=Executors.newFixedThreadPool(2)) {
             var a=executor.submit(()->{barreira.await();return criar(p,primeiro).getResponse().getStatus();});
             var b=executor.submit(()->{barreira.await();return criar(p,segundo).getResponse().getStatus();});
-            assertThat(java.util.List.of(a.get(30,java.util.concurrent.TimeUnit.SECONDS),b.get(30,java.util.concurrent.TimeUnit.SECONDS))).containsExactly(202,202);
+            assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactly(202,202);
         }
         assertThat(contar("select count(*) from public.solicitacao_provisionamento where id=?",id)).isEqualTo(1);
         assertThat(contar("select count(*) from public.auditoria_solicitacao_provisionamento where solicitacao_id=?",id)).isEqualTo(1);
     }
     @Test void senhaBrancaNaoCriaSolicitacaoNemReservaAdministradorInutilizavel() throws Exception {
-        for (String senhaInicial : java.util.List.of(" ".repeat(12), "\u2003".repeat(12))) {
+        for (String senhaInicial : List.of(" ".repeat(12), "\u2003".repeat(12))) {
             UUID id=UUID.randomUUID();
-            var p=new java.util.HashMap<>(pedido(id));p.put("senha",senhaInicial);
+            var p=new HashMap<>(pedido(id));p.put("senha",senhaInicial);
             var resposta=criar(p).getResponse();
             assertThat(resposta.getStatus()).isEqualTo(400);
             assertThat(mapper.readTree(resposta.getContentAsString()).get("codigo").asText()).isEqualTo("ENTRADA_INVALIDA");
@@ -173,7 +179,7 @@ class SolicitacaoProvisionamentoTest {
     }
     @Test void trabalhadorRecusaSolicitacaoQuePassouAUsarOrigemSaas() throws Exception {
         UUID id=UUID.randomUUID();var p=pedido(id);assertThat(criar(p).getResponse().getStatus()).isEqualTo(202);
-        var ambiente=new java.util.HashMap<>(System.getenv());ambiente.put("RM_PLATFORM_HOST",(String)p.get("host"));
+        var ambiente=new HashMap<>(System.getenv());ambiente.put("RM_PLATFORM_HOST",(String)p.get("host"));
         assertThatThrownBy(()->new ProvisionamentoService(ambiente).processarSolicitacao(id))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("Domínio indisponível para empresa.");
         assertThat(contar("select count(*) from public.empresa where id=?",id)).isZero();
@@ -186,8 +192,8 @@ class SolicitacaoProvisionamentoTest {
     @Test void cliLegadoNaoTomaReservaDaApiNemCriaHashDivergente() throws Exception {
         UUID id=UUID.randomUUID();var p=pedido(id);assertThat(criar(p).getResponse().getStatus()).isEqualTo(202);
         var service=new ProvisionamentoService(System.getenv());
-        for(UUID tentativa:java.util.List.of(id,UUID.randomUUID())) {
-            var cli=new ProvisionamentoService.Pedido(tentativa,(String)p.get("nome"),(String)p.get("host"),(String)p.get("unidade"),(String)p.get("email"),(String)p.get("senha"));
+        for(UUID tentativa:List.of(id,UUID.randomUUID())) {
+            var cli=new PedidoProvisionamento(tentativa,(String)p.get("nome"),(String)p.get("host"),(String)p.get("unidade"),(String)p.get("email"),(String)p.get("senha"));
             assertThatThrownBy(()->service.reservar(cli)).isInstanceOf(IllegalStateException.class).hasMessage("Reserva pertence à fila SaaS; processe a solicitação original.");
         }
         assertThat(service.processarSolicitacao(id).estado()).isEqualTo("ATIVO");

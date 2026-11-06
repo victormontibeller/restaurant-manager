@@ -1,5 +1,44 @@
 # Checkpoint de execução
 
+## Refatoração de camadas Java — em andamento, 2026-11-06
+
+Proprietário solicitou padronizar todo o backend com imports explícitos,
+nomes simples e camadas dentro de cada domínio; entrega no próprio PR #5.
+Checkout inicialmente limpo em `b8deed087671123316ad86fcb92d056cf97b24b3`,
+branch `codex/sprint-02-catalogo-pwa`. A CI desse head foi aprovada em
+[push](https://github.com/victormontibeller/restaurant-manager/actions/runs/42298639403) e
+[PR](https://github.com/victormontibeller/restaurant-manager/actions/runs/42298647461);
+essa evidência não aprova a refatoração em curso.
+
+Trabalho dividido por domínio, com integração, contratos, migrations e
+checkpoint sob coordenação única. DTOs compartilhados são extraídos e acessos
+entre pacotes ajustados preservando encapsulamento e comportamento. Migrations
+e contratos HTTP permanecem iguais. Guardas de release reconhecem os caminhos
+antigo e novo da configuração JWT, mantendo a exigência de HTTPS e a exceção
+histórica de login restrita.
+
+Cinco testes direcionados dos guardas aprovados localmente. A primeira rodada
+de 25 testes usou temporário com ancestral não confiável e encontrou quatro
+erros de caminho e uma restrição de socket do sandbox; não é resultado aprovado.
+Reexecução direcionada no temporário privado correto passou. Compilação
+integrada de aplicação/testes aprovada; build Angular/PWA, formatação, tipos,
+13 probes e nove combinações de templates aprovados novamente. Recursos,
+migrations e frontend permanecem iguais ao head anterior. Backend/PostgreSQL:
+**262 testes/35 XML aprovados**, sem falha, erro ou skip. Suíte Python local:
+163 testes executados, zero falhas e 15 erros pela ausência de `/proc` no macOS;
+esses erros não são aprovados e a suíte completa será conferida no Ubuntu da CI.
+
+Novo candidato SHA-256
+`f4c942c7e79b01537d068acb0ec195e4d4b70e7f8cdbce5253fe8ce5b770fecb`;
+253 fontes da aplicação conferidos sem alteração após o build. Runtime HTTPS
+local iniciado com esse JAR, PID/hash/TLS e captura por tenant conferidos.
+Dez contas fictícias novas preparadas para verificação de e-mail consumível,
+sem alterar contas existentes ou quotas. Matriz de 295 pares em execução;
+CI do novo head ainda pendente. Nenhum novo commit/push desta refatoração até
+este ponto.
+Linux/Hermes, homologação, dispositivos físicos e piloto continuam pendentes;
+sem merge ou deploy.
+
 ## Sprint 2 — publicada para revisão, 2026-11-06
 
 Commit de implementação `27e36eac447cd163ad50b55c1bc6fa6552e85622`

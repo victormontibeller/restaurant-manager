@@ -6,8 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.restaurantmanager.plataforma.ProvisionamentoService;
-import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.plataforma.dtos.PedidoProvisionamento;
+import br.com.restaurantmanager.plataforma.services.ProvisionamentoService;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import jakarta.servlet.http.Cookie;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -48,7 +49,7 @@ class EstadoEmpresaTest {
         try(var c=conexao();var s=c.prepareStatement("insert into public.usuario_plataforma(id,email,senha_hash) values (?,?,?)")) {
             s.setObject(1,operador);s.setString(2,email);s.setString(3,new BCryptPasswordEncoder(12).encode(senha));s.executeUpdate();
         }
-        new ProvisionamentoService(System.getenv()).provisionar(new ProvisionamentoService.Pedido(empresa,"Empresa de suspensão",host,"Unidade inicial",email,senha));
+        new ProvisionamentoService(System.getenv()).provisionar(new PedidoProvisionamento(empresa,"Empresa de suspensão",host,"Unidade inicial",email,senha));
     }
     private Connection conexao() throws Exception {
         var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"));

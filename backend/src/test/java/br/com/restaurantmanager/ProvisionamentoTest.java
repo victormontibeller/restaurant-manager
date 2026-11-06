@@ -3,16 +3,27 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.restaurantmanager.plataforma.ProvisionamentoService;
-import br.com.restaurantmanager.plataforma.ProvisionamentoService.Pedido;
-import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.plataforma.commands.ProvisionamentoCommand;
+import br.com.restaurantmanager.plataforma.dtos.PedidoProvisionamento;
+import br.com.restaurantmanager.plataforma.services.ProvisionamentoService;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import br.com.restaurantmanager.tenancy.infrastructure.SchemaCompatibility;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,10 +38,10 @@ class ProvisionamentoTest {
         service = new ProvisionamentoService(System.getenv());
     }
 
-    private Pedido pedido(String host) {
+    private PedidoProvisionamento pedido(String host) {
         UUID id = UUID.randomUUID();
         created.add(id);
-        return new Pedido(id, "Empresa fictícia", host, "Unidade inicial", "admin@example.invalid",
+        return new PedidoProvisionamento(id, "Empresa fictícia", host, "Unidade inicial", "admin@example.invalid",
                 UUID.randomUUID() + "-Senha9!");
     }
 
@@ -91,9 +102,9 @@ class ProvisionamentoTest {
     @Test void mesmaChaveComPayloadOuSenhaDiferenteConflita() throws Exception {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         service.reservar(command);
-        assertThatThrownBy(() -> service.reservar(new Pedido(command.id(), "Outro", command.host(), command.unidade(), command.email(), command.senha())))
+        assertThatThrownBy(() -> service.reservar(new PedidoProvisionamento(command.id(), "Outro", command.host(), command.unidade(), command.email(), command.senha())))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> service.reservar(new Pedido(command.id(), command.nome(), command.host(), command.unidade(), command.email(), UUID.randomUUID().toString())))
+        assertThatThrownBy(() -> service.reservar(new PedidoProvisionamento(command.id(), command.nome(), command.host(), command.unidade(), command.email(), UUID.randomUUID().toString())))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -124,7 +135,7 @@ class ProvisionamentoTest {
     @Test void retomadaRecusaDominioQuePassouASerOrigemSaas() throws Exception {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         service.reservar(command);
-        var ambiente = new java.util.HashMap<>(System.getenv());
+        var ambiente = new HashMap<>(System.getenv());
         ambiente.put("RM_PLATFORM_HOST", command.host());
         assertThatThrownBy(() -> new ProvisionamentoService(ambiente).concluir(command.id()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("Domínio indisponível para empresa.");
@@ -142,7 +153,7 @@ class ProvisionamentoTest {
     @Test void entradasMalformadasNaoReservamSchema() {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         for (String host : List.of("A.localhost", "a.localhost:8088", "a.localhost/rota", "a;drop.localhost", "a.example.com")) {
-            assertThatThrownBy(() -> service.reservar(new Pedido(command.id(), command.nome(), host, command.unidade(), command.email(), command.senha())))
+            assertThatThrownBy(() -> service.reservar(new PedidoProvisionamento(command.id(), command.nome(), host, command.unidade(), command.email(), command.senha())))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -150,37 +161,37 @@ class ProvisionamentoTest {
     @Test void processoCliReservaEProcessoNovoRetomaSemSenhaEmSaida() throws Exception {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         service.reservar(command);
-        var output = java.nio.file.Files.createTempFile(java.nio.file.Path.of(System.getenv("TMPDIR")), "rm-cli-", ".log");
+        var output = Files.createTempFile(Path.of(System.getenv("TMPDIR")), "rm-cli-", ".log");
         try {
-            var process = new ProcessBuilder(java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+            var process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                     "-Xmx128m", "-XX:ActiveProcessorCount=2", "-cp", System.getProperty("java.class.path"),
                     "br.com.restaurantmanager.RestaurantManagerApplication", "--retomar-provisionamento", command.id().toString())
                     .redirectErrorStream(true).redirectOutput(output.toFile()).start();
-            if (!process.waitFor(40, java.util.concurrent.TimeUnit.SECONDS)) {
+            if (!process.waitFor(40, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
                 throw new IllegalStateException("CLI não encerrou no prazo.");
             }
             assertThat(process.exitValue()).isZero();
-            String log = java.nio.file.Files.readString(output);
+            String log = Files.readString(output);
             assertThat(log).contains("Provisionamento " + command.id() + ": ATIVO").doesNotContain(command.senha());
             assertThat(service.provisionar(command).estado()).isEqualTo("ATIVO");
-        } finally { java.nio.file.Files.deleteIfExists(output); }
+        } finally { Files.deleteIfExists(output); }
     }
 
     @Test void cliCompletoCriaSomenteEmpresaSolicitada() throws Exception {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
-        var file = java.nio.file.Files.createTempFile(java.nio.file.Path.of(System.getenv("TMPDIR")), "rm-request-", ".properties");
+        var file = Files.createTempFile(Path.of(System.getenv("TMPDIR")), "rm-request-", ".properties");
         try {
-            java.nio.file.Files.writeString(file, "id=" + command.id() + "\nnome=" + command.nome() + "\nhost=" + command.host()
+            Files.writeString(file, "id=" + command.id() + "\nnome=" + command.nome() + "\nhost=" + command.host()
                     + "\nunidade=" + command.unidade() + "\nemail=" + command.email() + "\nsenha=" + command.senha() + "\n");
-            java.nio.file.Files.setPosixFilePermissions(file, java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
-            br.com.restaurantmanager.plataforma.ProvisionamentoCommand.executar(new String[]{"--provisionar", file.toString()}, System.getenv());
+            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+            ProvisionamentoCommand.executar(new String[]{"--provisionar", file.toString()}, System.getenv());
             assertThat(service.provisionar(command).estado()).isEqualTo("ATIVO");
-        } finally { java.nio.file.Files.deleteIfExists(file); }
+        } finally { Files.deleteIfExists(file); }
     }
 
     @Test void homologacaoRecusadaAntesDeConectar() {
-        var env = new java.util.HashMap<>(System.getenv());
+        var env = new HashMap<>(System.getenv());
         env.put("RM_STAGE", "hml");
         env.put("RM_DB_URL", "jdbc:postgresql://127.0.0.1:55432/rm_hml");
         env.put("RM_MIGRATION_USER", "rm_hml_owner");
@@ -192,17 +203,17 @@ class ProvisionamentoTest {
     @Test void pedidoCliInvalidoNaoMigraEmpresasReservadas() throws Exception {
         var pending = pedido("p-" + UUID.randomUUID() + ".localhost");
         service.reservar(pending);
-        var file = java.nio.file.Files.createTempFile(java.nio.file.Path.of(System.getenv("TMPDIR")), "rm-invalid-", ".properties");
+        var file = Files.createTempFile(Path.of(System.getenv("TMPDIR")), "rm-invalid-", ".properties");
         try {
-            java.nio.file.Files.writeString(file, "id=" + UUID.randomUUID() + "\nnome=Fictícia\nhost=INVALIDO\nunidade=Inicial\nemail=admin@example.invalid\nsenha=" + UUID.randomUUID() + "\n");
-            java.nio.file.Files.setPosixFilePermissions(file, java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
-            assertThatThrownBy(() -> br.com.restaurantmanager.plataforma.ProvisionamentoCommand.executar(new String[]{"--provisionar", file.toString()}, System.getenv()))
+            Files.writeString(file, "id=" + UUID.randomUUID() + "\nnome=Fictícia\nhost=INVALIDO\nunidade=Inicial\nemail=admin@example.invalid\nsenha=" + UUID.randomUUID() + "\n");
+            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+            assertThatThrownBy(() -> ProvisionamentoCommand.executar(new String[]{"--provisionar", file.toString()}, System.getenv()))
                     .isInstanceOf(IllegalArgumentException.class);
             try (var c = owner(); var s = c.createStatement()) {
                 var r = s.executeQuery("select count(*) from pg_namespace where nspname='t_" + pending.id().toString().replace("-", "") + "'");
                 r.next(); assertThat(r.getInt(1)).isZero();
             }
-        } finally { java.nio.file.Files.deleteIfExists(file); }
+        } finally { Files.deleteIfExists(file); }
     }
 
     @Test void mesmoEmailEmDuasEmpresasNaoCompartilhaIdentidade() throws Exception {
@@ -229,7 +240,7 @@ class ProvisionamentoTest {
              var s = c.createStatement()) {
             Migrations.verifyIdentity(c, "rm_test", "rm_test_app");
             assertThatThrownBy(() -> s.executeQuery("select * from public.provisionamento"))
-                    .isInstanceOf(java.sql.SQLException.class);
+                    .isInstanceOf(SQLException.class);
         }
     }
 
@@ -256,14 +267,14 @@ class ProvisionamentoTest {
     @Test void empresaReservadaNaoImpedeRuntimeDasAtivas() throws Exception {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         service.reservar(command); // Schema propositalmente ainda ausente.
-        var config = new com.zaxxer.hikari.HikariConfig();
+        var config = new HikariConfig();
         config.setJdbcUrl(System.getenv("RM_DB_URL"));
         config.setUsername(System.getenv("RM_DB_USER"));
         config.setPassword(System.getenv("RM_DB_PASSWORD"));
         config.setMaximumPoolSize(2);
         config.setSchema("pg_catalog");
-        try (var pool = new com.zaxxer.hikari.HikariDataSource(config)) {
-            new br.com.restaurantmanager.tenancy.SchemaCompatibility(pool, "rm_test_app", "test", false).afterPropertiesSet();
+        try (var pool = new HikariDataSource(config)) {
+            new SchemaCompatibility(pool, "rm_test_app", "test", false).afterPropertiesSet();
         }
     }
 
@@ -271,17 +282,17 @@ class ProvisionamentoTest {
         var command = pedido("p-" + UUID.randomUUID() + ".localhost");
         var barrier = new CountDownLatch(2);
         try (var executor = Executors.newFixedThreadPool(2)) {
-            var tasks = new ArrayList<java.util.concurrent.Future<String>>();
+            var tasks = new ArrayList<Future<String>>();
             for (int i = 0; i < 2; i++) tasks.add(executor.submit(() -> {
                 barrier.countDown();
-                if (!barrier.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("Barreira expirada.");
+                if (!barrier.await(5, TimeUnit.SECONDS)) throw new IllegalStateException("Barreira expirada.");
                 try { return service.provisionar(command).estado(); }
                 catch (IllegalStateException conflict) {
                     assertThat(conflict).hasMessage("Outro migrador ou provisionador está ativo.");
                     return "CONFLITO";
                 }
             }));
-            var results = List.of(tasks.get(0).get(30, java.util.concurrent.TimeUnit.SECONDS), tasks.get(1).get(30, java.util.concurrent.TimeUnit.SECONDS));
+            var results = List.of(tasks.get(0).get(30, TimeUnit.SECONDS), tasks.get(1).get(30, TimeUnit.SECONDS));
             assertThat(results).contains("ATIVO");
             assertThat(results).allMatch(state -> state.equals("ATIVO") || state.equals("CONFLITO"));
         }

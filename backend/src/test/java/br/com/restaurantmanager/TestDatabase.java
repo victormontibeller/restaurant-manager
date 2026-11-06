@@ -1,5 +1,6 @@
 package br.com.restaurantmanager;
 
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.sql.DriverManager;
 import java.util.Map;
 import org.flywaydb.core.Flyway;
@@ -54,7 +55,7 @@ final class TestDatabase {
                 if (letter.equals("a")) s.execute("insert into "+schema+".unidade(id,nome) values ('22222222-2222-2222-2222-222222222222','A2') on conflict do nothing");
             }
         }
-        br.com.restaurantmanager.tenancy.Migrations.run(System.getenv());
+        Migrations.run(System.getenv());
     }
     static void migrate(String schema, String location) {
         Flyway.configure().dataSource(System.getenv("RM_DB_URL"), System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"))

@@ -1,9 +1,17 @@
 package br.com.restaurantmanager;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
+import br.com.restaurantmanager.identidade.models.Acao;
+import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
+import br.com.restaurantmanager.identidade.services.AcessosService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import br.com.restaurantmanager.unidades.services.ConfiguracaoUnidadeService;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
@@ -11,9 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +36,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -31,9 +45,9 @@ import tools.jackson.databind.ObjectMapper;
 class AcessosTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
-    @Autowired br.com.restaurantmanager.identidade.AcessosService acessos;
-    @Autowired br.com.restaurantmanager.unidades.ConfiguracaoUnidadeService configuracaoUnidade;
-    @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
+    @Autowired AcessosService acessos;
+    @Autowired ConfiguracaoUnidadeService configuracaoUnidade;
+    @Autowired PlatformTransactionManager transactions;
     private final List<UUID> criados = new ArrayList<>();
     private final String senha = UUID.randomUUID().toString();
     private UUID admin;
@@ -165,11 +179,11 @@ class AcessosTest {
         try(var c=banco();var pool=Executors.newSingleThreadExecutor()) {
             c.setAutoCommit(false);
             try(var s=c.createStatement()){s.execute("select id from "+schema+".politica_acesso where id=1 for update");}
-            var started=new java.util.concurrent.CountDownLatch(1);
+            var started=new CountDownLatch(1);
             var future=pool.submit(()->{started.countDown();return consultar(access,eventos(U1,-1)).getResponse().getStatus();});
             try {
                 assertThat(started.await(5,TimeUnit.SECONDS)).isTrue();
-                org.assertj.core.api.Assertions.assertThatThrownBy(()->future.get(1,TimeUnit.SECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);
+                Assertions.assertThatThrownBy(()->future.get(1,TimeUnit.SECONDS)).isInstanceOf(TimeoutException.class);
                 try(var s=c.createStatement()){s.execute("delete from "+schema+".permissao_perfil where perfil='COZINHA' and acao='unidade.acompanhar'");}
             }finally{c.commit();}
             assertThat(future.get(20,TimeUnit.SECONDS)).isEqualTo(403);
@@ -177,13 +191,13 @@ class AcessosTest {
     }
     @Test void eventosNaoPulamEscritaNaoConfirmadaNemPublicamRollback() throws Exception {
         reautenticar(token);UUID id=UUID.randomUUID();criarUnidade(token,id,"Inicial","UTC",true);
-        var principal=mapper.readValue(consultar(token,"/api/v1/auth/me").getResponse().getContentAsString(),br.com.restaurantmanager.identidade.IdentidadeAtual.class);
+        var principal=mapper.readValue(consultar(token,"/api/v1/auth/me").getResponse().getContentAsString(),IdentidadeAtual.class);
         for(boolean rollback:List.of(true,false)) {
-            var gravou=new java.util.concurrent.CountDownLatch(1);var liberar=new java.util.concurrent.CountDownLatch(1);
+            var gravou=new CountDownLatch(1);var liberar=new CountDownLatch(1);
             try(var pool=Executors.newFixedThreadPool(2)) {
                 var writer=pool.submit(()->{
-                    try(var scope=br.com.restaurantmanager.tenancy.TenantScope.open(schema)) {
-                        new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status->{
+                    try(var scope=TenantScope.open(schema)) {
+                        new TransactionTemplate(transactions).executeWithoutResult(status->{
                             configuracaoUnidade.alterar(principal,id,0,"Confirmada","UTC",true);gravou.countDown();
                             try {if(!liberar.await(10,TimeUnit.SECONDS))throw new IllegalStateException("Leitor não liberou escritor.");}
                             catch(InterruptedException e){Thread.currentThread().interrupt();throw new IllegalStateException(e);}
@@ -193,7 +207,7 @@ class AcessosTest {
                 });
                 assertThat(gravou.await(10,TimeUnit.SECONDS)).isTrue();
                 var reader=pool.submit(()->consultar(token,eventos(id,0)));
-                try{org.assertj.core.api.Assertions.assertThatThrownBy(()->reader.get(1,TimeUnit.SECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);}
+                try{Assertions.assertThatThrownBy(()->reader.get(1,TimeUnit.SECONDS)).isInstanceOf(TimeoutException.class);}
                 finally{liberar.countDown();}
                 writer.get(20,TimeUnit.SECONDS);var response=reader.get(20,TimeUnit.SECONDS).getResponse();assertThat(response.getStatus()).isEqualTo(200);
                 var body=mapper.readTree(response.getContentAsString());assertThat(body.get("eventos").size()).isEqualTo(rollback?0:1);
@@ -316,7 +330,7 @@ class AcessosTest {
     @Test void loginsSimultaneosMantemSessoesIndependentes() throws Exception {
         UUID worker=criar("COZINHA");var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<String> task=()->{start.await(10,TimeUnit.SECONDS);return login(worker);};
+            Callable<String> task=()->{start.await(10,TimeUnit.SECONDS);return login(worker);};
             var a=pool.submit(task);var b=pool.submit(task);
             String primeiro=a.get(30,TimeUnit.SECONDS),segundo=b.get(30,TimeUnit.SECONDS);
             assertThat(primeiro).isNotEqualTo(segundo);
@@ -332,10 +346,10 @@ class AcessosTest {
     @Test void unidadesCriacaoEEdicaoConcorrentesTemResultadoUnico() throws Exception {
         reautenticar(token);UUID id=UUID.randomUUID();var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<Integer> create=()->{start.await(10,TimeUnit.SECONDS);return criarUnidade(token,id,"Concorrente","UTC",true).getResponse().getStatus();};
+            Callable<Integer> create=()->{start.await(10,TimeUnit.SECONDS);return criarUnidade(token,id,"Concorrente","UTC",true).getResponse().getStatus();};
             var a=pool.submit(create);var b=pool.submit(create);
             assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactly(200,200);
-            java.util.concurrent.Callable<Integer> edit=()->{start.await(10,TimeUnit.SECONDS);return alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Alterada","fuso","UTC","ativa",false)).getResponse().getStatus();};
+            Callable<Integer> edit=()->{start.await(10,TimeUnit.SECONDS);return alterar(token,"/api/v1/configuracoes/unidades/"+id,Map.of("versao",0,"nome","Alterada","fuso","UTC","ativa",false)).getResponse().getStatus();};
             var c=pool.submit(edit);var d=pool.submit(edit);
             assertThat(List.of(c.get(30,TimeUnit.SECONDS),d.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,409);
         }
@@ -390,7 +404,7 @@ class AcessosTest {
         Map<String,Object> body=Map.of("versao",version,"perfil","COZINHA","acoes",List.of("cozinha.iniciar"));
         var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<Integer> task=()->{start.await(10,TimeUnit.SECONDS);return alterar(token,"/api/v1/configuracoes/acessos",body).getResponse().getStatus();};
+            Callable<Integer> task=()->{start.await(10,TimeUnit.SECONDS);return alterar(token,"/api/v1/configuracoes/acessos",body).getResponse().getStatus();};
             var a=pool.submit(task);var b=pool.submit(task);
             assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,409);
         }
@@ -404,15 +418,15 @@ class AcessosTest {
     @Test void revogacaoDaMatrizAfetaAutorizacaoCentralComJwtValido() throws Exception {
         UUID id=criar("COZINHA");String access=login(id);reautenticar(token);
         assertThat(alterar(token,"/api/v1/equipe/"+id,vinculo("COZINHA",true,0,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);
-        var principal=mapper.readValue(consultar(access,"/api/v1/auth/me").getResponse().getContentAsString(),br.com.restaurantmanager.identidade.IdentidadeAtual.class);
-        try(var scope=br.com.restaurantmanager.tenancy.TenantScope.open(schema)) {
-            new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,br.com.restaurantmanager.identidade.Acao.COZINHA_INICIAR,U1));
-            org.assertj.core.api.Assertions.assertThatThrownBy(()->new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,br.com.restaurantmanager.identidade.Acao.COZINHA_INICIAR,U2))).isInstanceOf(br.com.restaurantmanager.identidade.AuthFailure.class);
+        var principal=mapper.readValue(consultar(access,"/api/v1/auth/me").getResponse().getContentAsString(),IdentidadeAtual.class);
+        try(var scope=TenantScope.open(schema)) {
+            new TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,Acao.COZINHA_INICIAR,U1));
+            Assertions.assertThatThrownBy(()->new TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,Acao.COZINHA_INICIAR,U2))).isInstanceOf(AuthFailure.class);
         }
         assertThat(alterar(token,"/api/v1/configuracoes/acessos",Map.of("versao",0,"perfil","COZINHA","acoes",List.of())).getResponse().getStatus()).isEqualTo(200);
         assertThat(mapper.readTree(consultar(access,"/api/v1/acessos/efetivos").getResponse().getContentAsString()).get("acoes").size()).isZero();
-        try(var scope=br.com.restaurantmanager.tenancy.TenantScope.open(schema)) {
-            org.assertj.core.api.Assertions.assertThatThrownBy(()->new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,br.com.restaurantmanager.identidade.Acao.COZINHA_INICIAR,U1))).isInstanceOf(br.com.restaurantmanager.identidade.AuthFailure.class);
+        try(var scope=TenantScope.open(schema)) {
+            Assertions.assertThatThrownBy(()->new TransactionTemplate(transactions).executeWithoutResult(s->acessos.autorizar(principal,Acao.COZINHA_INICIAR,U1))).isInstanceOf(AuthFailure.class);
         }
         try(var c=banco();var s=c.createStatement();var r=s.executeQuery("select count(*),bool_and(antes<>depois) from "+schema+".auditoria_acesso")) {r.next();assertThat(r.getInt(1)).isEqualTo(2);assertThat(r.getBoolean(2)).isTrue();}
     }
@@ -430,11 +444,11 @@ class AcessosTest {
         try(var c=banco();var pool=Executors.newSingleThreadExecutor()) {
             c.setAutoCommit(false);
             try(var s=c.createStatement()){s.execute("select id from "+schema+".politica_acesso where id=1 for update");}
-            var start=new java.util.concurrent.CountDownLatch(1);
+            var start=new CountDownLatch(1);
             var future=pool.submit(()->{start.countDown();return login(employee);});
             try {
                 assertThat(start.await(5,TimeUnit.SECONDS)).isTrue();
-                org.assertj.core.api.Assertions.assertThatThrownBy(()->future.get(3,TimeUnit.SECONDS)).isInstanceOf(java.util.concurrent.TimeoutException.class);
+                Assertions.assertThatThrownBy(()->future.get(3,TimeUnit.SECONDS)).isInstanceOf(TimeoutException.class);
             } finally {c.commit();}
             assertThat(future.get(20,TimeUnit.SECONDS)).isNotBlank();
         }

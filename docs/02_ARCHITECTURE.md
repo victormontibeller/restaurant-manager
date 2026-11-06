@@ -48,6 +48,11 @@ restaurant-manager/
       identidade/
       unidades/
       catalogo/
+        controllers/
+        services/
+        models/
+        repositories/
+        dtos/
       carrinho/
       midia/
       shared/
@@ -79,7 +84,16 @@ mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md). Domínios pos
 pagamentos, continuam planejados. Componentes, serviços e tipos Angular ficam
 próximos no domínio correspondente, conforme os [padrões de código](10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
 
-Cada módulo usa controllers, services, repositories, DTOs, entidades e mappers quando necessários. Não criar classes vazias só para preencher camadas. `shared` contém apenas elementos transversais demonstrados, não regras de pedido misturadas a helpers genéricos. Leituras complexas podem ter consultas/projeções específicas, sem impor a nomenclatura ou heranças do Django.
+Cada módulo separa suas camadas em pacotes `controllers`, `services`,
+`models`, `repositories` e `dtos`, como ilustrado em catálogo. Criar somente
+as camadas que possuem implementação: carrinho, por exemplo, ainda não possui
+repositório. Configurações, filtros, jobs, comandos e infraestrutura permanecem
+no módulo responsável, em pacotes próprios. Mappers existem quando necessários;
+não criar classes vazias só para preencher camadas. `shared` contém apenas
+elementos transversais demonstrados, não regras de pedido misturadas a helpers
+genéricos. Leituras complexas podem ter consultas/projeções específicas, sem
+impor a nomenclatura ou heranças do Django. Os detalhes de imports, DTOs e
+encapsulamento ficam nos [padrões Java](10_CODING_STANDARDS.md#legibilidade-e-organização-java).
 
 Controller trata transporte e validação estrutural. Service recebe um contexto autenticado, autoriza a ação sobre o recurso, aplica a regra e delimita a transação. Repository consulta/persiste. Mapper converte dados sem consultas ocultas. Adaptadores encapsulam provedores. Operações entre módulos usam serviços explícitos; não consultar livremente tabelas internas de outro módulo para contornar invariantes.
 

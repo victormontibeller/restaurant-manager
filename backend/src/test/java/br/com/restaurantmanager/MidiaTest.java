@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-import br.com.restaurantmanager.identidade.AuthFailure;
-import br.com.restaurantmanager.identidade.IdentidadeAtual;
-import br.com.restaurantmanager.midia.MidiaService;
-import br.com.restaurantmanager.tenancy.Migrations;
-import br.com.restaurantmanager.tenancy.TenantScope;
+import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
+import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
+import br.com.restaurantmanager.midia.services.MidiaService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -1,16 +1,17 @@
 package br.com.restaurantmanager;
 
-import br.com.restaurantmanager.tenancy.TenantConnections;
-import java.sql.Connection;
-import java.sql.SQLException;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.any;
+
+import br.com.restaurantmanager.tenancy.infrastructure.TenantConnections;
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.Test;
 
 class TenantConnectionFailureTest {
     @Test void abortaConexaoQuandoNaoConsegueNeutralizar() throws Exception {

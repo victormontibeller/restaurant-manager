@@ -1,16 +1,16 @@
 package br.com.restaurantmanager;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static br.com.restaurantmanager.CatalogoCenario.OUTRA_UNIDADE;
 import static br.com.restaurantmanager.CatalogoCenario.UNIDADE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Adicional;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Categoria;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Grupo;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Opcao;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.Produto;
-import br.com.restaurantmanager.catalogo.ContratoCatalogo.TipoProduto;
+import br.com.restaurantmanager.catalogo.dtos.Adicional;
+import br.com.restaurantmanager.catalogo.dtos.Categoria;
+import br.com.restaurantmanager.catalogo.dtos.Grupo;
+import br.com.restaurantmanager.catalogo.dtos.Opcao;
+import br.com.restaurantmanager.catalogo.dtos.Produto;
+import br.com.restaurantmanager.catalogo.models.TipoProduto;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
