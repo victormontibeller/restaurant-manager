@@ -8,15 +8,16 @@
 **Status:** em andamento desde 2026-11-04; não concluída. Há implementação
 empresarial e SaaS, convites/verificação/recuperação, matriz/equipe/unidades,
 eventos cadastrais, exportação mínima e provisionamento assistido. A homologação
-serve o candidato3cd4eeb, sem promoção do baseline449ce3c. A matriz96769ac passou
-215combinações, mas não aprova as correções posteriores de formulários. O build
-intermediário36e49e7 falhou em teste com massa compartilhada; o ajuste isolado
-6cd8a86 passou em teste focado, CI e build nativo com174backend sem falhas.
-Vinte combinações de formulários e45de identidade passaram no novo JAR; a matriz
-restante segue em execução. A revisão visual do ciclo25 reprovou sucesso antigo
-após falha de uma nova exportação. A correção dos estados passou em teste de
-lógica; novo build/E2E ainda pendentes. Não promover6cd8a86 nem transferir suas
-parcelas para o Angular corrigido. [Evidência](evidencias/sprint-01-retomada-ciclo-25.md).
+serve o candidato3cd4eeb, sem promoção do baseline449ce3c. A matriz6cd8a86 passou
+215 combinações, mas sua exportação foi reprovada visualmente por sucesso antigo
+após nova falha. Não promover esse artefato nem transferir suas provas ao Angular
+corrigido. A correção6f623bd foi consolidada no build97d75b0, aprovado com174
+testes backend sem falha/erro/skip. No ciclo26,25 combinações focadas de exportação,
+vínculos, convites, plataforma e estado comercial passaram no novo JAR; a matriz
+restante está em execução. Exportação corrigida foi inspecionada mobile/desktop;
+um complemento desktop de convites não enquadra o perfil inteiro. Ajuste somente
+de captura, sem mudança de produto, aguarda reexecução de UI18 no MESMO JAR.
+Não reconstruir nem repetir os demais cenários por esse ajuste. [Defeito anterior](evidencias/sprint-01-retomada-ciclo-25.md).
 Manutenção, troca do frontend, jornada assistida hml, smokes, revisão visual e
 aceitação do candidato final permanecem pendentes. Estado atual, resultados e
 limites no [checkpoint](25_EXECUTION_STATUS.md).

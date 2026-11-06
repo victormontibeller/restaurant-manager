@@ -106,7 +106,8 @@ test('S01-UI18: criação incerta preserva UUID após logout e reenvia sem dupli
   await page.getByRole('heading',{name:'Convites de funcionários',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:test.info().outputPath('convites-contexto.png'),fullPage:false});
   await convites.locator('form').first().screenshot({path:test.info().outputPath('convites-reautenticacao.png')});
-  await page.getByLabel('E-mail do funcionário convidado').scrollIntoViewIfNeeded();
+  // Mesmo já visível, centralizar o campo inclui perfil/início das unidades no desktop.
+  await page.getByLabel('E-mail do funcionário convidado').evaluate(element=>element.scrollIntoView({block:'center'}));
   await page.screenshot({path:test.info().outputPath('convites-cadastro-viewport.png'),fullPage:false});
   await page.getByRole('button',{name:'Criar convite',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:test.info().outputPath('convites-criar-viewport.png'),fullPage:false});

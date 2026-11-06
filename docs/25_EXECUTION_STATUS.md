@@ -2,6 +2,26 @@
 
 ## Retomada — ciclo26, 2026-11-05 local
 
+Atualização01:59Z:25 pares focados passaram sem falha/skip/flaky/retry; restante
+da matriz em execução no worker26. Exportação corrigida inspecionada mobile/
+desktop, sem sucesso antigo. Revisão dos complementos encontrou perfil cortado
+apenas no enquadramento desktop de convites. Teste passa a centralizar o campo
+antes da captura; typecheck aprovado, reexecuçãoUI18×5 ainda pendente. Não altera
+produto/artefato e NÃO exige rebuild nem repetir outras famílias; preservar worker
+atual e substituir somente a parcelaUI18 na consolidação depois do reteste.
+CI7c8982f: um check passou; outro foi cancelado durante download lento de pacotes
+Ubuntu, antes de backend. Log preservado e UMA reexecução limitada iniciada;
+resultado novo ainda não observado neste registro. Não aumentar timeout nem
+relaxar gates para esconder falha externa.
+
+Atualização01:45Z: build único97d75b0 aprovado,23XML/174backend sem falha/erro/
+skip, gate/hash conferidos e unidade encerrada. Artefato34e207ff6f877d050ef2c9c485c6fb7ff32a2297abb8f2834cf852286ce91f47.
+As378 entradas fora de static são idênticas ao JARhml3cd4eeb. Fonte7c8982f
+compatível sem reconstrução; PR3 OPEN/draft/head/corpo relidos. Worker26 ativo,
+preparando candidato/E2E; ainda sem resultado de foco. Reentrada recusada antes
+de trabalho/progresso preservado; KillMode control-group e limite4h conferidos.
+Hml3cd4eeb UP/PID399982 preservada. Não confundir build aprovado com E2E/visual.
+
 Worker24 terminou em 2026-11-06T01:19:12Z:215 pares únicos aprovados, todos os
 JSON/hashes/contagens reabertos. A reprovação visual da exportação permanece;
 não promover6cd8a86 nem transferir sua matriz. PR3/head97d75b0 OPEN/draft e ambos
