@@ -30,7 +30,7 @@ Um backend atende todas as empresas. Separação de módulos é organização de
 
 ## Organização de código
 
-Estrutura futura proposta; estas pastas ainda não representam código existente:
+Estrutura da implementação local, incluindo os domínios da Sprint 2:
 
 ```text
 restaurant-manager/
@@ -42,19 +42,19 @@ restaurant-manager/
     REFERENCES.md
     adr/
   backend/
-    src/main/java/<pacote-base>/
+    src/main/java/br/com/restaurantmanager/
       plataforma/
       tenancy/
       identidade/
-      acessos/
+      unidades/
       catalogo/
-      mesas/
-      pedidos/
-      cozinha/
-      entrega/
-      pagamentos/
-      notificacoes/
-      auditoria/
+        controllers/
+        services/
+        models/
+        repositories/
+        dtos/
+      carrinho/
+      midia/
       shared/
     src/main/resources/db/migration/
       public/
@@ -62,13 +62,38 @@ restaurant-manager/
     src/test/
   frontend/
     src/app/
-      core/
-      shared/
-      features/
+      identidade/
+      acessos/
+      unidades/
+      plataforma/
+      catalogo/
+      carrinho/
+      pwa/
   scripts/
 ```
 
-Cada módulo usa controllers, services, repositories, DTOs, entidades e mappers quando necessários. Não criar classes vazias só para preencher camadas. `shared` contém apenas elementos transversais demonstrados, não regras de pedido misturadas a helpers genéricos. Leituras complexas podem ter consultas/projeções específicas, sem impor a nomenclatura ou heranças do Django.
+A política de acessos do backend permanece em `identidade`; o frontend possui
+seu próprio domínio `acessos`. Preservar essa organização. O desenho inicial de
+`core/shared/features` não exige mover componentes existentes.
+
+Na Sprint 2, horários e canais ampliam `unidades`; `catalogo` concentra
+cadastro, ofertas e favoritos; `carrinho` calcula a composição por meio do
+serviço público do catálogo; `midia` publica imagens normalizadas. No frontend,
+`pwa` controla instalação, conexão e atualização do shell. A persistência de
+mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md). Domínios posteriores, como pedidos, mesas, cozinha, entrega e
+pagamentos, continuam planejados. Componentes, serviços e tipos Angular ficam
+próximos no domínio correspondente, conforme os [padrões de código](10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
+
+Cada módulo separa suas camadas em pacotes `controllers`, `services`,
+`models`, `repositories` e `dtos`, como ilustrado em catálogo. Criar somente
+as camadas que possuem implementação: carrinho, por exemplo, ainda não possui
+repositório. Configurações, filtros, jobs, comandos e infraestrutura permanecem
+no módulo responsável, em pacotes próprios. Mappers existem quando necessários;
+não criar classes vazias só para preencher camadas. `shared` contém apenas
+elementos transversais demonstrados, não regras de pedido misturadas a helpers
+genéricos. Leituras complexas podem ter consultas/projeções específicas, sem
+impor a nomenclatura ou heranças do Django. Os detalhes de imports, DTOs e
+encapsulamento ficam nos [padrões Java](10_CODING_STANDARDS.md#legibilidade-e-organização-java).
 
 Controller trata transporte e validação estrutural. Service recebe um contexto autenticado, autoriza a ação sobre o recurso, aplica a regra e delimita a transação. Repository consulta/persiste. Mapper converte dados sem consultas ocultas. Adaptadores encapsulam provedores. Operações entre módulos usam serviços explícitos; não consultar livremente tabelas internas de outro módulo para contornar invariantes.
 

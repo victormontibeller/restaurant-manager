@@ -5,11 +5,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.restaurantmanager.plataforma.services.PlataformaService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import com.nimbusds.jwt.SignedJWT;
+import jakarta.servlet.http.Cookie;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import jakarta.servlet.http.Cookie;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +32,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -28,8 +48,8 @@ class PlataformaTest {
     private static final String AUTH = "/api/v1/plataforma/auth/";
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
-    @Autowired org.springframework.security.oauth2.jwt.JwtEncoder encoder;
-    @Autowired br.com.restaurantmanager.plataforma.PlataformaService service;
+    @Autowired JwtEncoder encoder;
+    @Autowired PlataformaService service;
     private UUID usuario;
     private String email;
     private String senha;
@@ -43,15 +63,15 @@ class PlataformaTest {
             s.setObject(1,usuario);s.setString(2,email);s.setString(3,new BCryptPasswordEncoder(12).encode(senha));s.executeUpdate();
         }
     }
-    private java.sql.Connection conexao() throws Exception {
+    private Connection conexao() throws Exception {
         var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"));
-        br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");return c;
+        Migrations.verifyIdentity(c,"rm_test","rm_test_owner");return c;
     }
     private RequestPostProcessor csrf() throws Exception {
         var r=mvc.perform(get(AUTH+"csrf").header("Host","plataforma.localhost")).andExpect(status().isOk()).andReturn().getResponse();
         var b=mapper.readTree(r.getContentAsString());var cookie=r.getCookie("__Host-RM_PLATFORM_CSRF");
         assertThat(cookie).isNotNull();assertThat(cookie.getSecure()).isTrue();assertThat(cookie.isHttpOnly()).isTrue();assertThat(cookie.getDomain()).isNull();
-        return request->{var cookies=new java.util.ArrayList<Cookie>();if(request.getCookies()!=null)cookies.addAll(List.of(request.getCookies()));cookies.add(cookie);request.setCookies(cookies.toArray(Cookie[]::new));request.addHeader(b.get("headerName").asText(),b.get("token").asText());return request;};
+        return request->{var cookies=new ArrayList<Cookie>();if(request.getCookies()!=null)cookies.addAll(List.of(request.getCookies()));cookies.add(cookie);request.setCookies(cookies.toArray(Cookie[]::new));request.addHeader(b.get("headerName").asText(),b.get("token").asText());return request;};
     }
     private MvcResult login(String password) throws Exception {
         return mvc.perform(post(AUTH+"login").header("Host","plataforma.localhost").with(csrf()).with(r->{r.setRemoteAddr(origem);return r;})
@@ -72,7 +92,7 @@ class PlataformaTest {
         mvc.perform(get("/api/v1/equipe").header("Host","a.localhost").header("Authorization","Bearer "+access)).andExpect(status().isUnauthorized());
         mvc.perform(get(AUTH+"me").header("Host","a.localhost").header("Authorization","Bearer "+access)).andExpect(status().isNotFound());
         mvc.perform(get(AUTH+"me").header("Host","invasor.localhost").header("Forwarded","host=plataforma.localhost").header("Authorization","Bearer "+access)).andExpect(status().isNotFound());
-        assertThat(br.com.restaurantmanager.tenancy.TenantScope.current()).isEqualTo("__none__");
+        assertThat(TenantScope.current()).isEqualTo("__none__");
     }
     @Test void csrfObrigatorioMesmoComBearerECookieEmpresarialNaoServe() throws Exception {
         var r=login(senha);String access=token(r);
@@ -92,11 +112,11 @@ class PlataformaTest {
     }
     @Test void refreshSimultaneoTemUmVencedorERevogaFamilia() throws Exception {
         var r=login(senha);String access=token(r);var cookie=r.getResponse().getCookie("RM_PLATFORM_REFRESH");
-        var start=new java.util.concurrent.CyclicBarrier(2);
-        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<Integer> task=()->{var csrf=csrf();start.await(10,java.util.concurrent.TimeUnit.SECONDS);return mvc.perform(post(AUTH+"refresh").header("Host","plataforma.localhost").cookie(cookie).with(csrf)).andReturn().getResponse().getStatus();};
+        var start=new CyclicBarrier(2);
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            Callable<Integer> task=()->{var csrf=csrf();start.await(10,TimeUnit.SECONDS);return mvc.perform(post(AUTH+"refresh").header("Host","plataforma.localhost").cookie(cookie).with(csrf)).andReturn().getResponse().getStatus();};
             var a=executor.submit(task);var b=executor.submit(task);
-            assertThat(List.of(a.get(20,java.util.concurrent.TimeUnit.SECONDS),b.get(20,java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,401);
+            assertThat(List.of(a.get(20,TimeUnit.SECONDS),b.get(20,TimeUnit.SECONDS))).containsExactlyInAnyOrder(200,401);
         }
         mvc.perform(get(AUTH+"me").header("Host","plataforma.localhost").header("Authorization","Bearer "+access)).andExpect(status().isUnauthorized());
     }
@@ -118,19 +138,19 @@ class PlataformaTest {
         mvc.perform(post("/api/v1/plataforma/impersonar").header("Host","plataforma.localhost").header("Authorization","Bearer "+access)).andExpect(status().isForbidden());
     }
     @Test void claimsInvalidasNaoAutenticamMesmoAssinadasPeloEmissor() throws Exception {
-        String good=token(login(senha));var original=com.nimbusds.jwt.SignedJWT.parse(good).getJWTClaimsSet();
+        String good=token(login(senha));var original=SignedJWT.parse(good).getJWTClaimsSet();
         for(String variation:List.of("exp","iss","aud","sid","sub","tenant","iat")) {
-            var claims=new java.util.HashMap<String,Object>(original.getClaims());claims.put("iat",java.time.Instant.now().minusSeconds(900));claims.put("exp",java.time.Instant.now().plusSeconds(300));
+            var claims=new HashMap<String,Object>(original.getClaims());claims.put("iat",Instant.now().minusSeconds(900));claims.put("exp",Instant.now().plusSeconds(300));
             switch(variation){
-                case "exp"->claims.put("exp",java.time.Instant.now().minusSeconds(600));
+                case "exp"->claims.put("exp",Instant.now().minusSeconds(600));
                 case "iat"->claims.remove("iat");
                 case "iss"->claims.put("iss","outro-emissor");
                 case "aud"->claims.put("aud",List.of("restaurant-manager-empresa"));
                 default->claims.put(variation,"invalido");
             }
-            String changed=encoder.encode(org.springframework.security.oauth2.jwt.JwtEncoderParameters.from(
-                    org.springframework.security.oauth2.jwt.JwsHeader.with(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256).build(),
-                    org.springframework.security.oauth2.jwt.JwtClaimsSet.builder().claims(c->c.putAll(claims)).build())).getTokenValue();
+            String changed=encoder.encode(JwtEncoderParameters.from(
+                    JwsHeader.with(MacAlgorithm.HS256).build(),
+                    JwtClaimsSet.builder().claims(c->c.putAll(claims)).build())).getTokenValue();
             mvc.perform(get(AUTH+"me").header("Host","plataforma.localhost").header("Authorization","Bearer "+changed)).andExpect(status().isUnauthorized());
         }
     }
@@ -146,7 +166,7 @@ class PlataformaTest {
         try(var c=conexao();var s=c.prepareStatement("select count(*) from public.sessao_plataforma where usuario_id=?")){s.setObject(1,usuario);try(var r=s.executeQuery()){r.next();assertThat(r.getInt(1)).isZero();}}
     }
     @Test void origemBloqueadaNaoConsomeQuotaDaConta() throws Exception {
-        String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("origem:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("origem:"+origem).getBytes(StandardCharsets.UTF_8)));
         try(var c=conexao();var s=c.prepareStatement("insert into public.limite_plataforma(chave,tentativas,inicio_em) values (?,100,now())")){s.setString(1,hash);s.executeUpdate();}
         assertThat(login(senha).getResponse().getStatus()).isEqualTo(429);
         origem="2001:db8::"+UUID.randomUUID().toString().substring(0,4);assertThat(login(senha).getResponse().getStatus()).isEqualTo(200);

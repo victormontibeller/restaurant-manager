@@ -3,30 +3,42 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import java.util.Map;
-import java.util.UUID;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Base64;
+
+import br.com.restaurantmanager.identidade.infrastructure.CapturaEmail;
+import br.com.restaurantmanager.identidade.services.EmailIdentidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.security.SecureRandom;
 import java.sql.DriverManager;
-
-import br.com.restaurantmanager.identidade.EmailIdentidadeService;
-import br.com.restaurantmanager.identidade.CapturaEmail;
-import br.com.restaurantmanager.tenancy.TenantScope;
-import org.junit.jupiter.api.BeforeEach;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -42,19 +54,19 @@ class RecuperacaoTest {
     private final List<UUID> mensagens=new ArrayList<>();
     private static final Path CAPTURA=criarDiretorio();
     @DynamicPropertySource static void propriedades(DynamicPropertyRegistry registry) {
-        byte[] key=new byte[32]; new java.security.SecureRandom().nextBytes(key);
+        byte[] key=new byte[32]; new SecureRandom().nextBytes(key);
         String encoded=Base64.getEncoder().encodeToString(key);
         registry.add("rm.email.secret",()->encoded);
         registry.add("rm.email.capture-directory",()->CAPTURA.toString());
     }
     private static Path criarDiretorio() {
         try { return Files.createTempDirectory(Path.of(System.getenv().getOrDefault("TMPDIR",System.getProperty("java.io.tmpdir"))),"rm-recuperacao-"); }
-        catch(java.io.IOException error) { throw new IllegalStateException("Não foi possível preparar captura privada."); }
+        catch(IOException error) { throw new IllegalStateException("Não foi possível preparar captura privada."); }
     }
     @BeforeAll static void preparar() throws Exception { TestDatabase.prepare(); }
     @BeforeEach void conta() throws Exception {
         usuario=UUID.randomUUID(); email=usuario+"@example.invalid"; senha=UUID.randomUUID().toString();
-        String hash=new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12).encode(senha);
+        String hash=new BCryptPasswordEncoder(12).encode(senha);
         for(String schema:List.of(FundacaoTest.A,FundacaoTest.B)) {
             sql(schema,"insert into %s.usuario(id,email,senha_hash,perfil,email_verificado) values (?,?,?,'CLIENTE',true)",usuario,email,hash);
         }
@@ -70,7 +82,7 @@ class RecuperacaoTest {
     }
     private void sql(String schema,String template,Object...args) throws Exception {
         try(var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
             try(var s=c.prepareStatement(template.formatted(schema))) {
                 for(int i=0;i<args.length;i++) s.setObject(i+1,args[i]); s.executeUpdate();
             }
@@ -81,7 +93,7 @@ class RecuperacaoTest {
             var ids=new ArrayList<UUID>(); while(r.next()) ids.add(r.getObject(1,UUID.class)); return ids;
         }
     }
-    private org.springframework.test.web.servlet.request.RequestPostProcessor csrf() throws Exception {
+    private RequestPostProcessor csrf() throws Exception {
         var response=mvc.perform(get("/api/v1/auth/csrf").header("Host","a.localhost")).andReturn().getResponse();
         var body=mapper.readTree(response.getContentAsString());
         return r->{r.setCookies(response.getCookie("__Host-RM_CSRF"));r.addHeader(body.get("headerName").asText(),body.get("token").asText());return r;};
@@ -169,11 +181,11 @@ class RecuperacaoTest {
         assertThat(login(senha,"a.localhost").getResponse().getStatus()).isEqualTo(200);
     }
     @Test void consumoConcorrenteTemSomenteUmVencedor() throws Exception {
-        String code=codigo(); var barreira=new java.util.concurrent.CyclicBarrier(2);
-        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<Integer> task=()->{barreira.await(10,java.util.concurrent.TimeUnit.SECONDS);return confirmar(code,UUID.randomUUID().toString(),"a.localhost").getResponse().getStatus();};
+        String code=codigo(); var barreira=new CyclicBarrier(2);
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            Callable<Integer> task=()->{barreira.await(10,TimeUnit.SECONDS);return confirmar(code,UUID.randomUUID().toString(),"a.localhost").getResponse().getStatus();};
             var a=executor.submit(task);var b=executor.submit(task);
-            assertThat(List.of(a.get(30,java.util.concurrent.TimeUnit.SECONDS),b.get(30,java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
+            assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
         }
     }
     @Test void contaInexistenteEInativaSaoIgnoradasSomenteNoWorker() throws Exception {
@@ -201,7 +213,7 @@ class RecuperacaoTest {
             emails.concluir(primeira.id(),primeira.lease(),true);
             captura.entregar(retomada.id(),retomada.conteudo()); emails.concluir(retomada.id(),retomada.lease(),true);
             assertThat(emails.preparar()).isNull();
-            assertThat(Files.getPosixFilePermissions(CAPTURA.resolve(FundacaoTest.A).resolve(primeira.id()+".txt"))).isEqualTo(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+            assertThat(Files.getPosixFilePermissions(CAPTURA.resolve(FundacaoTest.A).resolve(primeira.id()+".txt"))).isEqualTo(PosixFilePermissions.fromString("rw-------"));
         }
     }
     @Test void falhaTemRetryLimitadoEExpiracaoNaoEntregaCodigoAntigo() throws Exception {
@@ -239,18 +251,18 @@ class RecuperacaoTest {
         sql(FundacaoTest.A,"update %s.recuperacao_senha set expira_em=now()-interval '25 hours' where usuario_id=?",usuario);
         sql(FundacaoTest.A,"update %s.email_identidade set expira_em=now()-interval '25 hours' where id=?",antigo);
         Path arquivo=CAPTURA.resolve(FundacaoTest.A).resolve(antigo+".txt");
-        Files.setLastModifiedTime(arquivo,java.nio.file.attribute.FileTime.from(java.time.Instant.now().minusSeconds(90000)));
+        Files.setLastModifiedTime(arquivo,FileTime.from(Instant.now().minusSeconds(90000)));
         try(var scope=TenantScope.open(FundacaoTest.A)) {emails.expurgar();captura.expurgar();}
         assertThat(ids()).contains(recente).doesNotContain(antigo);assertThat(Files.exists(arquivo)).isFalse();
         assertThat(confirmar(code,UUID.randomUUID().toString(),"a.localhost").getResponse().getStatus()).isEqualTo(422);
     }
     @Test void codigoExpiradoDuranteEsperaPorLockNaoPodeSerConsumido() throws Exception {
         String code=codigo();
-        try(var executor=java.util.concurrent.Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
+        try(var executor=Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
             try(var s=c.createStatement()) {s.execute("select id from "+FundacaoTest.A+".politica_acesso where id=1 for update");}
             var future=executor.submit(()->confirmar(code,UUID.randomUUID().toString(),"a.localhost").getResponse().getStatus());
-            long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+            long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
             boolean aguardando=false;
             while(System.nanoTime()<deadline) {
                 try(var s=c.createStatement();var r=s.executeQuery("select exists(select 1 from pg_locks where not granted and transactionid in (select transactionid from pg_locks where pid=pg_backend_pid() and locktype='transactionid' and granted))")) {
@@ -262,7 +274,7 @@ class RecuperacaoTest {
             if(!aguardando) { c.rollback(); throw new AssertionError("A requisição não aguardou o lock observado."); }
             try(var s=c.prepareStatement("update "+FundacaoTest.A+".recuperacao_senha set expira_em=clock_timestamp() where usuario_id=?")){s.setObject(1,usuario);s.executeUpdate();}
             c.commit();
-            assertThat(future.get(30,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(422);
+            assertThat(future.get(30,TimeUnit.SECONDS)).isEqualTo(422);
         }
         assertThat(login(senha,"a.localhost").getResponse().getStatus()).isEqualTo(200);
     }

@@ -3,20 +3,23 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.restaurantmanager.identidade.AuthFailure;
-import br.com.restaurantmanager.identidade.IdentidadeService;
-import br.com.restaurantmanager.identidade.RetencaoIdentidadeService;
-import br.com.restaurantmanager.tenancy.Migrations;
-import br.com.restaurantmanager.tenancy.TenantScope;
+import br.com.restaurantmanager.identidade.dtos.ResultadoRetencao;
+import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
+import br.com.restaurantmanager.identidade.services.IdentidadeService;
+import br.com.restaurantmanager.identidade.services.RetencaoIdentidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -69,7 +72,7 @@ class RetencaoIdentidadeTest {
         return id;
     }
     private String refresh(String schema, UUID sessao, boolean usado) throws Exception {
-        String raw = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(UUID.randomUUID().toString().substring(0, 32).getBytes(StandardCharsets.UTF_8));
+        String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(UUID.randomUUID().toString().substring(0, 32).getBytes(StandardCharsets.UTF_8));
         String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)));
         try (var c = owner(); var s = c.prepareStatement("insert into " + schema + ".refresh_token(hash,sessao_id,usado_em) values (?,?,?::timestamptz)")) {
             s.setString(1, hash); s.setObject(2, sessao); s.setString(3, usado ? Instant.now().minusSeconds(60).toString() : null); s.executeUpdate();
@@ -88,7 +91,7 @@ class RetencaoIdentidadeTest {
             s.setObject(1, id); try (var r = s.executeQuery()) { r.next(); return r.getInt(1) > 0; }
         }
     }
-    private RetencaoIdentidadeService.Resultado executar(String schema) {
+    private ResultadoRetencao executar(String schema) {
         try (var scope = TenantScope.open(schema)) { return retencao.executarLote(); }
     }
     @Test void eliminaSomenteExpiradosAntigosDoTenantSemPerderDeteccaoDeReuso() throws Exception {
@@ -127,7 +130,7 @@ class RetencaoIdentidadeTest {
         for (int i = 0; i < 20; i++) sessao(A, -172800, false);
         var inicio = new CyclicBarrier(2);
         try (var threads = Executors.newFixedThreadPool(2)) {
-            java.util.concurrent.Callable<Integer> tarefa = () -> {
+            Callable<Integer> tarefa = () -> {
                 inicio.await(10, TimeUnit.SECONDS); return executar(A).sessoes();
             };
             var a = threads.submit(tarefa); var b = threads.submit(tarefa);

@@ -44,8 +44,8 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 | Plano | Situação |
 | --- | --- |
 | [Sprint 0 — Fundação](14_SPRINT_00.md) | Fundação validada; PR #2 mesclado |
-| [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | PR #3 integrado em `b50b9d1`; revisão pré-Sprint 2 no [PR #4](https://github.com/victormontibeller/restaurant-manager/pull/4), com Linux/homologação pendentes |
-| [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Não iniciada |
+| [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | PRs #3 e [#4](https://github.com/victormontibeller/restaurant-manager/pull/4) integrados; CI da revisão aprovada e homologação do novo release pendente |
+| [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Implementação, revisão final e testes locais concluídos; publicação/integração rastreáveis no [PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5); Linux/homologação pendentes |
 | [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Não iniciada |
 | [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | Não iniciada |
 | [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Não iniciada |

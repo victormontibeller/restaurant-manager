@@ -4,6 +4,9 @@
 
 Esta pasta mantém registros de decisões arquiteturais relevantes. O [ADR 0001 — Fundação nativa](0001-fundacao-nativa.md) foi aceito tecnicamente no escopo da Sprint 00; seus limites históricos não aprovam sprints posteriores. As decisões de produto confirmadas continuam em [Visão do projeto](../00_PROJECT_VISION.md).
 
+O [ADR 0002 — Mídia pública transacional](0002-midia-publica-transacional.md) registra
+a escolha de armazenamento e seus limites na Sprint 2 local.
+
 ## Quando registrar
 
 Registre uma escolha quando seu contexto, alternativas e consequências forem necessários para entender uma mudança relevante de arquitetura, segurança, integração ou operação. Não criar ADR para toda alteração pequena ou apenas para repetir uma regra existente.

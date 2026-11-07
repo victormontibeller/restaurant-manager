@@ -3,6 +3,10 @@ server:
   port: ${RM_PORT:8089}
   forward-headers-strategy: none
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   web:
     error:
       include-message: never
@@ -31,6 +35,10 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: true
+      accept-float-as-int: false
+    datatype:
+      enum:
+        fail-on-numbers-for-enums: true
 management:
   endpoints:
     web:

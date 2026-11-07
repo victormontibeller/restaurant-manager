@@ -1,5 +1,10 @@
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
+
+// Estas provas injetam falha/gate entre a API real e o navegador. O worker pode
+// impedir page.route no WebKit; PWA e jornadas sem injeção mantêm o worker ativo.
+test.use({ serviceWorkers: 'block' });
+
 const fixture = JSON.parse(fs.readFileSync(process.env['RM_AUTH_FIXTURE']!, 'utf8')) as {
   email: string;
   senha: string;

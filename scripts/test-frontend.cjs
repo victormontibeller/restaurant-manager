@@ -12,6 +12,12 @@ const tests = [
   'test_event_config.cjs',
   'test_inactive_memberships.cjs',
   'test_hml_fixture.cjs',
+  'test_public_hours.cjs',
+  'test_unit_schedule.cjs',
+  'test_pwa.cjs',
+  'test_catalog_cart.cjs',
+  'test_catalog_media.cjs',
+  'test_catalog_recovery.cjs',
 ];
 
 for (const test of tests) {

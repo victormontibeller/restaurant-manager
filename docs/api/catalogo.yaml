@@ -1,0 +1,871 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — catálogo e favoritos
+  version: 0.2.0
+  description: Catálogo compartilhado por empresa; preço, canais e disponibilidade
+    por unidade. Tenant vem do domínio cadastrado. Respostas não são armazenáveis
+    em cache; público não recebe autoria/auditoria. Operações empresariais exigem
+    catalogo.editar; ofertas exigem consulta/ação local vigente e unidade atribuída.
+    Não cria pedidos.
+paths:
+  "/api/v1/gestao/catalogo/categorias":
+    get:
+      operationId: listarCategorias
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - itens
+                - temMais
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Categoria"
+                    maxItems: 50
+                  temMais:
+                    type: boolean
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+    post:
+      operationId: criarCategoria
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Categoria"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Categoria"
+      description: UUID gerado pelo cliente e versão zero. Mesmo UUID, ator e payload
+        repetem intenção retornando recurso atual; divergência retorna 409. Alteração
+        compartilhada afeta todas as filiais.
+  "/api/v1/gestao/catalogo/categorias/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    put:
+      operationId: alterarCategoria
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Categoria"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Categoria"
+      description: Versão consultada obrigatória. Conflito 409 exige reconsulta. ID
+        no corpo corresponde à rota. Alteração equivalente não gera versão/auditoria.
+        Desativar preserva o cadastro; não há DELETE.
+  "/api/v1/gestao/catalogo/produtos":
+    get:
+      operationId: listarProdutos
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - itens
+                - temMais
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Produto"
+                    maxItems: 50
+                  temMais:
+                    type: boolean
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+    post:
+      operationId: criarProduto
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Produto"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Produto"
+      description: UUID gerado pelo cliente e versão zero. Mesmo UUID, ator e payload
+        repetem intenção retornando recurso atual; divergência retorna 409. Alteração
+        compartilhada afeta todas as filiais.
+  "/api/v1/gestao/catalogo/produtos/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    put:
+      operationId: alterarProduto
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Produto"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Produto"
+      description: Versão consultada obrigatória. Conflito 409 exige reconsulta. ID
+        no corpo corresponde à rota. Alteração equivalente não gera versão/auditoria.
+        Desativar preserva o cadastro; não há DELETE.
+    get:
+      operationId: consultarProdutoAdministrativo
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Produto"
+        default:
+          "$ref": "#/components/responses/Erro"
+  "/api/v1/gestao/catalogo/produtos/{id}/unidades/{unidadeId}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: unidadeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: consultarOferta
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Oferta"
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: Exige catalogo.consultar e unidade permitida. Ausência equivale
+        à versão 0, preço 0.00, indisponível e sem canais.
+    put:
+      operationId: alterarOferta
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Oferta"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AlterarOferta"
+      description: Exige catalogo.alterar_unidade e unidade ativa permitida. Versão
+        antiga retorna 409; escrita equivalente não cria versão/auditoria.
+  "/api/v1/catalogo":
+    get:
+      operationId: listarCatalogoPublico
+      security: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CatalogoPublico"
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: Produtos/categorias ativos com oferta na unidade, inclusive oferta
+        indisponível sinalizada. Busca literal por nome/descrição; sugestões são curadas.
+        Unidade fechada permite consulta, mas impede cálculo confirmável.
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: canal
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+      - name: busca
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 120
+          default: ''
+      - name: categoriaId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+  "/api/v1/catalogo/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: consultarProdutoPublico
+      security: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProdutoPublico"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: canal
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+  "/api/v1/operacao/catalogo":
+    get:
+      operationId: listarCatalogoOperacional
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CatalogoPublico"
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: Exige catalogo.consultar na unidade. Inclui produtos ainda sem
+        oferta para configurá-los; nenhuma autorização decorre do payload da UI.
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: canal
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+          default: DELIVERY
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+  "/api/v1/clientes/me/favoritos":
+    get:
+      operationId: listarMeusFavoritos
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                - produtoIds
+                properties:
+                  produtoIds:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                    maxItems: 200
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: Somente CLIENTE ativo com sessão vigente; propriedade sempre obtida
+        da identidade. Produtos/categorias inativos são omitidos.
+  "/api/v1/clientes/me/favoritos/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    put:
+      operationId: incluirMeuFavorito
+      security:
+      - empresarial: []
+      responses:
+        '204':
+          description: Operação concluída sem conteúdo
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: CLIENTE, produto ativo do tenant, máximo 200. Repetição idempotente.
+        Ao incluir novo favorito, vínculos próprios ocultos por produto ou categoria
+        inativos são removidos antes de aplicar a cota; GET não altera favoritos.
+    delete:
+      operationId: removerMeuFavorito
+      security:
+      - empresarial: []
+      responses:
+        '204':
+          description: Operação concluída sem conteúdo
+        default:
+          "$ref": "#/components/responses/Erro"
+      description: CLIENTE. Repetição idempotente, recurso alheio retorna 404. Não recebe identificador
+        de usuário.
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Erro:
+      type: object
+      additionalProperties: false
+      required:
+      - codigo
+      - mensagem
+      - correlacao
+      properties:
+        codigo:
+          type: string
+        mensagem:
+          type: string
+        correlacao:
+          type: string
+    Categoria:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - nome
+      - ativa
+      - versao
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        ativa:
+          type: boolean
+        versao:
+          type: integer
+          minimum: 0
+    Adicional:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - nome
+      - preco
+      - maximo
+      - ativo
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        preco:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        maximo:
+          type: integer
+          minimum: 1
+          maximum: 10
+        ativo:
+          type: boolean
+    Opcao:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - produtoId
+      - acrescimo
+      - limite
+      - adicionaisPermitidos
+      properties:
+        id:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        acrescimo:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        limite:
+          type: integer
+          minimum: 1
+          maximum: 20
+        adicionaisPermitidos:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 20
+          uniqueItems: true
+    Grupo:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - nome
+      - minimo
+      - maximo
+      - opcoes
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        minimo:
+          type: integer
+          minimum: 0
+          maximum: 20
+        maximo:
+          type: integer
+          minimum: 1
+          maximum: 20
+        opcoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Opcao"
+          maxItems: 20
+          minItems: 1
+    Produto:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - versao
+      - nome
+      - descricao
+      - categoriaId
+      - tipo
+      - ativo
+      - sugerido
+      - adicionais
+      - grupos
+      properties:
+        id:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        descricao:
+          type: string
+          maxLength: 2000
+        categoriaId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum:
+          - SIMPLES
+          - COMBO
+        ativo:
+          type: boolean
+        sugerido:
+          type: boolean
+        midiaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Adicional"
+          maxItems: 20
+        grupos:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Grupo"
+          maxItems: 10
+      description: SIMPLES não tem grupos; COMBO tem ao menos um grupo e adicionais
+        somente nos componentes simples ativos, sem combos aninhados. IDs de adicionais/grupos/opções
+        são únicos no produto. Grupos satisfazem mínimo/máximo e limites por unidade
+        comercial; adicionais permitidos pertencem ao componente. Desativação preserva
+        referências e histórico.
+    AlterarOferta:
+      type: object
+      additionalProperties: false
+      required:
+      - versao
+      - preco
+      - disponivel
+      - canais
+      properties:
+        versao:
+          type: integer
+          minimum: 0
+        preco:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        disponivel:
+          type: boolean
+        canais:
+          type: array
+          items:
+            type: string
+            enum:
+            - DELIVERY
+            - RETIRADA
+            - MESA
+          maxItems: 3
+          uniqueItems: true
+    Oferta:
+      type: object
+      additionalProperties: false
+      required:
+      - produtoId
+      - unidadeId
+      - versao
+      - preco
+      - disponivel
+      - canais
+      properties:
+        produtoId:
+          type: string
+          format: uuid
+        unidadeId:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        preco:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        disponivel:
+          type: boolean
+        canais:
+          type: array
+          items:
+            type: string
+            enum:
+            - DELIVERY
+            - RETIRADA
+            - MESA
+          maxItems: 3
+          uniqueItems: true
+    OpcaoPublica:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - produtoId
+      - acrescimo
+      - limite
+      - adicionaisPermitidos
+      - nome
+      - disponivel
+      - adicionais
+      properties:
+        id:
+          type: string
+          format: uuid
+        produtoId:
+          type: string
+          format: uuid
+        acrescimo:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        limite:
+          type: integer
+          minimum: 1
+          maximum: 20
+        adicionaisPermitidos:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 20
+          uniqueItems: true
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        disponivel:
+          type: boolean
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Adicional"
+          maxItems: 20
+    GrupoPublico:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - nome
+      - minimo
+      - maximo
+      - opcoes
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        minimo:
+          type: integer
+          minimum: 0
+          maximum: 20
+        maximo:
+          type: integer
+          minimum: 1
+          maximum: 20
+        opcoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OpcaoPublica"
+          maxItems: 20
+          minItems: 1
+    ProdutoPublico:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - versao
+      - nome
+      - descricao
+      - categoriaId
+      - tipo
+      - sugerido
+      - midiaId
+      - adicionais
+      - preco
+      - disponivel
+      - grupos
+      properties:
+        id:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 120
+        descricao:
+          type: string
+          maxLength: 2000
+        categoriaId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum:
+          - SIMPLES
+          - COMBO
+        sugerido:
+          type: boolean
+        midiaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Adicional"
+          maxItems: 20
+        preco:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,2})?$"
+          description: Entrada BRL em texto, zero a duas casas decimais, máximo 999999.99.
+            Saída sempre normalizada em duas casas; sem ponto flutuante.
+        disponivel:
+          type: boolean
+        grupos:
+          type: array
+          items:
+            "$ref": "#/components/schemas/GrupoPublico"
+          maxItems: 10
+    CatalogoPublico:
+      type: object
+      additionalProperties: false
+      required:
+      - itens
+      - temMais
+      - categorias
+      - aberto
+      - consultadoEm
+      - revisao
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ProdutoPublico"
+          maxItems: 50
+        temMais:
+          type: boolean
+        categorias:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Categoria"
+        aberto:
+          type: boolean
+        consultadoEm:
+          type: string
+          format: date-time
+        revisao:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+  responses:
+    Erro:
+      description: 400 estrutura/parâmetro, 401 sessão, 403 ação, 404 recurso alheio/inexistente,
+        409 conflito, 413 tamanho, 415 tipo HTTP ou 422 regra. Sem detalhes internos.
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/Erro"

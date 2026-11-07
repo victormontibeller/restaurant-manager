@@ -1,6 +1,7 @@
 package br.com.restaurantmanager;
 
-import br.com.restaurantmanager.tenancy.Migrations;
+import br.com.restaurantmanager.plataforma.commands.ProvisionamentoCommand;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
 import java.util.Arrays;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +12,7 @@ public class RestaurantManagerApplication {
     public static void main(String[] args) {
         if (args.length > 0 && (args[0].equals("--provisionar") || args[0].equals("--retomar-provisionamento") || args[0].equals("--processar-solicitacao"))) {
             try {
-                br.com.restaurantmanager.plataforma.ProvisionamentoCommand.executar(args, System.getenv());
+                ProvisionamentoCommand.executar(args, System.getenv());
             } catch (Exception failure) {
                 System.err.println("Provisionamento interrompido. Verifique alvo, pedido privado e registro persistido. Tipo: " + failure.getClass().getSimpleName());
                 System.exit(1);

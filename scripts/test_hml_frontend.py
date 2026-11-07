@@ -47,6 +47,26 @@ class FrontendReplacementTest(unittest.TestCase):
                 require_same_backend(old, new)
             require_login_startup_change(old, new)
 
+    def test_reorganizacao_de_pacotes_nao_e_excecao_de_login(self):
+        from hml_frontend import require_login_startup_frontend_change
+        prefix = 'BOOT-INF/classes/br/com/restaurantmanager/identidade/'
+        moves = {'Usuario.class': 'models/Usuario.class',
+                 'IdentidadeRepository.class': 'repositories/IdentidadeRepository.class',
+                 'JwtConfiguration.class': 'config/JwtConfiguration.class'}
+        with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as directory:
+            old, new = self.login_jars(directory)
+            with zipfile.ZipFile(new) as archive:
+                entries = {name: archive.read(name) for name in archive.namelist()}
+            for before, after in moves.items():
+                entries[prefix + after] = entries.pop(prefix + before)
+            with zipfile.ZipFile(new, 'w') as archive:
+                for name, value in entries.items():
+                    archive.writestr(name, value)
+            for guard in (require_same_backend, require_login_startup_change,
+                          require_login_startup_frontend_change):
+                with self.subTest(guard=guard.__name__), self.assertRaises(ValueError):
+                    guard(old, new)
+
     def test_opt_in_login_recusa_mudancas_fora_do_incremento(self):
         entries = ['BOOT-INF/lib/sdk.jar', 'BOOT-INF/classes/static/index.html',
                    'BOOT-INF/classes/db/migration/public/V1.sql',

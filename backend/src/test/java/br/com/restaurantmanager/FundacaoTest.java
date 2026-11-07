@@ -6,16 +6,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.restaurantmanager.tenancy.TenantScope;
-import br.com.restaurantmanager.unidades.UnidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.unidades.services.UnidadeService;
 import java.sql.DriverManager;
-import java.util.UUID;
+import java.sql.SQLException;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -78,12 +78,12 @@ class FundacaoTest {
     @Test void runtimeNaoPodeCriarTabelaOuAcessarOutroBanco() throws Exception {
         try (var c = dataSource.getConnection(); var s = c.createStatement()) {
             assertThatThrownBy(() -> s.execute("create table public.invasao(id int)"))
-                    .isInstanceOf(java.sql.SQLException.class);
+                    .isInstanceOf(SQLException.class);
         }
         assertThatThrownBy(() -> DriverManager.getConnection(
                 System.getenv("RM_DB_URL").replace("/rm_test", "/rm_hml"),
                 System.getenv("RM_DB_USER"), System.getenv("RM_DB_PASSWORD")))
-                .isInstanceOf(java.sql.SQLException.class);
+                .isInstanceOf(SQLException.class);
     }
 
     @Test void errosERotasPrivadasNegadosSemVazarDetalhes() throws Exception {

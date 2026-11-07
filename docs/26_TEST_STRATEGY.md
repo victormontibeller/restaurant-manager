@@ -29,6 +29,13 @@ Usar Playwright como ferramenta de automação E2E, com versão fixada e comando
 
 Mocks são permitidos nos testes de unidade e nas fronteiras externas controladas. Na suíte que comprova jornada integrada, não substituir a API, a autorização, o cálculo do pedido nem o PostgreSQL por respostas prontas. Se Mercado Pago/e-mail forem simulados, marcar esse contexto como simulado; não apresentá-lo como homologação do provedor.
 
+Provas de interrupção de transporte com `page.route` isolam o service worker
+somente nesse contexto, pois ele pode impedir a interceptação pelo Playwright.
+Preservar a chamada real ao backend, asserções de commit/reconciliação e
+evidência de que a falha foi injetada. As jornadas normais e a suíte PWA mantêm
+o worker ativo. Essa fronteira e suas reexecuções ficam identificadas no
+relatório; não comprovam o comportamento da PWA por si sós.
+
 ## Massa de dados e isolamento da execução
 
 - Pelo menos duas empresas fictícias, A e B. A possui unidades A1 e A2; um funcionário operacional tem acesso somente a A1. Cada empresa possui suas identidades, dados e integração fictícia/sandbox segregados.

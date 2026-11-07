@@ -126,32 +126,40 @@ test('S01-UI21: código inválido, erro de rede, teclado e layout', async ({ pag
     page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
   ).toBeVisible();
 });
-test('S01-UI22: confirmação com resposta perdida é reconciliada na conta', async ({
-  page,
-}, info) => {
-  const conta = fixture.contas[info.project.name + '-incerto'];
-  await abrir(page);
-  const codigo = await solicitar(page, conta.email);
-  await page.getByLabel('Código de verificação', { exact: true }).fill(codigo);
-  await page.route(
-    '**/api/v1/auth/verificacao/confirmar',
-    async (route) => {
-      const real = await route.fetch();
-      expect(real.status()).toBe(204);
-      await route.abort('failed');
-    },
-    { times: 1 },
-  );
-  const perda = page.waitForEvent('requestfailed', (r) =>
-    r.url().endsWith('/auth/verificacao/confirmar'),
-  );
-  await page.getByRole('button', { name: 'Confirmar verificação', exact: true }).click();
-  await perda;
-  await expect(page.getByRole('alert')).toContainText(
-    'A resposta não chegou. O e-mail pode ter sido verificado.',
-  );
-  await expect(
-    page.getByText('E-mail verificado. Sua senha e seu perfil foram preservados.', { exact: true }),
-  ).toHaveCount(0);
-  await conferirConta(page, conta);
+test.describe('Fronteira de rede S01-UI22', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI22: confirmação com resposta perdida é reconciliada na conta', async ({
+    page,
+  }, info) => {
+    const conta = fixture.contas[info.project.name + '-incerto'];
+    await abrir(page);
+    const codigo = await solicitar(page, conta.email);
+    await page.getByLabel('Código de verificação', { exact: true }).fill(codigo);
+    await page.route(
+      '**/api/v1/auth/verificacao/confirmar',
+      async (route) => {
+        const real = await route.fetch();
+        expect(real.status()).toBe(204);
+        await route.abort('failed');
+      },
+      { times: 1 },
+    );
+    const perda = page.waitForEvent('requestfailed', (r) =>
+      r.url().endsWith('/auth/verificacao/confirmar'),
+    );
+    await page.getByRole('button', { name: 'Confirmar verificação', exact: true }).click();
+    await perda;
+    await expect(page.getByRole('alert')).toContainText(
+      'A resposta não chegou. O e-mail pode ter sido verificado.',
+    );
+    await expect(
+      page.getByText('E-mail verificado. Sua senha e seu perfil foram preservados.', {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await conferirConta(page, conta);
+  });
 });

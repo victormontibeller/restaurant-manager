@@ -3,19 +3,27 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import br.com.restaurantmanager.identidade.CapturaEmail;
-import br.com.restaurantmanager.identidade.EmailIdentidadeService;
-import br.com.restaurantmanager.tenancy.Migrations;
-import br.com.restaurantmanager.tenancy.TenantScope;
+
+import br.com.restaurantmanager.identidade.infrastructure.CapturaEmail;
+import br.com.restaurantmanager.identidade.services.EmailIdentidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +40,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -47,13 +56,13 @@ class ConvitesTest {
     private final String host="convite-"+empresa+".localhost",senha=UUID.randomUUID().toString();
     private String token;
     @DynamicPropertySource static void propriedades(DynamicPropertyRegistry r) {
-        byte[] bytes=new byte[32];new java.security.SecureRandom().nextBytes(bytes);
+        byte[] bytes=new byte[32];new SecureRandom().nextBytes(bytes);
         String key=Base64.getEncoder().encodeToString(bytes);
         r.add("rm.email.secret",()->key);r.add("rm.email.capture-directory",()->CAPTURA.toString());
     }
     private static Path diretorio() {
         try{return Files.createTempDirectory(Path.of(System.getenv().getOrDefault("TMPDIR",System.getProperty("java.io.tmpdir"))),"rm-convites-");}
-        catch(java.io.IOException e){throw new IllegalStateException("Captura privada indisponível.");}
+        catch(IOException e){throw new IllegalStateException("Captura privada indisponível.");}
     }
     @BeforeAll static void preparar() throws Exception {TestDatabase.prepare();}
     private Connection banco() throws Exception {
@@ -82,7 +91,7 @@ class ConvitesTest {
         sql("delete from public.dominio where empresa_id=?",empresa);sql("delete from public.empresa where id=?",empresa);
         try(var c=banco();var s=c.createStatement()){s.execute("drop schema "+schema+" cascade");}
     }
-    private org.springframework.test.web.servlet.request.RequestPostProcessor csrf() throws Exception {
+    private RequestPostProcessor csrf() throws Exception {
         var r=mvc.perform(get("/api/v1/auth/csrf").header("Host",host)).andReturn().getResponse();var b=mapper.readTree(r.getContentAsString());
         return q->{q.setCookies(r.getCookie("__Host-RM_CSRF"));q.addHeader(b.get("headerName").asText(),b.get("token").asText());return q;};
     }
@@ -136,13 +145,13 @@ class ConvitesTest {
         assertThat(criar(convite(UUID.randomUUID(),"novo@example.invalid","ADMINISTRADOR",Set.of(unidade))).getResponse().getStatus()).isEqualTo(400);
         assertThat(criar(convite(UUID.randomUUID(),"novo@example.invalid","CLIENTE",Set.of())).getResponse().getStatus()).isEqualTo(400);
         assertThat(criar(convite(UUID.randomUUID(),"novo@example.invalid","CAIXA",Set.of(UUID.randomUUID()))).getResponse().getStatus()).isEqualTo(404);
-        var extra=new java.util.HashMap<>(body);extra.put("emailVerificado",true);assertThat(criar(extra).getResponse().getStatus()).isEqualTo(400);
+        var extra=new HashMap<>(body);extra.put("emailVerificado",true);assertThat(criar(extra).getResponse().getStatus()).isEqualTo(400);
     }
     @Test void intencaoIdempotenteConcorrenteEPayloadDivergente() throws Exception {
         reautenticar();UUID id=UUID.randomUUID();String email=UUID.randomUUID()+"@example.invalid";
         var body=convite(id,email,"COZINHA",Set.of(unidade));var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)){
-            java.util.concurrent.Callable<Integer> call=()->{start.await(10,TimeUnit.SECONDS);return criar(body).getResponse().getStatus();};
+            Callable<Integer> call=()->{start.await(10,TimeUnit.SECONDS);return criar(body).getResponse().getStatus();};
             var a=pool.submit(call);var b=pool.submit(call);assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactly(200,200);
         }
         assertThat(contar("convite_funcionario","id=?",id)).isEqualTo(1);assertThat(contar("email_identidade","tipo=?","CONVITE")).isEqualTo(1);
@@ -156,7 +165,7 @@ class ConvitesTest {
     @Test void aceitaUmaVezSobConcorrenciaENaoConverteContaExistente() throws Exception {
         UUID id=UUID.randomUUID();String email=UUID.randomUUID()+"@example.invalid",code=emitir(id,email);var start=new CyclicBarrier(2);
         try(var pool=Executors.newFixedThreadPool(2)){
-            java.util.concurrent.Callable<Integer> call=()->{start.await(10,TimeUnit.SECONDS);return aceitar(code,host);};
+            Callable<Integer> call=()->{start.await(10,TimeUnit.SECONDS);return aceitar(code,host);};
             var a=pool.submit(call);var b=pool.submit(call);assertThat(List.of(a.get(30,TimeUnit.SECONDS),b.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
         }
         assertThat(contar("usuario","email=?",email)).isEqualTo(1);assertThat(contar("auditoria_acesso","evento='CONVITE_ACEITO' and recurso_id=?",id)).isEqualTo(1);
@@ -180,8 +189,8 @@ class ConvitesTest {
     @Test void csrfCamposExtrasFinalidadeEQuotaSaoVerificados() throws Exception {
         var body=Map.<String,Object>of("codigo","A".repeat(43),"senha",senha);
         assertThat(mvc.perform(post("/api/v1/auth/convites/aceitar").header("Host",host).header("Authorization","Bearer "+token).contentType("application/json").content(mapper.writeValueAsString(body))).andReturn().getResponse().getStatus()).isEqualTo(403);
-        var extra=new java.util.HashMap<>(body);extra.put("perfil","ADMINISTRADOR");assertThat(publico("convites/aceitar",host,extra,"extra").getResponse().getStatus()).isEqualTo(400);
-        String origem=UUID.randomUUID().toString();String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("convite-confirmar:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        var extra=new HashMap<>(body);extra.put("perfil","ADMINISTRADOR");assertThat(publico("convites/aceitar",host,extra,"extra").getResponse().getStatus()).isEqualTo(400);
+        String origem=UUID.randomUUID().toString();String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("convite-confirmar:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into "+schema+".limite_login(chave,tentativas,inicio_em) values (?,29,now())",hash);
         assertThat(publico("convites/aceitar",host,body,origem).getResponse().getStatus()).isEqualTo(422);
         assertThat(publico("convites/aceitar",host,body,origem).getResponse().getStatus()).isEqualTo(429);
@@ -238,7 +247,7 @@ class ConvitesTest {
         assertThat(contar("usuario_unidade","usuario_id in (select id from "+schema+".usuario where email=?)",email)).isZero();
     }
     @Test void origemBloqueadaNaoEsperaPoliticaDoAceite() throws Exception {
-        String origem=UUID.randomUUID().toString();String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("convite-confirmar:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String origem=UUID.randomUUID().toString();String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("convite-confirmar:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into "+schema+".limite_login(chave,tentativas,inicio_em) values (?,30,now())",hash);
         try(var pool=Executors.newSingleThreadExecutor();var c=banco()){
             c.setAutoCommit(false);try(var s=c.createStatement()){s.execute("select id from "+schema+".politica_acesso where id=1 for update");}

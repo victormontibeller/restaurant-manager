@@ -96,8 +96,12 @@ def runtime_config(values, identity=False):
 
 
 def artifact_has_identity(jar):
+    identity_classes = {
+        'BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class',
+        'BOOT-INF/classes/br/com/restaurantmanager/identidade/config/JwtConfiguration.class',
+    }
     with zipfile.ZipFile(jar) as archive:
-        return 'BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class' in archive.namelist()
+        return not identity_classes.isdisjoint(archive.namelist())
 
 
 def require_foundation_artifact(jar):

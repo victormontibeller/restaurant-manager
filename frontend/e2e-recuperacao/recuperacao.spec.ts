@@ -162,37 +162,43 @@ test('S01-UI11: validação, código inválido, teclado e rede indisponível', a
   ).toBeVisible();
   await expect(page.getByLabel('E-mail', { exact: true })).toBeFocused();
 });
-test('S01-UI12: resposta perdida não confirma alteração e login reconcilia', async ({
-  page,
-}, info) => {
-  const email = fixture.emails[info.project.name];
-  const senha = crypto.randomUUID();
-  await abrir(page);
-  const codigo = await solicitar(page, email);
-  await preencher(page, codigo, senha);
-  await page.route(
-    '**/api/v1/auth/recuperacao/confirmar',
-    async (route) => {
-      const real = await route.fetch();
-      expect(real.status()).toBe(204);
-      await route.abort('failed');
-    },
-    { times: 1 },
-  );
-  const perda = page.waitForEvent('requestfailed', (r) =>
-    r.url().endsWith('/auth/recuperacao/confirmar'),
-  );
-  await page.getByRole('button', { name: 'Alterar senha', exact: true }).click();
-  await perda;
-  await expect(page.getByRole('alert')).toContainText(
-    'A resposta não chegou. A senha pode ter sido alterada.',
-  );
-  await expect(
-    page.getByText(
-      'Senha alterada e sessões anteriores encerradas. Volte ao login para entrar com a nova senha.',
-      { exact: true },
-    ),
-  ).toHaveCount(0);
-  await login(page, email, senha);
-  await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+test.describe('Fronteira de rede S01-UI12', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI12: resposta perdida não confirma alteração e login reconcilia', async ({
+    page,
+  }, info) => {
+    const email = fixture.emails[info.project.name];
+    const senha = crypto.randomUUID();
+    await abrir(page);
+    const codigo = await solicitar(page, email);
+    await preencher(page, codigo, senha);
+    await page.route(
+      '**/api/v1/auth/recuperacao/confirmar',
+      async (route) => {
+        const real = await route.fetch();
+        expect(real.status()).toBe(204);
+        await route.abort('failed');
+      },
+      { times: 1 },
+    );
+    const perda = page.waitForEvent('requestfailed', (r) =>
+      r.url().endsWith('/auth/recuperacao/confirmar'),
+    );
+    await page.getByRole('button', { name: 'Alterar senha', exact: true }).click();
+    await perda;
+    await expect(page.getByRole('alert')).toContainText(
+      'A resposta não chegou. A senha pode ter sido alterada.',
+    );
+    await expect(
+      page.getByText(
+        'Senha alterada e sessões anteriores encerradas. Volte ao login para entrar com a nova senha.',
+        { exact: true },
+      ),
+    ).toHaveCount(0);
+    await login(page, email, senha);
+    await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
+  });
 });

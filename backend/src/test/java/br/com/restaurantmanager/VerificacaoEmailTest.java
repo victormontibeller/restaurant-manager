@@ -3,22 +3,34 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import br.com.restaurantmanager.identidade.EmailIdentidadeService;
-import br.com.restaurantmanager.tenancy.TenantScope;
+
+import br.com.restaurantmanager.identidade.services.EmailIdentidadeService;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,14 +45,14 @@ class VerificacaoEmailTest {
     @Autowired EmailIdentidadeService emails;
     private static final Path CAPTURA=criarDiretorio();
     @DynamicPropertySource static void propriedades(DynamicPropertyRegistry registry) {
-        byte[] key=new byte[32];new java.security.SecureRandom().nextBytes(key);
+        byte[] key=new byte[32];new SecureRandom().nextBytes(key);
         String encoded=Base64.getEncoder().encodeToString(key);
         registry.add("rm.email.secret",()->encoded);
         registry.add("rm.email.capture-directory",()->CAPTURA.toString());
     }
     private static Path criarDiretorio() {
         try {return Files.createTempDirectory(Path.of(System.getenv().getOrDefault("TMPDIR",System.getProperty("java.io.tmpdir"))),"rm-verificacao-");}
-        catch(java.io.IOException error){throw new IllegalStateException("Captura privada indisponível.");}
+        catch(IOException error){throw new IllegalStateException("Captura privada indisponível.");}
     }
     @BeforeAll static void preparar() throws Exception {TestDatabase.prepare();}
     private String email(){return UUID.randomUUID()+"@example.invalid";}
@@ -56,7 +68,7 @@ class VerificacaoEmailTest {
     }
     private void sql(String template,Object...args) throws Exception {
         try(var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");
             try(var s=c.prepareStatement(template.formatted(FundacaoTest.A))) {
                 for(int i=0;i<args.length;i++)s.setObject(i+1,args[i]);s.executeUpdate();
             }
@@ -87,7 +99,7 @@ class VerificacaoEmailTest {
     }
     private String codigo(String email) throws Exception {
         assertThat(solicitar(email).getResponse().getStatus()).isEqualTo(202);
-        return drenar().stream().filter(t->t.startsWith("Para: "+email.toLowerCase(java.util.Locale.ROOT)+"\n")&&t.contains("Assunto: Verificar e-mail"))
+        return drenar().stream().filter(t->t.startsWith("Para: "+email.toLowerCase(Locale.ROOT)+"\n")&&t.contains("Assunto: Verificar e-mail"))
                 .findFirst().orElseThrow().lines().filter(l->l.startsWith("Código: ")).findFirst().orElseThrow().substring(8);
     }
     private int confirmar(String code,String host) throws Exception {
@@ -105,7 +117,7 @@ class VerificacaoEmailTest {
         assertThat(contar("usuario","email=? and not email_verificado",elegivel)).isEqualTo(1);
     }
     @Test void verificaContaExistenteSemAlterarSenhaPerfilVinculosNemCriarSessao() throws Exception {
-        String email=email();UUID id=usuario(email,true,false);String code=codigo(email.toUpperCase(java.util.Locale.ROOT));
+        String email=email();UUID id=usuario(email,true,false);String code=codigo(email.toUpperCase(Locale.ROOT));
         assertThat(confirmar(code,"b.localhost")).isEqualTo(422);
         assertThat(confirmar(code,"a.localhost")).isEqualTo(204);
         assertThat(contar("usuario","email=? and email_verificado and ativo and perfil='COZINHA' and senha_hash='!'",email)).isEqualTo(1);
@@ -126,11 +138,11 @@ class VerificacaoEmailTest {
     }
     @Test void codigosConcorrentesConfirmamUmaVezEAuditamUmaVez() throws Exception {
         String email=email();UUID id=usuario(email,true,false);String a=codigo(email),b=codigo(email);
-        var barreira=new java.util.concurrent.CyclicBarrier(2);
-        try(var executor=java.util.concurrent.Executors.newFixedThreadPool(2)) {
-            var f1=executor.submit(()->{barreira.await(10,java.util.concurrent.TimeUnit.SECONDS);return confirmar(a,"a.localhost");});
-            var f2=executor.submit(()->{barreira.await(10,java.util.concurrent.TimeUnit.SECONDS);return confirmar(b,"a.localhost");});
-            assertThat(List.of(f1.get(30,java.util.concurrent.TimeUnit.SECONDS),f2.get(30,java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
+        var barreira=new CyclicBarrier(2);
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            var f1=executor.submit(()->{barreira.await(10,TimeUnit.SECONDS);return confirmar(a,"a.localhost");});
+            var f2=executor.submit(()->{barreira.await(10,TimeUnit.SECONDS);return confirmar(b,"a.localhost");});
+            assertThat(List.of(f1.get(30,TimeUnit.SECONDS),f2.get(30,TimeUnit.SECONDS))).containsExactlyInAnyOrder(204,422);
         }
         assertThat(contar("auditoria_acesso","recurso_id=? and evento='EMAIL_VERIFICADO'",id)).isEqualTo(1);
         assertThat(contar("verificacao_email","usuario_id=? and consumido_em is null",id)).isZero();
@@ -151,7 +163,7 @@ class VerificacaoEmailTest {
         String email=email();for(int i=0;i<3;i++)assertThat(solicitar(email).getResponse().getStatus()).isEqualTo(202);
         assertThat(solicitar(email).getResponse().getStatus()).isEqualTo(429);
         String origem="2001:db8:"+UUID.randomUUID().toString().substring(0,4)+"::2";
-        String hash=java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(("verificacao-confirmar:"+origem).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("verificacao-confirmar:"+origem).getBytes(StandardCharsets.UTF_8)));
         sql("insert into %s.limite_login(chave,tentativas,inicio_em) values (?,29,now())",hash);
         assertThat(enviar("verificacao/confirmar","a.localhost",Map.of("codigo","A".repeat(43)),origem).getResponse().getStatus()).isEqualTo(422);
         assertThat(enviar("verificacao/confirmar","a.localhost",Map.of("codigo","A".repeat(43)),origem).getResponse().getStatus()).isEqualTo(429);
@@ -169,11 +181,11 @@ class VerificacaoEmailTest {
     }
     @Test void expiracaoRevalidadaDepoisDoLockEmpresarial() throws Exception {
         String email=email();UUID id=usuario(email,true,false);String code=codigo(email);
-        try(var executor=java.util.concurrent.Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
-            br.com.restaurantmanager.tenancy.Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
+        try(var executor=Executors.newSingleThreadExecutor();var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"))) {
+            Migrations.verifyIdentity(c,"rm_test","rm_test_owner");c.setAutoCommit(false);
             try(var s=c.createStatement()){s.execute("select id from "+FundacaoTest.A+".politica_acesso where id=1 for update");}
             var future=executor.submit(()->confirmar(code,"a.localhost"));
-            long limite=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10);boolean esperando=false;
+            long limite=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);boolean esperando=false;
             while(System.nanoTime()<limite) {
                 try(var s=c.createStatement();var r=s.executeQuery("select exists(select 1 from pg_locks where not granted and transactionid in (select transactionid from pg_locks where pid=pg_backend_pid() and locktype='transactionid' and granted))")) {
                     r.next();if(r.getBoolean(1)){esperando=true;break;}
@@ -182,13 +194,13 @@ class VerificacaoEmailTest {
             }
             if(!esperando){c.rollback();throw new AssertionError("Confirmação não aguardou lock observado.");}
             try(var s=c.prepareStatement("update "+FundacaoTest.A+".verificacao_email set expira_em=clock_timestamp() where usuario_id=?")){s.setObject(1,id);s.executeUpdate();}
-            c.commit();assertThat(future.get(30,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(422);
+            c.commit();assertThat(future.get(30,TimeUnit.SECONDS)).isEqualTo(422);
         }
         assertThat(contar("usuario","id=? and not email_verificado",id)).isEqualTo(1);
     }
     @Test void sessaoExistenteLeVerificacaoAtualSemTrocarJwt() throws Exception {
         String email=email(),senha=UUID.randomUUID().toString();UUID id=usuario(email,true,false);
-        sql("update %s.usuario set senha_hash=? where id=?",new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12).encode(senha),id);
+        sql("update %s.usuario set senha_hash=? where id=?",new BCryptPasswordEncoder(12).encode(senha),id);
         var login=enviar("login","a.localhost",Map.of("email",email,"senha",senha)).getResponse();
         assertThat(login.getStatus()).isEqualTo(200);
         String token=mapper.readTree(login.getContentAsString()).get("accessToken").asText();

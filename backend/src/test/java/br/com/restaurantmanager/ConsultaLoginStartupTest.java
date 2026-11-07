@@ -5,8 +5,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import br.com.restaurantmanager.identidade.Usuario;
-import br.com.restaurantmanager.tenancy.TenantScope;
+import br.com.restaurantmanager.identidade.models.Usuario;
+import br.com.restaurantmanager.tenancy.context.TenantScope;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.HqlTranslator;

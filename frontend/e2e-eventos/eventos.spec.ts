@@ -230,173 +230,185 @@ test('S01-UI34: Cliente não recebe acompanhamento nem eventos de outra empresa'
   );
 });
 
-test('S01-UI42: exportação cadastral reconsulta o servidor, baixa JSON mínimo e não usa cache em falha', async ({
-  page,
-  request,
-}) => {
-  const token = await administrador(request);
-  const id = await criar(request, token, 'Cadastro para exportar');
-  await entrar(page, massa().admin);
-  await acompanhar(page, id);
-  const nome = 'Cadastro atual ' + crypto.randomUUID();
-  expect(
-    (
-      await request.put('/api/v1/configuracoes/unidades/' + id, {
-        headers: { Authorization: 'Bearer ' + token },
-        data: { versao: 0, nome, fuso: 'UTC', ativa: true },
-      })
-    ).status(),
-  ).toBe(200);
-  const button = page.getByRole('button', {
-    name: 'Exportar cadastro da unidade (JSON)',
-    exact: true,
-  });
-  await expect(button).toBeEnabled();
-  await button.focus();
-  // O polling já avançou seu cursor; somente o clique deve reconsultar desde -1.
-  // Mesmo se o cache estiver atualizado, baixar sem esta leitura reprova o teste.
-  const consulta = page.waitForResponse(
-    (r) => r.url().endsWith('/' + id + '/eventos?depois=-1') && r.request().method() === 'GET',
-  );
-  const pending = page.waitForEvent('download');
-  await page.keyboard.press('Enter');
-  expect((await consulta).status()).toBe(200);
-  const download = await pending;
-  expect(download.suggestedFilename()).toBe('unidade-' + id + '.json');
-  const file = await download.path();
-  expect(file).not.toBeNull();
-  expect(JSON.parse(fs.readFileSync(file!, 'utf8'))).toEqual({
-    unidade: { id, nome, fuso: 'UTC', versao: '1' },
-  });
-  const estado = page.locator('app-eventos-unidade').getByRole('status');
-  await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
-  const downloads: string[] = [];
-  page.on('download', (d) => downloads.push(d.suggestedFilename()));
-  // Falha de transporte, não substituição da resposta da API por dados prontos.
-  await page.route('**/eventos?depois=-1', (route) => route.abort('internetdisconnected'));
-  await button.click();
-  await expect(page.getByRole('alert')).toContainText(
-    'Nenhum arquivo foi gerado com dados antigos',
-  );
-  await expect(estado).toHaveText('Exportação não concluída.');
-  await expect(page.getByRole('alert')).toBeFocused();
-  expect(downloads).toEqual([]);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    page.viewportSize()!.width,
-  );
-  await page
-    .locator('app-eventos-unidade')
-    .screenshot({ path: test.info().outputPath('exportacao.png') });
-  await page.unroute('**/eventos?depois=-1');
-  const recuperado = page.waitForEvent('download');
-  const reconsulta = page.waitForResponse(
-    (r) => r.url().endsWith('/' + id + '/eventos?depois=-1') && r.request().method() === 'GET',
-  );
-  await button.click();
-  expect((await reconsulta).status()).toBe(200);
-  const arquivoRecuperado = await (await recuperado).path();
-  expect(arquivoRecuperado).not.toBeNull();
-  expect(JSON.parse(fs.readFileSync(arquivoRecuperado!, 'utf8'))).toEqual({
-    unidade: { id, nome, fuso: 'UTC', versao: '1' },
-  });
-  await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
-  await expect(page.getByRole('alert')).toHaveCount(0);
-  expect(downloads).toEqual(['unidade-' + id + '.json']);
-});
+test.describe('Fronteira de rede S01-UI42', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
 
-test('S01-UI43: exportação pendente revalida revogação e não baixa dados de outra filial', async ({
-  page,
-  request,
-}) => {
-  const admin = await administrador(request);
-  const headers = { Authorization: 'Bearer ' + admin };
-  const id = await criar(request, admin, 'Exportação permitida');
-  const outra = await criar(request, admin, 'Exportação proibida');
-  const funcionarios = await (await request.get('/api/v1/equipe', { headers })).json();
-  const funcionario = funcionarios.find((x: { id: string }) => x.id === massa().cozinha.id);
-  expect(funcionario).toBeTruthy();
-  expect(
-    (
-      await request.put('/api/v1/equipe/' + funcionario.id, {
-        headers,
-        data: { versao: funcionario.versao, perfil: 'COZINHA', ativo: true, unidades: [id] },
-      })
-    ).status(),
-  ).toBe(200);
-  const token = await entrar(page, massa().cozinha);
-  await acompanhar(page, id);
-  expect(
-    (
-      await request.get('/api/v1/operacao/unidades/' + outra + '/eventos?depois=-1', {
-        headers: { Authorization: 'Bearer ' + token },
-      })
-    ).status(),
-  ).toBe(404);
-  expect(
-    (
-      await request.get(
-        'https://b.localhost:8089/api/v1/operacao/unidades/' + id + '/eventos?depois=-1',
-        { headers: { Authorization: 'Bearer ' + token } },
-      )
-    ).status(),
-  ).toBe(401);
-  const matriz = await (await request.get('/api/v1/configuracoes/acessos', { headers })).json();
-  let liberar!: () => void;
-  let recebeu!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    liberar = resolve;
-  });
-  const chegou = new Promise<void>((resolve) => {
-    recebeu = resolve;
-  });
-  await page.route('**/eventos?depois=-1', async (route) => {
-    recebeu();
-    await gate;
-    await route.continue();
-  });
-  const downloads: string[] = [];
-  page.on('download', (d) => downloads.push(d.suggestedFilename()));
-  let mudou = false;
-  try {
-    await page
-      .getByRole('button', { name: 'Exportar cadastro da unidade (JSON)', exact: true })
-      .click();
-    await chegou;
-    await expect(
-      page.getByRole('button', { name: 'Consultando para exportar…', exact: true }),
-    ).toBeDisabled();
+  test('S01-UI42: exportação cadastral reconsulta o servidor, baixa JSON mínimo e não usa cache em falha', async ({
+    page,
+    request,
+  }) => {
+    const token = await administrador(request);
+    const id = await criar(request, token, 'Cadastro para exportar');
+    await entrar(page, massa().admin);
+    await acompanhar(page, id);
+    const nome = 'Cadastro atual ' + crypto.randomUUID();
     expect(
       (
-        await request.put('/api/v1/configuracoes/acessos', {
-          headers,
-          data: {
-            versao: matriz.versao,
-            perfil: 'COZINHA',
-            acoes: matriz.perfis.COZINHA.filter((a: string) => a !== 'unidade.acompanhar'),
-          },
+        await request.put('/api/v1/configuracoes/unidades/' + id, {
+          headers: { Authorization: 'Bearer ' + token },
+          data: { versao: 0, nome, fuso: 'UTC', ativa: true },
         })
       ).status(),
     ).toBe(200);
-    mudou = true;
-    const denied = page.waitForResponse((r) => r.url().endsWith('/eventos?depois=-1'));
-    liberar();
-    expect((await denied).status()).toBe(403);
-    await expect(page.getByText('Acompanhamento encerrado.', { exact: true })).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Exportar cadastro da unidade (JSON)', exact: true }),
-    ).toHaveCount(0);
+    const button = page.getByRole('button', {
+      name: 'Exportar cadastro da unidade (JSON)',
+      exact: true,
+    });
+    await expect(button).toBeEnabled();
+    await button.focus();
+    // O polling já avançou seu cursor; somente o clique deve reconsultar desde -1.
+    // Mesmo se o cache estiver atualizado, baixar sem esta leitura reprova o teste.
+    const consulta = page.waitForResponse(
+      (r) => r.url().endsWith('/' + id + '/eventos?depois=-1') && r.request().method() === 'GET',
+    );
+    const pending = page.waitForEvent('download');
+    await page.keyboard.press('Enter');
+    expect((await consulta).status()).toBe(200);
+    const download = await pending;
+    expect(download.suggestedFilename()).toBe('unidade-' + id + '.json');
+    const file = await download.path();
+    expect(file).not.toBeNull();
+    expect(JSON.parse(fs.readFileSync(file!, 'utf8'))).toEqual({
+      unidade: { id, nome, fuso: 'UTC', versao: '1' },
+    });
+    const estado = page.locator('app-eventos-unidade').getByRole('status');
+    await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
+    const downloads: string[] = [];
+    page.on('download', (d) => downloads.push(d.suggestedFilename()));
+    // Falha de transporte, não substituição da resposta da API por dados prontos.
+    await page.route('**/eventos?depois=-1', (route) => route.abort('internetdisconnected'));
+    await button.click();
+    await expect(page.getByRole('alert')).toContainText(
+      'Nenhum arquivo foi gerado com dados antigos',
+    );
+    await expect(estado).toHaveText('Exportação não concluída.');
+    await expect(page.getByRole('alert')).toBeFocused();
     expect(downloads).toEqual([]);
-  } finally {
-    liberar();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      page.viewportSize()!.width,
+    );
+    await page
+      .locator('app-eventos-unidade')
+      .screenshot({ path: test.info().outputPath('exportacao.png') });
     await page.unroute('**/eventos?depois=-1');
-    if (mudou)
+    const recuperado = page.waitForEvent('download');
+    const reconsulta = page.waitForResponse(
+      (r) => r.url().endsWith('/' + id + '/eventos?depois=-1') && r.request().method() === 'GET',
+    );
+    await button.click();
+    expect((await reconsulta).status()).toBe(200);
+    const arquivoRecuperado = await (await recuperado).path();
+    expect(arquivoRecuperado).not.toBeNull();
+    expect(JSON.parse(fs.readFileSync(arquivoRecuperado!, 'utf8'))).toEqual({
+      unidade: { id, nome, fuso: 'UTC', versao: '1' },
+    });
+    await expect(estado).toHaveText('Arquivo cadastral solicitado ao navegador.');
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    expect(downloads).toEqual(['unidade-' + id + '.json']);
+  });
+});
+
+test.describe('Fronteira de rede S01-UI43', () => {
+  // A falha/gate é aplicada à API real por page.route. O worker pode impedir
+  // essa interceptação; PWA e jornadas normais permanecem com worker ativo.
+  test.use({ serviceWorkers: 'block' });
+
+  test('S01-UI43: exportação pendente revalida revogação e não baixa dados de outra filial', async ({
+    page,
+    request,
+  }) => {
+    const admin = await administrador(request);
+    const headers = { Authorization: 'Bearer ' + admin };
+    const id = await criar(request, admin, 'Exportação permitida');
+    const outra = await criar(request, admin, 'Exportação proibida');
+    const funcionarios = await (await request.get('/api/v1/equipe', { headers })).json();
+    const funcionario = funcionarios.find((x: { id: string }) => x.id === massa().cozinha.id);
+    expect(funcionario).toBeTruthy();
+    expect(
+      (
+        await request.put('/api/v1/equipe/' + funcionario.id, {
+          headers,
+          data: { versao: funcionario.versao, perfil: 'COZINHA', ativo: true, unidades: [id] },
+        })
+      ).status(),
+    ).toBe(200);
+    const token = await entrar(page, massa().cozinha);
+    await acompanhar(page, id);
+    expect(
+      (
+        await request.get('/api/v1/operacao/unidades/' + outra + '/eventos?depois=-1', {
+          headers: { Authorization: 'Bearer ' + token },
+        })
+      ).status(),
+    ).toBe(404);
+    expect(
+      (
+        await request.get(
+          'https://b.localhost:8089/api/v1/operacao/unidades/' + id + '/eventos?depois=-1',
+          { headers: { Authorization: 'Bearer ' + token } },
+        )
+      ).status(),
+    ).toBe(401);
+    const matriz = await (await request.get('/api/v1/configuracoes/acessos', { headers })).json();
+    let liberar!: () => void;
+    let recebeu!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      liberar = resolve;
+    });
+    const chegou = new Promise<void>((resolve) => {
+      recebeu = resolve;
+    });
+    await page.route('**/eventos?depois=-1', async (route) => {
+      recebeu();
+      await gate;
+      await route.continue();
+    });
+    const downloads: string[] = [];
+    page.on('download', (d) => downloads.push(d.suggestedFilename()));
+    let mudou = false;
+    try {
+      await page
+        .getByRole('button', { name: 'Exportar cadastro da unidade (JSON)', exact: true })
+        .click();
+      await chegou;
+      await expect(
+        page.getByRole('button', { name: 'Consultando para exportar…', exact: true }),
+      ).toBeDisabled();
       expect(
         (
           await request.put('/api/v1/configuracoes/acessos', {
             headers,
-            data: { versao: matriz.versao + 1, perfil: 'COZINHA', acoes: matriz.perfis.COZINHA },
+            data: {
+              versao: matriz.versao,
+              perfil: 'COZINHA',
+              acoes: matriz.perfis.COZINHA.filter((a: string) => a !== 'unidade.acompanhar'),
+            },
           })
         ).status(),
       ).toBe(200);
-  }
+      mudou = true;
+      const denied = page.waitForResponse((r) => r.url().endsWith('/eventos?depois=-1'));
+      liberar();
+      expect((await denied).status()).toBe(403);
+      await expect(page.getByText('Acompanhamento encerrado.', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Exportar cadastro da unidade (JSON)', exact: true }),
+      ).toHaveCount(0);
+      expect(downloads).toEqual([]);
+    } finally {
+      liberar();
+      await page.unroute('**/eventos?depois=-1');
+      if (mudou)
+        expect(
+          (
+            await request.put('/api/v1/configuracoes/acessos', {
+              headers,
+              data: { versao: matriz.versao + 1, perfil: 'COZINHA', acoes: matriz.perfis.COZINHA },
+            })
+          ).status(),
+        ).toBe(200);
+    }
+  });
 });

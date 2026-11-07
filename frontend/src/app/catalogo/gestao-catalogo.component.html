@@ -1,0 +1,177 @@
+<section aria-labelledby="gestao-catalogo-titulo" [attr.aria-busy]="ocupado()">
+  <h2 id="gestao-catalogo-titulo">Gestão do catálogo</h2>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+  @if (incerto()) {
+    <p class="aviso">
+      Consulte o resultado da alteração antes de editar novamente. A consulta recupera a versão
+      atual do servidor e substitui o rascunho.
+    </p>
+    <button type="button" (click)="reconciliar()" [disabled]="ocupado()">
+      Consultar alteração pendente
+    </button>
+  }
+  @if (acessos(); as acesso) {
+    @if (podeEditar()) {
+      <nav class="acoes" aria-label="Gestão do catálogo">
+        <button
+          type="button"
+          [attr.aria-pressed]="aba() === 'produtos'"
+          [disabled]="travado()"
+          (click)="abrirAba('produtos')"
+        >
+          Produtos e combos
+        </button>
+        <button
+          type="button"
+          [attr.aria-pressed]="aba() === 'categorias'"
+          [disabled]="travado()"
+          (click)="abrirAba('categorias')"
+        >
+          Categorias
+        </button>
+      </nav>
+    } @else if (podeConsultar()) {
+      <p>Seu acesso permite consultar o catálogo operacional das unidades vinculadas.</p>
+      <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
+      <select
+        #unidade
+        id="catalogo-operacional-unidade"
+        [value]="unidadeOperacional()"
+        [disabled]="travado()"
+        (change)="trocarUnidade(unidade.value)"
+      >
+        @for (item of acesso.unidades; track item.id) {
+          <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
+            {{ item.nome }}
+          </option>
+        }
+      </select>
+    } @else {
+      <p>Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.</p>
+    }
+    @if (aba() === 'categorias' && podeEditar()) {
+      <div class="acoes">
+        <button type="button" (click)="novaCategoria()" [disabled]="travado()">
+          Nova categoria
+        </button>
+      </div>
+      @if (categoriaSelecionada(); as categoria) {
+        <app-categoria-editor
+          [categoria]="categoria"
+          [nova]="criando()"
+          [bloqueado]="ocupado() || incerto()"
+          (salvarCategoria)="salvarCategoria($event)"
+          (cancelar)="categoriaSelecionada.set(null)"
+        />
+      }
+      <div class="grade">
+        @for (categoria of categorias(); track categoria.id) {
+          <article class="item">
+            <h3>{{ categoria.nome }}</h3>
+            <p>{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</p>
+            <button type="button" (click)="editarCategoria(categoria)" [disabled]="travado()">
+              Editar categoria {{ categoria.nome }}
+            </button>
+          </article>
+        } @empty {
+          <p class="vazio">Nenhuma categoria cadastrada.</p>
+        }
+      </div>
+    } @else if (podeConsultar()) {
+      <div class="acoes">
+        @if (podeEditar()) {
+          <button type="button" (click)="novoProduto()" [disabled]="travado()">Novo produto</button>
+        }
+        <button
+          class="secundario"
+          type="button"
+          (click)="carregarProdutos(pagina())"
+          [disabled]="travado()"
+        >
+          Atualizar lista de produtos
+        </button>
+      </div>
+      @if (produtoSelecionado(); as produto) {
+        <app-produto-editor
+          [produto]="produto"
+          [novo]="criando()"
+          [categorias]="categorias()"
+          [componentes]="componentes()"
+          [temMaisComponentes]="componentesTemMais()"
+          [bloqueado]="ocupado() || incerto()"
+          (salvarProduto)="salvarProduto($event)"
+          (maisComponentes)="carregarComponentes()"
+          (bloqueio)="bloquearFilho($event)"
+          (cancelar)="produtoSelecionado.set(null)"
+        />
+      }
+      @if (ofertaSelecionada(); as produto) {
+        <app-oferta-unidade
+          [produtoId]="produto.id"
+          [nome]="produto.nome"
+          [unidades]="acesso.unidades"
+          [podeAlterar]="podeAlterarOferta()"
+          [bloqueado]="ocupado() || incerto()"
+          (bloqueio)="bloquearFilho($event)"
+        />
+        <button
+          class="secundario"
+          type="button"
+          (click)="ofertaSelecionada.set(null)"
+          [disabled]="travado()"
+        >
+          Fechar oferta
+        </button>
+      }
+      <div class="grade">
+        @for (produto of produtos(); track produto.id) {
+          <article class="item">
+            <h3>{{ produto.nome }}</h3>
+            <p>{{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</p>
+            <div class="acoes">
+              @if (podeEditar()) {
+                <button type="button" (click)="editarProduto(produto.id)" [disabled]="travado()">
+                  Editar produto {{ produto.nome }}
+                </button>
+              }
+              <button
+                class="secundario"
+                type="button"
+                (click)="abrirOferta(produto)"
+                [disabled]="travado()"
+              >
+                Oferta de {{ produto.nome }}
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <p class="vazio">Nenhum produto nesta página.</p>
+        }
+      </div>
+      <nav class="acoes" aria-label="Páginas dos produtos">
+        <button
+          type="button"
+          (click)="carregarProdutos(pagina() - 1)"
+          [disabled]="travado() || pagina() === 0"
+        >
+          Página anterior de produtos
+        </button>
+        <span>Página {{ pagina() + 1 }}</span>
+        <button
+          type="button"
+          (click)="carregarProdutos(pagina() + 1)"
+          [disabled]="travado() || !temMais()"
+        >
+          Próxima página de produtos
+        </button>
+      </nav>
+    }
+  } @else if (!ocupado()) {
+    <button type="button" (click)="iniciar()">Consultar meus acessos ao catálogo</button>
+  }
+</section>

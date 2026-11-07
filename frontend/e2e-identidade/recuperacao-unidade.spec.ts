@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
+
+// Apenas a fronteira de perda da resposta usa interceptação de rede. PWA e
+// jornadas normais continuam com worker ativo; page.route exige esta separação.
+test.use({ serviceWorkers: 'block' });
+
 const fixture = JSON.parse(fs.readFileSync(process.env['RM_AUTH_FIXTURE']!, 'utf8')) as {
   email: string;
   senha: string;

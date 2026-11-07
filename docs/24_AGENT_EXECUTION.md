@@ -7,12 +7,14 @@
 
 ## Fluxo e responsabilidades
 
-Na revisão Mac de 2026-11-06, o PR #3 foi confirmado como integrado pelo
-proprietário em `b50b9d1`. O escopo atual é revisar/corrigir a base antes da
-Sprint 2, em `codex/revisao-pre-sprint-02`, sem iniciar a próxima sprint.
-Resultados locais não substituem os gates de homologação. O parágrafo a seguir
-registra a delimitação da missão original do Hermes; sua pendência de merge
-foi resolvida pelo proprietário.
+Na preparação de 2026-11-06, os PRs #3 e #4 foram confirmados como integrados
+pelo proprietário; a base atual é `19dff9d`. O proprietário confirmou as
+premissas da Sprint 2 e orientou avançar no desenvolvimento local da aplicação,
+deixando o acesso Linux para depois. A execução local ocorre na branch
+`codex/sprint-02-catalogo-pwa`, começando por horários/canais de unidades.
+Resultados locais e CI não substituem os gates do release em homologação.
+Não reativar o supervisor da missão anterior por essa orientação. O parágrafo
+a seguir registra a delimitação histórica da missão Hermes.
 
 Delimitação histórica da missão Hermes em 2026-11-06: terminar somente a implementação/validação da
 Sprint 01 e preparar passagem sanitizada para o proprietário continuar no

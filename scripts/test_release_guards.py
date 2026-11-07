@@ -176,14 +176,26 @@ class ReleaseGuardsTest(unittest.TestCase):
 
     def test_identidade_nao_pode_ser_verificada_em_http(self):
         jar = self.root / 'identity.jar'
+        prefix = 'BOOT-INF/classes/br/com/restaurantmanager/identidade/'
+        for name in ('JwtConfiguration.class', 'config/JwtConfiguration.class'):
+            with self.subTest(layout=name):
+                with zipfile.ZipFile(jar, 'w') as archive:
+                    archive.writestr(prefix + name, b'fixture')
+                self.assertTrue(release_support.artifact_has_identity(jar))
+                with self.assertRaises(ValueError):
+                    release_support.runtime_transport(jar, {})
+                with self.assertRaises(ValueError):
+                    release_support.runtime_transport(jar, {b'SERVER_SSL_KEY_STORE': b'file:/ausente'})
+                with self.assertRaises(ValueError):
+                    release_support.require_foundation_artifact(jar)
+
+    def test_nome_sem_pacote_exato_nao_identifica_autenticacao(self):
+        jar = self.root / 'foundation.jar'
         with zipfile.ZipFile(jar, 'w') as archive:
-            archive.writestr('BOOT-INF/classes/br/com/restaurantmanager/identidade/JwtConfiguration.class', b'fixture')
-        with self.assertRaises(ValueError):
-            release_support.runtime_transport(jar, {})
-        with self.assertRaises(ValueError):
-            release_support.runtime_transport(jar, {b'SERVER_SSL_KEY_STORE': b'file:/ausente'})
-        with self.assertRaises(ValueError):
-            release_support.require_foundation_artifact(jar)
+            archive.writestr('BOOT-INF/classes/outro/JwtConfiguration.class', b'fixture')
+        self.assertFalse(release_support.artifact_has_identity(jar))
+        release_support.require_foundation_artifact(jar)
+        self.assertEqual(release_support.runtime_transport(jar, {}), ('http://127.0.0.1:8088', None))
 
     def test_grupo_com_terceiros_nao_pode_substituir_configuracao(self):
         from types import SimpleNamespace

@@ -1,15 +1,18 @@
 package br.com.restaurantmanager;
 
-import br.com.restaurantmanager.tenancy.TenantConnections;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.infrastructure.TenantConnections;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.sql.SQLException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PoolIsolationTest {
     @BeforeAll static void prepare() throws Exception { TestDatabase.prepare(); }
@@ -30,7 +33,7 @@ class PoolIsolationTest {
             int pid;
             try (var s = a.createStatement(); var r = s.executeQuery("select pg_backend_pid()")) { r.next(); pid = r.getInt(1); }
             a.setAutoCommit(false);
-            assertThatThrownBy(() -> a.createStatement().execute("select 1/0")).isInstanceOf(java.sql.SQLException.class);
+            assertThatThrownBy(() -> a.createStatement().execute("select 1/0")).isInstanceOf(SQLException.class);
             a.rollback(); a.setAutoCommit(true);
             provider.releaseConnection(FundacaoTest.A,a);
             try (var neutral = pool.getConnection(); var s = neutral.createStatement(); var r = s.executeQuery("select pg_backend_pid(), current_schema()")) {
@@ -45,7 +48,7 @@ class PoolIsolationTest {
         try (var pool = pool(1); var thread = Executors.newSingleThreadExecutor()) {
             var provider = new TenantConnections(pool);
             var cancelled = thread.submit(() -> {
-                try (var scope = br.com.restaurantmanager.tenancy.TenantScope.open(FundacaoTest.A)) {
+                try (var scope = TenantScope.open(FundacaoTest.A)) {
                     var c = provider.getConnection(FundacaoTest.A);
                     try {
                         c.setNetworkTimeout(Runnable::run,5000);
@@ -56,7 +59,7 @@ class PoolIsolationTest {
                             // O driver envia cancelamento real, não uma exceção simulada.
                             s.setQueryTimeout(1);
                             assertThatThrownBy(() -> s.execute("select pg_sleep(30)"))
-                                    .isInstanceOfSatisfying(java.sql.SQLException.class, failure -> assertThat(failure.getSQLState()).isEqualTo("57014"));
+                                    .isInstanceOfSatisfying(SQLException.class, failure -> assertThat(failure.getSQLState()).isEqualTo("57014"));
                         }
                         return new long[]{pid, Thread.currentThread().threadId()};
                     } finally {
@@ -67,18 +70,18 @@ class PoolIsolationTest {
             }).get(15,TimeUnit.SECONDS);
             thread.submit(() -> {
                 assertThat(Thread.currentThread().threadId()).isEqualTo(cancelled[1]);
-                assertThat(br.com.restaurantmanager.tenancy.TenantScope.current()).isEqualTo("__none__");
+                assertThat(TenantScope.current()).isEqualTo("__none__");
                 try (var c = pool.getConnection(); var s = c.createStatement(); var rows = s.executeQuery("select pg_backend_pid(),current_schema()")) {
                     rows.next(); assertThat(rows.getLong(1)).isEqualTo(cancelled[0]); assertThat(rows.getString(2)).isEqualTo("pg_catalog");
                 }
-                try (var scope = br.com.restaurantmanager.tenancy.TenantScope.open(FundacaoTest.B)) {
+                try (var scope = TenantScope.open(FundacaoTest.B)) {
                     var c = provider.getConnection(FundacaoTest.B);
                     try (var s = c.createStatement(); var rows = s.executeQuery("select pg_backend_pid(),nome from unidade order by nome")) {
                         assertThat(rows.next()).isTrue();assertThat(rows.getLong(1)).isEqualTo(cancelled[0]);assertThat(rows.getString(2)).isEqualTo("B1");
                         assertThat(rows.next()).isFalse();
                     } finally { provider.releaseConnection(FundacaoTest.B,c); }
                 }
-                assertThat(br.com.restaurantmanager.tenancy.TenantScope.current()).isEqualTo("__none__");
+                assertThat(TenantScope.current()).isEqualTo("__none__");
                 return null;
             }).get(15,TimeUnit.SECONDS);
         }

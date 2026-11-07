@@ -1,0 +1,165 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — mídia pública de catálogo
+  version: 0.2.0
+  description: Módulo próprio. Upload exige catalogo.editar vigente; leitura pública
+    depende do tenant ativo resolvido pelo domínio. Apenas PNG/JPEG decodificados
+    e reencodados, até 5 MiB, lado máximo 4096 e até 12 milhões de pixels; saída até 1280 px.
+    Metadados do arquivo removidos. Armazenamento transacional bytea no schema empresarial
+    junto com cota/auditoria; nenhuma rota de arquivos privados.
+paths:
+  "/api/v1/gestao/midias/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    post:
+      operationId: publicarMidia
+      security:
+      - empresarial: []
+      responses:
+        '201':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Midia"
+        default:
+          "$ref": "#/components/responses/Erro"
+        '200':
+          description: Intenção já concluída
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Midia"
+      description: UUID estável gerado pelo cliente. Novo retorna 201; mesmo UUID/ator/hash
+        normalizado retorna 200; divergência retorna 409. Falha transacional não consome cota nem publica
+        arquivo; resposta perdida após commit é reconciliada por consulta; reconsultar
+        metadata/repetir a mesma intenção após resposta perdida. Por empresa, 200 imagens
+        e 100 MiB. SVG/GIF, arquivo corrompido ou conteúdo incompatível retorna 422; excesso retorna 413.
+        Nome/caminho do cliente nunca define armazenamento.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - arquivo
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+    get:
+      operationId: consultarMidiaAdministrativa
+      description: Consulta de metadados e reconciliação de upload exige catalogo.editar
+        vigente na mesma empresa, além de sessão válida.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Midia"
+        default:
+          "$ref": "#/components/responses/Erro"
+  "/api/v1/midias/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    get:
+      operationId: lerMidiaPublica
+      security: []
+      responses:
+        '200':
+          description: Bytes normalizados; Cache-Control:no-store e X-Content-Type-Options:nosniff.
+            Nenhuma autoria ou dado privado.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        default:
+          "$ref": "#/components/responses/Erro"
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Erro:
+      type: object
+      additionalProperties: false
+      required:
+      - codigo
+      - mensagem
+      - correlacao
+      properties:
+        codigo:
+          type: string
+        mensagem:
+          type: string
+        correlacao:
+          type: string
+    Midia:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - url
+      - contentType
+      - largura
+      - altura
+      - tamanho
+      - sha256
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          pattern: "^/api/v1/midias/"
+        contentType:
+          type: string
+          enum:
+          - image/png
+          - image/jpeg
+        largura:
+          type: integer
+          minimum: 1
+          maximum: 1280
+        altura:
+          type: integer
+          minimum: 1
+          maximum: 1280
+        tamanho:
+          type: integer
+          minimum: 1
+          maximum: 5242880
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+  responses:
+    Erro:
+      description: 400 estrutura/parâmetro, 401 sessão, 403 ação, 404 recurso alheio/inexistente,
+        409 conflito, 413 tamanho, 415 tipo HTTP ou 422 regra. Sem detalhes internos.
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/Erro"

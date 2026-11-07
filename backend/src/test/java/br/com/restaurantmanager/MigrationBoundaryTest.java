@@ -3,15 +3,18 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.restaurantmanager.tenancy.Migrations;
-import br.com.restaurantmanager.tenancy.SchemaCompatibility;
+import br.com.restaurantmanager.tenancy.infrastructure.Migrations;
+import br.com.restaurantmanager.tenancy.infrastructure.SchemaCompatibility;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.HashMap;
-import java.sql.DriverManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.junit.jupiter.api.Test;
 
 class MigrationBoundaryTest {
@@ -26,7 +29,7 @@ class MigrationBoundaryTest {
 
     @Test void migradorReaplicaSemDuplicarERegistraTodosOsSchemas() throws Exception {
         TestDatabase.prepare();
-        var expected = new java.util.ArrayList<String>(java.util.List.of("public", "t_template"));
+        var expected = new ArrayList<String>(List.of("public", "t_template"));
         try (var connection = DriverManager.getConnection(System.getenv("RM_DB_URL"),
                 System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"));
              var statement = connection.createStatement();
@@ -66,7 +69,7 @@ class MigrationBoundaryTest {
             var flyway = Flyway.configure().dataSource(System.getenv("RM_DB_URL"),
                     System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"))
                     .defaultSchema(schema).schemas(schema).locations("filesystem:" + directory).cleanDisabled(true).load();
-            assertThatThrownBy(flyway::migrate).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
+            assertThatThrownBy(flyway::migrate).isInstanceOf(FlywayException.class);
             try (var rows = statement.executeQuery("select to_regclass('" + schema + ".exemplo')")) {
                 rows.next(); assertThat(rows.getString(1)).isNull();
             }
@@ -110,7 +113,7 @@ class MigrationBoundaryTest {
             try {
                 statement.executeUpdate("update public.flyway_schema_history set checksum=0 where version='1'");
                 assertThatThrownBy(validator::afterPropertiesSet)
-                        .isInstanceOf(org.flywaydb.core.api.FlywayException.class)
+                        .isInstanceOf(FlywayException.class)
                         .hasMessageContaining("checksum mismatch");
                 try (var rows = statement.executeQuery("select checksum from public.flyway_schema_history where version='1'")) {
                     rows.next(); assertThat(rows.getInt(1)).isZero();

@@ -5,6 +5,39 @@
 
 [Índice da documentação](README.md)
 
+## Horários e canais da unidade
+
+Na Sprint 2, a unidade mantém uma agenda semanal por canal (`DELIVERY`,
+`RETIRADA`, `MESA`), interpretada no fuso IANA cadastrado. A configuração é
+exclusiva do Administrador, com reautenticação, versão própria e auditoria;
+não concede acesso a pedidos nem cria atendimento de mesa.
+
+- Unidades sem configuração começam com todos os canais desabilitados.
+  Canal habilitado sem janela para o instante consultado permanece fechado.
+- Cada janela informa dia de início (segunda = 1, domingo = 7), início e fim
+  em horas/minutos. O início é inclusivo e o fim exclusivo. Fim anterior ao
+  início atravessa a madrugada; `24:00` representa o fim do dia. Horários
+  iguais são inválidos; `00:00`–`24:00` representa um dia inteiro.
+- Limite técnico inicial: 84 janelas por unidade. Janelas do mesmo canal não
+  podem se sobrepor, inclusive na passagem de domingo para segunda. Intervalos
+  adjacentes e janelas de canais diferentes são permitidos.
+- Desabilitar um canal preserva suas janelas para edição posterior. Unidade
+  inativa não aparece na consulta pública, mesmo com canais habilitados.
+- O servidor calcula a disponibilidade no instante atual e retorna o instante
+  consultado. A hora civil do fuso define a janela, inclusive nas transições
+  de horário de verão: hora repetida pertence à mesma janela; hora inexistente
+  não gera intervalo extra. O navegador não é autoridade sobre abertura.
+- Uma alteração equivalente, após normalizar a ordem das janelas/canais, não
+  cria versão nem auditoria adicionais. O salvamento exige também a versão do
+  cadastro da unidade consultado, para detectar alteração concorrente de fuso
+  ou atividade. Qualquer versão desatualizada exige recarregar;
+  após resultado incerto, consultar o estado antes de outra alteração.
+
+A consulta pública informa disponibilidade de horário, sem reservar produto
+ou aceitar pedido. Exceções por feriado/data, agendamento de pedidos e regras
+de entrega por região não estão neste incremento. O catálogo e o envio futuro
+precisam revalidar unidade/canal/horário no servidor no momento da operação.
+
 ## Catálogo e cálculo
 
 Produtos têm nome, descrição, categoria, mídia, composição/configuração permitida e disponibilidade. Adicionais possuem preço e limites de seleção; combos usam composição explícita. Observações de preparo têm limite de tamanho e são texto simples. Informações sobre ingredientes e alergênicos devem ser claras quando fornecidas pelo restaurante; não prometer ausência de contaminação sem validação operacional.
