@@ -1,5 +1,51 @@
 # Checkpoint de execução
 
+## Revisão final do PR #5 — concluída localmente, 2026-11-06
+
+Proprietário autorizou revisão, correções e merge do PR #5, mantendo Linux e
+homologação pendentes. Base reconciliada: `origin/main` em
+`19dff9d625d03cdba9d23bf023e88846743dec03`; head inicial limpo
+`64ae6f088a143898fd176725151de9dad94579b6`, CI de push/PR aprovada e sem
+comentários pendentes. A aprovação inicial não foi herdada pelas correções.
+
+Correções em `219c2e38c266e401a10492d0218b3c3725da12f4`: recuperação de
+referências do combo após gravação incerta; orientação EXIF/espelhos aplicada
+antes de remover metadados; selects WebKit com altura real de 48 px; leitura
+pública de versões pelo serviço de unidades e jobs pelo serviço de tenancy.
+Revisões independentes e cruzadas concluídas. Contratos, mensagens, migrations
+ou dependências não foram alterados; organização por domínio preservada.
+
+Candidato SHA-256
+`ca6b02130fb910e931b4efc110b7567e3f384299dde6b1d3d86f0cb87a1a476b`.
+**271 testes backend/35 XML e 295 pares únicos de navegador aprovados**, sem
+falha, erro, skip, retry ou flaky nas seleções finais. Os 262 testes existentes
+foram preservados e nove regressões acrescentadas. São 59 cenários nos cinco
+projetos, 65 lotes, mesmo JAR e PID; 260 fontes/configurações conferidos antes e
+depois. Cinco pares PWA usam atualização controlada e 75 isolam falha de
+transporte. APIs de negócio e PostgreSQL reais; quotas da matriz preservadas.
+
+Build Angular/PWA, formatação, tipos, 14 scripts de lógica e nove combinações
+de templates aprovados. Cinco testes de guardas e sete verificações negativas
+nos JARs reais confirmaram HTTPS e recusa de exceção de login ampla. Cinquenta
+capturas revisadas; problema visual dos selects WebKit corrigido. Scanner de
+valores privados, diff, links e âncoras conferidos. Falhas reproduzidas antes
+das correções, reexecuções, contagens e limites estão na
+[evidência da revisão final](evidencias/revisao-final-pr-05-2026-11-06.md).
+
+A publicação, o SHA do head, a CI de push/PR e a integração em `main` são
+rastreáveis no [PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5).
+A descrição registra os resultados do head final; conferir seus
+[checks](https://github.com/victormontibeller/restaurant-manager/pull/5/checks),
+sem transferir aprovação entre commits. Python completo no Mac não foi repetido;
+os 15 erros históricos de `/proc` continuam documentados e separados da CI Ubuntu.
+
+Runtime HTTPS local e PostgreSQL temporários encerrados; portas 8089/55432 sem
+listener. Banco, fixtures e relatórios privados preservados. **Linux/Hermes,
+homologação, UI29/UI31 com worker/gates reais, 50 smokes, restore, aparelhos
+físicos/PWA, tecnologia assistiva e piloto continuam pendentes.** Nenhum deploy
+ou acesso Linux. Próximo passo externo: reconciliar o ambiente Linux e cumprir
+os gates do novo release quando o proprietário retomar a homologação.
+
 ## Refatoração de camadas Java — validação local concluída, 2026-11-06
 
 Todo o backend organizado com imports explícitos, nomes simples e camadas

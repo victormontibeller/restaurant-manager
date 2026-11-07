@@ -2,7 +2,7 @@
 
 ## Sprint 2 integrada — validação local concluída
 
-A [evidência integrada local](sprint-02-local-2026-11-06.md) registra 262 testes
+A [revisão final do PR #5](revisao-final-pr-05-2026-11-06.md) registra 271 testes
 backend e 295 pares únicos de navegador aprovados no candidato final, sem
 skip/retry/flaky na consolidação. Inclui cinco provas controladas de atualização
 PWA e 75 pares com injeção de falha de transporte isolada. As APIs de negócio
@@ -10,9 +10,9 @@ usam PostgreSQL real. O [checkpoint](../25_EXECUTION_STATUS.md) identifica
 artefato, processos encerrados e homologação deliberadamente pendente.
 
 A [refatoração das camadas Java](refatoracao-camadas-java-2026-11-06.md)
-reexecutou os mesmos 262 testes backend e 295 pares no novo JAR. É a validação
-local vigente do PR #5; a execução anterior permanece como histórico e não é
-somada às contagens atuais.
+reexecutou os 262 testes backend e 295 pares no JAR daquela etapa. Ela e a
+[entrega original](sprint-02-local-2026-11-06.md) permanecem como histórico;
+a validação vigente é a revisão final acima, sem somar as execuções.
 
 | Cenário | Famílias | Superfícies e prova |
 | --- | --- | --- |
@@ -24,8 +24,9 @@ somada às contagens atuais.
 | S02-PWA01 | T01–T05, X14 | Shell integrado offline, manifesto/ícones, cache sem APIs/tokens/query privada, reconexão |
 | S02-PWA02 | X14 | Build real em servidor local controlado: nova versão aguarda consentimento; cancelamento preserva a aba; atualização não recarrega outras abas |
 | CatalogoTest / CarrinhoTest / CalculadoraCarrinhoTest | T02–T05/T20–T21, X01/X05/X12/X13 | Dinheiro, combos/limites, adulteração, tenant/unidade/ator, versões, snapshots, concorrência, rollback e revogação enquanto aguarda lock |
-| MidiaTest / NormalizadorImagemTest / Sprint02BoundaryTest | T20, X01/X13 | Tipo real, quotas/dimensões, normalização, atomicidade, replay, ação atual, isolamento e allowlist HTTP |
+| MidiaTest / NormalizadorImagemTest / Sprint02BoundaryTest | T20, X01/X13 | Tipo real, quotas/dimensões, orientação EXIF/espelhos, limites dos metadados, normalização, atomicidade, replay, ação atual, isolamento e allowlist HTTP |
 | test_catalog_cart.cjs / test_pwa.cjs | T03–T05, X12/X14 | Probes simulados: dinheiro exato, cálculo somente servidor, respostas atrasadas, prévia/rede/edição, cache restrito e atualização explícita |
+| test_catalog_recovery.cjs | T20–T21, X13 | Probe simulado do editor real: recuperação de componentes do combo, rascunho/UUID preservados, falha/reconsulta, inativo e destruição sem limpar intenção |
 
 S02-UI01/02 continuam cobrindo horários e agenda pública. A regressão das
 famílias existentes é executada no mesmo candidato; UI29/UI31 e smokes de

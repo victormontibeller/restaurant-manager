@@ -6,7 +6,7 @@
 [Índice da documentação](README.md)
 
 **Status:** implementação e testes locais concluídos em 2026-11-06, com
-262 testes backend e 295 pares de navegador aprovados no mesmo candidato.
+271 testes backend e 295 pares de navegador aprovados no candidato da revisão final.
 Horários, catálogo, combos, mídia, favoritos, carrinho e PWA mantêm a organização
 por domínio. Linux/homologação ficam pendentes por orientação do proprietário.
 
@@ -92,6 +92,10 @@ com homologação Linux separada e pendente.
 Após a padronização das camadas Java no PR #5, os 262 testes backend e os
 295 pares de navegador foram executados novamente no novo artefato, conforme
 a [evidência da refatoração](evidencias/refatoracao-camadas-java-2026-11-06.md).
+A [revisão final do PR #5](evidencias/revisao-final-pr-05-2026-11-06.md)
+corrigiu recuperação de combos, orientação das imagens, alvos WebKit e
+fronteiras entre domínios. O novo candidato passou 271 testes backend e os
+295 pares completos; registros anteriores permanecem como histórico.
 
 ## Critérios de aceite
 
