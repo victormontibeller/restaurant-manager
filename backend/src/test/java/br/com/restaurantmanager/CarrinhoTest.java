@@ -131,6 +131,52 @@ class CarrinhoTest {
     }
 
     @Test
+    void cadastroDaUnidadeExigeReconfirmacaoSemAlterarValoresOuReagirAOutraFilial() throws Exception {
+        var linha = linha(1, List.of(escolha(1, true)));
+        var inicial = c.json(calcular(List.of(linha), null));
+        String revisao = inicial.get("revisao").asText();
+
+        c.executar("update " + c.schema + ".unidade set nome='Outra filial alterada',versao=versao+1 where id='" + OUTRA_UNIDADE + "'");
+        var semMudanca = c.json(calcular(List.of(linha), revisao));
+        assertThat(semMudanca.get("revisao").asText()).isEqualTo(revisao);
+        assertThat(semMudanca.get("requerConfirmacao").asBoolean()).isFalse();
+
+        c.executar("update " + c.schema + ".unidade set nome='Centro atualizado',fuso='America/Manaus',versao=versao+1 where id='" + UNIDADE + "'");
+        var atualizado = c.json(calcular(List.of(linha), revisao));
+        assertThat(atualizado.get("revisao").asText()).isNotEqualTo(revisao);
+        assertThat(atualizado.get("requerConfirmacao").asBoolean()).isTrue();
+        assertThat(atualizado.get("total").asText()).isEqualTo(inicial.get("total").asText());
+        assertThat(c.json(calcular(List.of(linha), atualizado.get("revisao").asText()))
+                .get("requerConfirmacao").asBoolean()).isFalse();
+    }
+
+    @Test
+    void revisaoPublicaPermaneceNoTenantENegaUnidadeAlheiaOuInativa() throws Exception {
+        String catalogo = "/api/v1/catalogo?unidadeId=" + UNIDADE + "&canal=DELIVERY";
+        var linha = linha(1, List.of(escolha(1, true)));
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            var inicial = outro.enviar("GET", catalogo, null, null);
+            assertThat(inicial.getStatus()).isEqualTo(200);
+            String revisao = outro.json(inicial).get("revisao").asText();
+            c.executar("update " + c.schema + ".unidade set versao=versao+1 where id='" + UNIDADE + "'");
+            var posterior = outro.enviar("GET", catalogo, null, null);
+            assertThat(posterior.getStatus()).isEqualTo(200);
+            assertThat(outro.json(posterior).get("revisao").asText()).isEqualTo(revisao);
+
+            UUID alheia = UUID.randomUUID();
+            outro.executar("insert into " + outro.schema + ".unidade(id,nome) values ('" + alheia + "','Outra empresa')");
+            assertThat(c.enviar("GET", catalogo.replace(UNIDADE.toString(), alheia.toString()), null, null)
+                    .getStatus()).isEqualTo(404);
+            assertThat(c.enviar("POST", CALCULAR, null,
+                    new Calcular(alheia, CanalAtendimento.DELIVERY, List.of(linha), null)).getStatus()).isEqualTo(404);
+        }
+
+        c.executar("update " + c.schema + ".unidade set ativa=false,versao=versao+1 where id='" + UNIDADE + "'");
+        assertThat(c.enviar("GET", catalogo, null, null).getStatus()).isEqualTo(404);
+        assertThat(calcular(List.of(linha), null).getStatus()).isEqualTo(404);
+    }
+
+    @Test
     void opcaoIndisponivelPermiteAlternativaMasNuncaSubstituicaoSilenciosa() throws Exception {
         c.ofertar(componente.id(), UNIDADE, "100.00", false);
         var detalhe = c.json(c.enviar("GET", c.publico(combo.id()), null, null));

@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import br.com.restaurantmanager.identidade.dtos.ResultadoRetencao;
 import br.com.restaurantmanager.identidade.services.RetencaoIdentidadeService;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
-import br.com.restaurantmanager.tenancy.repositories.TenantRepository;
+import br.com.restaurantmanager.tenancy.services.TenantService;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class RetencaoIdentidadeJobTest {
     @Test @ExtendWith(OutputCaptureExtension.class)
     void lotesCheiosContinuamComLimiteEAdvertenciaSemImpedirOutroTenant(CapturedOutput output) {
-        var tenants = mock(TenantRepository.class);
+        var tenants = mock(TenantService.class);
         var service = mock(RetencaoIdentidadeService.class);
         String a = "t_" + "a".repeat(32), b = "t_" + "b".repeat(32);
         when(tenants.schemasParaManutencao("")).thenReturn(List.of(a, b));
@@ -39,7 +39,7 @@ class RetencaoIdentidadeJobTest {
     }
     @Test @ExtendWith(OutputCaptureExtension.class)
     void falhaIdentificaTenantSemPublicarMensagemDaExcecao(CapturedOutput output) {
-        var tenants = mock(TenantRepository.class);
+        var tenants = mock(TenantService.class);
         var service = mock(RetencaoIdentidadeService.class);
         String a = "t_" + "a".repeat(32);
         when(tenants.schemasParaManutencao("")).thenReturn(List.of(a));
@@ -49,7 +49,7 @@ class RetencaoIdentidadeJobTest {
         assertThat(output).contains("Retenção de identidade pendente: tenant=" + a).doesNotContain("conteudo-protegido");
     }
     @Test void erroEmUmTenantLimpaThreadEPermitePaginaSeguinte() {
-        var tenants = mock(TenantRepository.class);
+        var tenants = mock(TenantService.class);
         var service = mock(RetencaoIdentidadeService.class);
         String a = "t_" + "a".repeat(32), b = "t_" + "b".repeat(32);
         when(tenants.schemasParaManutencao("")).thenReturn(List.of(a));
@@ -67,7 +67,7 @@ class RetencaoIdentidadeJobTest {
         verify(tenants).schemasParaManutencao(b);
     }
     @Test void naoAceitaContextoHerdadoNemRemoveContextoDoChamador() {
-        var job = new RetencaoIdentidadeJob(mock(TenantRepository.class), mock(RetencaoIdentidadeService.class));
+        var job = new RetencaoIdentidadeJob(mock(TenantService.class), mock(RetencaoIdentidadeService.class));
         String a = "t_" + "a".repeat(32);
         try (var scope = TenantScope.open(a)) {
             assertThatThrownBy(job::executar).isInstanceOf(IllegalStateException.class);

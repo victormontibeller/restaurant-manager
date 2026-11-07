@@ -37,6 +37,9 @@ textarea {
   background: white;
   color: #202a25;
 }
+select {
+  height: 3rem;
+}
 textarea {
   min-height: 6rem;
   resize: vertical;

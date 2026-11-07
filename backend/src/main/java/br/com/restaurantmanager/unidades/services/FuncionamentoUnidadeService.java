@@ -67,6 +67,11 @@ public class FuncionamentoUnidadeService {
     }
 
     @Transactional(readOnly = true)
+    public String revisaoPublica(UUID unidade) {
+        return repository.revisaoPublica(unidade).orElseThrow(FuncionamentoUnidadeService::inexistente);
+    }
+
+    @Transactional(readOnly = true)
     public FuncionamentoPublicoUnidade consultarPublico(UUID unidade) {
         var consulta = obter(unidade);
         if (!consulta.ativa()) {

@@ -20,6 +20,17 @@ public class FuncionamentoUnidadeRepository {
         this.em = em;
     }
 
+    public Optional<String> revisaoPublica(UUID unidade) {
+        List<Object[]> linhas = em.createNativeQuery("""
+                select u.versao, coalesce(f.versao, 0)
+                  from unidade u left join funcionamento_unidade f on f.unidade_id = u.id
+                 where u.id = :unidade and u.ativa
+                """, Object[].class)
+                .setParameter("unidade", unidade)
+                .getResultList();
+        return linhas.stream().findFirst().map(linha -> linha[0] + ":" + linha[1]);
+    }
+
     public Optional<ConsultaFuncionamentoUnidade> consultar(UUID unidade) {
         // Um único comando mantém unidade, canais e janelas no mesmo snapshot PostgreSQL.
         List<Object[]> linhas = em.createNativeQuery("""

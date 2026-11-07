@@ -63,7 +63,7 @@ public class NormalizadorImagem {
                 if (original == null) {
                     throw invalida("A imagem está incompleta ou corrompida.");
                 }
-                return otimizar(original, formato);
+                return otimizar(original, formato, OrientacaoImagem.ler(bytes, formato));
             } finally {
                 leitor.dispose();
             }
@@ -84,17 +84,26 @@ public class NormalizadorImagem {
         throw invalida("Somente imagens PNG ou JPEG válidas são permitidas.");
     }
 
-    private ImagemNormalizada otimizar(BufferedImage original, String formato) throws IOException {
+    private ImagemNormalizada otimizar(BufferedImage original, String formato, int orientacao) throws IOException {
         double escala = Math.min(1.0, (double) DIMENSAO_PUBLICADA
                 / Math.max(original.getWidth(), original.getHeight()));
         int largura = Math.max(1, (int) Math.round(original.getWidth() * escala));
         int altura = Math.max(1, (int) Math.round(original.getHeight() * escala));
+        int larguraPublicada = OrientacaoImagem.trocaEixos(orientacao) ? altura : largura;
+        int alturaPublicada = OrientacaoImagem.trocaEixos(orientacao) ? largura : altura;
         int tipo = formato.equals("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
-        var publicada = new BufferedImage(largura, altura, tipo);
+        var publicada = new BufferedImage(larguraPublicada, alturaPublicada, tipo);
         var desenho = publicada.createGraphics();
         try {
             desenho.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            desenho.drawImage(original, 0, 0, largura, altura, null);
+            if (orientacao == 1) {
+                desenho.drawImage(original, 0, 0, largura, altura, null);
+            } else {
+                // Orientação e escala no desenho final, sem outro bitmap de até 12 milhões de pixels.
+                var transformacao = OrientacaoImagem.transformacao(orientacao, largura, altura);
+                transformacao.scale((double) largura / original.getWidth(), (double) altura / original.getHeight());
+                desenho.drawImage(original, transformacao, null);
+            }
         } finally {
             desenho.dispose();
             original.flush();
@@ -109,7 +118,7 @@ public class NormalizadorImagem {
             if (conteudo.length > MAXIMO_BYTES) {
                 throw excessiva();
             }
-            return new ImagemNormalizada("image/" + formato, largura, altura, conteudo, hash(conteudo));
+            return new ImagemNormalizada("image/" + formato, larguraPublicada, alturaPublicada, conteudo, hash(conteudo));
         } finally {
             publicada.flush();
         }

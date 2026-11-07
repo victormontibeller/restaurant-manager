@@ -108,6 +108,10 @@ async function abrirProduto(gestao: Locator, nome: string, categoriaId: string):
     .getByLabel('Descrição', { exact: true })
     .fill('Produto fictício para validar a Sprint 2.');
   await editor.getByLabel('Categoria do produto', { exact: true }).selectOption(categoriaId);
+  for (const rotulo of ['Categoria do produto', 'Tipo de produto']) {
+    const seletor = editor.getByLabel(rotulo, { exact: true });
+    expect((await seletor.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  }
   return editor;
 }
 
@@ -178,6 +182,9 @@ async function configurarCombo(
   await configurador
     .getByLabel('Opção da escolha', { exact: true })
     .selectOption(combo.grupos[0].opcoes[0].id);
+  expect(
+    (await configurador.getByLabel('Opção da escolha', { exact: true }).boundingBox())!.height,
+  ).toBeGreaterThanOrEqual(48);
   await configurador.getByLabel('Quantidade desta escolha', { exact: true }).fill(escolhas);
   if (adicional) await configurador.getByLabel(/Queijo extra ·/).fill('1');
   if (adicional) {
@@ -325,6 +332,9 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     await expect(gestao).toHaveAttribute('aria-busy', 'false');
   }
   await opcao.getByLabel('Produto da opção', { exact: true }).selectOption(simples.id);
+  expect(
+    (await opcao.getByLabel('Produto da opção', { exact: true }).boundingBox())!.height,
+  ).toBeGreaterThanOrEqual(48);
   await opcao.getByLabel('Acréscimo por escolha (R$)', { exact: true }).fill('5.00');
   await opcao.getByLabel('Limite desta opção no grupo', { exact: true }).fill('2');
   await opcao.getByLabel('Queijo extra', { exact: true }).check();

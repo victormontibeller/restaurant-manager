@@ -15,7 +15,10 @@ privados, documentos de cliente nem provedor de mídia neste escopo.
 ## Decisão
 
 O domínio `midia` valida PNG/JPEG por conteúdo, decodifica com limites e gera
-uma imagem nova, sem metadados, de até 1280 pixels por lado. O resultado
+uma imagem nova, sem metadados, de até 1280 pixels por lado. A orientação EXIF
+válida, incluindo espelhos, é aplicada aos pixels antes de descartar metadados;
+leitura inválida não segue offsets externos nem dados após o fim da imagem.
+O resultado
 imutável fica em `bytea` no schema da empresa. Bytes, tamanho, hash, cota e
 auditoria são publicados na mesma transação; a FK do produto aponta para a
 mídia do mesmo schema. O upload tem UUID estável, autor e hash para recuperação

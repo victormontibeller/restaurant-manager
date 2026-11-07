@@ -3,7 +3,7 @@ package br.com.restaurantmanager.identidade.jobs;
 import br.com.restaurantmanager.identidade.infrastructure.CapturaEmail;
 import br.com.restaurantmanager.identidade.services.EmailIdentidadeService;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
-import br.com.restaurantmanager.tenancy.repositories.TenantRepository;
+import br.com.restaurantmanager.tenancy.services.TenantService;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +17,11 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "rm.email.agendado", havingValue = "true", matchIfMissing = true)
 public class EmailIdentidadeJob {
     private static final Logger LOG = LoggerFactory.getLogger(EmailIdentidadeJob.class);
-    private final TenantRepository tenants;
+    private final TenantService tenants;
     private final EmailIdentidadeService service;
     private final CapturaEmail captura;
 
-    public EmailIdentidadeJob(TenantRepository tenants, EmailIdentidadeService service, CapturaEmail captura) {
+    public EmailIdentidadeJob(TenantService tenants, EmailIdentidadeService service, CapturaEmail captura) {
         this.tenants = tenants;
         this.service = service;
         this.captura = captura;

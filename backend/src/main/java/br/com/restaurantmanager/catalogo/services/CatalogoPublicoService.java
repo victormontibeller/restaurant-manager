@@ -82,7 +82,7 @@ public class CatalogoPublicoService {
     }
 
     private String revisao(UUID unidade, CanalAtendimento canal) {
-        return revisoes.gerar(unidade, canal, repository.revisao(), repository.versaoUnidade(unidade));
+        return revisoes.gerar(unidade, canal, repository.revisao(), funcionamento.revisaoPublica(unidade));
     }
 
     private Produto obterPublicavel(UUID id) {

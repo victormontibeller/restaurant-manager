@@ -17,6 +17,7 @@ const tests = [
   'test_pwa.cjs',
   'test_catalog_cart.cjs',
   'test_catalog_media.cjs',
+  'test_catalog_recovery.cjs',
 ];
 
 for (const test of tests) {

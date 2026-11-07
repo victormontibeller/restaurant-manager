@@ -2,7 +2,7 @@ package br.com.restaurantmanager.identidade.jobs;
 
 import br.com.restaurantmanager.identidade.services.RetencaoIdentidadeService;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
-import br.com.restaurantmanager.tenancy.repositories.TenantRepository;
+import br.com.restaurantmanager.tenancy.services.TenantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "rm.auth.retencao-agendada", havingValue = "true", matchIfMissing = true)
 public class RetencaoIdentidadeJob {
     private static final Logger LOG = LoggerFactory.getLogger(RetencaoIdentidadeJob.class);
-    private final TenantRepository tenants;
+    private final TenantService tenants;
     private final RetencaoIdentidadeService service;
 
-    public RetencaoIdentidadeJob(TenantRepository tenants, RetencaoIdentidadeService service) {
+    public RetencaoIdentidadeJob(TenantService tenants, RetencaoIdentidadeService service) {
         this.tenants = tenants;
         this.service = service;
     }

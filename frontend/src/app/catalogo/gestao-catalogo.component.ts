@@ -225,7 +225,12 @@ export class GestaoCatalogoComponent {
       this.aba.set(pendente.tipo === 'categoria' ? 'categorias' : 'produtos');
       if (pendente.tipo === 'categoria')
         this.categoriaSelecionada.set((atual ?? pendente.dados) as Categoria);
-      else this.produtoSelecionado.set((atual ?? pendente.dados) as Produto);
+      else {
+        const produto = (atual ?? pendente.dados) as Produto;
+        await this.carregarReferencias(produto);
+        if (this.destruido) return;
+        this.produtoSelecionado.set(produto);
+      }
       estado.set(null);
       this.incerto.set(false);
       this.aviso.set(

@@ -6,7 +6,6 @@ import br.com.restaurantmanager.catalogo.dtos.Grupo;
 import br.com.restaurantmanager.catalogo.dtos.Oferta;
 import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.catalogo.dtos.Produto;
-import br.com.restaurantmanager.catalogo.exceptions.ErrosCatalogo;
 import br.com.restaurantmanager.catalogo.models.Dinheiro;
 import br.com.restaurantmanager.catalogo.models.TipoProduto;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
@@ -52,16 +51,6 @@ public class CatalogoRepository {
     public long revisao() {
         return consulta("select versao from catalogo_revisao where id = 1", Long.class)
                 .getSingleResult();
-    }
-
-    public String versaoUnidade(UUID unidade) {
-        Object[] linha = consulta("""
-                select u.versao, coalesce(f.versao, 0)
-                  from unidade u left join funcionamento_unidade f on f.unidade_id = u.id
-                 where u.id = :id and u.ativa
-                """, Object[].class).setParameter("id", unidade).getResultStream().findFirst()
-                .orElseThrow(ErrosCatalogo::inexistente);
-        return linha[0] + ":" + linha[1];
     }
 
     public Optional<Categoria> categoria(UUID id) {
