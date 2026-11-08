@@ -1,0 +1,31 @@
+<section class="painel-interno" [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'">
+  <h2>{{ mesa() ? 'Minhas rodadas' : 'Meus pedidos' }}</h2>
+  <button (click)="carregar(pagina())" [disabled]="ocupado()">Atualizar pedidos</button>
+  <p role="status">
+    {{ acompanhamento.estado() }} Última atualização:
+    {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+  </p>
+  @if (outrasUnidades()) {
+    <p>Pedidos desta página são conferidos também a cada cinco segundos.</p>
+  }
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @for (pedido of pedidos(); track pedido.id) {
+    <app-pedido-detalhe
+      [pedido]="pedido"
+      [contexto]="mesa() ? 'mesa' : 'cliente'"
+      (atualizar)="carregar(pagina())"
+    />
+  } @empty {
+    <p>Nenhum pedido encontrado nesta página.</p>
+  }
+  <div class="acoes">
+    <button (click)="carregar(pagina() - 1)" [disabled]="ocupado() || pagina() === 0">
+      Página anterior de pedidos
+    </button>
+    <button (click)="carregar(pagina() + 1)" [disabled]="ocupado() || !mais()">
+      Próxima página de pedidos
+    </button>
+  </div>
+</section>

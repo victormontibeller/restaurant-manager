@@ -26,11 +26,21 @@ async function entrar(page: Page): Promise<string> {
   return body.accessToken;
 }
 async function consultar(page: Page): Promise<void> {
-  await page.getByLabel('Identificador da empresa').fill(empresa.id);
+  const identificador = page.getByLabel('Identificador da empresa');
+  await identificador.fill(empresa.id);
+  await expect(identificador).toHaveValue(empresa.id);
+  expect(await identificador.evaluate((input) => (input as HTMLInputElement).validity.valid)).toBe(
+    true,
+  );
+  const consultar = page.getByRole('button', { name: 'Consultar estado comercial', exact: true });
+  await consultar.focus();
+  await expect(consultar).toBeFocused();
   const response = page.waitForResponse(
     (r) => r.url().endsWith(url) && r.request().method() === 'GET',
   );
-  await page.getByRole('button', { name: 'Consultar estado comercial', exact: true }).click();
+  // Após o alerta, o Firefox pode ainda estar compondo a rolagem visual.
+  // O teclado submete o controle realmente focado sem depender dessas coordenadas.
+  await consultar.press('Enter');
   expect((await response).status()).toBe(200);
   await expect(
     page.getByRole('status').filter({ hasText: 'Estado comercial consultado.' }),

@@ -7,10 +7,13 @@ import br.com.restaurantmanager.identidade.models.Usuario;
 import br.com.restaurantmanager.unidades.models.Unidade;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -32,7 +35,21 @@ public class AcessosRepository {
     }
 
     public Sessao sessao(UUID id) {
-        return em.find(Sessao.class, id);
+        // Acesso precede os agregados: logout/reuso do refresh aguardam a operação autorizada.
+        try {
+            var sessao = em.find(Sessao.class, id, LockModeType.PESSIMISTIC_READ);
+            if (sessao != null) em.refresh(sessao, LockModeType.PESSIMISTIC_READ);
+            return sessao;
+        } catch (PersistenceException erro) {
+            // Sob REPEATABLE_READ, uma alteração posterior ao snapshot impede a releitura.
+            // Recuse esse conflito de sessão sem repetir a operação nem ocultar outras falhas SQL.
+            for (Throwable causa = erro; causa != null; causa = causa.getCause()) {
+                if (causa instanceof SQLException sql && "40001".equals(sql.getSQLState())) {
+                    throw new ObjectOptimisticLockingFailureException(Sessao.class, id, erro);
+                }
+            }
+            throw erro;
+        }
     }
 
     public List<Usuario> equipe(int pagina) {
@@ -57,6 +74,10 @@ public class AcessosRepository {
     public List<Unidade> unidadesAtivas() {
         return em.createQuery("from Unidade where ativa=true order by nome", Unidade.class)
                 .getResultList();
+    }
+
+    public List<Unidade> unidadesExistentes() {
+        return em.createQuery("from Unidade order by nome", Unidade.class).getResultList();
     }
 
     @SuppressWarnings("unchecked")

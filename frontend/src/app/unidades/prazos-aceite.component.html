@@ -1,0 +1,77 @@
+<section class="painel-interno" aria-labelledby="prazos-aceite-titulo">
+  <h3 id="prazos-aceite-titulo">Prazos de aceite</h3>
+  <p>
+    Alterações valem apenas para futuros pedidos. Pedidos já enviados conservam os prazos
+    confirmados.
+  </p>
+  <label for="escopo-prazos">Configuração</label>
+  <select
+    id="escopo-prazos"
+    #escopo
+    [value]="empresa() ? 'empresa' : 'unidade'"
+    (change)="trocarEscopo(escopo)"
+    [disabled]="ocupado()"
+  >
+    <option value="unidade">Unidade selecionada</option>
+    <option value="empresa">Padrão da empresa</option>
+  </select>
+  <button (click)="carregar()" [disabled]="ocupado()">Consultar prazos atuais</button>
+  @if (atual()) {
+    <form (submit)="salvar($event, senha)">
+      @if (!empresa()) {
+        <label class="selecao" for="herdar-prazos"
+          ><input
+            id="herdar-prazos"
+            type="checkbox"
+            #herdar
+            [checked]="herdado"
+            (change)="herdado = herdar.checked"
+            [disabled]="ocupado()"
+          />Herdar padrão da empresa</label
+        >
+      }
+      <label for="alerta-aceite">Alerta após (segundos)</label>
+      <input
+        id="alerta-aceite"
+        #alerta
+        type="number"
+        min="1"
+        max="86399"
+        step="1"
+        [value]="alertaSegundos"
+        (input)="alertaSegundos = alerta.value"
+        [disabled]="ocupado() || (!empresa() && herdado)"
+        required
+      />
+      <label for="expiracao-aceite">Cancelar automaticamente após (segundos)</label>
+      <input
+        id="expiracao-aceite"
+        #expiracao
+        type="number"
+        min="2"
+        max="86400"
+        step="1"
+        [value]="expiracaoSegundos"
+        (input)="expiracaoSegundos = expiracao.value"
+        [disabled]="ocupado() || (!empresa() && herdado)"
+        required
+      />
+      <label for="senha-prazos">Confirme sua senha para salvar prazos</label>
+      <input
+        id="senha-prazos"
+        #senha
+        type="password"
+        autocomplete="current-password"
+        [disabled]="ocupado()"
+        required
+      />
+      <button type="submit" [disabled]="ocupado()">Salvar prazos de aceite</button>
+    </form>
+  }
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

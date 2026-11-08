@@ -1,0 +1,1342 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — pedidos, cozinha e contratos de cobrança
+  version: 0.3.0
+  description: Sprint 3 local. Tenant resolvido pelo domínio; JWT empresarial ou audiência
+    exclusiva de mesa. Respostas no-store. Não implementa recebimentos/devoluções
+    reais, regiões/mínimo de delivery ou expedição. Cobrança pertence ao pedido externo
+    ou à comanda; cancelamento gera ajuste somente do remanescente. Saldo informa
+    obrigação, não execução de devolução. Eventos/replay têm contrato próprio.
+paths:
+  "/api/v1/me/pedidos":
+    get:
+      operationId: listarPedidosCliente
+      description: Somente rodadas de autoria do participante ou pedidos do cliente.
+        Snapshot transacional consistente.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PedidoDetalhe"
+                    maxItems: 50
+                  mais:
+                    type: boolean
+                required:
+                - itens
+                - mais
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+  "/api/v1/me/pedidos/{id}":
+    get:
+      operationId: consultarPedidoCliente
+      description: ID alheio retorna 404. Intenção permanece associada ao pedido.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/me/pedidos/intencoes/{id}":
+    get:
+      operationId: reconciliarPedidoCliente
+      description: ID alheio retorna 404. Intenção permanece associada ao pedido.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/me/pedidos/{id}/cancelar":
+    post:
+      operationId: cancelarPedidoCliente
+      description: Motivo obrigatório e unidades vazias. Autocancelamento integral
+        somente antes do primeiro preparo. Solicitação posterior não interrompe produção.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/me/pedidos/{id}/solicitar-cancelamento":
+    post:
+      operationId: solicitarcancelamentoPedidoCliente
+      description: Solicitação posterior ao primeiro preparo, com motivo obrigatório
+        e unidades vazias. Exige pedido não terminal e nenhuma solicitação PENDENTE.
+        Não interrompe produção; aguarda decisão operacional autorizada.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/pedidos":
+    post:
+      operationId: enviarPedidoCliente
+      description: Novo pedido recalcula após locks e exige revisão atual e vendas
+        habilitadas. Cliente delivery/retirada entra em aceite. Delivery somente
+        dev/test com opt-in, endereço fictício obrigatório e taxa de teste R$ 0,00.
+        Replay idêntico recupera o pedido sob lock, inclusive com vendas suspensas,
+        se a autorização permanece válida; mesmo UUID com payload divergente retorna 409.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EnviarPedido"
+  "/api/v1/mesa/pedidos":
+    get:
+      operationId: listarPedidosMesa
+      description: Somente rodadas de autoria do participante ou pedidos do cliente.
+        Snapshot transacional consistente.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PedidoDetalhe"
+                    maxItems: 50
+                  mais:
+                    type: boolean
+                required:
+                - itens
+                - mais
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+    post:
+      operationId: enviarPedidoMesa
+      description: Nova rodada recalcula após locks, exige revisão atual, vendas
+        habilitadas e comanda aberta. Replay idêntico recupera o pedido sob lock,
+        inclusive durante fechamento ou suspensão, se a sessão de participante
+        permanece válida; mesmo UUID com payload divergente retorna 409.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EnviarPedido"
+  "/api/v1/mesa/pedidos/{id}":
+    get:
+      operationId: consultarPedidoMesa
+      description: ID alheio retorna 404. Intenção permanece associada ao pedido.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/mesa/pedidos/intencoes/{id}":
+    get:
+      operationId: reconciliarPedidoMesa
+      description: ID alheio retorna 404. Intenção permanece associada ao pedido.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/mesa/pedidos/{id}/cancelar":
+    post:
+      operationId: cancelarPedidoMesa
+      description: Motivo obrigatório e unidades vazias. Autocancelamento integral
+        somente antes do primeiro preparo. Solicitação posterior não interrompe produção.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/mesa/pedidos/{id}/solicitar-cancelamento":
+    post:
+      operationId: solicitarcancelamentoPedidoMesa
+      description: Solicitação posterior ao primeiro preparo, com motivo obrigatório
+        e unidades vazias. Exige pedido não terminal e nenhuma solicitação PENDENTE.
+        Não interrompe produção; aguarda decisão operacional autorizada.
+      security:
+      - mesa: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoDetalhe"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos":
+    post:
+      operationId: criarPedidoAssistido
+      description: Exige pedido.criar_assistido; autoria permanece do funcionário.
+        Novo pedido recalcula após locks e exige revisão atual e vendas habilitadas;
+        mesa exige comanda aberta. Replay idêntico recupera o pedido sob lock,
+        inclusive durante fechamento ou suspensão, se a autorização permanece válida.
+        Mesmo UUID com payload divergente retorna 409. Retorno mínimo sem preço/endereço/saldo.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EnviarPedido"
+    get:
+      operationId: listarPedidosOperacionais
+      description: Exige pedido.consultar na unidade; preserva operações existentes
+        em unidade inativa.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PedidoOperacional"
+                    maxItems: 50
+                  mais:
+                    type: boolean
+                required:
+                - itens
+                - mais
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+  "/api/v1/operacao/pedidos/{id}":
+    get:
+      operationId: consultarPedidoOperacional
+      description: Projeção mínima autorizada por unidade.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/intencoes/{id}":
+    get:
+      operationId: reconciliarPedidoOperacional
+      description: Projeção mínima autorizada por unidade.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/aceitar":
+    post:
+      operationId: aceitarPedido
+      description: Ação específica e versão atual obrigatórias; não recebe seleção de unidades.
+        Exige AGUARDANDO_ACEITE. Em agora >= expirarEm confirma o cancelamento
+        durável e retorna 409, mesmo se o job atrasou. Alerta devido ainda não
+        registrado é recuperado uma única vez antes da expiração, na mesma
+        transação e com horário real de processamento.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/recusar":
+    post:
+      operationId: recusarPedido
+      description: Exige ação específica, versão atual, motivo e pedido AGUARDANDO_ACEITE.
+        Não recebe seleção de unidades; cancela integralmente e abate somente
+        o valor remanescente.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/cancelar":
+    post:
+      operationId: cancelarPedido
+      description: Exige versão atual e motivo. Seleção vazia cancela todas as unidades
+        ativas; parcial recebe UUIDs de unidades completas. Componentes de combo
+        são negados. Após qualquer preparo exige pedido.cancelar_apos_preparo.
+        Cancelamento integral resolve solicitação PENDENTE como APROVADA na mesma
+        transação, sem segundo abatimento; parcial preserva a solicitação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/servir":
+    post:
+      operationId: servirPedido
+      description: Exige ação específica, versão atual e pedido de mesa PRONTO.
+        Não recebe seleção de unidades. Solicitação de cancelamento PENDENTE
+        deve ser decidida antes do serviço; pagamento não é pré-requisito.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/solicitacoes/{solicitacaoId}/aprovar":
+    post:
+      operationId: aprovarSolicitacaoCancelamento
+      description: Revalida pedido, solicitação pendente e permissão antes/após preparo.
+        Motivo obrigatório; aprovação pode selecionar unidades completas. Rejeição
+        não recebe unidades.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: solicitacaoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/operacao/pedidos/{id}/solicitacoes/{solicitacaoId}/rejeitar":
+    post:
+      operationId: rejeitarSolicitacaoCancelamento
+      description: Revalida pedido, solicitação pendente e permissão antes/após preparo.
+        Motivo obrigatório; aprovação pode selecionar unidades completas. Rejeição
+        não recebe unidades.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: solicitacaoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/cozinha":
+    get:
+      operationId: listarKds
+      description: Somente NA_FILA/EM_PREPARO/PRONTO da unidade autorizada. Não expõe
+        dados financeiros, endereço ou contato.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PedidoOperacional"
+                    maxItems: 50
+                  mais:
+                    type: boolean
+                required:
+                - itens
+                - mais
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+  "/api/v1/cozinha/pedidos/{id}/iniciar":
+    post:
+      operationId: iniciarProducao
+      description: Lote não vazio de UUIDs únicos de unidades comerciais, atômico.
+        Revalida todas as unidades e estado do pedido. Primeiro início é imutável;
+        combo é unidade completa.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/cozinha/pedidos/{id}/concluir":
+    post:
+      operationId: concluirProducao
+      description: Lote não vazio de UUIDs únicos de unidades comerciais, atômico.
+        Revalida todas as unidades e estado do pedido. Primeiro início é imutável;
+        combo é unidade completa.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  "/api/v1/configuracoes/prazos-aceite":
+    get:
+      operationId: consultarPrazosEmpresa
+      description: Somente Administrador. Defaults empresa 120/300 segundos; unidade
+        herda até override.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrazosAceite"
+        default:
+          "$ref": "#/components/responses/Erro"
+    put:
+      operationId: alterarPrazosEmpresa
+      description: Administrador reautenticado; versão atual. 0 < alerta < expiração
+        <= 86400. Empresa não aceita herdar=true; mudanças valem apenas para pedidos
+        futuros.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrazosAceite"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AlterarPrazos"
+  "/api/v1/configuracoes/unidades/{id}/prazos-aceite":
+    get:
+      operationId: consultarPrazosUnidade
+      description: Somente Administrador. Defaults empresa 120/300 segundos; unidade
+        herda até override.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrazosAceite"
+        default:
+          "$ref": "#/components/responses/Erro"
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    put:
+      operationId: alterarPrazosUnidade
+      description: Administrador reautenticado; versão atual. 0 < alerta < expiração
+        <= 86400. herdar=true usa o padrão da empresa; mudanças valem apenas para
+        pedidos futuros.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrazosAceite"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AlterarPrazos"
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    mesa:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT de mesa
+  schemas:
+    EnviarPedido:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        unidadeId:
+          type: string
+          format: uuid
+        canal:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+        comandaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        revisao:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        linhas:
+          type: array
+          items:
+            "$ref": carrinho.yaml#/components/schemas/Linha
+          minItems: 1
+          maxItems: 50
+        observacao:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        endereco:
+          oneOf:
+          - "$ref": "#/components/schemas/EnderecoEntrega"
+          - type: 'null'
+      required:
+      - intencaoId
+      - unidadeId
+      - canal
+      - revisao
+      - linhas
+    EnderecoEntrega:
+      type: object
+      additionalProperties: false
+      properties:
+        logradouro:
+          type: string
+          minLength: 1
+          maxLength: 150
+        numero:
+          type: string
+          minLength: 1
+          maxLength: 20
+        complemento:
+          type:
+          - string
+          - 'null'
+          maxLength: 100
+        bairro:
+          type: string
+          minLength: 1
+          maxLength: 100
+        cidade:
+          type: string
+          minLength: 1
+          maxLength: 100
+        uf:
+          type: string
+          pattern: "^[A-Z]{2}$"
+        cep:
+          type: string
+          pattern: "^[0-9]{8}$"
+      required:
+      - logradouro
+      - numero
+      - bairro
+      - cidade
+      - uf
+      - cep
+    ComandoPedido:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        motivo:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        unidades:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 4950
+      required:
+      - intencaoId
+      - versao
+      - unidades
+    UnidadeProducao:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        linhaId:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          enum:
+          - NA_FILA
+          - EM_PREPARO
+          - PRONTO
+          - CANCELADO
+        iniciadoEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        concluidoEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - linhaId
+      - estado
+      - iniciadoEm
+      - concluidoEm
+    HistoricoPedido:
+      type: object
+      additionalProperties: false
+      properties:
+        tipo:
+          type: string
+        motivo:
+          type: string
+        ocorridoEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - tipo
+      - motivo
+      - ocorridoEm
+    SolicitacaoCancelamento:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+        estado:
+          type: string
+          enum:
+          - PENDENTE
+          - APROVADA
+          - REJEITADA
+        criadaEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - motivo
+      - estado
+      - criadaEm
+    SaldoCobranca:
+      type: object
+      additionalProperties: false
+      properties:
+        totalDevido:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]{2}$"
+        pagoConfirmado:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]{2}$"
+        devolvidoConfirmado:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]{2}$"
+        saldoAReceber:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]{2}$"
+        saldoADevolver:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]{2}$"
+        pendenciaFinanceira:
+          type: boolean
+      required:
+      - totalDevido
+      - pagoConfirmado
+      - devolvidoConfirmado
+      - saldoAReceber
+      - saldoADevolver
+      - pendenciaFinanceira
+    PedidoDetalhe:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        unidadeId:
+          type: string
+          format: uuid
+        comandaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        canal:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+        estado:
+          type: string
+          enum:
+          - AGUARDANDO_ACEITE
+          - NA_FILA
+          - EM_PREPARO
+          - PRONTO
+          - CONCLUIDO
+          - CANCELADO
+        versao:
+          type: integer
+          minimum: 0
+        criadoEm:
+          type: string
+          format: date-time
+        primeiroPreparoEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        alertarEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expirarEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        observacao:
+          type: string
+        unidades:
+          type: array
+          items:
+            "$ref": "#/components/schemas/UnidadeProducao"
+        historico:
+          type: array
+          items:
+            "$ref": "#/components/schemas/HistoricoPedido"
+        solicitacoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SolicitacaoCancelamento"
+        linhas:
+          type: array
+          items:
+            "$ref": carrinho.yaml#/components/schemas/SnapshotLinha
+        saldo:
+          "$ref": "#/components/schemas/SaldoCobranca"
+      required:
+      - id
+      - unidadeId
+      - comandaId
+      - canal
+      - estado
+      - versao
+      - criadoEm
+      - primeiroPreparoEm
+      - alertarEm
+      - expirarEm
+      - observacao
+      - unidades
+      - historico
+      - solicitacoes
+      - linhas
+      - saldo
+    AdicionalPreparo:
+      type: object
+      additionalProperties: false
+      properties:
+        nome:
+          type: string
+        quantidade:
+          type: integer
+          minimum: 1
+      required:
+      - nome
+      - quantidade
+    EscolhaPreparo:
+      type: object
+      additionalProperties: false
+      properties:
+        grupo:
+          type: string
+        nome:
+          type: string
+        quantidade:
+          type: integer
+          minimum: 1
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AdicionalPreparo"
+      required:
+      - grupo
+      - nome
+      - quantidade
+      - adicionais
+    LinhaPreparo:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - SIMPLES
+          - COMBO
+        quantidade:
+          type: integer
+          minimum: 1
+        adicionais:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AdicionalPreparo"
+        escolhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/EscolhaPreparo"
+      required:
+      - id
+      - nome
+      - tipo
+      - quantidade
+      - adicionais
+      - escolhas
+    PedidoOperacional:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        unidadeId:
+          type: string
+          format: uuid
+        comandaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        canal:
+          type: string
+          enum:
+          - DELIVERY
+          - RETIRADA
+          - MESA
+        estado:
+          type: string
+          enum:
+          - AGUARDANDO_ACEITE
+          - NA_FILA
+          - EM_PREPARO
+          - PRONTO
+          - CONCLUIDO
+          - CANCELADO
+        versao:
+          type: integer
+          minimum: 0
+        criadoEm:
+          type: string
+          format: date-time
+        primeiroPreparoEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        alertarEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expirarEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        observacao:
+          type: string
+        unidades:
+          type: array
+          items:
+            "$ref": "#/components/schemas/UnidadeProducao"
+        historico:
+          type: array
+          items:
+            "$ref": "#/components/schemas/HistoricoPedido"
+        solicitacoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SolicitacaoCancelamento"
+        linhas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LinhaPreparo"
+      required:
+      - id
+      - unidadeId
+      - comandaId
+      - canal
+      - estado
+      - versao
+      - criadoEm
+      - primeiroPreparoEm
+      - alertarEm
+      - expirarEm
+      - observacao
+      - unidades
+      - historico
+      - solicitacoes
+      - linhas
+    PrazosAceite:
+      type: object
+      additionalProperties: false
+      properties:
+        versao:
+          type: integer
+          minimum: 0
+        alertaSegundos:
+          type: integer
+          minimum: 1
+          maximum: 86399
+        expiracaoSegundos:
+          type: integer
+          minimum: 2
+          maximum: 86400
+        herdado:
+          type: boolean
+      required:
+      - versao
+      - alertaSegundos
+      - expiracaoSegundos
+      - herdado
+    AlterarPrazos:
+      type: object
+      additionalProperties: false
+      properties:
+        versao:
+          type: integer
+          minimum: 0
+        alertaSegundos:
+          type: integer
+          minimum: 1
+          maximum: 86399
+        expiracaoSegundos:
+          type: integer
+          minimum: 2
+          maximum: 86400
+        herdar:
+          type: boolean
+      required:
+      - versao
+      - alertaSegundos
+      - expiracaoSegundos
+      - herdar
+    Erro:
+      "$ref": carrinho.yaml#/components/schemas/Erro
+  responses:
+    Erro:
+      description: 400 estrutura; 401 sessão; 403 ação; 404 recurso alheio/inexistente;
+        409 versão/estado/idempotência; 422 regra de negócio. Erros em PT-BR sem stack
+        trace.
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/Erro"

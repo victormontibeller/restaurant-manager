@@ -53,6 +53,13 @@ Em 2026-11-06, o proprietário confirmou P05, P06, P12 e P13 para a Sprint 2.
 O aceite valida essas escolhas de produto; não comprova implementação nem
 homologação. As demais premissas mantêm seus registros e prazos próprios.
 
+Na abertura da Sprint 3 local, em 2026-11-06, o proprietário confirmou P10:
+SSE autenticado com alternativa por polling e jobs duráveis no PostgreSQL,
+inicialmente no processo da API. Delivery nesta sprint fica restrito a cenários
+controlados locais, com endereço fictício e taxa definida no servidor; regiões,
+pedido mínimo, pagamentos e expedição permanecem na Sprint 4. Linux e
+homologação continuam pendentes. Essa confirmação não comprova implementação.
+
 | ID | Proposta de planejamento | Validar até |
 | --- | --- | --- |
 | P01 | Monorepositório com `backend/`, `frontend/`, `docs/` e futuros `scripts/`; monólito modular, Maven, Spring Security, JPA/Hibernate e Flyway. | Sprint 0 |
@@ -64,7 +71,7 @@ homologação. As demais premissas mantêm seus registros e prazos próprios.
 | P07 | Regiões por faixas de CEP, taxa fixa, pedido mínimo e horários por unidade. Sem roteirização ou mapa do entregador. | Sprint 4 |
 | P08 | Mercado Pago conectado por OAuth e checkout hospedado como primeira modalidade; confirmar produto, recursos disponíveis no SDK e habilitação das contas. | Sprint 0: viabilidade; Sprint 4: escolha e homologação |
 | P09 | API e Angular na mesma origem; proxy Caddy, serviços systemd e mídia persistente. Builds/testes em área e processos de desenvolvimento separados dos releases/serviços de produção, mesmo no Linux compartilhado; recursos e concorrência precisam de medição. | Sprint 0: desenho; Sprint 5: ambiente real |
-| P10 | Atualizações operacionais via SSE autenticado com alternativa por polling; jobs duráveis no PostgreSQL, inicialmente no mesmo processo da API. | Sprint 0: desenho; Sprint 3: validação |
+| P10 | Atualizações operacionais via SSE autenticado com alternativa por polling; jobs duráveis no PostgreSQL, inicialmente no mesmo processo da API. | Confirmada pelo proprietário em 2026-11-06; implementação/validação na Sprint 3 |
 | P11 | Provisionamento assistido e cobrança da assinatura SaaS administrada manualmente no piloto; venda do restaurante separada da receita SaaS. | Sprint 1 |
 | P12 | BRL como moeda inicial; instantes em UTC e fuso por unidade. Sem descontos livres, gorjeta ou taxa de serviço automática na primeira entrega. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |
 | P13 | Sem pedidos offline: cache apenas de shell e conteúdo público permitido; operações precisam de confirmação do servidor. | Confirmada pelo proprietário em 2026-11-06; execução na Sprint 2 |

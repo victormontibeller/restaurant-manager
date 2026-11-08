@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -28,6 +29,21 @@ public class CarrinhoService {
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Resumo calcular(Calcular pedido) {
+        return calcularAtual(pedido);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void bloquearParaPedido() {
+        catalogo.bloquearParaPedido();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Resumo calcularParaPedido(Calcular pedido) {
+        catalogo.bloquearParaPedido();
+        return calcularAtual(pedido);
+    }
+
+    private Resumo calcularAtual(Calcular pedido) {
         var ids = new HashSet<UUID>();
         pedido.linhas().forEach(linha -> {
             if (!ids.add(linha.id())) throw ErrosCatalogo.regra("Cada linha do carrinho deve ter um identificador próprio.");

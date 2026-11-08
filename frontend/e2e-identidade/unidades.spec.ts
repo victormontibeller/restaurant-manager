@@ -43,6 +43,18 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   const access = (await autenticada.json()).accessToken;
   await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configurações de unidades' })).toBeVisible();
+  const orientacao = page.getByText(
+    'Configure horários e canais em cada unidade. Ajuste os prazos de aceite em Operar pedidos e mesas. Regiões de entrega ainda não estão disponíveis.',
+    { exact: true },
+  );
+  const inativacao = page.getByText(
+    'Somente o Administrador configura unidades. Inativar bloqueia novas vendas e remove a unidade da lista pública, preservando o cadastro, os vínculos e a resolução de operações existentes por usuários autorizados.',
+    { exact: true },
+  );
+  await expect(orientacao).toBeVisible();
+  await expect(inativacao).toBeVisible();
+  await orientacao.screenshot({ path: test.info().outputPath('s03-texto-prazos-unidade.png') });
+  await inativacao.screenshot({ path: test.info().outputPath('s03-texto-inativacao-unidade.png') });
   const nome = 'Unidade ' + crypto.randomUUID().slice(0, 8);
   await page.getByLabel('Nome da nova unidade').fill(nome);
   await page.getByRole('button', { name: 'Criar unidade', exact: true }).click();

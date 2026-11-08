@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Restaurant Manager — Eventos operacionais
+  version: 0.3.0
+  description: >-
+    Eventos duráveis da Sprint 3. SSE e polling compartilham o mesmo envelope.
+    O consumidor reconsulta o estado autorizado do domínio; evento entregue não
+    comprova leitura. Tokens nunca aparecem em URLs. Validação local e
+    homologação são registradas separadamente no checkpoint.
+servers:
+  - url: /api/v1
+security:
+  - bearer: []
+paths:
+  /eventos:
+    get:
+      summary: Consultar eventos próprios ou operacionais da unidade
+      parameters:
+        - $ref: '#/components/parameters/Unidade'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Até cinquenta eventos do fluxo autorizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pagina' }
+        '400': { description: Cursor inválido }
+        '401': { description: Sessão inválida ou revogada }
+        '403': { description: Ação removida }
+        '404': { description: Unidade não autorizada }
+        '409': { description: Cursor adiantado; reiniciar consulta }
+  /eventos/stream:
+    get:
+      summary: Acompanhar eventos por SSE com Bearer no header
+      description: >-
+        Usa fetch streaming. Cada evento atualizacao contém uma Pagina e seu id
+        é proximo. Heartbeats são comentários. A conexão termina em até cinquenta
+        segundos ou na expiração do access token; reconectar com a mesma posição.
+        Sessão e ação são revalidadas em cada consulta, antes do envio.
+      parameters:
+        - $ref: '#/components/parameters/Unidade'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Stream privado sem cache
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '401': { description: Sessão inválida ou token expirado }
+        '403': { description: Ação removida }
+        '404': { description: Unidade não autorizada }
+        '503': { description: Capacidade de streams ocupada; utilizar polling }
+  /mesa/eventos:
+    get:
+      summary: Eventos das próprias rodadas e avisos mínimos da comanda
+      description: >-
+        Exige audiência restaurant-manager-mesa. O contexto vem da sessão.
+        Avisos compartilhados não incluem IDs de pedidos nem dados pessoais de
+        outros participantes. O cursor composto deve ser tratado como opaco.
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Até cinquenta eventos próprios e cinquenta avisos da comanda
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pagina' }
+        '400': { description: Cursor inválido }
+        '401': { description: Sessão encerrada, revogada ou expirada }
+        '409': { description: Cursor adiantado; reiniciar consulta }
+  /mesa/eventos/stream:
+    get:
+      summary: SSE restrito ao participante e sua comanda
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Mesmo envelope do polling em eventos atualizacao
+          content:
+            text/event-stream:
+              schema: { type: string }
+        '401': { description: Sessão encerrada, revogada ou expirada }
+        '503': { description: Utilizar polling enquanto a capacidade está ocupada }
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Unidade:
+      name: unidadeId
+      in: query
+      required: true
+      schema: { type: string, format: uuid }
+    Cursor:
+      name: depois
+      in: query
+      schema: { type: string, default: '-1', maxLength: 39 }
+      description: Cursor retornado pelo mesmo contexto; -1 inicia a consulta
+  schemas:
+    Evento:
+      type: object
+      additionalProperties: false
+      required: [id, tipo, pedidoId, comandaId, ocorridoEm]
+      properties:
+        id: { type: string }
+        tipo: { type: string }
+        pedidoId: { type: string, format: uuid, nullable: true }
+        comandaId: { type: string, format: uuid, nullable: true }
+        ocorridoEm: { type: string, format: date-time }
+    Pagina:
+      type: object
+      additionalProperties: false
+      required: [eventos, proximo, temMais]
+      properties:
+        eventos:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/Evento' }
+        proximo: { type: string }
+        temMais: { type: boolean }

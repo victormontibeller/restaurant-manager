@@ -61,6 +61,11 @@ public class CatalogoPublicoService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
+    public void bloquearParaPedido() {
+        repository.bloquearLeitura();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
     public ContextoCarrinho paraCarrinho(UUID unidade, CanalAtendimento canal, List<UUID> produtos) {
         var contexto = funcionamento.consultarPublico(unidade);
         var leitura = new Leitura(unidade, canal, habilitado(contexto, canal));

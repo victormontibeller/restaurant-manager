@@ -9,7 +9,7 @@ test('S00-UI01: shell conecta à API e PostgreSQL reais', async ({ page }) => {
     page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
   ).toHaveText('Sistema conectado. Banco de dados disponível.');
   await expect(
-    page.getByText('Nenhum pedido ou pagamento é aceito nesta versão.', { exact: false }),
+    page.getByText('Pagamentos e entrega real ainda não estão disponíveis.', { exact: false }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
@@ -97,6 +97,12 @@ test('S00-API01: gestão privada e domínio arbitrário negados', async ({ reque
   const privateRoute = await request.get('/api/v1/equipe', { headers: { Host: privateHost } });
   expect(privateRoute.status()).toBe(401);
   expect((await privateRoute.json()).codigo).toBe('AUTENTICACAO_NECESSARIA');
+  const applicationStatus = await request.get('/api/v1/status');
+  expect(applicationStatus.status()).toBe(200);
+  expect(await applicationStatus.json()).toEqual({
+    ambiente: expect.any(String),
+    etapa: 'Pedidos, mesas e cozinha — Sprint 3',
+  });
   const health = await request.get('/actuator/health');
   expect(await health.json()).toEqual({ status: 'UP' });
 });

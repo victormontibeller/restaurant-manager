@@ -42,6 +42,12 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
     await response.finished();
   }
   await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
+  const orientacao = page.getByText(
+    'As permissões controlam catálogo, pedidos, mesas e cozinha conforme o perfil e a unidade. O registro de pagamentos ainda não está disponível.',
+    { exact: true },
+  );
+  await expect(orientacao).toBeVisible();
+  await orientacao.screenshot({ path: test.info().outputPath('s03-texto-acessos.png') });
   await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   await page.getByLabel('Perfil operacional').selectOption('COZINHA');
   const kitchen = page.getByLabel('Iniciar preparo', { exact: true });

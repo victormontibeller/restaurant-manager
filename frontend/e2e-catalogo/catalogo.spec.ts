@@ -29,6 +29,21 @@ async function capturar(page: Page, alvo: Locator, nome: string): Promise<void> 
   await page.screenshot({ path: test.info().outputPath(nome + '.png'), fullPage: false });
 }
 
+async function verificarAlvoDeToque(alvo: Locator): Promise<void> {
+  const alturaCss = await alvo.evaluate((elemento) => {
+    const estilo = getComputedStyle(elemento);
+    return Math.max(
+      Number.parseFloat(estilo.minHeight) || 0,
+      Number.parseFloat(estilo.height) || 0,
+    );
+  });
+  // O select nativo do WebKit expõe min-height de 18px, mas respeita height de 48px.
+  expect(alturaCss).toBeGreaterThanOrEqual(48);
+  // O Firefox pode reportar 47.99993896484375 para um alvo CSS de 48px.
+  // A tolerância cobre apenas precisão geométrica, preservando o mínimo CSS.
+  expect((await alvo.boundingBox())!.height).toBeGreaterThanOrEqual(48 - 0.001);
+}
+
 async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<string> {
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
@@ -110,7 +125,7 @@ async function abrirProduto(gestao: Locator, nome: string, categoriaId: string):
   await editor.getByLabel('Categoria do produto', { exact: true }).selectOption(categoriaId);
   for (const rotulo of ['Categoria do produto', 'Tipo de produto']) {
     const seletor = editor.getByLabel(rotulo, { exact: true });
-    expect((await seletor.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+    await verificarAlvoDeToque(seletor);
   }
   return editor;
 }
@@ -182,9 +197,7 @@ async function configurarCombo(
   await configurador
     .getByLabel('Opção da escolha', { exact: true })
     .selectOption(combo.grupos[0].opcoes[0].id);
-  expect(
-    (await configurador.getByLabel('Opção da escolha', { exact: true }).boundingBox())!.height,
-  ).toBeGreaterThanOrEqual(48);
+  await verificarAlvoDeToque(configurador.getByLabel('Opção da escolha', { exact: true }));
   await configurador.getByLabel('Quantidade desta escolha', { exact: true }).fill(escolhas);
   if (adicional) await configurador.getByLabel(/Queijo extra ·/).fill('1');
   if (adicional) {
@@ -204,7 +217,7 @@ async function configurarCombo(
   });
   await calcular.focus();
   await expect(calcular).toBeFocused();
-  expect((await calcular.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  await verificarAlvoDeToque(calcular);
   await calcular.press('Enter');
   const calculada = await previa;
   expect(calculada.status()).toBe(200);
@@ -317,24 +330,31 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   await grupo.getByLabel('Quantidade máxima', { exact: true }).fill('2');
   await grupo.getByRole('button', { name: 'Adicionar opção ao grupo 1', exact: true }).click();
   const opcao = grupo.getByRole('group', { name: 'Opção 1 de Escolha principal', exact: true });
-  while (
-    !(await opcao
-      .getByLabel('Produto da opção', { exact: true })
-      .locator('option[value="' + simples.id + '"]')
-      .count())
-  ) {
-    const mais = comboEditor.getByRole('button', {
-      name: 'Carregar mais componentes',
-      exact: true,
-    });
-    await expect(mais).toBeVisible();
+  const produtoOpcao = opcao
+    .getByLabel('Produto da opção', { exact: true })
+    .locator('option[value="' + simples.id + '"]');
+  const mais = comboEditor.getByRole('button', {
+    name: 'Carregar mais componentes',
+    exact: true,
+  });
+  while (true) {
+    await expect
+      .poll(
+        async () =>
+          (await produtoOpcao.count()) > 0 ||
+          ((await gestao.getAttribute('aria-busy')) === 'false' &&
+            (await mais.isVisible()) &&
+            (await mais.isEnabled())),
+        { message: 'Aguardar o componente salvo ou uma próxima página disponível.' },
+      )
+      .toBe(true);
+    if (await produtoOpcao.count()) break;
     await mais.click();
     await expect(gestao).toHaveAttribute('aria-busy', 'false');
   }
+  await expect(produtoOpcao).toHaveCount(1);
   await opcao.getByLabel('Produto da opção', { exact: true }).selectOption(simples.id);
-  expect(
-    (await opcao.getByLabel('Produto da opção', { exact: true }).boundingBox())!.height,
-  ).toBeGreaterThanOrEqual(48);
+  await verificarAlvoDeToque(opcao.getByLabel('Produto da opção', { exact: true }));
   await opcao.getByLabel('Acréscimo por escolha (R$)', { exact: true }).fill('5.00');
   await opcao.getByLabel('Limite desta opção no grupo', { exact: true }).fill('2');
   await opcao.getByLabel('Queijo extra', { exact: true }).check();
@@ -410,7 +430,9 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     .click();
   expect((await (await calculo).json()).requerConfirmacao).toBe(false);
   await expect(
-    carrinho.getByText('Resumo confirmado. Nenhum pedido foi criado.', { exact: true }),
+    carrinho.getByText('Resumo confirmado. O envio do pedido exige confirmação separada.', {
+      exact: true,
+    }),
   ).toBeVisible();
   const resumoAtual = carrinho.getByRole('region', { name: 'Resumo dos itens', exact: true });
   await capturar(

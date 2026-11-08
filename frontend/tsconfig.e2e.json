@@ -21,6 +21,7 @@
     "e2e-hml-identidade/**/*.ts",
     "e2e-funcionamento/**/*.ts",
     "e2e-pwa/**/*.ts",
-    "e2e-catalogo/**/*.ts"
+    "e2e-catalogo/**/*.ts",
+    "e2e-pedidos/**/*.ts"
   ]
 }

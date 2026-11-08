@@ -1,0 +1,7 @@
+.codigo {
+  display: block;
+  font-size: 1.5rem;
+  letter-spacing: 0.15rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}

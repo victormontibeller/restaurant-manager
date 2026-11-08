@@ -55,6 +55,11 @@ restaurant-manager/
         dtos/
       carrinho/
       midia/
+      pedidos/
+      mesas/
+      cozinha/
+      financeiro/
+      eventos/
       shared/
     src/main/resources/db/migration/
       public/
@@ -69,6 +74,10 @@ restaurant-manager/
       catalogo/
       carrinho/
       pwa/
+      pedidos/
+      mesas/
+      cozinha/
+      eventos/
   scripts/
 ```
 
@@ -80,8 +89,12 @@ Na Sprint 2, horários e canais ampliam `unidades`; `catalogo` concentra
 cadastro, ofertas e favoritos; `carrinho` calcula a composição por meio do
 serviço público do catálogo; `midia` publica imagens normalizadas. No frontend,
 `pwa` controla instalação, conexão e atualização do shell. A persistência de
-mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md). Domínios posteriores, como pedidos, mesas, cozinha, entrega e
-pagamentos, continuam planejados. Componentes, serviços e tipos Angular ficam
+mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md). Na Sprint 3 local, `pedidos` possui snapshots, unidades de produção e transições;
+`cozinha` oferece o KDS sem duplicar essa persistência; `mesas` possui atendimentos,
+participantes e estado da comanda; `financeiro` possui cobranças/ajustes/saldos;
+`eventos` publica fatos persistidos. Serviços de caso de uso coordenam serviços de
+agregado, que não injetam os orquestradores. Entrega comercial e recebimentos
+continuam planejados para a Sprint 4. Componentes, serviços e tipos Angular ficam
 próximos no domínio correspondente, conforme os [padrões de código](10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
 
 Cada módulo separa suas camadas em pacotes `controllers`, `services`,

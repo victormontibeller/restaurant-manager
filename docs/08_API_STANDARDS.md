@@ -77,6 +77,16 @@ Contrato de acompanhamento cadastral: [eventos de unidade](api/eventos-unidade.y
 em validação na retomada ciclo 5. Cursor por versão, paginação, projeção mínima,
 política e sessão revalidadas por consulta. Não é contrato de eventos financeiros.
 
+## Contratos da Sprint 3 local
+
+[Pedidos, produção e prazos](api/pedidos.yaml),
+[mesas, participantes e comandas](api/mesas.yaml) e
+[eventos operacionais](api/eventos-operacionais.yaml) documentam o candidato
+local em validação. A lista `/operacao/unidades-existentes` mantém as unidades
+atribuídas, inclusive inativas, para resolver operações anteriores; não autoriza
+novo consumo. A lista pública e a elegibilidade de novas vendas seguem exigindo
+unidade ativa. O checkpoint identifica testes executados e pendências externas.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

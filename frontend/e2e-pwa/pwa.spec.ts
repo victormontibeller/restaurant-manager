@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createServer, Server } from 'node:http';
+import { Socket } from 'node:net';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
@@ -87,6 +88,7 @@ test('S02-PWA02: atualização do shell espera consentimento e preserva outras a
   }
   for (const name of ['icon-192.png', 'icon-512.png'])
     files.set('/icons/' + name, readFileSync(path.join(build, 'icons', name)));
+  const sockets = new Set<Socket>();
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const key = url.pathname === '/' ? '/index.html' : url.pathname;
@@ -111,6 +113,10 @@ test('S02-PWA02: atualização do shell espera consentimento e preserva outras a
             : 'text/html';
     res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' });
     res.end(content);
+  });
+  server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
@@ -161,8 +167,12 @@ test('S02-PWA02: atualização do shell espera consentimento e preserva outras a
       .toBe(true);
     await other.close();
   } finally {
-    await new Promise<void>((resolve, reject) =>
+    const encerrado = new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),
     );
+    // Preconnect sem requisição HTTP também mantém server.close pendente.
+    // Encerre somente conexões deste servidor de fronteira, inclusive em falhas.
+    for (const socket of sockets) socket.destroy();
+    await encerrado;
   }
 });

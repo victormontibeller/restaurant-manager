@@ -1,5 +1,75 @@
 # Inventário rastreável de cobertura
 
+## Sprint 3 — revisão final concluída localmente
+
+A [revisão final](revisao-final-sprint-03-2026-11-07.md) registra as correções
+R01–R10, falhas e reexecuções. O JAR15 passou em **365 testes backend/54 XML**,
+sem falhas, erros ou skips. Formatação, tipos, 19 grupos de lógica (18 casos
+de mesas e seis de contexto), 12 combinações de templates e build/PWA passaram.
+Os probes usam transporte controlado. A matriz14 aprovou 295 pares da regressão,
+mas parou no UI05 Firefox após 43 pares Sprint 3: alerta omitido pelo job tardio.
+A correção R10 passou em sete testes dirigidos e na regressão completa15;
+verifica alerta/expiração únicos e ordenados, inclusive após lease abandonada
+ou aceite no limite. A matriz15 passou nos 65 pares Sprint 3 e 295 de regressão,
+sem herdar resultados14, skips, retries ou instabilidade. Foram inspecionadas
+110 capturas e cinco complementares Firefox, separados da contagem da matriz. UI05 e seus prazos permanecem inalterados. UI10 aguarda
+a abertura real de SSE e comprova JWT válido antes de revogar, preservando o
+limite da revogação.
+
+| Cobertura acrescentada | Prova e situação |
+| --- | --- |
+| AcessosSessaoConcorrenciaTest / AcessosRepositoryTest / EventosOperacionaisControllerTest | Revogação/serialização, conflito de sessão em REPEATABLE_READ, JWT vencendo entre filtro e controller, erro interno legítimo; incluídos na regressão completa aprovada |
+| PedidosReplayTest / PedidosSolicitacoesMesaTest | Replay consistente, revogação durante espera, pendência versus serviço/cancelamento e rollback de decisão inválida; incluídos na regressão completa aprovada |
+| CatalogoTest | Escrita autorizada precede logout real; revogação anterior à autorização impede escrita; 13 testes incluídos na regressão completa aprovada |
+| test_mesa_pagination.cjs / test_mesa_context.cjs | Paginação independente, intenção incerta, respostas tardias, contexto e erros de ação preservados durante consultas; 18 e seis casos aprovados nos componentes reais com transporte controlado |
+| test_mesa_navigation_templates.cjs | Geometria/foco em 360/768/1280 px, fonte ampliada, clique único durante SSE, erro 409 persistente, fila e bloqueio de envio; aprovado em Chromium/Firefox/WebKit com transporte controlado |
+| PedidosDeadlineTest | Recuperação após ambos os vencimentos, alerta anterior já existente, reprocessamento, lease abandonada, aceite no limite e corrida aceite/job; sete dirigidos e regressão completa aprovados |
+| S03-UI12 | Mais de 50 mesas, solicitações e comandas assistidas; aprovado nos cinco projetos da matriz final |
+| S03-UI13 | Nome duplicado, resposta de criação perdida e resposta tardia da comanda A após escolher B; aprovado nos cinco projetos da matriz final |
+
+## Sprint 3 — histórico da implementação local, candidatos07/08
+
+No artefato final08 `e828ec28de90d6fdbc4a302fa4df53296d49df00cc12b09e5cba35d0c67344c7`,
+a regressão backend executou novamente **347 testes/49 XML**, sem falhas, erros
+ou skips, com JDK 21 e PostgreSQL real. Recuperação de deadlines após reinício,
+replay sem duplicação e **30 pares dirigidos** passaram nesse mesmo JAR.
+A matriz completa **350 pares únicos (55 novos + 295 de regressão)** pertence ao
+candidato07 `2c11a135df8276adc25308d05a594f77c2cb81f5493e7514e0bd85bd1dc6deea`.
+O delta08 se limita a sete textos em cinco arquivos TypeScript e ao literal de
+etapa da API. Não somar essas execuções nem declarar 350 pares no hash final.
+
+As duas consolidações selecionam somente PASS, sem skips, retries ou flaky;
+falhas e reexecuções históricas permanecem registradas na
+[evidência da sprint](sprint-03-local-2026-11-07.md). Os 30 pares do08 passaram
+na primeira tentativa. Foram inspecionadas 55 capturas do07 e 30 focais do08.
+Formatação, tipos, build/PWA, 18 grupos de lógica e nove probes de templates
+passaram; esses probes usam simulação e não substituem os E2E com API/DB reais.
+Linux/homologação, aparelhos físicos, tecnologia assistiva e piloto pendentes.
+
+| Cenário | Famílias | Superfícies e prova local executada |
+| --- | --- | --- |
+| S03-UI01 | T05/T09/T12/T15 | Cliente envia; equipe aceita; KDS inicia/conclui uma de três unidades; projeção mínima |
+| S03-UI02 | T10/T11/T14/T17 | Mesa, QR sem segredo, código temporário, rodada, ajuda/conta, fechamento e revogação |
+| S03-UI03 | T05/T09, X13 | Resposta perdida, consulta da mesma intenção, replay/conflito e pedido alheio negado |
+| S03-UI04 | T04/T09/T15/T19 | Duas unidades de combo, cancelamento integral de uma, saldo e primeiro preparo imutável |
+| S03-UI05 | T12/T23/T27 | Prazo versionado, alerta durável único e expiração pelo job real |
+| S03-UI06 | T12/T15/T24/T25 | Cinco perfis operacionais, ações efetivas, unidade não atribuída e campos indevidos |
+| S03-UI07 | T05/T09/T12 | Delivery fictício controlado, taxa do servidor e recusa com ajuste |
+| S03-UI08 | T05/T09, X14 | Confirmação bloqueada offline, reconexão, teclado e formulário |
+| S03-UI09 | T13/T14/T15 | Pedido assistido, preparo e serviço na mesa com autoria preservada |
+| S03-UI10 | T12/T27, X13 | Revogação durante SSE com JWT ainda válido e remoção das ações |
+| S03-UI11 | T09/T27, X14 | Falha isolada de transporte SSE, polling real e reconexão |
+| PedidosTest / PedidosMesaTest / PedidosConcorrenciaTest | T05/T09–T15/T17, X01/X13 | Intenção, catálogo/horários, autorização, tenant/unidade, suspensão/inativação e corridas de envio/aceite/preparo/fechamento |
+| CozinhaTest / FinanceiroTest | T15/T19 | Lote atômico, unidades/combos, marco imutável e ajuste remanescente com fixtures financeiras |
+| MesasTest / SessaoMesaTest | T10/T11/T14/T17 | Atendimento único, comandos versionados, audiência, rotação/expiração/revogação e fechamento |
+| PedidosDeadlineTest / EventosOperacionaisTest / FluxoEventosServiceTest | T12/T27 | Lease/retry, expiração no limite, evento transacional, ordenação por commit e expiração durante consulta SSE |
+| test_order_recovery.cjs / test_operational_events.cjs | T05/T09/T27 | Probes simulados de intenção incerta, sessão antiga, cursor, fallback e revogação |
+| test_mesa_context.cjs / test_snapshot_queue.cjs | T09/T14/T27 | Probes simulados de contexto, respostas antigas, consultas serializadas e atualização de várias unidades |
+| ApiExceptionHandlerTest / SseTransporteTest / RespostaJsonTransporteTest / DespachoSseSecurityTest | T27, X13 | Conversor e cadeias de segurança reais: desconexão, ERROR/INCLUDE, JSON de erro, 500 legítimo e rotas negadas |
+
+Recebimentos, devoluções reais, expedição, regiões e piloto continuam fora da
+implementação da Sprint 3. Resultados históricos abaixo não são herdados.
+
 ## Sprint 2 integrada — validação local concluída
 
 A [revisão final do PR #5](revisao-final-pr-05-2026-11-06.md) registra 271 testes
@@ -260,7 +330,11 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 
 ## Famílias de telas
 
-| ID | Estado atual | Dependência/evidência parcial |
+Retrato histórico da Sprint 1 no candidato95. Os estados abaixo não descrevem
+o checkout atual: as seções de Sprint 2 e Sprint 3 no início deste inventário
+registram a cobertura posterior, distinguindo validação local de homologação.
+
+| ID | Estado histórico registrado | Dependência/evidência parcial |
 | --- | --- | --- |
 | T01 | Parcial, não aprovado como família | Resolução do domínio/listagem testadas; escolha/horários pendentes |
 | T02 | Não implementado/não executado | Sprint 02 |
@@ -293,7 +367,10 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 
 ## Cenários transversais
 
-| ID | Estado atual | Dependência/evidência parcial |
+Retrato histórico da Sprint 1 no candidato95; consultar as seções vigentes
+no início deste inventário para a cobertura acrescentada nas Sprints 2 e 3.
+
+| ID | Estado histórico registrado | Dependência/evidência parcial |
 | --- | --- | --- |
 | X01 | Não implementado/não executado | Sprint 03 |
 | X02 | Não implementado/não executado | Sprint 03 |

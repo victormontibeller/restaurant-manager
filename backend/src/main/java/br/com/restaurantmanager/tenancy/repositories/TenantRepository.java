@@ -22,4 +22,9 @@ public class TenantRepository {
         return jdbc.query("select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') and schema_name > ? order by schema_name limit 50",
                 (rs, row) -> rs.getString(1), depoisDe);
     }
+
+    public Optional<String> bloquearEstadoComercial(String schema) {
+        return jdbc.query("select estado from public.empresa where schema_name=? for share",
+                (rs, row) -> rs.getString(1), schema).stream().findFirst();
+    }
 }

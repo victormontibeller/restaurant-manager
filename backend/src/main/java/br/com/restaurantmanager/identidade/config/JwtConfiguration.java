@@ -68,6 +68,11 @@ public class JwtConfiguration {
         return decoder(keys, "restaurant-manager-plataforma");
     }
 
+    @Bean("mesaJwtDecoder")
+    JwtDecoder mesaJwtDecoder(Chaves keys) {
+        return decoder(keys, "restaurant-manager-mesa");
+    }
+
     private JwtDecoder decoder(Chaves keys, String audience) {
         var configured = new LinkedHashMap<String, JwtDecoder>();
         configured.put(keys.ativaId(), decoder(keys.ativa(), audience));
