@@ -1,38 +1,55 @@
 # Checkpoint de execução
 
-## Redesenho com Spartan — implementação local em validação, 2026-11-08
+## Redesenho — prévia atualizada, matriz final em andamento
 
-Plano explicitamente autorizado; branch `codex/redesenho-frontend`, base `14ca980`
-(PR #6 já integrado, divergindo da descrição histórica abaixo). Cliente, gestão e
-cozinha têm rotas e layouts próprios, tema de bistrô e fundação Spartan/Tailwind,
-conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Sessão, carrinho,
-contexto e intenções ficam em memória; proteção de saída e reconciliação foram
-preservadas. Contrato público de nome, filtros SQL antes da paginação e fallback
-explícito SPA adicionados; nenhuma migration ou contrato de escrita alterado.
+Branch `codex/redesenho-frontend`, sobre `14ca980` (PR #6 já integrado).
+Cliente, gestão e cozinha têm rotas e layouts próprios e tema de bistrô com
+Spartan/Tailwind, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md).
+Sessão, carrinho, contexto e intenções ficam em memória. Contrato público de nome,
+filtros SQL antes da paginação e fallback explícito SPA adicionados; nenhuma
+migration ou contrato de escrita alterado.
 
-Validação backend local: 402 testes na suíte completa, zero falhas/erros/skips;
-depois, 38 testes de rotas após acrescentar os destinos finais. Não somar essas
-rodadas como testes únicos nem atribuir o delta a uma suíte completa repetida.
-Lógica (19 grupos), templates (12 grupos em Chromium/Firefox/WebKit), tipos e
-compilação Angular passaram durante a integração. Build com lazy loading:
-281,83 kB iniciais, limites 450/600 kB preservados. Empacotamento PWA inclui
-31 arquivos públicos, sem APIs/mídia da empresa. Revisão final de build e
-regressão completa de navegador continuam em andamento; não há aprovação da
-matriz nem publicação do redesenho nesta gravação.
+Demonstração em 8095 serve o candidato
+`c2e2c6dfbebf68db70ddf8f5613fd3bdba7820769a00cb2714824eee71d06352`
+(fonte da aplicação `3ac3bf0`), explicitamente **em validação**. Backup consistente,
+JAR/configurações de retorno, acessos, certificado e PostgreSQL preservados.
+Hash do JS servido, health, login administrativo e duas unidades conferidos após
+atualizar. A revisão anterior das três larguras e três perfis, bem como o smoke
+novo de 30 verificações, pertence ao candidato `d24b128c…`; não transferir essa
+aprovação automaticamente. Duas fotos ilustrativas foram associadas somente aos
+produtos fictícios pela API.
 
-Demonstração manual em 8095 permanece na versão anterior; banco `rm_dev` e
-PostgreSQL compartilhado preservados. Runner novo e evidências privados do
-redesenho separados, com alvo `rm_test`, sem herdar aprovação anterior.
-Primeiro candidato de navegador `5f0df6d5…`, commit `a312cd7`, interrompido
-na primeira falha: gestão vazia após login por leitura prematura do snapshot
-filho; três cenários da fundação passaram e o atalho de conteúdo revelou
-recarga indevida da página. Nenhuma dessas rodadas aprova a matriz. Correções
-e probes de regressão em preparação para candidato 02; relatórios preservados.
-Próximo passo: gerar artefato identificado e recibo de validação `mac-local`,
-executar matriz integral de navegador e revisão visual, corrigir/reexecutar,
-atualizar demonstração com backup e registrar hash realmente servido.
-Linux/homologação externa, aparelhos físicos, tecnologia assistiva e piloto
-continuam pendentes; não há merge em main nem publicação em produção.
+Backend: 402 testes na suíte completa; depois, 38 testes de rotas após o delta
+final. Zero falhas/erros/skips nas duas rodadas, sem somar como testes únicos.
+As entradas não estáticas do JAR atual são byte a byte idênticas às testadas.
+Build atual: formatação, tipos, 20 grupos de lógica, 12 grupos de templates em
+Chromium/Firefox/WebKit, Angular/PWA e npm audit aprovados. Inicial 282,11 kB,
+limites de aviso/erro 450/600 kB preservados; 31 arquivos públicos na PWA.
+
+Chrome em zoom nativo de 200% confirmou layout e diálogo sem overflow. A revisão
+revelou retorno de foco ao body: corrigido em `22e661b`, com probe aprovado nos
+três motores no candidato atual. Zoom restaurado para 100%. O Mac foi desbloqueado pelo proprietário; atualização consentida e retorno do
+foco ao botão de origem foram conferidos no Chrome nativo, sem overflow.
+
+Rodada `redesenho-05-h02`, pausada para completar as abas da cozinha: reexecução completa dos 360 pares no mesmo JAR/PID,
+sem herdar aprovação anterior. Pedidos usam tenant novo no banco exclusivo
+`rm_test`; demonstração usa `rm_dev`. Alternância somente nas esperas naturais de
+quota mantém um worker total, sem redefinir limites. A rodada anterior parou em
+S03-UI09: o harness consultava visibilidade antes de o Angular renderizar o novo
+item. Correção `e1c0a32` aguarda diálogo fechado e botão anexado, incluindo o
+resumo oculto no mobile; o cenário assistido passou em desktop e celular. Os 13 cenários desktop e o primeiro móvel passaram. A baseline avançou sem falha
+até a pausa. A revisão do plano identificou o seletor de etapas ainda sem abas;
+a fundação Brain/CDK e as abas Todas/Fila/Preparo/Prontos foram completadas, com
+cobertura de teclado e filtros adicionada ao cenário S03-UI01. Novo candidato
+será compilado e a matriz completa será repetida. Não transferir os resultados
+parciais do candidato anterior.
+
+Histórico de falhas e reexecuções em
+[evidência do redesenho](evidencias/redesenho-frontend-2026-11-08.md).
+Próximo passo: concluir matriz e revisão visual, conferir a demonstração no
+artefato final e consolidar os resultados. Linux/homologação externa, aparelhos
+físicos, leitores de tela e piloto continuam pendentes. Sem merge em main ou
+publicação em produção.
 
 ## Sprint 3 — revisão concluída localmente, 2026-11-07
 

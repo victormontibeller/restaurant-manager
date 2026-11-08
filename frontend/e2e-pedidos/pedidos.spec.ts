@@ -55,6 +55,42 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     const tokenCozinha = await loginUi(cozinha.page, fixture().contas.cozinha);
     const kds = await operacao(cozinha.page, 'Painel da cozinha');
     const preparo = kds.getByRole('article', { name: 'Pedido ' + enviado.id, exact: true });
+    const etapas = kds.getByRole('tablist', { name: 'Etapas da cozinha', exact: true });
+    const filaTab = etapas.getByRole('tab', { name: 'Na fila', exact: true });
+    const preparoTab = etapas.getByRole('tab', { name: 'Em preparo', exact: true });
+    const prontoTab = etapas.getByRole('tab', { name: 'Prontos', exact: true });
+    const todasTab = etapas.getByRole('tab', { name: 'Todas', exact: true });
+    const filtrarEtapa = async (estado: string, acionar: () => Promise<void>) => {
+      const consulta = cozinha.page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === '/api/v1/cozinha' && (url.searchParams.get('estados') ?? '') === estado
+        );
+      });
+      await acionar();
+      const pagina = await ok<{ itens: Pedido[] }>(await consulta);
+      if (estado) expect(pagina.itens.every((pedido) => pedido.estado === estado)).toBe(true);
+      await expect(kds.locator('app-cozinha > section')).toHaveAttribute('aria-busy', 'false');
+    };
+    await filtrarEtapa('NA_FILA', () => filaTab.click());
+    await expect(filaTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toBeVisible();
+    expect((await filaTab.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+    await filaTab.press('ArrowRight');
+    await expect(preparoTab).toBeFocused();
+    await filtrarEtapa('EM_PREPARO', () => preparoTab.press('Enter'));
+    await expect(preparoTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toHaveCount(0);
+    await preparoTab.press('ArrowRight');
+    await expect(prontoTab).toBeFocused();
+    await filtrarEtapa('PRONTO', () => prontoTab.press('Enter'));
+    await expect(prontoTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toHaveCount(0);
+    await prontoTab.press('Home');
+    await expect(todasTab).toBeFocused();
+    await filtrarEtapa('', () => todasTab.press('Enter'));
+    await expect(todasTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toBeVisible();
     await preparo.getByRole('checkbox').nth(0).check();
     await preparo
       .getByRole('button', { name: 'Iniciar unidades selecionadas', exact: true })

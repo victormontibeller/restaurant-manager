@@ -316,6 +316,35 @@ dialog::backdrop {
   margin: auto;
   padding: 2rem;
 }
+.rm-tabs-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.4rem;
+  margin: 1rem 0;
+  background: var(--muted, #eee9e1);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+}
+.rm-tabs-list button {
+  min-height: 48px;
+  padding: 0.65rem 0.4rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--foreground);
+  box-shadow: none;
+}
+.rm-tabs-list button[aria-selected='true'] {
+  background: white;
+  border-color: var(--border);
+  color: var(--primary);
+  box-shadow: 0 2px 5px #2925210a;
+}
+@media (max-width: 520px) {
+  .rm-tabs-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .ui-catalogo section {
   padding: 1.5rem;
   background: white;

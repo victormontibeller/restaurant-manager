@@ -1,4 +1,11 @@
-<section class="painel-interno" aria-labelledby="cozinha-titulo" [attr.aria-busy]="ocupado()">
+<section
+  class="painel-interno"
+  aria-labelledby="cozinha-titulo"
+  [attr.aria-busy]="ocupado()"
+  [brnTabs]="filtroEstado() || 'TODAS'"
+  activationMode="manual"
+  (brnTabsChange)="filtrar('estado', $event === 'TODAS' ? '' : ($event ?? ''))"
+>
   <header class="cabecalho-painel">
     <div>
       <span class="sobretitulo">Produção em tempo real</span>
@@ -8,21 +15,12 @@
       </p>
     </div>
   </header>
+  <div brnTabsList class="rm-tabs-list" aria-label="Etapas da cozinha">
+    @for (etapa of etapas; track etapa.valor) {
+      <button type="button" [brnTabsTrigger]="etapa.valor">{{ etapa.nome }}</button>
+    }
+  </div>
   <div class="filtros" aria-label="Filtros da cozinha">
-    <div class="campo-filtro">
-      <label for="cozinha-estado">Etapa de produção</label>
-      <select
-        id="cozinha-estado"
-        #estado
-        [value]="filtroEstado()"
-        (change)="filtrar('estado', estado.value)"
-      >
-        <option value="">Todas as etapas</option>
-        <option value="NA_FILA">Na fila</option>
-        <option value="EM_PREPARO">Em preparo</option>
-        <option value="PRONTO">Prontos</option>
-      </select>
-    </div>
     <div class="campo-filtro">
       <label for="cozinha-canal">Canal do pedido</label>
       <select
@@ -50,53 +48,64 @@
       </select>
     </div>
   </div>
-  <div class="barra-conexao">
-    <p role="status" class="status-consulta">
-      <span class="status-reserva" aria-hidden="true"
-        >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada. Última
-        atualização: ainda não confirmada.</span
-      >
-      <span
-        >{{ acompanhamento.estado() }} Última atualização:
-        {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
-      >
-    </p>
-    <button class="secundario" (click)="carregar()" [disabled]="ocupado()">
-      Atualizar cozinha
-    </button>
-  </div>
-  @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
+  @for (etapa of etapas; track etapa.valor) {
+    <div [brnTabsContent]="etapa.valor">
+      @if ((filtroEstado() || 'TODAS') === etapa.valor) {
+        <div class="barra-conexao">
+          <p role="status" class="status-consulta">
+            <span class="status-reserva" aria-hidden="true"
+              >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada.
+              Última atualização: ainda não confirmada.</span
+            >
+            <span
+              >{{ acompanhamento.estado() }} Última atualização:
+              {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
+            >
+          </p>
+          <button class="secundario" (click)="carregar()" [disabled]="ocupado()">
+            Atualizar cozinha
+          </button>
+        </div>
+        @if (erro()) {
+          <p role="alert" class="erro">{{ erro() }}</p>
+        }
+        <div class="resumo-listagem">
+          <span>{{ pedidos().length }} pedidos nesta página</span
+          ><span>Página {{ pagina() + 1 }}</span>
+        </div>
+        <div class="grade-pedidos grade-cozinha">
+          @for (pedido of pedidos(); track pedido.id) {
+            <app-pedido-detalhe
+              [pedido]="pedido"
+              contexto="cozinha"
+              [acoes]="acoes()"
+              (atualizar)="carregar()"
+            />
+          } @empty {
+            <div class="vazio">
+              <h3>{{ ocupado() ? 'Atualizando a cozinha…' : 'A fila está em dia' }}</h3>
+              <p>Nenhum pedido autorizado corresponde aos filtros desta unidade.</p>
+            </div>
+          }
+        </div>
+        <nav class="paginacao" aria-label="Páginas da cozinha">
+          <button
+            class="secundario"
+            (click)="navegar(pagina() - 1)"
+            [disabled]="ocupado() || pagina() === 0"
+          >
+            Página anterior da cozinha
+          </button>
+          <span>Página {{ pagina() + 1 }}</span>
+          <button
+            class="secundario"
+            (click)="navegar(pagina() + 1)"
+            [disabled]="ocupado() || !mais()"
+          >
+            Próxima página da cozinha
+          </button>
+        </nav>
+      }
+    </div>
   }
-  <div class="resumo-listagem">
-    <span>{{ pedidos().length }} pedidos nesta página</span><span>Página {{ pagina() + 1 }}</span>
-  </div>
-  <div class="grade-pedidos grade-cozinha">
-    @for (pedido of pedidos(); track pedido.id) {
-      <app-pedido-detalhe
-        [pedido]="pedido"
-        contexto="cozinha"
-        [acoes]="acoes()"
-        (atualizar)="carregar()"
-      />
-    } @empty {
-      <div class="vazio">
-        <h3>{{ ocupado() ? 'Atualizando a cozinha…' : 'A fila está em dia' }}</h3>
-        <p>Nenhum pedido autorizado corresponde aos filtros desta unidade.</p>
-      </div>
-    }
-  </div>
-  <nav class="paginacao" aria-label="Páginas da cozinha">
-    <button
-      class="secundario"
-      (click)="navegar(pagina() - 1)"
-      [disabled]="ocupado() || pagina() === 0"
-    >
-      Página anterior da cozinha
-    </button>
-    <span>Página {{ pagina() + 1 }}</span>
-    <button class="secundario" (click)="navegar(pagina() + 1)" [disabled]="ocupado() || !mais()">
-      Próxima página da cozinha
-    </button>
-  </nav>
 </section>

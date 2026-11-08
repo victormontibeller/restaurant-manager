@@ -4,10 +4,11 @@ import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { PaginaPedidos, Pedido } from '../pedidos/modelos';
 import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
+import { RM_TABS } from '../ui/tabs';
 
 @Component({
   selector: 'app-cozinha',
-  imports: [PedidoDetalheComponent],
+  imports: [PedidoDetalheComponent, RM_TABS],
   templateUrl: './cozinha.component.html',
   styleUrl: '../operacao.css',
 })
@@ -22,6 +23,12 @@ export class CozinhaComponent {
   readonly pagina = signal(0);
   readonly mais = signal(false);
   readonly filtroEstado = signal('');
+  readonly etapas = [
+    { valor: 'TODAS', nome: 'Todas' },
+    { valor: 'NA_FILA', nome: 'Na fila' },
+    { valor: 'EM_PREPARO', nome: 'Em preparo' },
+    { valor: 'PRONTO', nome: 'Prontos' },
+  ];
   readonly filtroCanal = signal('');
   readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('ANTIGOS');
   private geracao = 0;

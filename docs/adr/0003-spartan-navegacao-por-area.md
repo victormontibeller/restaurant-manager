@@ -12,6 +12,8 @@ Consultar [Spartan](https://www.spartan.ng/documentation/installation), [suporte
 
 A amostra de componentes está em `/design-system`. Mudanças na fundação devem ser revisadas em 360/768/1280 pixels, com teclado, foco, contraste, zoom e redução de movimento. Os limites de build permanecem 450 kB (aviso) e 600 kB (erro). A PWA enumera todos os chunks com hash do build, incluindo letras minúsculas, hífen e underscore; imagens de catálogo e APIs continuam fora do cache.
 
+As abas usam diretamente `@spartan-ng/brain/tabs` por meio de `app/ui/tabs.ts`, com aparência centralizada no tema. Setas, Home/End e foco seguem o Brain/CDK; Enter ou espaço ativa a etapa. A cozinha mantém painéis associados a cada aba e aplica o filtro no servidor antes da paginação, sem transformar totais da página em contagens globais.
+
 ## Imagens ilustrativas
 
 Imagens criadas com a ferramenta nativa `imagegen`, sem referência a marcas ou pessoas. Os PNGs originais foram convertidos para JPEG, sem edição de conteúdo. Não representam pratos reais nem operação comercial.
@@ -20,4 +22,4 @@ Imagens criadas com a ferramenta nativa `imagegen`, sem referência a marcas ou 
 - Demonstração: [burger.jpg](../assets/demo/burger.jpg). Prompt: fotografia editorial de hambúrguer artesanal com queijo, alface, tomate, molho da casa e pão brioche em prato de cerâmica; nogueira, terracota, luz natural; sem batatas, texto, marca ou watermark.
 - Demonstração: [pizza.jpg](../assets/demo/pizza.jpg). Prompt: fotografia editorial de pizza Margherita inteira, muçarela, tomate, manjericão e borda dourada em prato de cerâmica; nogueira, terracota, luz natural; sem texto, marca ou watermark.
 
-As duas fotos de produto serão associadas somente aos produtos fictícios correspondentes pela API de mídia da demonstração; não há associação automática pelo nome no código da aplicação.
+As duas fotos de produto foram associadas somente aos produtos fictícios correspondentes pela API de mídia da demonstração; não há associação automática pelo nome no código da aplicação.
