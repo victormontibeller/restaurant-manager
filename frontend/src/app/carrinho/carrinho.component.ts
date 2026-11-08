@@ -47,7 +47,7 @@ import { ItemCarrinho } from './modelos';
             <button hlmBtn
               class="secundario"
               type="button"
-              (click)="editar.emit(item)"
+              (click)="editarComposicao(item, $event.currentTarget)"
               [disabled]="carrinho.ocupado() || !carrinho.online()"
             >
               Editar composição do item {{ indice + 1 }}
@@ -148,6 +148,12 @@ export class CarrinhoComponent {
 
   nomeCanal(canal: string): string {
     return CANAIS.find((item) => item.valor === canal)?.nome ?? canal;
+  }
+
+  editarComposicao(item: ItemCarrinho, acionador: EventTarget | null): void {
+    // Safari pode não focar botões acionados pelo ponteiro; preserve o retorno do diálogo.
+    if (acionador instanceof HTMLElement) acionador.focus({ preventScroll: true });
+    this.editar.emit(item);
   }
 
   alterarQuantidade(item: ItemCarrinho, input: HTMLInputElement): void {

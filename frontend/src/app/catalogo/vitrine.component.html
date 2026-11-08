@@ -249,6 +249,7 @@
 
 
 
+
                   }}{{ moeda(produto.preco) }}
                 </p>
                 @if (!produto.disponivel) {
@@ -258,7 +259,7 @@
                   <button
                     hlmBtn
                     type="button"
-                    (click)="configurar(produto.id)"
+                    (click)="configurar(produto.id, null, $event.currentTarget)"
                     [disabled]="ocupado() || !carrinho.online()"
                   >
                     Ver opções de {{ produto.nome }}
@@ -273,6 +274,7 @@
                       [disabled]="favoritos.ocupado() || favoritos.incerto() || !carrinho.online()"
                     >
                       {{ favoritos.ids().includes(produto.id) ? 'Remover dos favoritos: ' : 'Favoritar: '
+
 
 
 

@@ -67,7 +67,7 @@ export async function confirmarNavegacaoBloqueada(page: Page, rota: string): Pro
   ).toBeVisible();
   expect(new URL(page.url()).pathname).toBe(anterior);
   await page.getByRole('button', { name: 'Fechar aviso', exact: true }).click();
-  const fechar = page.getByRole('button', { name: 'Fechar menu', exact: true });
+  const fechar = page.locator('.sidebar .close-menu');
   if (await fechar.first().isVisible()) await fechar.first().click();
 }
 

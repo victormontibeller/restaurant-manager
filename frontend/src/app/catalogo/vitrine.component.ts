@@ -227,12 +227,18 @@ export class VitrineComponent {
     });
   }
 
-  async configurar(id: string, linha: LinhaCarrinho | null = null): Promise<void> {
+  async configurar(
+    id: string,
+    linha: LinhaCarrinho | null = null,
+    acionador: EventTarget | null = document.activeElement,
+  ): Promise<void> {
     if (this.ocupado() || !this.carrinho.online()) return;
+    // O carregamento desabilita o botão e o navegador pode retirar seu foco.
+    const origem = acionador instanceof HTMLElement ? acionador : null;
     await this.executar(async (signal) => {
       const produto = await this.api.consultar<ProdutoPublico>(this.rotaProduto(id), signal);
       if (signal.aborted || this.destruido) return;
-      this.focoAnterior = document.activeElement as HTMLElement | null;
+      this.focoAnterior = origem;
       this.selecionado.set(produto);
       this.linhaEditada.set(linha ? structuredClone(linha) : null);
       setTimeout(() => {

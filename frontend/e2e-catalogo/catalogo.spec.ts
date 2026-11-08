@@ -260,6 +260,9 @@ async function configurarCombo(
   }
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
   await expect(configurador).toHaveCount(0);
+  await expect(
+    vitrine.getByRole('button', { name: 'Ver opções de ' + combo.nome, exact: true }),
+  ).toBeFocused();
 }
 
 async function atualizarOferta(
