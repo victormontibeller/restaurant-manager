@@ -1,97 +1,167 @@
 # Redesenho do frontend — 2026-11-08
 
-## Estado
+## Entrega
 
-Implementação local na branch `codex/redesenho-frontend`, sobre `14ca980` (PR #6 integrado).
-A demonstração possui uma prévia **em validação**; a matriz final do candidato `c2e2c6df…`
-está em execução. Esta evidência não aprova Linux, aparelhos físicos, leitores de tela ou piloto.
+Implementado e validado localmente na branch `codex/redesenho-frontend`, sobre
+`14ca980` (PR #6 integrado). Demonstração atualizada em
+[demo.localhost:8095](https://demo.localhost:8095), com dados fictícios, acessos e
+certificado preservados. Não representa homologação Linux ou aprovação do piloto.
+
+- Fonte da aplicação: `c991bd89eef693901a265f0940ea9830a1472430`.
+- Correção final exclusiva do teste de upload: `a408cae`.
+- JAR: `3df1f92ce34dd9cc1868a1fdc76252b980e5a4294ebf9c6ed3f909eb26fa9411`.
+- Consolidação dos 360 pares: `7d1fd87308224eabe802bb92bc9d2cf340ff5e0f41df1e37981121e4ffe0e978`.
+- Escopo efetivo: `mac-local`; Java 21.0.9, Node 26.0.0, Playwright 1.64.1 e
+  PostgreSQL 18.4/Homebrew. Banco `rm_test` exclusivo; demonstração em `rm_dev`.
 
 ## Resultado implementado
 
-Cliente, gestão e cozinha separados por rotas, layouts e permissões efetivas. Tema de
-bistrô contemporâneo com Spartan Brain 1.9.0, CDK/Router/Forms 22.2.4 e Tailwind 4.3.5.
-Tokens e atribuição upstream centralizados, conforme [ADR 0003](../adr/0003-spartan-navegacao-por-area.md).
-Sessão, contexto de unidade, carrinho, rascunhos e intenções incertas permanecem em memória.
-Contrato de nome público e filtros operacionais antes da paginação documentados na API.
-Nenhuma migration ou regra de dinheiro foi alterada.
+Cliente, gestão e cozinha possuem rotas, layouts e navegação próprios. A raiz
+abre o cardápio; gestão inicia em pedidos em andamento; cozinha oferece abas
+Todas/Fila/Preparo/Prontos. Plataforma permanece separada. Links antigos de mesa
+continuam funcionando.
 
-## Verificação local já realizada
+Tema de bistrô contemporâneo, tokens centrais, fotografias ilustrativas, botões
+e abas Spartan Brain 1.9.0, CDK/Router/Forms 22.2.4 e Tailwind 4.3.5. Controles
+nativos usam a mesma fundação visual. Origem, licença e atualização estão no
+[ADR 0003](../adr/0003-spartan-navegacao-por-area.md). Fontes do sistema e ícones
+locais; nenhum CDN. Catálogo interno em `/design-system`.
 
-- Backend: suíte completa de 402 testes, sem falhas/erros/skips; depois, 38 testes de rotas
-  após o delta de cinco destinos. São rodadas distintas; não declarar uma suíte completa
-  de 440 testes. As entradas não estáticas dos JARs seguintes foram comparadas byte a byte.
-- Tipos, formatação, lógica, templates nos três motores e build Angular/PWA aprovados
-  durante os incrementos. O build inicial caiu de aproximadamente 458 kB para 282 kB,
-  mantendo os limites de aviso/erro de 450/600 kB.
-- Pacotes npm instalados com peers compatíveis, versões exatas e auditoria sem achados.
-- PWA inclui todos os chunks com hash misto e somente o banner público enumerado;
-  APIs, mídia da empresa, credenciais e escritas permanecem fora do cache.
-- Candidato `e1a98eae…` aprovou os 65 pares de pedidos/mesas/cozinha nos cinco projetos;
-  a regressão seguinte detectou sobreposição do aviso offline móvel. Esse resultado
-  anterior não aprova a matriz do código corrigido.
-- Candidato `d24b128c…`, commit `6781d72`, corrigiu o aviso offline; PWA01 móvel com
-  clique real passou. Na rodada seguinte, desktop da baseline completou 59/59; ainda
-  houve falha de seletor do menu na identidade móvel e timeout no cenário volumoso
-  de paginação. Resultados parciais não encerram a matriz.
-- Revisão nativa no Chrome: zoom indicado de 200%, viewport CSS de 896 px e scrollWidth
-  de 896 px, sem rolagem horizontal. Diálogo também permaneceu contido. O zoom foi
-  restaurado para 100%. A revisão revelou retorno de foco ao body; corrigido capturando
-  o acionador antes da consulta/desabilitação, com cobertura adicional no catálogo.
+Sessão, contexto, carrinho, rascunhos e intenções incertas permanecem em memória.
+Formulários e operações pendentes protegem a saída; logout continua disponível.
+Trocas de área/unidade/sessão encerram acompanhamento e descartam respostas
+antigas. Cadastro, recuperação, verificação, convites, favoritos, combos,
+atendimento assistido, cancelamentos e comandas preservados.
 
-## Falhas e correções preservadas
+`GET /api/v1/restaurante` expõe somente o nome pelo domínio registrado. Filtros
+operacionais e de cozinha são aplicados antes da paginação, preservando os
+padrões de clientes antigos e os estados autorizados da cozinha. Contagens da
+página não são apresentadas como totais globais. Fallback SPA é explícito, sem
+capturar APIs ou arquivos inexistentes. Nenhuma migration ou contrato de escrita
+foi alterado; pagamentos reais e novos indicadores financeiros ficaram fora.
 
-Gestão vazia por acesso prematuro ao snapshot filho; skiplink com base `/` recarregando
-a página; contraste da ação de saída da cozinha; aviso offline sobrepondo controles;
-retorno do foco do configurador. Foram acrescentadas provas de regressão pertinentes.
+## Validação final
 
-Adaptações do harness preservam os cenários: navegação por RouterLinks, espera dos
-estados realmente exibidos antes de comandos, seletores por papel acessível, fechamento
-do botão do menu em vez do overlay, canal explícito e hosts ligados à fixture gerenciada.
-A proteção do último Administrador usa tenant com um único administrador ativo.
-Contas de verificação consumidas são substituídas por contas novas, sem reverter sua
-verificação. Quotas não foram apagadas nem redefinidas. Logs, traces, snapshots e falhas
-anteriores ficam preservados no registro privado da execução.
+| Verificação | Resultado |
+| --- | --- |
+| Backend completo com PostgreSQL real | 407 testes; zero falhas, erros e skips |
+| Formatação e tipos | Aprovados, incluindo o ajuste final do teste |
+| Lógica | 20 grupos; transporte fictício onde indicado pelos probes |
+| Templates | 12 grupos em Chromium/Firefox/WebKit; JIT e API fictícia |
+| Build Angular/PWA | 286,19 kB iniciais; limites 450/600 kB mantidos |
+| npm audit | Zero achados |
+| Matriz integrada de UI/API | 360 pares únicos; zero skips, retries e instabilidade na seleção final |
+| Catálogo de componentes | 3 motores × 360/768/1280: teclado, painéis, toque 48 px e overflow |
+| Demonstração publicada | 42 conferências de rotas/navegação/perfis e 30 verificações de smoke |
+| Acessos existentes | 7 perfis autenticados, sem mudar credenciais |
+| Revisão visual | 20 capturas efetivamente inspecionadas e aprovadas; uma prematura rejeitada e substituída |
 
-## Demonstração
+Os bytes não estáticos do JAR imutável foram comparados com a compilação que
+executou os 407 testes. As rodadas anteriores de 402 testes completos e 38 de
+rotas são históricas e não são somadas à contagem final. Os 411 arquivos de
+fonte/configuração da aplicação foram identificados por hash.
 
-Prévia em `https://demo.localhost:8095`, separada em banco `rm_dev`; matriz usa `rm_test`.
-PostgreSQL compartilhado foi preservado. Backup consistente e cópia do JAR/configurações
-anteriores permitem reversão. O artefato realmente servido foi conferido por hash do JS.
+| Projeto de navegador | Pedidos/mesas/cozinha | Regressão | Total |
+| --- | ---: | ---: | ---: |
+| Chromium desktop, 1280 px | 13 | 59 | 72 |
+| Chromium mobile, 360 px | 13 | 59 | 72 |
+| Chromium tablet, 768 px | 13 | 59 | 72 |
+| Firefox desktop | 13 | 59 | 72 |
+| WebKit desktop | 13 | 59 | 72 |
+| **Total** | **65** | **295** | **360** |
 
-No candidato anterior `d24b128c…`, login administrativo, unidades, três larguras de tela
-(360/768/1280) e logins de Administrador/Cozinha/Cliente passaram. Smoke novo de 30
-verificações concluiu duas retiradas fictícias até PRONTO, com negativas 403 e consulta de
-expedição; sem pagamentos. Duas fotos ilustrativas foram associadas aos produtos fictícios
-correspondentes pela API. Acessos e certificado foram mantidos.
+A matriz usou o mesmo JAR e PID 32335, um worker total, com esperas naturais de
+quota e sem redefinir limites. Cobriu positivos e negativos por perfil/unidade,
+isolamento, revogação, SSE/polling, envio incerto sem duplicação, cancelamentos,
+combos, preparo parcial, mesas/comandas, paginação e fluxos de identidade.
 
-## Candidato final em execução
+Na demonstração, acesso direto e recarga de rotas, voltar/avançar preservando
+unidade em memória, QR antigo, negativa de gestão ao cliente/cozinha e erros de
+API/arquivos foram conferidos. Capturas finais das três áreas nas três larguras
+aguardaram layout e consulta estáveis. A captura inicial vazia de gestão foi
+rejeitada por ter ocorrido antes da renderização, preservada e substituída.
 
-Candidato `c2e2c6dfbebf68db70ddf8f5613fd3bdba7820769a00cb2714824eee71d06352`,
-fonte da aplicação `3ac3bf0`, prévia atualizada com backup novo, health, nome público,
-login administrativo, duas unidades e bytes do JS servido conferidos. Probe de foco
-aprovado em Chromium, Firefox e WebKit; PWA01 móvel também aprovado.
+Chrome nativo com `main-Q6GR7OUG.js`: atualização consentida, zoom indicado de
+200%, viewport/scrollWidth 896 px e diálogo clientWidth/scrollWidth 638 px. Escape
+retornou foco ao acionador. Zoom restaurado a 100%, viewport/scrollWidth 1792 px.
+O proprietário desbloqueou o Mac; não houve contorno do bloqueio.
 
-A primeira rodada deste JAR passou oito pares e parou em S03-UI09: consulta imediata
-de visibilidade no harness confundia a renderização pendente do carrinho com a versão
-móvel. O trace mostrou o item presente depois, sem navegação possível no instante
-anterior. A correção `e1c0a32` aguarda fechamento do diálogo e botão de revisão anexado,
-incluindo elementos ocultos por CSS. Desktop e celular passaram nos probes; uma falha
-intermediária do probe móvel por omitir `includeHidden` também está preservada.
+Seis pares principais de texto/foco do tema tiveram contraste calculado entre
+5,53:1 e 14,23:1, acima de 4,5:1. Isso não é auditoria universal WCAG ou prova de
+leitor de tela. Os seletores nativos compactos mostram as opções completas ao abrir.
 
-A rodada `redesenho-05-h02` reexecuta todos os 360 pares, sem aproveitar os oito
-resultados anteriores. Apenas um worker total; quando uma família aguarda quota,
-a outra pode prosseguir serialmente. Nenhum limite foi apagado ou reduzido. JAR,
-PID, fontes, fixtures e harness permanecem identificados por hashes. Depois de o proprietário desbloquear o Mac, a atualização consentida e o retorno
-do foco ao botão de origem foram conferidos no Chrome nativo, com o JS esperado.
-A rodada foi pausada na fronteira de cenário para completar as abas da cozinha,
-identificadas na conferência final do plano. Novo candidato será gerado com abas
-Spartan Brain, setas/Home/End, ativação por Enter/espaço e filtros de servidor; a
-regressão S03-UI01 passa a verificar esse comportamento.
+PWA enumera 33 arquivos públicos; APIs, mídia do catálogo, credenciais e escritas
+ficam fora do cache. Offline não confirma operações. A atualização controlada
+foi exercitada nos cinco projetos; a versão publicada foi atualizada também no
+Chrome nativo por consentimento. CSP e erros de recursos permaneceram preservados.
 
-## Critério de encerramento pendente
+Comandos-base executados: `backend/mvnw -B -ntp -f backend/pom.xml verify`,
+`npm run format:check`, `npm run typecheck`, `npm run test:logic`,
+`npm run test:templates`, `npm run build`, `npm audit --audit-level=moderate` e
+Playwright por projeto/família com `--workers=1 --retries=0 --max-failures=1`.
+O scanner de repositório e a verificação de diff/links completam a entrega documental.
 
-Gerar candidato com foco corrigido, confirmar o comportamento no navegador, reexecutar
-os 360 pares no mesmo release integrado, revisar as capturas e consolidar sem skips,
-instabilidade ou aprovações transferidas. Atualizar o estado da demonstração e este relato
-somente conforme os resultados reais. Linux, aparelhos físicos e tecnologia assistiva
-continuam distinguíveis da validação local.
+## Falhas e reexecuções preservadas
+
+| Achado | Correção e comprovação |
+| --- | --- |
+| Gestão vazia por snapshot filho ainda não ativado | Leitura da árvore de snapshots; regressão de ativação e matriz final |
+| Skiplink recarregando a aplicação | Foco no conteúdo da rota atual, sem recarga; verificação por teclado |
+| Saída da cozinha com contraste inadequado | Ícone/ação ajustados; capturas finais e jornadas por perfil |
+| Aviso offline sobrepondo controles móveis | Aviso no fluxo e área segura; PWA móvel e matriz final |
+| Diálogo retornando foco ao body | Acionador capturado antes de desabilitar/carregar; probes nos três motores e Chrome nativo |
+| Carrinho ainda não renderizado no harness | Espera de diálogo fechado e botão anexado, incluindo ocultos por CSS; `e1c0a32` e 65 pares finais |
+| Etapas de cozinha ainda apenas em seletor | Abas Brain/CDK completadas em `c991bd8`; catálogo interno e S03-UI01 nos cinco projetos |
+| Harness de upload buscando menu durante logout | Espera de URL e remoção do layout; respeito ao retorno protegido do editor em `a408cae` |
+
+O primeiro probe de upload corrigiu a espera, mas tentou sair para Minha conta
+quando a aplicação já havia retomado corretamente o editor com upload incerto.
+A proteção impediu essa saída. O teste passou a aguardar e verificar o editor
+preservado; S02-UI05 aprovou os cinco projetos. Falhas, traces e probes
+intermediários continuam arquivados; não foram convertidos em aprovação.
+
+O JAR e seu processo não mudaram nessa correção exclusiva do teste. Toda a família
+de catálogo foi invalidada e repetida na baseline `redesenho-06-baseline-02`.
+Outros 77 pares, em 17 lotes íntegros do mesmo JAR/PID, foram vinculados por
+recibos que reabrem os resultados originais. Os 21 pedidos já concluídos
+continuaram com os mesmos specs/helpers e plano. Nenhuma aprovação de outro
+candidato foi usada.
+
+A primeira retomada foi recusada antes de executar testes. A transição posterior
+aceita somente a origem explícita `redesenho-06`, com snapshots e comparação de
+seis arquivos de harness. Alterações adicionais simuladas em helper e PID foram
+recusadas. Revisão auditada:
+`6c43c9fc70f2c4e66aace4ce620878b6d3adf0f2e6e02e84f40a82106e292f13`.
+A consolidação final releu todos os relatórios e recibos e confirmou 360 pares
+únicos aprovados. Resultado parcial, bloqueado ou não executado não foi contado.
+
+## Demonstração e reversão
+
+O processo PostgreSQL compartilhado foi preservado. Cada atualização teve dump
+consistente de `rm_dev` e cópia do JAR/metadados/configuração anteriores. Há nova
+cópia antes de acrescentar os exemplos finais. Não houve migração de dados;
+a reversão do aplicativo usa esses arquivos, preservando acessos e certificado.
+Não foi declarado um ensaio de restauração completo nesta entrega.
+
+O smoke novo deixou duas retiradas fictícias PRONTAS e verificou negativas 403,
+consulta de expedição e ausência de dados financeiros na cozinha, sem pagamentos.
+Foram acrescentados quatro exemplos, dois por unidade: fila e preparo parcial
+com uma unidade pronta, uma em preparo e uma na fila. Dados anteriores mantidos.
+Duas fotografias ilustrativas foram associadas aos produtos fictícios pela API.
+
+Evidências privadas permanentes, incluindo JAR, relatórios originais, falhas,
+recibos, capturas e `entrega.json`:
+`/Users/mac/.local/share/restaurant-manager-manual/evidencias/redesenho-20261108-3df1f92ce34d`.
+Credenciais permanecem somente no arquivo privado `ACESSOS.txt` do ambiente.
+API de testes 32335 encerrada após a consolidação; 8089 liberada. Demonstração
+8095 saudável após a parada; PostgreSQL preservado.
+
+## Etapas externas pendentes
+
+- Homologação Linux/Hermes, inclusive S01-UI29 e S01-UI31: não executada nesta rodada;
+  não integra os 360 pares locais aprovados.
+- Aparelhos físicos, instalação/comportamento PWA nesses aparelhos e leitores de tela:
+  não executados; emulação e teclado nativo não os substituem.
+- Provedores reais, pagamentos, produção e piloto: permanecem fora deste incremento.
+
+Implementação local aprovada não equivale à prontidão completa de produção.

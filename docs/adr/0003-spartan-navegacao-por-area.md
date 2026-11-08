@@ -1,6 +1,6 @@
 # ADR 0003 — Spartan UI e navegação por área
 
-- **Status:** aceito em 2026-11-08, por escolha explícita do proprietário no plano de redesenho. Validação integrada em andamento; não equivale a homologação Linux.
+- **Status:** aceito em 2026-11-08, por escolha explícita do proprietário no plano de redesenho. Validação integrada local concluída: 407 testes backend e 360 pares de navegador; não equivale a homologação Linux.
 - **Contexto:** a página única misturava cardápio, autenticação, cadastros e operação. O objetivo é organizar cliente, gestão e cozinha com identidade de bistrô contemporâneo, preservando os contratos e a recuperação de operações incertas.
 - **Decisão:** Angular Router 22.2.4 com layouts por área e carregamento sob demanda. Spartan Brain 1.9.0, Angular CDK/Forms 22.2.4 e Tailwind CSS/PostCSS 4.3.5 fixados no lockfile. Os peers publicados do Spartan aceitam Angular/CDK 21 e 22. A diretiva Helm de botão foi adaptada do código MIT oficial; tema e componentes locais ficam em `frontend/src/app/ui/` e tokens em `frontend/src/styles.css`. Não há dependência de CDN nem fonte remota.
 - **Alternativas:** Angular Material mantém convenções visuais mais definidas; PrimeNG 22 tem modelo Community/Commercial que exige avaliação específica. Spartan foi escolhido pela liberdade de compor a identidade do restaurante. Não misturar bibliotecas visuais por área.

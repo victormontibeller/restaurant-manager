@@ -12,6 +12,10 @@ A organização segue o padrão do Schools: documentos por assunto, roadmap cent
 
 As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresentação está no [README do repositório](../README.md).
 
+O [redesenho com Spartan](evidencias/redesenho-frontend-2026-11-08.md) foi validado
+localmente e publicado na demonstração, com cliente, gestão e cozinha separados.
+O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externas pendentes.
+
 ## Fontes por assunto
 
 | Assunto | Arquivo | Conteúdo |
