@@ -346,3 +346,7 @@ h1 {
     transition: none;
   }
 }
+
+.kitchen-workplace .workspace-tools > button[data-variant='ghost'] {
+  color: #ffffff;
+}
