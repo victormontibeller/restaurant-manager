@@ -189,13 +189,26 @@ async function configurarCombo(
 ): Promise<void> {
   await navegarUi(page, '/cardapio');
   const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
+  const detalhe = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      response.request().method() === 'GET' &&
+      url.pathname === '/api/v1/catalogo/' + combo.id &&
+      url.searchParams.get('unidadeId') === fixture().unidadeA &&
+      url.searchParams.get('canal') === 'DELIVERY'
+    );
+  });
   await vitrine.getByRole('button', { name: 'Ver opções de ' + combo.nome, exact: true }).click();
+  const produtoDisponivel = await detalhe;
+  expect(produtoDisponivel.status()).toBe(200);
+  expect((await produtoDisponivel.json()).disponivel).toBe(true);
   const configurador = page
     .getByRole('dialog', { name: 'Configurar produto', exact: true })
     .getByRole('region', {
       name: 'Configurar ' + combo.nome,
       exact: true,
     });
+  await expect(configurador.getByLabel('Quantidade do produto', { exact: true })).toBeEnabled();
   await configurador.getByLabel('Quantidade do produto', { exact: true }).fill(quantidade);
   await configurador
     .getByRole('button', { name: 'Adicionar escolha de Escolha principal', exact: true })
@@ -382,6 +395,25 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
   await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
+    fixture().unidadeA,
+  );
+  const canal = vitrine.getByLabel('Canal do cardápio', { exact: true });
+  if ((await canal.inputValue()) !== 'DELIVERY') {
+    const trocaCanal = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === 'GET' &&
+        url.pathname === '/api/v1/catalogo' &&
+        url.searchParams.get('unidadeId') === fixture().unidadeA &&
+        url.searchParams.get('canal') === 'DELIVERY'
+      );
+    });
+    await canal.selectOption('DELIVERY');
+    expect((await trocaCanal).status()).toBe(200);
+  }
+  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(canal).toHaveValue('DELIVERY');
   await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(combo.nome);
   await vitrine.getByLabel('Categoria do cardápio', { exact: true }).selectOption(categoriaId);
   const busca = page.waitForResponse((response) => {
@@ -389,6 +421,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     return (
       response.request().method() === 'GET' &&
       url.pathname === '/api/v1/catalogo' &&
+      url.searchParams.get('canal') === 'DELIVERY' &&
       url.searchParams.get('busca') === combo.nome &&
       url.searchParams.get('categoriaId') === categoriaId &&
       url.searchParams.get('unidadeId') === fixture().unidadeA
@@ -398,6 +431,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   const resultadoBusca = await busca;
   expect(resultadoBusca.status()).toBe(200);
   const catalogo = await resultadoBusca.json();
+  expect(catalogo.aberto).toBe(true);
   expect(catalogo.itens.map((item: { id: string }) => item.id)).toEqual([combo.id]);
   expect(catalogo.temMais).toBe(false);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');

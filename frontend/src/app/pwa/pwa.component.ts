@@ -35,7 +35,7 @@ interface PedidoInstalacao extends Event {
       <p role="status" aria-live="polite">{{ mensagem() }}</p>
     </details>
   `,
-  styles: `:host{display:block;max-width:520px}summary{min-height:44px;align-content:center;cursor:pointer;list-style:none}details p{line-height:1.6}button{margin:.5rem .5rem .5rem 0}.offline-notice{position:fixed;left:1rem;right:1rem;bottom:90px;max-width:640px;margin:auto;z-index:40;padding:1rem;border-radius:12px;background:#fff1d7;color:#694d1a;box-shadow:0 8px 32px #0002;font-size:.85rem}`,
+  styles: `:host{display:block;max-width:520px}summary{min-height:44px;align-content:center;cursor:pointer;list-style:none}details p{line-height:1.6}button{margin:.5rem .5rem .5rem 0}.offline-notice{max-width:640px;margin:0 0 1rem;padding:1rem;border-radius:12px;background:#fff1d7;color:#694d1a;box-shadow:0 8px 32px #0002;font-size:.85rem}`,
 })
 export class PwaComponent implements OnDestroy {
   readonly online = signal(navigator.onLine);

@@ -344,3 +344,9 @@ dialog::backdrop {
     max-height: 95dvh;
   }
 }
+
+@media (max-width: 800px) {
+  html {
+    scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}

@@ -84,6 +84,7 @@ export async function navegarUi(page: Page, destino: string): Promise<void> {
   if (destino.startsWith('/gestao/') || destino === '/cozinha') {
     if (new URL(page.url()).pathname === '/cozinha') {
       await page.getByRole('link', { name: 'Gestão', exact: true }).click();
+      await expect(page).toHaveURL((url) => url.pathname === '/gestao/pedidos');
     } else if (
       !new URL(page.url()).pathname.startsWith('/gestao/') ||
       new URL(page.url()).pathname === '/gestao/entrar'
@@ -95,7 +96,9 @@ export async function navegarUi(page: Page, destino: string): Promise<void> {
       }
       await abrirEquipe.click();
       await expect(page.locator('app-equipe-layout')).toBeVisible();
-      await expect(page.getByLabel('Unidade da operação', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Unidade da operação', exact: true }),
+      ).toBeVisible();
     }
     if (destino === '/gestao/pedidos/novo') await navegarUi(page, '/gestao/pedidos');
   }
@@ -135,7 +138,9 @@ export async function loginUi(page: Page, conta: Conta): Promise<string> {
     const area = page.locator('app-equipe-layout');
     await expect(area).toBeVisible();
     await expect(area.getByRole('main')).toBeVisible();
-    await expect(area.getByLabel('Unidade da operação', { exact: true })).toBeVisible();
+    await expect(
+      area.getByRole('combobox', { name: 'Unidade da operação', exact: true }),
+    ).toBeVisible();
   } else {
     await expect(page).toHaveURL((url) => url.pathname === '/cardapio');
     await expect(page.locator('a[href="/conta"]:visible').first()).toBeVisible();
@@ -171,8 +176,16 @@ export async function operacao(
     'Configurar prazos de aceite': '/gestao/configuracoes/prazos',
   };
   await navegarUi(page, destinos[area]);
-  await page.getByLabel('Unidade da operação', { exact: true }).selectOption(fixture().unidadeA);
   const painel = page.getByRole('main');
+  if (area === 'Configurar prazos de aceite') {
+    await expect(
+      painel.getByRole('button', { name: 'Consultar prazos atuais', exact: true }),
+    ).toBeEnabled();
+  }
+  const unidade = page.getByRole('combobox', { name: 'Unidade da operação', exact: true });
+  if ((await unidade.inputValue()) !== fixture().unidadeA)
+    await unidade.selectOption(fixture().unidadeA);
+  await expect(unidade).toHaveValue(fixture().unidadeA);
   if (area === 'Painel da cozinha') {
     // A cozinha abre pelos mais antigos; esta massa compartilhada busca o pedido recém-criado.
     await painel.getByLabel('Ordenar pedidos', { exact: true }).selectOption('RECENTES');
@@ -357,7 +370,10 @@ export async function montarCarrinho(
   await navegarUi(page, equipe ? '/gestao/pedidos/novo' : '/cardapio');
   const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
   if (equipe) {
-    await page.getByLabel('Unidade da operação', { exact: true }).selectOption(fixture().unidadeA);
+    const unidade = page.getByRole('combobox', { name: 'Unidade da operação', exact: true });
+    if ((await unidade.inputValue()) !== fixture().unidadeA)
+      await unidade.selectOption(fixture().unidadeA);
+    await expect(unidade).toHaveValue(fixture().unidadeA);
     await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
       fixture().unidadeA,
     );

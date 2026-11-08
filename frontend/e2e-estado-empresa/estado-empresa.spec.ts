@@ -5,7 +5,10 @@ const empresaArquivo = process.env['RM_AUTH_FIXTURE'];
 if (!arquivo || !empresaArquivo)
   throw new Error('Fixtures privadas SaaS e empresarial obrigatórias.');
 const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as { email: string; senha: string };
-const empresa = JSON.parse(fs.readFileSync(empresaArquivo, 'utf8')) as { id: string };
+const empresa = JSON.parse(fs.readFileSync(empresaArquivo, 'utf8')) as {
+  id: string;
+  host?: string;
+};
 const url = '/api/v1/plataforma/empresas/' + empresa.id;
 async function entrar(page: Page): Promise<string> {
   await page.goto('/plataforma');
@@ -145,7 +148,7 @@ test('S01-UI26: suspensão e reativação exigem confirmação sem bloquear cons
       'true',
     );
     const business = new URL(page.url());
-    business.hostname = 'c4.localhost';
+    business.hostname = empresa.host ?? 'c4.localhost';
     business.pathname = '/api/v1/unidades';
     business.search = '';
     expect((await page.request.get(business.toString())).status()).toBe(200);

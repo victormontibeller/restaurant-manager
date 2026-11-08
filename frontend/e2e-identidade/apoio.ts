@@ -43,6 +43,7 @@ export async function navegarGestao(page: Page, rota: string): Promise<void> {
     await page.getByRole('link', { name: 'Gestão', exact: true }).click();
     await expect(page).toHaveURL(/\/gestao\/pedidos$/);
   }
+  if (new URL(page.url()).pathname === rota) return;
   await expect(page.locator('app-equipe-layout')).toBeVisible();
   await abrirMenu(page);
   await page

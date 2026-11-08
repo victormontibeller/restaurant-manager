@@ -769,7 +769,13 @@ test('S03-UI04 combo cancela unidade completa e preserva primeiro preparo', asyn
   const primeiro = pedido.primeiroPreparoEm;
   const fila = await operacao(page);
   const card = fila.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
-  await card.getByRole('checkbox').nth(0).check();
+  // O login já abre a fila; aguarde o snapshot posterior ao preparo feito pelo setup.
+  const unidadeEmPreparo = card.getByRole('checkbox', {
+    name: 'Unidade 1 · Em preparo',
+    exact: true,
+  });
+  await expect(unidadeEmPreparo).toBeVisible();
+  await unidadeEmPreparo.check();
   await card
     .getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true })
     .fill('Cancelamento da unidade inteira do combo');
@@ -1108,11 +1114,11 @@ test('S03-UI10 revogação encerra acompanhamento e remove ações com JWT ainda
   const cliente = await loginApi(request, fixture().contas.clienteA);
   const criado = await enviarApi(request, cliente, catalogo.simples);
   await comando(request, admin, criado.pedido, 'aceitar');
-  const token = await loginUi(page, fixture().contas.cozinha);
   const requests: string[] = [];
   page.on('request', (req) => {
     if (req.url().includes('/eventos')) requests.push(req.url());
   });
+  const token = await loginUi(page, fixture().contas.cozinha);
   const painel = await operacao(page, 'Painel da cozinha');
   await expect(
     painel.getByRole('article', { name: 'Pedido ' + criado.pedido.id, exact: true }),
