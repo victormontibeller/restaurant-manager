@@ -4,8 +4,8 @@
 
 Revisão e correções concluídas localmente. Base
 `d9fde9968ab2ce154abecffe66e171788aae1770`, reconferida em `origin/main`;
-branch `codex/sprint-03-pedidos-mesas-cozinha`. Publicação por commit/push/PR
-em preparação autorizada. Linux/Hermes e homologação continuam pendentes;
+branch `codex/sprint-03-pedidos-mesas-cozinha`. Implementação publicada em
+`a6902bd2b06a0fa336a911d076975ca5f41437b8`, com [PR #6 aberto](https://github.com/victormontibeller/restaurant-manager/pull/6). Linux/Hermes e homologação continuam pendentes;
 merge e deploy não fazem parte desta entrega.
 
 Resultado vigente no JAR15

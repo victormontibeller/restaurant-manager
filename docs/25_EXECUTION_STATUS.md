@@ -5,8 +5,12 @@
 Implementação e revisão local concluídas na branch
 `codex/sprint-03-pedidos-mesas-cozinha`, sobre a base
 `d9fde9968ab2ce154abecffe66e171788aae1770`, reconferida em `origin/main`.
-Commit, push e abertura do PR autorizados e em preparação. Merge e deploy
-não fazem parte desta solicitação; Linux/Hermes e homologação seguem pendentes.
+Implementação publicada em `a6902bd2b06a0fa336a911d076975ca5f41437b8` e
+[PR #6 aberto](https://github.com/victormontibeller/restaurant-manager/pull/6).
+O head e a CI são rastreáveis nos [checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/6/checks);
+conferir o commit efetivo ao retomar, sem transferir aprovação entre heads.
+Merge e deploy não fazem parte desta solicitação; Linux/Hermes e homologação
+seguem pendentes.
 
 Pedidos, mesas/comandas, cozinha, cobranças/ajustes e eventos implementados
 com organização por domínio. V17–V21 novas; 22 migrations anteriores idênticas
