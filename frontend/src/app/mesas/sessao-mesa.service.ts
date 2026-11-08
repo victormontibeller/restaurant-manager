@@ -5,19 +5,32 @@ import { ParticipanteAtual } from './modelos';
 @Injectable({ providedIn: 'root' })
 export class SessaoMesaService {
   readonly participante = signal<ParticipanteAtual | null>(null);
+  readonly encerramentoPendente = signal(false);
   private access: string | null = null;
   private geracao = 0;
   private renovacao: Promise<void> | null = null;
+  private inicializacao: Promise<void> | null = null;
   private timer?: ReturnType<typeof setTimeout>;
   private readonly canal = new BroadcastChannel('rm-sessao-mesa');
 
   constructor() {
     this.canal.onmessage = (event) => {
-      if (event.data === 'saiu') this.limpar();
+      if (event.data === 'saiu') {
+        this.encerramentoPendente.set(false);
+        this.limpar();
+      }
     };
+    window.addEventListener('beforeunload', (event) => {
+      if (this.encerramentoPendente()) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    });
   }
 
   async autorizar(mesaId: string, codigo: string): Promise<void> {
+    if (this.encerramentoPendente())
+      throw new Error('Confirme o encerramento anterior antes de autorizar outra participação.');
     await navigator.locks.request('rm-sessao-mesa', async () => {
       const geracao = this.geracao;
       const response = await this.comando('autorizar', { mesaId, codigo });
@@ -25,7 +38,18 @@ export class SessaoMesaService {
     });
   }
 
+  inicializar(): Promise<void> {
+    if (!this.inicializacao) {
+      this.inicializacao = this.restaurar().catch((error) => {
+        this.inicializacao = null;
+        throw error;
+      });
+    }
+    return this.inicializacao;
+  }
+
   async restaurar(): Promise<void> {
+    if (this.encerramentoPendente()) return;
     if (!this.renovacao) {
       this.renovacao = navigator.locks
         .request('rm-sessao-mesa', async () => {
@@ -51,7 +75,11 @@ export class SessaoMesaService {
         this.comando('logout'),
       );
       if (!response.ok && response.status !== 401) throw await this.erro(response);
+      this.encerramentoPendente.set(false);
       this.canal.postMessage('saiu');
+    } catch (error) {
+      this.encerramentoPendente.set(true);
+      throw error;
     } finally {
       this.limpar();
     }

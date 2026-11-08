@@ -6,10 +6,14 @@ import br.com.restaurantmanager.pedidos.dtos.ComandoPedido;
 import br.com.restaurantmanager.pedidos.dtos.EnviarPedido;
 import br.com.restaurantmanager.pedidos.dtos.PaginaPedidos;
 import br.com.restaurantmanager.pedidos.exceptions.ErrosPedido;
+import br.com.restaurantmanager.pedidos.models.EstadoPedido;
+import br.com.restaurantmanager.pedidos.models.OrdenacaoPedidos;
 import br.com.restaurantmanager.pedidos.services.EnvioPedidoService;
 import br.com.restaurantmanager.pedidos.services.PedidoComandoService;
 import br.com.restaurantmanager.pedidos.services.PedidoConsultaService;
+import br.com.restaurantmanager.unidades.models.CanalAtendimento;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,8 +42,10 @@ public class PedidoOperacaoController {
 
     @GetMapping("/api/v1/operacao/pedidos")
     public PaginaPedidos<PedidoOperacional> listar(@AuthenticationPrincipal IdentidadeAtual ator, @RequestParam UUID unidadeId,
-            @RequestParam(defaultValue = "0") int pagina) {
-        return consultas.listarOperacao(ator, unidadeId, pagina, false);
+            @RequestParam(defaultValue = "0") int pagina, @RequestParam(required = false) List<EstadoPedido> estados,
+            @RequestParam(required = false) CanalAtendimento canal,
+            @RequestParam(defaultValue = "RECENTES") OrdenacaoPedidos ordenacao) {
+        return consultas.listarOperacao(ator, unidadeId, pagina, false, estados, canal, ordenacao);
     }
 
     @GetMapping({"/api/v1/operacao/pedidos/{id}", "/api/v1/operacao/pedidos/intencoes/{id}"})

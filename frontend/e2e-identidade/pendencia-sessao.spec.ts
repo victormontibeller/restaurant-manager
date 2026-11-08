@@ -1,3 +1,4 @@
+import { navegarGestao, confirmarNavegacaoBloqueada } from './apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 
@@ -17,7 +18,7 @@ async function entrar(page: Page): Promise<void> {
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await response).status()).toBe(200);
-  await expect(page.getByText('Perfil: ADMINISTRADOR')).toBeVisible();
+  await expect(page.locator('app-equipe-layout')).toBeVisible();
 }
 async function confirmar(page: Page): Promise<void> {
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
@@ -31,9 +32,9 @@ async function confirmar(page: Page): Promise<void> {
 test('S01-UI07: logout e retry sem reautenticação não descartam intenção incerta', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await entrar(page);
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await navegarGestao(page, '/gestao/unidades');
   await confirmar(page);
   const nome = 'Pendente ' + crypto.randomUUID().slice(0, 8);
   await page.getByLabel('Nome da nova unidade').fill(nome);
@@ -60,7 +61,7 @@ test('S01-UI07: logout e retry sem reautenticação não descartam intenção in
   await entrar(page);
   await expect(page.getByRole('button', { name: 'Reconciliar criação' })).toBeVisible();
   await expect(page.getByLabel('Intenção preservada')).toHaveText(nome + ' · America/Manaus');
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toBeDisabled();
+  await confirmarNavegacaoBloqueada(page, '/gestao/equipe');
   const retry = page.waitForResponse(
     (r) => r.url().endsWith('/configuracoes/unidades') && r.request().method() === 'POST',
   );
@@ -79,8 +80,9 @@ test('S01-UI07: logout e retry sem reautenticação não descartam intenção in
 });
 
 test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await entrar(page);
+  await navegarGestao(page, '/gestao/equipe');
   await confirmar(page);
   let liberar!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -111,9 +113,7 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', 
   await page.getByRole('button', { name: 'Salvar permissões' }).click();
   await gravada;
   try {
-    await expect(
-      page.getByRole('button', { name: 'Gerenciar unidades', exact: true }),
-    ).toBeDisabled();
+    await confirmarNavegacaoBloqueada(page, '/gestao/unidades');
   } finally {
     liberar();
   }
@@ -129,6 +129,9 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', 
     { timeout: 15000 },
   );
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gerenciar unidades', exact: true })).toBeEnabled();
+  await navegarGestao(page, '/gestao/unidades');
+  await expect(
+    page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
 });

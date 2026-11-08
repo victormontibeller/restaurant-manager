@@ -1,3 +1,4 @@
+import { abrirConta, navegarGestao, nomePerfil } from '../e2e-identidade/apoio';
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -84,7 +85,7 @@ for (const [indice, perfil] of perfis.entries()) {
           })
         ).status(),
       ).toBe(200);
-      await page.goto('/');
+      await page.goto('/gestao/entrar');
       await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
       await page.getByLabel('E-mail', { exact: true }).fill(fixture.cozinha.email);
       await page.getByLabel('Senha', { exact: true }).fill(fixture.cozinha.senha);
@@ -97,10 +98,14 @@ for (const [indice, perfil] of perfis.entries()) {
       expect(response.status()).toBe(200);
       const token = (await response.json()).accessToken;
       const worker = { Authorization: 'Bearer ' + token };
-      await expect(page.getByText('Perfil: ' + perfil, { exact: true })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: 'Configurações da empresa' })).toHaveCount(
-        0,
-      );
+      await abrirConta(page);
+      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
+      await navegarGestao(page, '/gestao/atualizacoes');
+      await expect(
+        page.locator(
+          'a[href="/gestao/equipe"], a[href="/gestao/unidades"], a[href="/gestao/equipe/convites"]',
+        ),
+      ).toHaveCount(0);
       // Confirmação de senha não transforma perfil operacional em Administrador.
       expect(
         (
@@ -142,7 +147,7 @@ for (const [indice, perfil] of perfis.entries()) {
       expect(
         await (await request.get('/api/v1/configuracoes/acessos', { headers })).json(),
       ).toEqual(politica);
-      await page.getByRole('button', { name: 'Acompanhar atualizações da unidade' }).click();
+      await navegarGestao(page, '/gestao/atualizacoes');
       const select = page.getByLabel('Unidade acompanhada', { exact: true });
       await expect(select.locator('option[value="' + unidade + '"]')).toHaveCount(1);
       await expect(select.locator('option[value="' + outra + '"]')).toHaveCount(0);
@@ -171,9 +176,11 @@ for (const [indice, perfil] of perfis.entries()) {
         ).status(),
       ).toBe(200);
       await expect(
-        page.getByText(
-          'Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.',
-        ),
+        page
+          .getByText(
+            'Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.',
+          )
+          .or(page.getByRole('heading', { name: 'Seu acesso foi atualizado', exact: true })),
       ).toBeVisible({ timeout: 15000 });
       await expect(page.getByTestId('unidade-atual')).toHaveCount(0);
       expect(
@@ -204,9 +211,10 @@ for (const [indice, perfil] of perfis.entries()) {
         .getByTestId('unidade-atual')
         .screenshot({ path: test.info().outputPath('perfil-' + perfil + '.png') });
       await page.reload();
-      await expect(page.getByText('Perfil: ' + perfil, { exact: true })).toBeVisible();
+      await abrirConta(page);
+      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Sair da conta' }).click();
-      await expect(page.getByRole('heading', { name: 'Acessar minha conta' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Entre na sua conta.' })).toBeVisible();
       expect((await request.get('/api/v1/auth/me', { headers: worker })).status()).toBe(401);
       expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([
         0, 0,

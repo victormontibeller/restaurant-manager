@@ -1,33 +1,102 @@
-<section class="painel-interno" aria-labelledby="cozinha-titulo">
-  <h3 id="cozinha-titulo">Cozinha · unidades de produção</h3>
-  <p>
-    Selecione as unidades completas para iniciar ou concluir. Começar qualquer componente inicia o
-    combo inteiro.
-  </p>
-  <p role="status">
-    {{ acompanhamento.estado() }} Última atualização:
-    {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
-  </p>
-  <button (click)="carregar()" [disabled]="ocupado()">Atualizar cozinha</button>
+<section class="painel-interno" aria-labelledby="cozinha-titulo" [attr.aria-busy]="ocupado()">
+  <header class="cabecalho-painel">
+    <div>
+      <span class="sobretitulo">Produção em tempo real</span>
+      <h2 id="cozinha-titulo">Painel da cozinha</h2>
+      <p class="texto-secundario">
+        Cada seleção representa uma unidade completa. Os componentes do combo são preparados juntos.
+      </p>
+    </div>
+  </header>
+  <div class="filtros" aria-label="Filtros da cozinha">
+    <div class="campo-filtro">
+      <label for="cozinha-estado">Etapa de produção</label>
+      <select
+        id="cozinha-estado"
+        #estado
+        [value]="filtroEstado()"
+        (change)="filtrar('estado', estado.value)"
+      >
+        <option value="">Todas as etapas</option>
+        <option value="NA_FILA">Na fila</option>
+        <option value="EM_PREPARO">Em preparo</option>
+        <option value="PRONTO">Prontos</option>
+      </select>
+    </div>
+    <div class="campo-filtro">
+      <label for="cozinha-canal">Canal do pedido</label>
+      <select
+        id="cozinha-canal"
+        #canal
+        [value]="filtroCanal()"
+        (change)="filtrar('canal', canal.value)"
+      >
+        <option value="">Todos os canais</option>
+        <option value="MESA">Mesa</option>
+        <option value="RETIRADA">Retirada</option>
+        <option value="DELIVERY">Delivery</option>
+      </select>
+    </div>
+    <div class="campo-filtro">
+      <label for="cozinha-ordem">Ordenar pedidos</label>
+      <select
+        id="cozinha-ordem"
+        #ordem
+        [value]="ordenacao()"
+        (change)="filtrar('ordem', ordem.value)"
+      >
+        <option value="ANTIGOS">Mais antigos primeiro</option>
+        <option value="RECENTES">Mais recentes primeiro</option>
+      </select>
+    </div>
+  </div>
+  <div class="barra-conexao">
+    <p role="status" class="status-consulta">
+      <span class="status-reserva" aria-hidden="true"
+        >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada. Última
+        atualização: ainda não confirmada.</span
+      >
+      <span
+        >{{ acompanhamento.estado() }} Última atualização:
+        {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
+      >
+    </p>
+    <button class="secundario" (click)="carregar()" [disabled]="ocupado()">
+      Atualizar cozinha
+    </button>
+  </div>
   @if (erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>
   }
-  @for (pedido of pedidos(); track pedido.id) {
-    <app-pedido-detalhe
-      [pedido]="pedido"
-      contexto="cozinha"
-      [acoes]="acoes()"
-      (atualizar)="carregar()"
-    />
-  } @empty {
-    <p>Nenhum pedido autorizado na fila desta unidade.</p>
-  }
-  <div class="acoes">
-    <button (click)="navegar(pagina() - 1)" [disabled]="ocupado() || pagina() === 0">
+  <div class="resumo-listagem">
+    <span>{{ pedidos().length }} pedidos nesta página</span><span>Página {{ pagina() + 1 }}</span>
+  </div>
+  <div class="grade-pedidos grade-cozinha">
+    @for (pedido of pedidos(); track pedido.id) {
+      <app-pedido-detalhe
+        [pedido]="pedido"
+        contexto="cozinha"
+        [acoes]="acoes()"
+        (atualizar)="carregar()"
+      />
+    } @empty {
+      <div class="vazio">
+        <h3>{{ ocupado() ? 'Atualizando a cozinha…' : 'A fila está em dia' }}</h3>
+        <p>Nenhum pedido autorizado corresponde aos filtros desta unidade.</p>
+      </div>
+    }
+  </div>
+  <nav class="paginacao" aria-label="Páginas da cozinha">
+    <button
+      class="secundario"
+      (click)="navegar(pagina() - 1)"
+      [disabled]="ocupado() || pagina() === 0"
+    >
       Página anterior da cozinha
     </button>
-    <button (click)="navegar(pagina() + 1)" [disabled]="ocupado() || !mais()">
+    <span>Página {{ pagina() + 1 }}</span>
+    <button class="secundario" (click)="navegar(pagina() + 1)" [disabled]="ocupado() || !mais()">
       Próxima página da cozinha
     </button>
-  </div>
+  </nav>
 </section>

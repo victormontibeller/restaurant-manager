@@ -20,7 +20,7 @@ fieldset {
   min-width: 0;
   margin: 0.75rem 0;
   padding: 0.75rem;
-  border: 1px solid #78857b;
+  border: 1px solid var(--input);
   border-radius: 0.5rem;
 }
 input:not([type='checkbox']),
@@ -32,10 +32,10 @@ textarea {
   min-height: 48px;
   font: inherit;
   padding: 0.5rem;
-  border: 1px solid #78857b;
+  border: 1px solid var(--input);
   border-radius: 0.25rem;
   background: white;
-  color: #202a25;
+  color: var(--foreground);
 }
 select {
   height: 3rem;
@@ -69,9 +69,9 @@ button {
   margin: 0.75rem 0;
 }
 .secundario {
-  background: #e9f0e9;
-  color: #204c30;
-  border: 1px solid #6b7a70;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
 }
 .erro {
   color: #9d2424;
@@ -88,7 +88,7 @@ button {
 }
 .item {
   min-width: 0;
-  border: 1px solid #b9c8bb;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
 }
@@ -107,7 +107,7 @@ button {
 }
 .vazio {
   padding: 1rem;
-  background: #f4f6f2;
+  background: var(--muted);
 }
 ul {
   padding-left: 1.25rem;

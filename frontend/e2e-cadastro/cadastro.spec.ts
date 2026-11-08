@@ -1,3 +1,4 @@
+import { abrirConta } from '../e2e-identidade/apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,7 +8,7 @@ const arquivo = process.env['RM_RECOVERY_FIXTURE'];
 if (!arquivo) throw new Error('Fixture privada de captura obrigatória.');
 const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as { captureDirectory: string };
 async function abrir(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/entrar');
   await expect(
     page.getByRole('button', { name: 'Criar conta de cliente', exact: true }),
   ).toBeEnabled();
@@ -68,9 +69,10 @@ async function login(page: Page, email: string, senha: string): Promise<void> {
   await page.getByLabel('E-mail', { exact: true }).fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(senha);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByText('Perfil: CLIENTE', { exact: true })).toBeVisible();
+  await abrirConta(page);
+  await expect(page.getByText('Cliente', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toHaveCount(0);
+  await expect(page.locator('a[href="/gestao/equipe"]')).toHaveCount(0);
 }
 test('S01-UI13: cadastro verificado, login de cliente e código consumido', async ({ page }) => {
   const email = crypto.randomUUID() + '@example.invalid',
@@ -165,7 +167,7 @@ test('S01-UI14: cadastro inválido, validação de senha, foco e offline', async
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(
-    page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
+    page.getByRole('heading', { name: 'Entre na sua conta.', exact: true }),
   ).toBeVisible();
 });
 test.describe('Fronteira de rede S01-UI15', () => {

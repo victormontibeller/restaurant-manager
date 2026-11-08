@@ -2,6 +2,7 @@ package br.com.restaurantmanager.tenancy.services;
 
 import br.com.restaurantmanager.tenancy.repositories.TenantRepository;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
+import br.com.restaurantmanager.tenancy.dtos.RestaurantePublico;
 import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,12 @@ public class TenantService {
 
     public List<String> schemasParaManutencao(String depoisDe) {
         return repository.schemasParaManutencao(depoisDe);
+    }
+
+    public RestaurantePublico restaurantePublico() {
+        String nome = repository.nomeOperacional(TenantScope.current())
+                .orElseThrow(() -> new AuthFailure(404, "EMPRESA_INDISPONIVEL", "Empresa indisponível."));
+        return new RestaurantePublico(nome);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

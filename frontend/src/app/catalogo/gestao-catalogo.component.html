@@ -105,6 +105,8 @@
           [temMaisComponentes]="componentesTemMais()"
           [bloqueado]="ocupado() || incerto()"
           (salvarProduto)="salvarProduto($event)"
+          (salvo)="salvo.emit($event)"
+          (rascunhoAlterado)="rascunhoAlterado.emit($event)"
           (maisComponentes)="carregarComponentes()"
           (bloqueio)="bloquearFilho($event)"
           (cancelar)="produtoSelecionado.set(null)"
@@ -116,6 +118,7 @@
           [nome]="produto.nome"
           [unidades]="acesso.unidades"
           [podeAlterar]="podeAlterarOferta()"
+          (salvo)="salvo.emit($event)"
           [bloqueado]="ocupado() || incerto()"
           (bloqueio)="bloquearFilho($event)"
         />

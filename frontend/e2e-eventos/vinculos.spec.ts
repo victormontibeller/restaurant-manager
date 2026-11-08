@@ -1,3 +1,4 @@
+import { navegarGestao } from '../e2e-identidade/apoio';
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -70,7 +71,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   ).toBe(200);
 
   // Abre a equipe pela interface com uma nova sessão de Administrador.
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.admin.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.admin.senha);
@@ -84,6 +85,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await response).status()).toBe(200);
+  await navegarGestao(page, '/gestao/equipe');
   for (const result of await loaded) {
     expect(result.status()).toBe(200);
     await result.finished();

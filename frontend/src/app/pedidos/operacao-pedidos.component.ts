@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { Unidade, mensagemErro } from '../catalogo/modelos';
 import { CozinhaComponent } from '../cozinha/cozinha.component';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
@@ -15,6 +15,11 @@ import { PedidoDetalheComponent } from './pedido-detalhe.component';
   styleUrl: '../operacao.css',
 })
 export class OperacaoPedidosComponent {
+  readonly unidadeExterna = input<string | undefined>(undefined);
+  readonly acoesExternas = input<string[] | undefined>(undefined);
+  readonly administradorExterno = input(false);
+  readonly navegacaoInterna = input(true);
+  readonly areaInicial = input<'pedidos' | 'cozinha' | 'mesas' | 'prazos'>('pedidos');
   private readonly sessao = inject(SessaoService);
   readonly acoes = signal<string[]>([]);
   readonly unidades = signal<Unidade[]>([]);
@@ -27,6 +32,9 @@ export class OperacaoPedidosComponent {
   readonly ocupado = signal(false);
   readonly carregandoAcessos = signal(false);
   readonly erro = signal('');
+  readonly filtroEstado = signal('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO');
+  readonly filtroCanal = signal('');
+  readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('RECENTES');
   readonly acompanhamento = new AcompanhamentoEventos();
   private geracao = 0;
   private carregamento: Promise<void> | null = null;
@@ -34,7 +42,24 @@ export class OperacaoPedidosComponent {
   private timer?: ReturnType<typeof setTimeout>;
 
   constructor() {
-    void this.carregarAcessos();
+    effect(() => {
+      const unidade = this.unidadeExterna();
+      const acoes = this.acoesExternas();
+      const administrador = this.administradorExterno();
+      const area = this.areaInicial();
+      untracked(() => {
+        if (unidade !== undefined) {
+          clearTimeout(this.timer);
+          this.acoes.set(acoes ?? []);
+          this.administrador.set(administrador);
+          if (this.area() !== area) this.selecionarArea(area);
+          const permitida = acoes?.includes('pedido.consultar') ? unidade : '';
+          if (this.unidadeId() !== permitida) this.selecionarUnidade(permitida);
+        } else {
+          void this.carregarAcessos();
+        }
+      });
+    });
     inject(DestroyRef).onDestroy(() => {
       this.destruido = true;
       this.geracao++;
@@ -48,7 +73,7 @@ export class OperacaoPedidosComponent {
   }
 
   async carregarAcessos(): Promise<void> {
-    if (this.destruido || this.carregandoAcessos()) return;
+    if (this.destruido || this.carregandoAcessos() || this.unidadeExterna() !== undefined) return;
     clearTimeout(this.timer);
     this.carregandoAcessos.set(true);
     try {
@@ -102,9 +127,22 @@ export class OperacaoPedidosComponent {
     this.carregamento = null;
     this.area.set(area);
     this.pedidos.set([]);
+    this.pagina.set(0);
     this.ocupado.set(false);
     this.acompanhamento.encerrar();
     if (area === 'pedidos' && this.unidadeId()) this.acompanhar();
+  }
+
+  filtrar(campo: 'estado' | 'canal' | 'ordem', valor: string): void {
+    if (campo === 'estado') this.filtroEstado.set(valor);
+    if (campo === 'canal') this.filtroCanal.set(valor);
+    if (campo === 'ordem') this.ordenacao.set(valor === 'RECENTES' ? 'RECENTES' : 'ANTIGOS');
+    this.geracao++;
+    this.carregamento = null;
+    this.pagina.set(0);
+    this.mais.set(false);
+    this.pedidos.set([]);
+    void this.carregarPedidos(0);
   }
 
   private acompanhar(): void {
@@ -143,7 +181,13 @@ export class OperacaoPedidosComponent {
     try {
       const resultado = await this.sessao.api<PaginaPedidos>(
         '/api/v1/operacao/pedidos?' +
-          new URLSearchParams({ unidadeId: this.unidadeId(), pagina: String(pagina) }),
+          new URLSearchParams({
+            unidadeId: this.unidadeId(),
+            pagina: String(pagina),
+            ...(this.filtroEstado() ? { estados: this.filtroEstado() } : {}),
+            ...(this.filtroCanal() ? { canal: this.filtroCanal() } : {}),
+            ordenacao: this.ordenacao(),
+          }),
       );
       if (geracao !== this.geracao || this.destruido) return;
       this.pedidos.set(resultado.itens);

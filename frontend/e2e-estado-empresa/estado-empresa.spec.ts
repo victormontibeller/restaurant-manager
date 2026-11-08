@@ -8,7 +8,8 @@ const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as { email: string;
 const empresa = JSON.parse(fs.readFileSync(empresaArquivo, 'utf8')) as { id: string };
 const url = '/api/v1/plataforma/empresas/' + empresa.id;
 async function entrar(page: Page): Promise<string> {
-  await page.goto('/?area=plataforma');
+  await page.goto('/plataforma');
+  await expect(page).toHaveURL(/\/plataforma$/);
   await expect(
     page.getByRole('button', { name: 'Entrar na plataforma', exact: true }),
   ).toBeEnabled();

@@ -1,0 +1,256 @@
+:host {
+  display: block;
+}
+.bistro-hero {
+  min-height: 310px;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(90deg, #211910ee 0%, #21191095 43%, #21191000 78%),
+    url('/assets/bistro-banner.jpg') center 53% / cover;
+  display: flex;
+  align-items: center;
+  color: #fffaf3;
+  padding: 2.5rem 3rem;
+  margin: 0 0 2rem;
+  overflow: hidden;
+}
+.bistro-hero h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4.2vw, 3.8rem);
+  letter-spacing: -0.035em;
+  margin: 0.5rem 0;
+}
+.bistro-hero .eyebrow {
+  color: #f1cba2;
+}
+.bistro-hero p {
+  margin: 0.6rem 0;
+}
+.bistro-hero span {
+  display: block;
+  font-size: 0.65rem;
+  color: #eee1d1;
+  margin-top: 1.5rem;
+}
+.experiencia-cardapio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 1.5rem;
+}
+.vitrine-painel {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.vitrine-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.vitrine-cabecalho h2 {
+  font-size: 1.8rem;
+  margin: 0.3rem 0;
+}
+.vitrine-cabecalho .eyebrow {
+  margin: 0;
+}
+.vitrine-cabecalho .badge {
+  background: white;
+}
+.categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+.categorias button {
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  min-height: 48px;
+  font-size: 0.85rem;
+}
+.categorias button[aria-pressed='true'] {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.produtos {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.produto-card {
+  padding: 0;
+  overflow: hidden;
+  border-color: var(--border);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  box-shadow: 0 3px 15px #36281705;
+}
+.produto-card > img {
+  width: 100%;
+  max-width: none;
+  height: 180px;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+}
+.produto-sem-foto {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #f0ebe3;
+  color: #9e7c57;
+}
+.produto-sem-foto svg {
+  width: 65px;
+  height: 65px;
+}
+.produto-sem-foto span {
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+}
+.produto-corpo {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.produto-corpo h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.6rem;
+}
+.produto-corpo p {
+  font-size: 0.88rem;
+  color: var(--muted-foreground);
+  margin: 0.35rem 0;
+}
+.produto-corpo .produto-preco {
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--foreground);
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+.produto-corpo .acoes {
+  margin: 0.9rem 0 0;
+}
+.produto-corpo button {
+  font-size: 0.8rem;
+  padding: 0.65rem 0.8rem;
+  flex: 1;
+}
+.produto-corpo button.secundario {
+  font-size: 0.75rem;
+}
+.carrinho-lateral {
+  position: sticky;
+  top: 1.5rem;
+  min-width: 0;
+}
+.carrinho-lateral app-carrinho {
+  display: block;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  max-height: calc(100dvh - 3rem);
+  overflow: auto;
+}
+.somente-carrinho {
+  display: block;
+  max-width: 800px;
+  margin: auto;
+}
+.somente-carrinho .carrinho-lateral {
+  position: static;
+}
+.somente-carrinho app-carrinho {
+  max-height: none;
+  overflow: visible;
+  padding: 1.5rem;
+}
+.carrinho-movel {
+  display: none;
+}
+.produto-dialogo {
+  width: min(700px, calc(100vw - 2rem));
+}
+@media (max-width: 1100px) {
+  .experiencia-cardapio {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .produtos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 800px) {
+  .experiencia-cardapio {
+    display: block;
+  }
+  .experiencia-cardapio:not(.somente-carrinho) .carrinho-lateral {
+    display: none;
+  }
+  .bistro-hero {
+    padding: 2rem;
+    min-height: 270px;
+    background-position: 60% center;
+  }
+  .produtos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .carrinho-movel {
+    display: flex;
+    position: fixed;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    left: 1rem;
+    right: 1rem;
+    z-index: 20;
+    justify-content: space-between;
+    box-shadow: 0 5px 24px #57271944;
+  }
+  .carrinho-contagem {
+    background: #ffffff20;
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.4rem;
+  }
+  .vitrine-painel {
+    padding-bottom: 5rem !important;
+  }
+  .vitrine-cabecalho > .badge {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .bistro-hero {
+    padding: 1.5rem;
+    min-height: 260px;
+    margin-bottom: 1.5rem;
+  }
+  .bistro-hero h1 {
+    font-size: 2.6rem;
+  }
+  .bistro-hero p:not(.eyebrow) {
+    max-width: 20ch;
+  }
+  .produtos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .produto-sem-foto {
+    height: 130px;
+  }
+  .produto-corpo {
+    padding: 1rem;
+  }
+  .vitrine-cabecalho h2 {
+    font-size: 1.65rem;
+  }
+}

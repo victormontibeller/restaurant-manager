@@ -4,6 +4,7 @@ const SHELL = __RM_SHELL__;
 const CACHE_PREFIX = 'rm-shell-';
 const CACHE_NAME = CACHE_PREFIX + VERSION;
 const paths = new Set(SHELL);
+const hashedAssetPattern = new RegExp(__RM_HASHED_ASSET_PATTERN__);
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -40,8 +41,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin || request.headers.has('Authorization')) return;
   // Nem consultas públicas, imagens da empresa, saúde, cookies ou ações entram no cache.
-  const navigation = request.mode === 'navigate' && (url.pathname === '/' || url.pathname === '/index.html');
-  const hashedAsset = /^\/(main|chunk|styles|polyfills)-[A-Z0-9]+\.(js|css)$/.test(url.pathname);
+  const appRoute = /^(?:\/|\/index\.html|\/(?:cardapio|carrinho|pedidos(?:\/[^/]+)?|mesa(?:\/[^/]+)?|conta|entrar|cadastro|recuperar-senha|aceitar-convite|verificar-email|sem-acesso|cozinha|plataforma|design-system)|\/gestao(?:\/(?:entrar|pedidos(?:\/novo)?|mesas|catalogo|equipe(?:\/convites)?|convites|unidades|configuracoes\/prazos|atualizacoes))?)$/;
+  const navigation = request.mode === 'navigate' && appRoute.test(url.pathname);
+  const hashedAsset = hashedAssetPattern.test(url.pathname);
   if (!navigation && ((!paths.has(url.pathname) && !hashedAsset) || url.search)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);

@@ -17,7 +17,7 @@ import { EnvioMidiaPendente, MidiaPendenteService } from './midia-pendente.servi
 @Component({
   selector: 'app-midia-editor',
   template: `
-    <fieldset [disabled]="bloqueado || ocupado()" aria-label="Imagem do produto">
+    <fieldset [attr.data-rascunho]="'midia-' + produto.id" [disabled]="bloqueado || ocupado()" aria-label="Imagem do produto">
       <legend>Imagem do produto</legend>
       @if (midiaId) {
         <img class="previa" [src]="'/api/v1/midias/' + midiaId" alt="Imagem atual do produto" />
@@ -66,6 +66,7 @@ export class MidiaEditorComponent implements OnChanges {
   @Input() bloqueado = false;
   @Output() midiaIdChange = new EventEmitter<string | null>();
   @Output() bloqueio = new EventEmitter<boolean>();
+  @Output() salvo = new EventEmitter<string>();
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(MidiaPendenteService);
   private estado: WritableSignal<EnvioMidiaPendente | null> | null = null;
@@ -182,6 +183,7 @@ export class MidiaEditorComponent implements OnChanges {
     if (this.estado?.()?.id === midia.id) this.estado.set(null);
     this.incerto.set(false);
     this.aviso.set('Imagem validada. Salve o produto para associá-la ao catálogo.');
+    this.salvo.emit('midia-' + this.produto.id);
   }
 
   private finalizar(): void {

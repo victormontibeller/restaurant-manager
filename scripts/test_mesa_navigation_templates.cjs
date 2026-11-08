@@ -92,7 +92,12 @@ const ts = require(repo + '/frontend/node_modules/typescript');
           { provide: SessaoService, useValue: mock },
           { provide: SessaoMesaService, useValue: { participante: () => null } },
           { provide: CarrinhoService, useValue: { contexto, confirmado: () => true, resumo: () => ({ unidadeId: contexto().unidadeId, canal: 'MESA' }), online: () => true } },
-          { provide: PedidoEnvioService, useValue: { ocupado: () => false, pendente: () => incerta() ? { corpo: {} } : null } },
+          { provide: PedidoEnvioService, useFactory: () => {
+            const envio = new PedidoEnvioService();
+            const pendente = envio.pendente.bind(envio);
+            envio.pendente = (mesa) => incerta() ? { corpo: {} } : pendente(mesa);
+            return envio;
+          } },
         ] }).then((app) => {
           window.fixture = { app, host: app.components[0].instance, estado, requests, contexto, incerta,
             evento() { estado.eventCount++; cursor++; fluxo.enqueue(new TextEncoder().encode('event: atualizacao\\ndata: ' + JSON.stringify({ eventos: [{ id: String(cursor), tipo: 'MESA_AJUDA' }], proximo: String(cursor), temMais: false }) + '\\n\\n')); },
@@ -228,7 +233,7 @@ const ts = require(repo + '/frontend/node_modules/typescript');
       page.evaluate(() => {
         const seletores = [
           'app-mesas summary',
-          'app-mesas > section > button',
+          'app-mesas .barra-conexao > button',
           'app-mesas nav[aria-label="Páginas de mesas"]',
           'app-mesas nav[aria-label="Páginas de solicitações"]',
           '#comanda-pedido-assistido',

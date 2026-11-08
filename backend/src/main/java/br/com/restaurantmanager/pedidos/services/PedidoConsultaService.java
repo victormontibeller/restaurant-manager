@@ -14,7 +14,11 @@ import br.com.restaurantmanager.pedidos.dtos.PaginaPedidos;
 import br.com.restaurantmanager.pedidos.dtos.PedidoDetalhe;
 import br.com.restaurantmanager.pedidos.exceptions.ErrosPedido;
 import br.com.restaurantmanager.pedidos.models.PedidoRegistro;
+import br.com.restaurantmanager.pedidos.models.EstadoPedido;
+import br.com.restaurantmanager.pedidos.models.OrdenacaoPedidos;
 import br.com.restaurantmanager.pedidos.repositories.PedidoRepository;
+import br.com.restaurantmanager.unidades.models.CanalAtendimento;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -71,10 +75,14 @@ public class PedidoConsultaService {
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public PaginaPedidos<PedidoOperacional> listarOperacao(IdentidadeAtual ator, UUID unidade, int pagina, boolean cozinha) {
+    public PaginaPedidos<PedidoOperacional> listarOperacao(IdentidadeAtual ator, UUID unidade, int pagina, boolean cozinha,
+            List<EstadoPedido> estados, CanalAtendimento canal, OrdenacaoPedidos ordenacao) {
         pagina(pagina);
         acessos.autorizarOperacaoExistente(ator, Acao.PEDIDO_CONSULTAR, unidade);
-        var ids = repository.listar(unidade, null, null, pagina, cozinha);
+        if (estados != null && estados.stream().anyMatch(estado -> estado == null)) {
+            throw ErrosPedido.regra("Informe estados válidos para filtrar os pedidos.");
+        }
+        var ids = repository.listar(unidade, null, null, pagina, cozinha, estados, canal, ordenacao);
         return new PaginaPedidos<>(ids.stream().limit(50).map(id -> operacional(acesso.obter(id))).toList(), ids.size() > 50);
     }
 

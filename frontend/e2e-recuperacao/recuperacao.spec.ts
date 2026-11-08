@@ -1,3 +1,4 @@
+import { abrirConta } from '../e2e-identidade/apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,7 +11,7 @@ const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as {
   captureDirectory: string;
 };
 async function abrir(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/entrar');
   await expect(page.getByRole('button', { name: 'Recuperar senha', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Recuperar senha', exact: true }).focus();
   await page.keyboard.press('Enter');
@@ -61,7 +62,8 @@ async function login(page: Page, email: string, senha: string): Promise<void> {
   await page.getByLabel('E-mail', { exact: true }).fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(senha);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByText('Perfil: CLIENTE', { exact: true })).toBeVisible();
+  await abrirConta(page);
+  await expect(page.getByText('Cliente', { exact: true })).toBeVisible();
 }
 test('S01-UI10: recuperação capturada, senha nova e código de uso único', async ({
   page,
@@ -158,7 +160,7 @@ test('S01-UI11: validação, código inválido, teclado e rede indisponível', a
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(
-    page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
+    page.getByRole('heading', { name: 'Entre na sua conta.', exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel('E-mail', { exact: true })).toBeFocused();
 });

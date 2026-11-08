@@ -18,6 +18,11 @@ public class TenantRepository {
                 (rs, row) -> rs.getString(1), host).stream().findFirst();
     }
 
+    public Optional<String> nomeOperacional(String schema) {
+        return jdbc.query("select nome from public.empresa where schema_name=? and estado in ('ATIVO','SUSPENSO')",
+                (rs, row) -> rs.getString(1), schema).stream().findFirst();
+    }
+
     public List<String> schemasParaManutencao(String depoisDe) {
         return jdbc.query("select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') and schema_name > ? order by schema_name limit 50",
                 (rs, row) -> rs.getString(1), depoisDe);

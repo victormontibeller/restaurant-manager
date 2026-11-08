@@ -17,7 +17,7 @@
   </select>
   <button (click)="carregar()" [disabled]="ocupado()">Consultar prazos atuais</button>
   @if (atual()) {
-    <form (submit)="salvar($event, senha)">
+    <form data-rascunho="prazos" (submit)="salvar($event, senha)">
       @if (!empresa()) {
         <label class="selecao" for="herdar-prazos"
           ><input

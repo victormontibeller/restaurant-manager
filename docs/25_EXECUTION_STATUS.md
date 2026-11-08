@@ -1,5 +1,34 @@
 # Checkpoint de execução
 
+## Redesenho com Spartan — implementação local em validação, 2026-11-08
+
+Plano explicitamente autorizado; branch `codex/redesenho-frontend`, base `14ca980`
+(PR #6 já integrado, divergindo da descrição histórica abaixo). Cliente, gestão e
+cozinha têm rotas e layouts próprios, tema de bistrô e fundação Spartan/Tailwind,
+conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Sessão, carrinho,
+contexto e intenções ficam em memória; proteção de saída e reconciliação foram
+preservadas. Contrato público de nome, filtros SQL antes da paginação e fallback
+explícito SPA adicionados; nenhuma migration ou contrato de escrita alterado.
+
+Validação backend local: 402 testes na suíte completa, zero falhas/erros/skips;
+depois, 38 testes de rotas após acrescentar os destinos finais. Não somar essas
+rodadas como testes únicos nem atribuir o delta a uma suíte completa repetida.
+Lógica (19 grupos), templates (12 grupos em Chromium/Firefox/WebKit), tipos e
+compilação Angular passaram durante a integração. Build com lazy loading:
+281,83 kB iniciais, limites 450/600 kB preservados. Empacotamento PWA inclui
+31 arquivos públicos, sem APIs/mídia da empresa. Revisão final de build e
+regressão completa de navegador continuam em andamento; não há aprovação da
+matriz nem publicação do redesenho nesta gravação.
+
+Demonstração manual em 8095 permanece na versão anterior; banco `rm_dev` e
+PostgreSQL compartilhado preservados. Runner novo e evidências privados do
+redesenho separados, com alvo `rm_test`, sem herdar aprovação anterior.
+Próximo passo: gerar artefato identificado e recibo de validação `mac-local`,
+executar matriz integral de navegador e revisão visual, corrigir/reexecutar,
+atualizar demonstração com backup e registrar hash realmente servido.
+Linux/homologação externa, aparelhos físicos, tecnologia assistiva e piloto
+continuam pendentes; não há merge em main nem publicação em produção.
+
 ## Sprint 3 — revisão concluída localmente, 2026-11-07
 
 Implementação e revisão local concluídas na branch

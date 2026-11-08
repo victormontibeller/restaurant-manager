@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { HlmButton } from '../ui/button';
 import { CANAIS, moeda } from '../catalogo/modelos';
 import { CarrinhoService } from './carrinho.service';
 import { ConfirmarPedidoComponent } from '../pedidos/confirmar-pedido.component';
@@ -6,17 +7,15 @@ import { ItemCarrinho } from './modelos';
 
 @Component({
   selector: 'app-carrinho',
-  imports: [ConfirmarPedidoComponent],
+  imports: [ConfirmarPedidoComponent, HlmButton],
   template: `
     <section aria-labelledby="carrinho-titulo" [attr.aria-busy]="carrinho.ocupado()">
       <h2 id="carrinho-titulo">Meu carrinho</h2>
       @if (carrinho.contexto(); as contexto) {
         <p>{{ contexto.unidadeNome }} · {{ nomeCanal(contexto.canal) }}</p>
       }
-      <p>
-        O carrinho fica apenas nesta página. Atualizar ou fechar a página descarta os itens. Adicionar
-        itens e calcular o resumo não envia o pedido; confirme o envio para registrá-lo.
-      </p>
+      <p class="carrinho-instrucao">Confira seus itens e confirme o envio ao finalizar.</p>
+      <details class="carrinho-ajuda"><summary>Sobre o carrinho e os valores</summary><p>Os itens ficam nesta aba durante a navegação. Atualizar ou fechar a página descarta o rascunho. O resumo é validado pelo restaurante antes do envio.</p></details>
       @if (carrinho.erro()) {
         <p role="alert" class="erro">{{ carrinho.erro() }}</p>
       }
@@ -45,7 +44,7 @@ import { ItemCarrinho } from './modelos';
             configurados.
           </p>
           <div class="acoes">
-            <button
+            <button hlmBtn
               class="secundario"
               type="button"
               (click)="editar.emit(item)"
@@ -53,7 +52,7 @@ import { ItemCarrinho } from './modelos';
             >
               Editar composição do item {{ indice + 1 }}
             </button>
-            <button
+            <button hlmBtn
               class="secundario"
               type="button"
               (click)="carrinho.remover(item.linha.id)"
@@ -68,12 +67,12 @@ import { ItemCarrinho } from './modelos';
       }
       @if (carrinho.itens().length) {
         <div class="acoes">
-          <button
+          <button hlmBtn
             type="button"
             (click)="carrinho.calcular()"
             [disabled]="carrinho.ocupado() || !carrinho.online()"
           >
-            Calcular resumo no servidor
+            Revisar meu pedido
           </button>
         </div>
       }
@@ -125,7 +124,7 @@ import { ItemCarrinho } from './modelos';
             serviço.
           </p>
           @if (!carrinho.confirmado()) {
-            <button
+            <button hlmBtn
               type="button"
               (click)="carrinho.calcular(true)"
               [disabled]="carrinho.ocupado() || !carrinho.online()"
@@ -140,7 +139,7 @@ import { ItemCarrinho } from './modelos';
       <app-confirmar-pedido/>
     </section>
   `,
-  styleUrl: '../catalogo/catalogo.css',
+  styleUrls: ['../catalogo/catalogo.css', './carrinho.css'],
 })
 export class CarrinhoComponent {
   @Output() editar = new EventEmitter<ItemCarrinho>();

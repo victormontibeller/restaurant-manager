@@ -1,3 +1,4 @@
+import { navegarGestao } from './apoio';
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 
@@ -11,7 +12,7 @@ const fixture = JSON.parse(fs.readFileSync(process.env['RM_AUTH_FIXTURE']!, 'utf
 };
 
 test('S01-UI09: falha de paginação mantém página e registros confirmados', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.senha);
   const login = page.waitForResponse(
@@ -21,7 +22,7 @@ test('S01-UI09: falha de paginação mantém página e registros confirmados', a
   const response = await login;
   expect(response.status()).toBe(200);
   const access = (await response.json()).accessToken;
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await navegarGestao(page, '/gestao/unidades');
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
   const reauth = page.waitForResponse(
     (r) => r.url().endsWith('/auth/reautenticar') && r.request().method() === 'POST',

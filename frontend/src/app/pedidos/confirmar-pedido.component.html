@@ -1,5 +1,14 @@
-<section aria-labelledby="enviar-pedido-titulo" [attr.aria-busy]="carregandoMesas()">
-  <h3 id="enviar-pedido-titulo">Enviar pedido</h3>
+<section
+  class="cartao-formulario"
+  aria-labelledby="enviar-pedido-titulo"
+  [attr.aria-busy]="carregandoMesas()"
+>
+  <header class="cabecalho-painel">
+    <div>
+      <span class="sobretitulo">Confirmação</span>
+      <h3 id="enviar-pedido-titulo">Enviar pedido</h3>
+    </div>
+  </header>
   @if (!sessao.identidade() && !sessaoMesa.participante()) {
     <p>Entre em sua conta para delivery/retirada ou autorize sua participação na mesa.</p>
   } @else {
@@ -26,7 +35,7 @@
             <option [value]="mesa.comandaId">{{ mesa.nome }}</option>
           }
         </select>
-        <nav aria-label="Páginas de mesas para pedido assistido" class="acoes">
+        <nav aria-label="Páginas de mesas para pedido assistido" class="paginacao">
           <button
             (click)="carregarMesas(paginaMesas() - 1)"
             [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || paginaMesas() === 0"
@@ -72,7 +81,7 @@
       (input)="observacao = observacoes.value"
       [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
     ></textarea>
-    <p>
+    <p class="texto-secundario">
       O envio depende da confirmação do servidor. Pedidos de delivery/retirada aguardam aceite; mesa
       autorizada segue para a cozinha.
     </p>
@@ -101,6 +110,13 @@
     <p role="alert" class="erro">{{ erro() }}</p>
   }
   @if (confirmado(); as pedido) {
-    <p role="status">Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.</p>
+    <p role="status" class="sucesso">
+      Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.
+    </p>
+    @if (navegacaoDisponivel) {
+      <a hlmBtn [routerLink]="tipoMesa() ? '/mesa' : assistido() ? '/gestao/pedidos' : '/pedidos'">
+        Acompanhar pedido
+      </a>
+    }
   }
 </section>

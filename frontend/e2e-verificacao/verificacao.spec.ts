@@ -1,3 +1,4 @@
+import { abrirConta, navegarGestao } from '../e2e-identidade/apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,7 +11,8 @@ const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as {
   captureDirectory: string;
 };
 async function abrir(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/entrar');
+  await page.getByText('Convites e verificação de e-mail', { exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Verificar e-mail existente', exact: true }),
   ).toBeEnabled();
@@ -66,9 +68,11 @@ async function conferirConta(page: Page, conta: { email: string; senha: string }
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page.getByText('Perfil: COZINHA', { exact: true })).toBeVisible();
+  await abrirConta(page);
+  await expect(page.getByText('Equipe da cozinha', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toHaveCount(0);
+  await navegarGestao(page, '/gestao/pedidos');
+  await expect(page.locator('a[href="/gestao/equipe"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
 }
 test('S01-UI20: funcionário preexistente verifica e preserva senha e perfil', async ({
@@ -123,7 +127,7 @@ test('S01-UI21: código inválido, erro de rede, teclado e layout', async ({ pag
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(
-    page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
+    page.getByRole('heading', { name: 'Entre na sua conta.', exact: true }),
   ).toBeVisible();
 });
 test.describe('Fronteira de rede S01-UI22', () => {

@@ -33,6 +33,10 @@ A API não deve depender de DOM, cookie exclusivo do Angular ou chamadas locais 
 
 ## Consistência dos contratos
 
+Contrato público de identificação: [nome do restaurante](api/restaurante.yaml),
+resolvido pelo domínio cadastrado, sem identificadores técnicos. A consulta
+permanece disponível durante suspensão para identificar operações existentes.
+
 Contratos acrescentados na retomada ciclo17: [identidade empresarial](api/identidade.yaml)
 (CSRF, login, refresh, logout, identidade e confirmação de senha) e
 [matriz, equipe e acessos efetivos](api/acessos.yaml). Documentam os DTOs e

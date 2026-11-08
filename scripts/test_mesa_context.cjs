@@ -24,6 +24,8 @@ class ApiFailure extends Error {
 }
 class SessaoService {}
 class SessaoMesaService {}
+class PendenciasMesaService {}
+class NavegacaoProtegidaService {}
 class DestroyRef {}
 class AcompanhamentoEventos {
   iniciar() {}
@@ -31,6 +33,11 @@ class AcompanhamentoEventos {
 }
 function carregar(arquivo, nome, services = {}, adicionais = {}) {
   const efeitos = [];
+  const destruidores = [];
+  if (services.mesa) {
+    services.mesa.encerramentoPendente ??= signal(false);
+    services.mesa.inicializar ??= services.mesa.restaurar;
+  }
   const input = Object.assign((initial) => signal(initial), {
     required: () => signal('unidade-a'),
   });
@@ -42,6 +49,7 @@ function carregar(arquivo, nome, services = {}, adicionais = {}) {
     structuredClone,
     crypto: require('node:crypto').webcrypto,
     location: { origin: 'https://empresa.invalid', search: '' },
+    window: { addEventListener() {}, confirm: () => false },
     URLSearchParams,
     navigator: { locks: { request: async (_, fn) => fn() } },
     BroadcastChannel: class {
@@ -63,19 +71,45 @@ function carregar(arquivo, nome, services = {}, adicionais = {}) {
           DestroyRef,
           inject: (type) =>
             type === DestroyRef
-              ? { onDestroy() {} }
+              ? { onDestroy: (fn) => destruidores.push(fn) }
               : type === SessaoService
                 ? services.sessao
-                : services.mesa,
+                : type === PendenciasMesaService
+                  ? (services.pendencias ??= servicoReal(
+                      'mesas/pendencias-mesa.service.ts',
+                      'PendenciasMesaService',
+                    ))
+                  : type === NavegacaoProtegidaService
+                    ? (services.navegacao ??= servicoReal(
+                        'rotas/navegacao-protegida.service.ts',
+                        'NavegacaoProtegidaService',
+                      ))
+                    : services.mesa,
         };
       if (name.includes('sessao-mesa')) return { SessaoMesaService };
       if (name.includes('sessao.service')) return { SessaoService, ApiFailure };
+      if (name.includes('pendencias-mesa.service')) return { PendenciasMesaService };
+      if (name.includes('navegacao-protegida.service')) return { NavegacaoProtegidaService };
       if (name.includes('acompanhamento')) return { AcompanhamentoEventos };
       if (name.includes('catalogo/modelos'))
         return { mensagemErro: (error) => error.message, moeda: (value) => value };
       return {};
     },
   };
+  function servicoReal(relative, exported) {
+    const modulo = { ...context, exports: {} };
+    vm.runInNewContext(
+      ts.transpileModule(fs.readFileSync(repo + '/frontend/src/app/' + relative, 'utf8'), {
+        compilerOptions: {
+          target: ts.ScriptTarget.ES2022,
+          module: ts.ModuleKind.CommonJS,
+          experimentalDecorators: true,
+        },
+      }).outputText,
+      modulo,
+    );
+    return new modulo.exports[exported]();
+  }
   vm.runInNewContext(
     ts.transpileModule(fs.readFileSync(repo + '/frontend/src/app/mesas/' + arquivo, 'utf8'), {
       compilerOptions: {
@@ -86,7 +120,7 @@ function carregar(arquivo, nome, services = {}, adicionais = {}) {
     }).outputText,
     context,
   );
-  return { instance: new context.exports[nome](), efeitos, context };
+  return { instance: new context.exports[nome](), efeitos, destruidores, context, services };
 }
 const participante = (id) => ({
   participanteId: id,
@@ -290,6 +324,111 @@ async function erroDeSolicitacaoSobreviveConsultasSemPerderIntencao() {
   }
 }
 
+async function cadastroIncertoSobreviveNavegacaoSemCruzarContas() {
+  const corpos = [];
+  const services = {
+    sessao: {
+      identidade: signal({ usuarioId: 'admin-a' }),
+      api: async (_rota, metodo, corpo) => {
+        if (metodo !== 'POST') return [];
+        corpos.push(structuredClone(corpo));
+        if (corpos.length === 1) throw new Error('Resposta perdida depois do cadastro');
+        return { id: corpo.id };
+      },
+    },
+  };
+  const anterior = carregar('mesas.component.ts', 'MesasComponent', services);
+  anterior.efeitos.forEach((fn) => fn());
+  anterior.instance.nome = 'Mesa com resposta incerta';
+  await anterior.instance.criar({ preventDefault() {} });
+  const original = structuredClone(anterior.instance.criacaoPendente());
+  anterior.destruidores.forEach((fn) => fn());
+  const nova = carregar('mesas.component.ts', 'MesasComponent', services);
+  nova.efeitos.forEach((fn) => fn());
+  assert.deepEqual(
+    nova.instance.criacaoPendente(),
+    original,
+    'Trocar de rota conserva o cadastro incerto.',
+  );
+  services.sessao.identidade.set({ usuarioId: 'admin-b' });
+  nova.efeitos.forEach((fn) => fn());
+  assert.equal(
+    nova.instance.criacaoPendente(),
+    null,
+    'Outra conta não recebe a intenção anterior.',
+  );
+  services.sessao.identidade.set({ usuarioId: 'admin-a' });
+  nova.efeitos.forEach((fn) => fn());
+  await nova.instance.criar({ preventDefault() {} });
+  assert.deepEqual(
+    corpos[1],
+    corpos[0],
+    'Recuperação após navegação conserva UUID e payload completos.',
+  );
+  assert.equal(nova.instance.criacaoPendente(), null);
+}
+
+async function aberturaIncertaSobreviveNavegacaoEReutilizaIntencao() {
+  const corpos = [];
+  const services = {
+    sessao: {
+      identidade: signal({ usuarioId: 'admin-a' }),
+      api: async (_rota, metodo, corpo) => {
+        if (metodo !== 'POST') return [];
+        corpos.push(structuredClone(corpo));
+        if (corpos.length === 1) throw new Error('Resposta da abertura perdida');
+        return { mesaId: 'mesa-a', codigoTemporario: null, versao: 0 };
+      },
+    },
+  };
+  const anterior = carregar('mesas.component.ts', 'MesasComponent', services);
+  anterior.instance.acoes.set(['pedido.criar_assistido']);
+  anterior.efeitos.forEach((fn) => fn());
+  await anterior.instance.abrir({ id: 'mesa-a' });
+  anterior.destruidores.forEach((fn) => fn());
+  const nova = carregar('mesas.component.ts', 'MesasComponent', services);
+  nova.instance.acoes.set(['pedido.criar_assistido']);
+  nova.efeitos.forEach((fn) => fn());
+  assert.equal(
+    nova.instance.aberturaPendente({ id: 'mesa-a', atendimentoId: 'atendimento-ja-criado' }),
+    true,
+  );
+  await nova.instance.abrir({ id: 'mesa-a' });
+  assert.deepEqual(corpos[1], corpos[0]);
+  assert.equal(nova.instance.aberturaPendente({ id: 'mesa-a' }), false);
+  assert.equal(nova.instance.abertura().mesaId, 'mesa-a');
+}
+
+async function solicitacaoIncertaSobreviveRecriacaoDoComponente() {
+  const corpos = [];
+  const services = {
+    mesa: {
+      participante: signal(participante('a')),
+      restaurar: async () => {},
+      api: async (_rota, metodo, corpo) => {
+        if (metodo !== 'POST') return {};
+        corpos.push(structuredClone(corpo));
+        if (corpos.length === 1) throw new Error('Resposta da solicitação perdida');
+        return { id: corpo.intencaoId };
+      },
+    },
+  };
+  const anterior = carregar(
+    'participante-mesa.component.ts',
+    'ParticipanteMesaComponent',
+    services,
+  );
+  anterior.efeitos.forEach((fn) => fn());
+  await anterior.instance.solicitar('AJUDA');
+  anterior.destruidores.forEach((fn) => fn());
+  const nova = carregar('participante-mesa.component.ts', 'ParticipanteMesaComponent', services);
+  nova.efeitos.forEach((fn) => fn());
+  assert.equal(nova.instance.intencao().intencaoId, corpos[0].intencaoId);
+  await nova.instance.repetirSolicitacao();
+  assert.deepEqual(corpos[1], corpos[0]);
+  assert.equal(nova.instance.intencao(), null);
+}
+
 (async () => {
   for (const test of [
     trocaNoRefreshDescartaRespostaAnteriorSemInventarRejeicaoHTTP,
@@ -298,6 +437,9 @@ async function erroDeSolicitacaoSobreviveConsultasSemPerderIntencao() {
     cadastroPendenteNaoCruzaUnidades,
     ajudaPendentePermaneceComSeuParticipante,
     erroDeSolicitacaoSobreviveConsultasSemPerderIntencao,
+    cadastroIncertoSobreviveNavegacaoSemCruzarContas,
+    aberturaIncertaSobreviveNavegacaoEReutilizaIntencao,
+    solicitacaoIncertaSobreviveRecriacaoDoComponente,
   ]) {
     await test();
     console.log(test.name + ': aprovado');

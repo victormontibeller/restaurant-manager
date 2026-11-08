@@ -54,6 +54,31 @@ export class PedidoDetalheComponent {
   terminal(): boolean {
     return ['CANCELADO', 'CONCLUIDO', 'EM_ENTREGA'].includes(this.pedido().estado);
   }
+  referencia(): string {
+    return this.pedido().id.slice(0, 8).toUpperCase();
+  }
+  canal(): string {
+    return { MESA: 'Mesa', RETIRADA: 'Retirada', DELIVERY: 'Delivery' }[this.pedido().canal];
+  }
+  horaCriacao(): string {
+    return new Date(this.pedido().criadoEm).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  tempoDecorrido(): string {
+    const minutos = Math.max(
+      0,
+      Math.floor((this.agora() - Date.parse(this.pedido().criadoEm)) / 60000),
+    );
+    if (minutos < 1) return 'Agora';
+    return minutos < 60
+      ? minutos + ' min'
+      : Math.floor(minutos / 60) + ' h ' + (minutos % 60) + ' min';
+  }
+  quantidadeEstado(estado: string): number {
+    return this.pedido().unidades.filter((unidade) => unidade.estado === estado).length;
+  }
   podeCancelarOperacional(): boolean {
     return (
       this.contexto() === 'operacao' &&

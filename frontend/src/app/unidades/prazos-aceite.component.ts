@@ -1,4 +1,13 @@
-import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 
@@ -16,6 +25,8 @@ interface PrazosAceite {
 })
 export class PrazosAceiteComponent {
   readonly unidadeId = input.required<string>();
+  readonly salvo = output<void>();
+  readonly bloqueio = output<boolean>();
   private readonly sessao = inject(SessaoService);
   readonly atual = signal<PrazosAceite | null>(null);
   readonly empresa = signal(false);
@@ -28,6 +39,7 @@ export class PrazosAceiteComponent {
   private geracao = 0;
 
   constructor() {
+    effect(() => this.bloqueio.emit(this.ocupado()));
     effect(() => {
       this.unidadeId();
       this.geracao++;
@@ -94,6 +106,7 @@ export class PrazosAceiteComponent {
       if (geracao !== this.geracao) return;
       this.preencher(prazos);
       this.aviso.set('Prazos salvos para futuros pedidos.');
+      this.salvo.emit();
     } catch (error) {
       if (geracao === this.geracao)
         this.erro.set(mensagemErro(error) + ' Consulte os prazos atuais antes de repetir.');

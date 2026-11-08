@@ -1,0 +1,85 @@
+import { Routes } from '@angular/router';
+import { destinoEquipe, equipeObrigatoria, protegerSaida } from './guardas';
+
+export const GESTAO_ROUTES: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [destinoEquipe],
+    loadComponent: () =>
+      import('./pagina-informativa.component').then((m) => m.PaginaInformativaComponent),
+  },
+  {
+    path: 'pedidos',
+    title: 'Pedidos · Gestão',
+    data: { titulo: 'Pedidos', unidade: true, acao: 'pedido.consultar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaOperacaoComponent),
+  },
+  {
+    path: 'pedidos/novo',
+    title: 'Novo pedido · Gestão',
+    data: { titulo: 'Novo pedido', unidade: true, acao: 'pedido.criar_assistido' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaPedidoAssistidoComponent),
+  },
+  {
+    path: 'mesas',
+    title: 'Mesas e comandas · Gestão',
+    data: { titulo: 'Mesas e comandas', unidade: true, acao: 'pedido.consultar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaMesasComponent),
+  },
+  {
+    path: 'catalogo',
+    title: 'Cardápio · Gestão',
+    data: { titulo: 'Cardápio', acao: 'catalogo.consultar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaCatalogoComponent),
+  },
+  {
+    path: 'equipe',
+    title: 'Equipe e acessos · Gestão',
+    data: { titulo: 'Equipe e acessos', administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaEquipeComponent),
+  },
+  {
+    path: 'equipe/convites',
+    title: 'Convites · Gestão',
+    data: { titulo: 'Convites', administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaConvitesComponent),
+  },
+  { path: 'convites', redirectTo: 'equipe/convites', pathMatch: 'full' },
+  {
+    path: 'unidades',
+    title: 'Unidades e horários · Gestão',
+    data: { titulo: 'Unidades e horários', administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaUnidadesComponent),
+  },
+  {
+    path: 'configuracoes/prazos',
+    title: 'Prazos de aceite · Gestão',
+    data: { titulo: 'Prazos de aceite', unidade: true, administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaPrazosComponent),
+  },
+  {
+    path: 'atualizacoes',
+    title: 'Atualizações · Gestão',
+    data: { titulo: 'Atualizações', acao: 'unidade.acompanhar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaAtualizacoesComponent),
+  },
+];

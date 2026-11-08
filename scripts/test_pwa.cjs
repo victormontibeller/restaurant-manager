@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { HASHED_ASSET_PATTERN, PUBLIC_SHELL_PATHS } = require('./pwa-assets.cjs');
 const source = fs.readFileSync(
   path.join(__dirname, '../frontend/src/app/pwa/service-worker.js'),
   'utf8',
@@ -13,6 +14,10 @@ const shell = [
   '/styles-BBBB.css',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
+  '/assets/bistro-banner.jpg',
+  '/chunk--WnwAiwd.js',
+  '/chunk-aB_9-Qx.js',
+  '/styles-dF_7.css',
 ];
 const handlers = new Map();
 const stores = new Map();
@@ -59,7 +64,10 @@ const context = {
   },
 };
 vm.runInNewContext(
-  source.replace('__RM_VERSION__', '"teste"').replace('__RM_SHELL__', JSON.stringify(shell)),
+  source
+    .replace('__RM_VERSION__', '"teste"')
+    .replace('__RM_SHELL__', JSON.stringify(shell))
+    .replace('__RM_HASHED_ASSET_PATTERN__', JSON.stringify(HASHED_ASSET_PATTERN)),
   context,
 );
 const lifecycle = (event, extra = {}) => {
@@ -88,6 +96,22 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
   return intercepted;
 };
 (async () => {
+  const hashedAsset = new RegExp(HASHED_ASSET_PATTERN);
+  for (const name of [
+    '/main-aB_3-x.js',
+    '/chunk--WnwAiwd.js',
+    '/chunk-aB_9-Qx.js',
+    '/styles-dF_7.css',
+  ])
+    assert(hashedAsset.test(name), 'Hash Angular com caixa mista e símbolos: ' + name);
+  for (const name of [
+    '/api/chunk-secret.js',
+    '/chunk-private.json',
+    '/assets/main-foto.jpg',
+    '/main.js',
+  ])
+    assert(!hashedAsset.test(name), 'Formato fora do shell: ' + name);
+  assert(PUBLIC_SHELL_PATHS.includes('/assets/bistro-banner.jpg'));
   await lifecycle('install');
   assert.equal(skipped, 0, 'Instalação não deve ativar atualização por conta própria.');
   assert.deepEqual([...stores.get('rm-shell-teste').keys()], shell);
@@ -98,6 +122,8 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
     '/api/v1/midias/foto',
     '/actuator/health',
     '/arquivo-privado',
+    '/assets/outra-imagem.jpg',
+    '/assets/bistro-banner.jpg?token=privado',
     '/main-AAAA.js?token=privado',
     'https://b.exemplo.test/index.html',
   ]) {
@@ -106,10 +132,48 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
   assert.equal(fetchEvent('/api/v1/carrinho/calcular', 'POST'), undefined);
   assert.equal(fetchEvent('/index.html', 'GET', 'cors', true), undefined);
   offline = true;
+  for (const url of [
+    '/chunk--WnwAiwd.js',
+    '/chunk-aB_9-Qx.js',
+    '/styles-dF_7.css',
+    '/assets/bistro-banner.jpg',
+  ])
+    assert.equal(
+      await (await fetchEvent(url)).text(),
+      origin + url,
+      'Recurso público disponível offline: ' + url,
+    );
   const navigation = await fetchEvent('/?convite=segredo-nao-armazenavel', 'GET', 'navigate');
   assert.equal(await navigation.text(), origin + '/index.html');
+  for (const url of [
+    '/cardapio',
+    '/carrinho',
+    '/pedidos/pedido-ficticio',
+    '/mesa/mesa-ficticia',
+    '/gestao/pedidos',
+    '/gestao/pedidos/novo',
+    '/gestao/entrar?retorno=privado',
+    '/gestao/equipe/convites',
+    '/cozinha',
+    '/plataforma',
+  ]) {
+    const response = await fetchEvent(url, 'GET', 'navigate');
+    assert.equal(
+      await response.text(),
+      origin + '/index.html',
+      'Rota usa somente shell público: ' + url,
+    );
+  }
+  for (const url of ['/api/v1/me/pedidos', '/gestao/arquivo-privado', '/nao-autorizado'])
+    assert.equal(
+      fetchEvent(url, 'GET', 'navigate'),
+      undefined,
+      'Navegação fora da allowlist não entra no cache: ' + url,
+    );
   assert(![...stores.get('rm-shell-teste').keys()].some((key) => key.includes('segredo')));
   await store('rm-shell-antigo').put('/chunk-ANTIGO.js', new Response('anterior'));
+  await store('rm-shell-antigo').put('/chunk--aNti_go.js', new Response('anterior-misto'));
+  assert.equal(await (await fetchEvent('/chunk--aNti_go.js')).text(), 'anterior-misto');
   assert.equal(await (await fetchEvent('/chunk-ANTIGO.js')).text(), 'anterior');
   await lifecycle('activate');
   assert.equal(claimed, 1);

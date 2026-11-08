@@ -1,13 +1,17 @@
 import {
   Component,
+  Input,
   DestroyRef,
   ElementRef,
   ViewChild,
   effect,
   inject,
+  input,
   signal,
   untracked,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { HlmButton } from '../ui/button';
 import { ApiFailure } from '../identidade/sessao.service';
 import { CarrinhoComponent } from '../carrinho/carrinho.component';
 import { CarrinhoService } from '../carrinho/carrinho.service';
@@ -28,12 +32,15 @@ import {
 
 @Component({
   selector: 'app-vitrine',
-  imports: [ConfiguradorProdutoComponent, CarrinhoComponent],
+  imports: [ConfiguradorProdutoComponent, CarrinhoComponent, RouterLink, HlmButton],
   templateUrl: './vitrine.component.html',
-  styleUrl: './catalogo.css',
+  styleUrls: ['./catalogo.css', './vitrine.css'],
 })
 export class VitrineComponent {
-  @ViewChild('configuracao') private configuracao?: ElementRef<HTMLElement>;
+  @Input() modo: 'cardapio' | 'carrinho' = 'cardapio';
+  readonly unidadeExterna = input<string | undefined>();
+  private focoAnterior: HTMLElement | null = null;
+  @ViewChild('configuracao') private configuracao?: ElementRef<HTMLDialogElement>;
   @ViewChild('alerta') private alerta?: ElementRef<HTMLElement>;
   private readonly api = inject(CatalogoApiService);
   readonly carrinho = inject(CarrinhoService);
@@ -43,7 +50,7 @@ export class VitrineComponent {
   private requisicao: AbortController | null = null;
   readonly unidades = signal<Unidade[]>([]);
   readonly unidadeId = signal('');
-  readonly canalSelecionado = signal<Canal>('DELIVERY');
+  readonly canalSelecionado = signal<Canal>('RETIRADA');
   readonly trocaPendente = signal<ContextoCarrinho | null>(null);
   readonly produtos = signal<ProdutoPublico[]>([]);
   readonly categorias = signal<Categoria[]>([]);
@@ -87,6 +94,18 @@ export class VitrineComponent {
         if (this.unidadeId()) untracked(() => void this.carregar(0));
       }
     });
+    effect(() => {
+      const externa = this.unidadeExterna();
+      const unidade = this.unidades().find((item) => item.id === externa);
+      if (unidade)
+        untracked(() =>
+          this.solicitarTroca({
+            unidadeId: unidade.id,
+            unidadeNome: unidade.nome,
+            canal: this.canalSelecionado(),
+          }),
+        );
+    });
     void this.carregarUnidades();
   }
 
@@ -109,6 +128,24 @@ export class VitrineComponent {
       const unidades = await this.api.consultar<Unidade[]>('/api/v1/unidades', signal);
       if (!signal.aborted && !this.destruido) this.unidades.set(unidades);
     });
+    if (!this.destruido && !this.unidadeId() && this.unidades().length) {
+      const contexto = this.carrinho.contexto();
+      const unidade =
+        this.unidades().find((u) => u.id === contexto?.unidadeId) ?? this.unidades()[0];
+      this.aplicarContexto({
+        unidadeId: unidade.id,
+        unidadeNome: unidade.nome,
+        canal: contexto?.canal ?? this.canalSelecionado(),
+      });
+    }
+  }
+
+  quantidadeItens(): number {
+    return this.carrinho.itens().reduce((total, item) => total + item.linha.quantidade, 0);
+  }
+  escolherCategoria(id: string): void {
+    this.categoriaId = id;
+    void this.carregar(0);
   }
 
   selecionarUnidade(select: HTMLSelectElement): void {
@@ -195,9 +232,13 @@ export class VitrineComponent {
     await this.executar(async (signal) => {
       const produto = await this.api.consultar<ProdutoPublico>(this.rotaProduto(id), signal);
       if (signal.aborted || this.destruido) return;
+      this.focoAnterior = document.activeElement as HTMLElement | null;
       this.selecionado.set(produto);
       this.linhaEditada.set(linha ? structuredClone(linha) : null);
-      setTimeout(() => this.configuracao?.nativeElement.focus(), 0);
+      setTimeout(() => {
+        const dialogo = this.configuracao?.nativeElement;
+        if (dialogo && !dialogo.open) dialogo.showModal();
+      }, 0);
     });
   }
 
@@ -214,6 +255,8 @@ export class VitrineComponent {
   }
 
   fecharConfiguracao(): void {
+    this.configuracao?.nativeElement.close();
+    if (this.selecionado()) this.focoAnterior?.focus();
     this.selecionado.set(null);
     this.linhaEditada.set(null);
   }

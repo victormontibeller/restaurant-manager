@@ -7,6 +7,8 @@ Esta pasta mantém registros de decisões arquiteturais relevantes. O [ADR 0001 
 O [ADR 0002 — Mídia pública transacional](0002-midia-publica-transacional.md) registra
 a escolha de armazenamento e seus limites na Sprint 2 local.
 
+O [ADR 0003 — Spartan UI e navegação por área](0003-spartan-navegacao-por-area.md) registra a fundação visual e os limites do redesenho.
+
 ## Quando registrar
 
 Registre uma escolha quando seu contexto, alternativas e consequências forem necessários para entender uma mudança relevante de arquitetura, segurança, integração ou operação. Não criar ADR para toda alteração pequena ou apenas para repetir uma regra existente.

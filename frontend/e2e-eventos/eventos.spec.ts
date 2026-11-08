@@ -1,3 +1,4 @@
+import { abrirConta, navegarGestao } from '../e2e-identidade/apoio';
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -20,7 +21,7 @@ function massa(): Massa {
   return massas[test.info().project.name];
 }
 async function entrar(page: Page, conta: Conta): Promise<string> {
-  await page.goto('/');
+  await page.goto(conta.id === massa().cliente.id ? '/entrar' : '/gestao/entrar');
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
@@ -31,6 +32,7 @@ async function entrar(page: Page, conta: Conta): Promise<string> {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const response = await login;
   expect(response.status()).toBe(200);
+  if (conta.id === massa().cliente.id) await abrirConta(page);
   await expect(page.getByRole('button', { name: 'Sair da conta' })).toBeVisible();
   return (await response.json()).accessToken;
 }
@@ -66,7 +68,7 @@ async function criar(request: APIRequestContext, token: string, nome: string): P
   return id;
 }
 async function acompanhar(page: Page, id: string): Promise<void> {
-  await page.getByRole('button', { name: 'Acompanhar atualizações da unidade' }).click();
+  await navegarGestao(page, '/gestao/atualizacoes');
   await expect(page.getByLabel('Unidade acompanhada', { exact: true })).toContainText(
     'Selecione uma unidade',
   );
@@ -162,9 +164,11 @@ test('S01-UI33: Cozinha perde evento por ação e vínculo com o mesmo JWT', asy
     ).status(),
   ).toBe(200);
   await expect(
-    page.getByText(
-      'Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.',
-    ),
+    page
+      .getByText(
+        'Acesso à unidade removido ou sessão encerrada. Recarregue as unidades permitidas.',
+      )
+      .or(page.getByRole('heading', { name: 'Seu acesso foi atualizado', exact: true })),
   ).toBeVisible({ timeout: 15000 });
   await expect(page.getByTestId('unidade-atual')).toHaveCount(0);
   expect(
@@ -212,9 +216,7 @@ test('S01-UI34: Cliente não recebe acompanhamento nem eventos de outra empresa'
   request,
 }) => {
   const token = await entrar(page, massa().cliente);
-  await expect(
-    page.getByRole('button', { name: 'Acompanhar atualizações da unidade' }),
-  ).toHaveCount(0);
+  await expect(page.locator('a[href="/gestao/atualizacoes"]')).toHaveCount(0);
   const url = '/api/v1/operacao/unidades/11111111-1111-1111-1111-111111111111/eventos';
   const denied = await request.get(url, { headers: { Authorization: 'Bearer ' + token } });
   expect(denied.status()).toBe(403);
@@ -224,7 +226,7 @@ test('S01-UI34: Cliente não recebe acompanhamento nem eventos de outra empresa'
   });
   expect(foreign.status()).toBe(401);
   await page.getByRole('button', { name: 'Sair da conta' }).click();
-  await expect(page.getByRole('heading', { name: 'Acessar minha conta' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Entre na sua conta.' })).toBeVisible();
   expect((await request.get(url, { headers: { Authorization: 'Bearer ' + token } })).status()).toBe(
     401,
   );
@@ -392,7 +394,11 @@ test.describe('Fronteira de rede S01-UI43', () => {
       const denied = page.waitForResponse((r) => r.url().endsWith('/eventos?depois=-1'));
       liberar();
       expect((await denied).status()).toBe(403);
-      await expect(page.getByText('Acompanhamento encerrado.', { exact: true })).toBeVisible();
+      await expect(
+        page
+          .getByText('Acompanhamento encerrado.', { exact: true })
+          .or(page.getByRole('heading', { name: 'Seu acesso foi atualizado', exact: true })),
+      ).toBeVisible();
       await expect(
         page.getByRole('button', { name: 'Exportar cadastro da unidade (JSON)', exact: true }),
       ).toHaveCount(0);

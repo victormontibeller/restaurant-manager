@@ -109,6 +109,8 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     for (const form of forms) {
       await page.goto('http://127.0.0.1:' + server.address().port);
       await page.addScriptTag({ content: built.outputFiles[0].text });
+      if (['Aceitar convite de funcionário', 'Verificar e-mail existente'].includes(form.name))
+        await page.getByText('Convites e verificação de e-mail', { exact: true }).click();
       await expect(page.getByRole('button', { name: form.name, exact: true })).toBeEnabled();
       await page.getByRole('button', { name: form.name, exact: true }).focus();
       await page.keyboard.press('Enter');

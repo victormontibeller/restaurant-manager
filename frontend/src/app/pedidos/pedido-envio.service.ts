@@ -10,11 +10,18 @@ export interface IntencaoPedido {
   corpo: EnvioPedido;
 }
 
+export interface RascunhoPedido {
+  observacao: string;
+  comandaId: string;
+  paginaMesas: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PedidoEnvioService {
   private readonly sessao = inject(SessaoService);
   private readonly mesa = inject(SessaoMesaService);
   private readonly pendentes = new Map<string, IntencaoPedido>();
+  private readonly rascunhos = new Map<string, RascunhoPedido>();
   readonly alteracao = signal(0);
   readonly ocupado = signal(false);
   readonly confirmado = signal(0);
@@ -40,6 +47,16 @@ export class PedidoEnvioService {
   pendente(tipoMesa: boolean): IntencaoPedido | null {
     this.alteracao();
     return this.pendentes.get(this.contexto(tipoMesa)) ?? null;
+  }
+
+  rascunho(tipoMesa: boolean, unidadeId: string, canal: string): RascunhoPedido {
+    const chave = this.contexto(tipoMesa) + ':' + unidadeId + ':' + canal;
+    let rascunho = this.rascunhos.get(chave);
+    if (!rascunho) {
+      rascunho = { observacao: '', comandaId: '', paginaMesas: 0 };
+      this.rascunhos.set(chave, rascunho);
+    }
+    return rascunho;
   }
 
   async enviar(corpo: EnvioPedido, tipoMesa: boolean): Promise<Pedido> {

@@ -1,3 +1,4 @@
+import { abrirConta, navegarGestao, confirmarNavegacaoBloqueada } from '../e2e-identidade/apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,7 +11,7 @@ const auth = JSON.parse(fs.readFileSync(authFile, 'utf8')) as { email: string; s
 const fixture = JSON.parse(fs.readFileSync(captureFile, 'utf8')) as { captureDirectory: string };
 
 async function entrar(page: Page, email = auth.email, senha = auth.senha): Promise<void> {
-  await page.goto('/');
+  if (page.url() === 'about:blank') await page.goto('/gestao/entrar');
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(senha);
@@ -19,12 +20,15 @@ async function entrar(page: Page, email = auth.email, senha = auth.senha): Promi
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await r).status()).toBe(200);
-  await expect(page.getByRole('heading', { name: 'Minha conta', exact: true })).toBeVisible();
+  await abrirConta(page);
+  await expect(
+    page.getByRole('heading', { name: 'Que bom ter você por aqui.', exact: true }),
+  ).toBeVisible();
 }
 
 async function admin(page: Page): Promise<void> {
   await entrar(page);
-  await page.getByRole('button', { name: 'Gerenciar convites', exact: true }).click();
+  await navegarGestao(page, '/gestao/equipe/convites');
   await confirmarIdentidade(page);
 }
 
@@ -81,6 +85,7 @@ async function criar(page: Page, email: string): Promise<{ id: string; codigo: s
 }
 
 async function abrirAceite(page: Page): Promise<void> {
+  await page.getByText('Convites e verificação de e-mail', { exact: true }).click();
   await page.getByRole('button', { name: 'Aceitar convite de funcionário', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(
@@ -118,11 +123,10 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
 
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).click();
   await entrar(page, email, senha);
-  await expect(page.getByText('Perfil: COZINHA', { exact: true })).toBeVisible();
+  await expect(page.getByText('Equipe da cozinha', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gerenciar convites', exact: true })).toHaveCount(
-    0,
-  );
+  await navegarGestao(page, '/gestao/pedidos');
+  await expect(page.locator('a[href="/gestao/equipe/convites"]')).toHaveCount(0);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   expect(page.url()).not.toContain(codigo);
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
@@ -158,11 +162,10 @@ test('S01-UI41: seleção do perfil de convite persiste até aceite e login', as
 
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).click();
   await entrar(page, email, senha);
-  await expect(page.getByText('Perfil: EXPEDICAO', { exact: true })).toBeVisible();
+  await expect(page.getByText('Expedição', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Gerenciar convites', exact: true })).toHaveCount(
-    0,
-  );
+  await navegarGestao(page, '/gestao/pedidos');
+  await expect(page.locator('a[href="/gestao/equipe/convites"]')).toHaveCount(0);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   expect(page.url()).not.toContain(codigo);
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
@@ -206,9 +209,7 @@ test.describe('Fronteira de rede S01-UI18', () => {
     await page.getByRole('button', { name: 'Criar convite', exact: true }).click();
     await falha;
     await expect(page.getByRole('alert')).toContainText('Resultado incerto.');
-    await expect(
-      page.getByRole('button', { name: 'Gerenciar acessos', exact: true }),
-    ).toBeDisabled();
+    await confirmarNavegacaoBloqueada(page, '/gestao/equipe');
     await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
 
     // Mantém a mesma página: pendência é memória segregada por conta, não storage.

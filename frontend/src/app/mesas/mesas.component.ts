@@ -13,6 +13,8 @@ import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { nomeEstado } from '../pedidos/modelos';
 import { AberturaAtendimento, Comanda, Mesa, SolicitacaoMesa } from './modelos';
+import { PendenciasMesaService } from './pendencias-mesa.service';
+import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
 
 @Component({
   selector: 'app-mesas',
@@ -24,6 +26,9 @@ export class MesasComponent {
   readonly acoes = input<string[]>([]);
   readonly administrador = input(false);
   private readonly sessao = inject(SessaoService);
+  private readonly pendencias = inject(PendenciasMesaService);
+  private readonly navegacao = inject(NavegacaoProtegidaService);
+  private readonly chaveNavegacao = 'mesas:' + crypto.randomUUID();
   readonly mesas = signal<Mesa[]>([]);
   readonly solicitacoes = signal<SolicitacaoMesa[]>([]);
   readonly paginaMesas = signal(0);
@@ -47,9 +52,7 @@ export class MesasComponent {
   readonly moeda = moeda;
   readonly qrMesa = signal<Mesa | null>(null);
   readonly qrUrl = signal('');
-  readonly criacaoPendente = signal<{ id: string; unidadeId: string; nome: string } | null>(null);
-  private readonly aberturas = new Map<string, string>();
-  private readonly criacoes = new Map<string, { id: string; unidadeId: string; nome: string }>();
+  readonly criacaoPendente = computed(() => this.pendencias.criacao(this.contexto()));
   private geracao = 0;
   private selecaoComanda = 0;
   private carregamento: Promise<void> | null = null;
@@ -57,6 +60,7 @@ export class MesasComponent {
   nome = '';
 
   constructor() {
+    effect(() => this.navegacao.bloquear(this.chaveNavegacao, this.ocupado()));
     effect(() => {
       this.acoes();
       if (!this.financeiro()) this.comanda.set(null);
@@ -80,8 +84,8 @@ export class MesasComponent {
       this.comanda.set(null);
       this.abertura.set(null);
       this.qrMesa.set(null);
-      this.criacaoPendente.set(this.criacoes.get(contexto) ?? null);
-      this.nome = '';
+      const criacao = untracked(() => this.pendencias.criacao(contexto));
+      this.nome = criacao?.nome ?? '';
       this.erroAcao.set('');
       this.erroConsulta.set('');
       this.aviso.set('');
@@ -104,6 +108,7 @@ export class MesasComponent {
     inject(DestroyRef).onDestroy(() => {
       this.geracao++;
       this.acompanhamento.encerrar();
+      this.navegacao.liberar(this.chaveNavegacao);
     });
   }
 
@@ -111,7 +116,11 @@ export class MesasComponent {
     return this.acoes().includes(acao);
   }
   private contexto(): string {
-    return location.origin + ':' + this.sessao.identidade()?.usuarioId + ':' + this.unidadeId();
+    const identidade = this.sessao.identidade();
+    return location.origin + ':' + identidade?.usuarioId + ':' + this.unidadeId();
+  }
+  aberturaPendente(mesa: Mesa): boolean {
+    return !!this.pendencias.abertura(this.contexto(), mesa.id);
   }
   financeiro(): boolean {
     return [
@@ -122,7 +131,7 @@ export class MesasComponent {
     ].some((acao) => this.tem(acao));
   }
   linkMesa(mesa: Mesa): string {
-    return location.origin + '/?mesa=' + encodeURIComponent(mesa.id);
+    return location.origin + '/mesa/' + encodeURIComponent(mesa.id);
   }
 
   async mostrarQr(mesa: Mesa): Promise<void> {
@@ -246,8 +255,7 @@ export class MesasComponent {
       nome: this.nome.trim(),
     };
     if (!corpo.nome || this.ocupado()) return;
-    this.criacaoPendente.set(corpo);
-    this.criacoes.set(contexto, corpo);
+    this.pendencias.guardarCriacao(contexto, corpo);
     await this.executar(async (vigente) => {
       try {
         await this.sessao.api('/api/v1/operacao/mesas', 'POST', corpo);
@@ -260,14 +268,12 @@ export class MesasComponent {
           error.status >= 400 &&
           error.status < 500
         ) {
-          this.criacoes.delete(contexto);
-          if (vigente()) this.criacaoPendente.set(null);
+          this.pendencias.concluirCriacao(contexto);
         }
         throw error;
       }
-      this.criacoes.delete(contexto);
+      this.pendencias.concluirCriacao(contexto);
       if (!vigente()) return;
-      this.criacaoPendente.set(null);
       this.nome = '';
       this.aviso.set(
         'Mesa ' + corpo.nome + ' cadastrada. Use as páginas de mesas para localizar o cadastro.',
@@ -298,16 +304,25 @@ export class MesasComponent {
   }
 
   async abrir(mesa: Mesa): Promise<void> {
-    const chave = this.contexto() + ':' + mesa.id;
-    const intencaoId = this.aberturas.get(chave) ?? crypto.randomUUID();
-    this.aberturas.set(chave, intencaoId);
+    if (this.ocupado()) return;
+    const contexto = this.contexto();
+    const anterior = this.pendencias.abertura(contexto, mesa.id);
+    const intencaoId = anterior ?? crypto.randomUUID();
+    this.pendencias.guardarAbertura(contexto, mesa.id, intencaoId);
     await this.executar(async (vigente) => {
-      const resultado = await this.sessao.api<AberturaAtendimento>(
-        '/api/v1/operacao/mesas/' + mesa.id + '/abrir',
-        'POST',
-        { intencaoId },
-      );
-      this.aberturas.delete(chave);
+      let resultado: AberturaAtendimento;
+      try {
+        resultado = await this.sessao.api<AberturaAtendimento>(
+          '/api/v1/operacao/mesas/' + mesa.id + '/abrir',
+          'POST',
+          { intencaoId },
+        );
+      } catch (error) {
+        if (!anterior && error instanceof ApiFailure && error.status >= 400 && error.status < 500)
+          this.pendencias.concluirAbertura(contexto, mesa.id);
+        throw error;
+      }
+      this.pendencias.concluirAbertura(contexto, mesa.id);
       if (!vigente() || !this.tem('pedido.criar_assistido')) return;
       this.abertura.set(resultado);
       this.aviso.set(

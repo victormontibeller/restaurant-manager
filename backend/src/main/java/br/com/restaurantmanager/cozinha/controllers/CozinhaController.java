@@ -5,7 +5,11 @@ import br.com.restaurantmanager.cozinha.services.CozinhaService;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.pedidos.dtos.ComandoPedido;
 import br.com.restaurantmanager.pedidos.dtos.PaginaPedidos;
+import br.com.restaurantmanager.pedidos.models.EstadoPedido;
+import br.com.restaurantmanager.pedidos.models.OrdenacaoPedidos;
+import br.com.restaurantmanager.unidades.models.CanalAtendimento;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,8 +29,10 @@ public class CozinhaController {
 
     @GetMapping("/api/v1/cozinha")
     public PaginaPedidos<PedidoOperacional> listar(@AuthenticationPrincipal IdentidadeAtual ator, @RequestParam UUID unidadeId,
-            @RequestParam(defaultValue = "0") int pagina) {
-        return service.listar(ator, unidadeId, pagina);
+            @RequestParam(defaultValue = "0") int pagina, @RequestParam(required = false) List<EstadoPedido> estados,
+            @RequestParam(required = false) CanalAtendimento canal,
+            @RequestParam(defaultValue = "RECENTES") OrdenacaoPedidos ordenacao) {
+        return service.listar(ator, unidadeId, pagina, estados, canal, ordenacao);
     }
 
     @PostMapping("/api/v1/cozinha/pedidos/{id}/{acao:iniciar|concluir}")

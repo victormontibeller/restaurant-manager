@@ -1,74 +1,166 @@
 <section class="painel-interno" aria-labelledby="operacao-pedidos-titulo">
-  <h2 id="operacao-pedidos-titulo">Operação de pedidos e mesas</h2>
-  <button (click)="carregarAcessos()" [disabled]="carregandoAcessos()">
-    Revalidar acesso operacional
-  </button>
+  <header class="cabecalho-painel">
+    <div>
+      <span class="sobretitulo">Atendimento</span>
+      <h2 id="operacao-pedidos-titulo">
+        {{ navegacaoInterna() ? 'Operação de pedidos e mesas' : 'Fila de pedidos' }}
+      </h2>
+      <p class="texto-secundario">
+        Acompanhe cada pedido, confirme o aceite e mantenha a equipe em sintonia.
+      </p>
+    </div>
+    @if (unidadeExterna() === undefined) {
+      <button class="secundario" (click)="carregarAcessos()" [disabled]="carregandoAcessos()">
+        Revalidar acesso operacional
+      </button>
+    }
+  </header>
   @if (tem('pedido.consultar')) {
-    <label for="unidade-operacao">Unidade da operação</label>
-    <select
-      id="unidade-operacao"
-      #unidade
-      [value]="unidadeId()"
-      (change)="selecionarUnidade(unidade.value)"
-    >
-      <option value="">Selecione uma unidade</option>
-      @for (item of unidades(); track item.id) {
-        <option [value]="item.id">{{ item.nome }}</option>
-      }
-    </select>
-    <p>
-      Unidades inativas podem aparecer para resolver operações existentes. Novos pedidos seguem as
-      condições atuais de funcionamento.
-    </p>
+    @if (unidadeExterna() === undefined) {
+      <div class="filtros">
+        <div class="campo-filtro">
+          <label for="unidade-operacao">Unidade da operação</label>
+          <select
+            id="unidade-operacao"
+            #unidade
+            [value]="unidadeId()"
+            (change)="selecionarUnidade(unidade.value)"
+          >
+            <option value="">Selecione uma unidade</option>
+            @for (item of unidades(); track item.id) {
+              <option [value]="item.id">{{ item.nome }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <p class="texto-secundario">
+        Unidades inativas continuam disponíveis para resolver operações existentes.
+      </p>
+    }
     @if (unidadeId()) {
       @for (unidadeAtual of [unidadeId()]; track unidadeAtual) {
-        <nav class="acoes" aria-label="Áreas da operação">
-          <button (click)="selecionarArea('pedidos')" [attr.aria-pressed]="area() === 'pedidos'">
-            Fila de pedidos
-          </button>
-          @if (tem('cozinha.iniciar') || tem('cozinha.concluir')) {
-            <button (click)="selecionarArea('cozinha')" [attr.aria-pressed]="area() === 'cozinha'">
-              Painel da cozinha
+        @if (navegacaoInterna()) {
+          <nav class="acoes navegacao-operacao" aria-label="Áreas da operação">
+            <button (click)="selecionarArea('pedidos')" [attr.aria-pressed]="area() === 'pedidos'">
+              Fila de pedidos
             </button>
-          }
-          <button (click)="selecionarArea('mesas')" [attr.aria-pressed]="area() === 'mesas'">
-            Mesas e comandas
-          </button>
-          @if (administrador()) {
-            <button (click)="selecionarArea('prazos')" [attr.aria-pressed]="area() === 'prazos'">
-              Configurar prazos de aceite
+            @if (tem('cozinha.iniciar') || tem('cozinha.concluir')) {
+              <button
+                (click)="selecionarArea('cozinha')"
+                [attr.aria-pressed]="area() === 'cozinha'"
+              >
+                Painel da cozinha
+              </button>
+            }
+            <button (click)="selecionarArea('mesas')" [attr.aria-pressed]="area() === 'mesas'">
+              Mesas e comandas
             </button>
-          }
-        </nav>
+            @if (administrador()) {
+              <button (click)="selecionarArea('prazos')" [attr.aria-pressed]="area() === 'prazos'">
+                Configurar prazos de aceite
+              </button>
+            }
+          </nav>
+        }
         @if (area() === 'pedidos') {
-          <p role="status">
-            {{ acompanhamento.estado() }} Última atualização:
-            {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
-          </p>
-          <button (click)="carregarPedidos(pagina())" [disabled]="ocupado()">
-            Atualizar fila de pedidos
-          </button>
-          @for (pedido of pedidos(); track pedido.id) {
-            <app-pedido-detalhe
-              [pedido]="pedido"
-              contexto="operacao"
-              [acoes]="acoes()"
-              (atualizar)="carregarPedidos(pagina())"
-            />
-          } @empty {
-            <p>Nenhum pedido nesta página da unidade.</p>
-          }
-          <div class="acoes">
+          <div class="filtros" aria-label="Filtros da fila de pedidos">
+            <div class="campo-filtro">
+              <label for="pedidos-estado">Estado dos pedidos</label>
+              <select
+                id="pedidos-estado"
+                #estado
+                [value]="filtroEstado()"
+                (change)="filtrar('estado', estado.value)"
+              >
+                <option value="AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO">Em andamento</option>
+                <option value="">Todos os estados</option>
+                <option value="CONCLUIDO,CANCELADO">Histórico: concluídos e cancelados</option>
+                <option value="AGUARDANDO_ACEITE">Aguardando aceite</option>
+                <option value="NA_FILA">Na fila</option>
+                <option value="EM_PREPARO">Em preparo</option>
+                <option value="PRONTO">Prontos</option>
+                <option value="CONCLUIDO">Concluídos</option>
+                <option value="CANCELADO">Cancelados</option>
+              </select>
+            </div>
+            <div class="campo-filtro">
+              <label for="pedidos-canal">Canal do pedido</label>
+              <select
+                id="pedidos-canal"
+                #canal
+                [value]="filtroCanal()"
+                (change)="filtrar('canal', canal.value)"
+              >
+                <option value="">Todos os canais</option>
+                <option value="MESA">Mesa</option>
+                <option value="RETIRADA">Retirada</option>
+                <option value="DELIVERY">Delivery</option>
+              </select>
+            </div>
+            <div class="campo-filtro">
+              <label for="pedidos-ordem">Ordenar pedidos</label>
+              <select
+                id="pedidos-ordem"
+                #ordem
+                [value]="ordenacao()"
+                (change)="filtrar('ordem', ordem.value)"
+              >
+                <option value="ANTIGOS">Mais antigos primeiro</option>
+                <option value="RECENTES">Mais recentes primeiro</option>
+              </select>
+            </div>
+          </div>
+          <div class="barra-conexao">
+            <p role="status" class="status-consulta">
+              <span class="status-reserva" aria-hidden="true"
+                >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada.
+                Última atualização: ainda não confirmada.</span
+              >
+              <span
+                >{{ acompanhamento.estado() }} Última atualização:
+                {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
+              >
+            </p>
+            <button class="secundario" (click)="carregarPedidos(pagina())" [disabled]="ocupado()">
+              Atualizar fila de pedidos
+            </button>
+          </div>
+          <div class="resumo-listagem">
+            <span>{{ pedidos().length }} pedidos nesta página</span
+            ><span>Página {{ pagina() + 1 }}</span>
+          </div>
+          <div class="grade-pedidos" [attr.aria-busy]="ocupado()">
+            @for (pedido of pedidos(); track pedido.id) {
+              <app-pedido-detalhe
+                [pedido]="pedido"
+                contexto="operacao"
+                [acoes]="acoes()"
+                (atualizar)="carregarPedidos(pagina())"
+              />
+            } @empty {
+              <div class="vazio">
+                <h3>{{ ocupado() ? 'Buscando pedidos…' : 'Nenhum pedido por aqui' }}</h3>
+                <p>Os pedidos desta unidade aparecerão aqui conforme os filtros selecionados.</p>
+              </div>
+            }
+          </div>
+          <nav class="paginacao" aria-label="Páginas da fila de pedidos">
             <button
+              class="secundario"
               (click)="carregarPedidos(pagina() - 1)"
               [disabled]="ocupado() || pagina() === 0"
             >
               Página anterior da fila
             </button>
-            <button (click)="carregarPedidos(pagina() + 1)" [disabled]="ocupado() || !mais()">
+            <span>Página {{ pagina() + 1 }}</span>
+            <button
+              class="secundario"
+              (click)="carregarPedidos(pagina() + 1)"
+              [disabled]="ocupado() || !mais()"
+            >
               Próxima página da fila
             </button>
-          </div>
+          </nav>
         } @else if (area() === 'cozinha') {
           <app-cozinha [unidadeId]="unidadeId()" [acoes]="acoes()" />
         } @else if (area() === 'mesas') {
@@ -81,9 +173,14 @@
           <app-prazos-aceite [unidadeId]="unidadeId()" />
         }
       }
+    } @else {
+      <div class="vazio">
+        <h3>Escolha uma unidade para começar</h3>
+        <p>A fila mostra somente os pedidos da unidade selecionada.</p>
+      </div>
     }
   } @else {
-    <p>Sua política atual não permite consultar pedidos.</p>
+    <p class="aviso">Sua política atual não permite consultar pedidos.</p>
   }
   @if (erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>

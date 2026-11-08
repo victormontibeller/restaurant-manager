@@ -363,7 +363,8 @@ paths:
     get:
       operationId: listarPedidosOperacionais
       description: Exige pedido.consultar na unidade; preserva operações existentes
-        em unidade inativa.
+        em unidade inativa. Filtros e ordenação são aplicados antes da paginação.
+        Omissão dos filtros preserva todos os estados/canais e a ordem mais recente.
       security:
       - empresarial: []
       responses:
@@ -401,6 +402,9 @@ paths:
           minimum: 0
           maximum: 10000
           default: 0
+      - "$ref": "#/components/parameters/EstadosPedidos"
+      - "$ref": "#/components/parameters/CanalPedidos"
+      - "$ref": "#/components/parameters/OrdenacaoPedidos"
   "/api/v1/operacao/pedidos/{id}":
     get:
       operationId: consultarPedidoOperacional
@@ -645,7 +649,9 @@ paths:
     get:
       operationId: listarKds
       description: Somente NA_FILA/EM_PREPARO/PRONTO da unidade autorizada. Não expõe
-        dados financeiros, endereço ou contato.
+        dados financeiros, endereço ou contato. Filtros e ordenação são aplicados
+        antes da paginação. Estados solicitados são intersectados com a fila da
+        cozinha; estados externos à fila nunca ampliam o resultado.
       security:
       - empresarial: []
       responses:
@@ -683,6 +689,9 @@ paths:
           minimum: 0
           maximum: 10000
           default: 0
+      - "$ref": "#/components/parameters/EstadosPedidos"
+      - "$ref": "#/components/parameters/CanalPedidos"
+      - "$ref": "#/components/parameters/OrdenacaoPedidos"
   "/api/v1/cozinha/pedidos/{id}/iniciar":
     post:
       operationId: iniciarProducao
@@ -827,6 +836,33 @@ paths:
             schema:
               "$ref": "#/components/schemas/AlterarPrazos"
 components:
+  parameters:
+    EstadosPedidos:
+      name: estados
+      in: query
+      description: Estados separados por vírgula. Omissão ou lista vazia não adiciona filtro.
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [AGUARDANDO_ACEITE, NA_FILA, EM_PREPARO, PRONTO, CONCLUIDO, CANCELADO]
+    CanalPedidos:
+      name: canal
+      in: query
+      description: Canal de atendimento; omissão preserva todos os canais permitidos.
+      schema:
+        type: string
+        enum: [DELIVERY, RETIRADA, MESA]
+    OrdenacaoPedidos:
+      name: ordenacao
+      in: query
+      description: Ordem de criação; empates são resolvidos pelo UUID crescente.
+      schema:
+        type: string
+        enum: [ANTIGOS, RECENTES]
+        default: RECENTES
   securitySchemes:
     empresarial:
       type: http

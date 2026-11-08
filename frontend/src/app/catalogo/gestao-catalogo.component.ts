@@ -22,6 +22,8 @@ import {
 })
 export class GestaoCatalogoComponent {
   @Output() bloqueio = new EventEmitter<boolean>();
+  @Output() salvo = new EventEmitter<string>();
+  @Output() rascunhoAlterado = new EventEmitter<string>();
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(CatalogoPendenteService);
   private readonly midiasPendentes = inject(MidiaPendenteService);
