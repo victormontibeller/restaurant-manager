@@ -405,7 +405,15 @@ export async function montarCarrinho(
       .selectOption(produto.opcaoId);
   }
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
-  const revisar = page.getByRole('button', { name: 'Revisar meu pedido', exact: true });
+  await expect(page.getByRole('dialog', { name: 'Configurar produto', exact: true })).toBeHidden();
+  const revisar = page.getByRole('button', {
+    name: 'Revisar meu pedido',
+    exact: true,
+    includeHidden: true,
+  });
+  // O clique fecha o diálogo antes do Angular renderizar o novo item. Aguarde
+  // o carrinho também no mobile, onde seu resumo lateral fica oculto por CSS.
+  await expect(revisar).toBeAttached();
   if (!(await revisar.isVisible())) await navegarUi(page, '/carrinho');
   await revisar.click();
   await page.getByRole('button', { name: 'Confirmar composição e valores', exact: true }).click();
