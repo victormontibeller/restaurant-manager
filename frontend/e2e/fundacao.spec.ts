@@ -48,7 +48,15 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({
     if (await pular.evaluate((elemento) => elemento === document.activeElement)) break;
   }
   await expect(pular).toBeFocused();
+  const urlAntesDoAtalho = page.url();
+  await page.evaluate(() => {
+    document.documentElement.dataset['contextoAtalho'] = 'preservado';
+  });
   await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(urlAntesDoAtalho);
+  expect(await page.evaluate(() => document.documentElement.dataset['contextoAtalho'])).toBe(
+    'preservado',
+  );
   await expect(page.locator('main#conteudo')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByLabel('Unidade do cardápio', { exact: true })).toBeFocused();

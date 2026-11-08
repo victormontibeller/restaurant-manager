@@ -108,8 +108,10 @@ export class EquipeLayoutComponent {
   }
 
   private atualizarPagina(): void {
-    let rota = this.rota;
-    while (rota.firstChild) rota = rota.firstChild;
-    this.pagina.set(rota.snapshot.data);
+    // Durante a criação do layout, o ActivatedRoute do filho ainda não foi ativado.
+    // A árvore de snapshots já contém os dados reconhecidos da navegação inteira.
+    let snapshot = this.rota.snapshot;
+    while (snapshot.firstChild) snapshot = snapshot.firstChild;
+    this.pagina.set(snapshot.data);
   }
 }

@@ -17,7 +17,7 @@ import { PwaComponent } from './app/pwa/pwa.component';
   selector: 'app-root',
   imports: [RouterOutlet, PwaComponent],
   template: `
-    <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+    <a class="skip" href="#conteudo" (click)="pularConteudo($event)">Pular para o conteúdo</a>
     <div class="demo-banner">Ambiente de testes <span aria-hidden="true">·</span> Dados fictícios</div>
     @if(navegacao.aviso()){<div class="navigation-notice" role="alert">{{navegacao.aviso()}}<button type="button" aria-label="Fechar aviso" (click)="navegacao.aviso.set('')">×</button></div>}
     <router-outlet/>
@@ -44,12 +44,21 @@ class App {
     const eventos = router.events.subscribe((evento) => {
       if (evento instanceof NavigationEnd) {
         this.navegacao.concluirNavegacao();
-        setTimeout(() => document.querySelector<HTMLElement>('main#conteudo')?.focus());
+        setTimeout(() =>
+          document.querySelector<HTMLElement>('main#conteudo')?.focus({ preventScroll: true }),
+        );
       }
     });
     inject(DestroyRef).onDestroy(() => eventos.unsubscribe());
     void this.verificar();
   }
+  pularConteudo(evento: Event): void {
+    evento.preventDefault();
+    const conteudo = document.querySelector<HTMLElement>('main#conteudo');
+    conteudo?.focus({ preventScroll: true });
+    conteudo?.scrollIntoView({ block: 'start' });
+  }
+
   async verificar(): Promise<void> {
     this.carregando.set(true);
     this.mensagem.set('Verificando conexão…');

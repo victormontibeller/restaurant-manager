@@ -84,8 +84,17 @@ export async function navegarUi(page: Page, destino: string): Promise<void> {
   if (destino.startsWith('/gestao/') || destino === '/cozinha') {
     if (new URL(page.url()).pathname === '/cozinha') {
       await page.getByRole('link', { name: 'Gestão', exact: true }).click();
-    } else if (!new URL(page.url()).pathname.startsWith('/gestao/')) {
-      await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
+    } else if (
+      !new URL(page.url()).pathname.startsWith('/gestao/') ||
+      new URL(page.url()).pathname === '/gestao/entrar'
+    ) {
+      const abrirEquipe = page.getByRole('link', { name: 'Abrir área da equipe', exact: true });
+      if (!(await abrirEquipe.isVisible())) {
+        await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
+        await expect(page).toHaveURL((url) => url.pathname === '/gestao/entrar');
+      }
+      await abrirEquipe.click();
+      await expect(page.locator('app-equipe-layout')).toBeVisible();
       await expect(page.getByLabel('Unidade da operação', { exact: true })).toBeVisible();
     }
     if (destino === '/gestao/pedidos/novo') await navegarUi(page, '/gestao/pedidos');
@@ -120,7 +129,13 @@ export async function loginUi(page: Page, conta: Conta): Promise<string> {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const token = (await ok<{ accessToken: string }>(await resposta)).accessToken;
   if (equipe) {
-    await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
+    const destino = conta.email === clientes.cozinha.email ? '/cozinha' : '/gestao/pedidos';
+    // A sessão aparece no formulário antes de o Router concluir a troca de área.
+    await expect(page).toHaveURL((url) => url.pathname === destino);
+    const area = page.locator('app-equipe-layout');
+    await expect(area).toBeVisible();
+    await expect(area.getByRole('main')).toBeVisible();
+    await expect(area.getByLabel('Unidade da operação', { exact: true })).toBeVisible();
   } else {
     await expect(page).toHaveURL((url) => url.pathname === '/cardapio');
     await expect(page.locator('a[href="/conta"]:visible').first()).toBeVisible();

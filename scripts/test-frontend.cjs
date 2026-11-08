@@ -15,6 +15,7 @@ const tests = [
   'test_public_hours.cjs',
   'test_unit_schedule.cjs',
   'test_pwa.cjs',
+  'test_route_shell.cjs',
   'test_catalog_cart.cjs',
   'test_catalog_media.cjs',
   'test_catalog_recovery.cjs',

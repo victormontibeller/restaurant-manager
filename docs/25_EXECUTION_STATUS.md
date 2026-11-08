@@ -23,6 +23,11 @@ matriz nem publicação do redesenho nesta gravação.
 Demonstração manual em 8095 permanece na versão anterior; banco `rm_dev` e
 PostgreSQL compartilhado preservados. Runner novo e evidências privados do
 redesenho separados, com alvo `rm_test`, sem herdar aprovação anterior.
+Primeiro candidato de navegador `5f0df6d5…`, commit `a312cd7`, interrompido
+na primeira falha: gestão vazia após login por leitura prematura do snapshot
+filho; três cenários da fundação passaram e o atalho de conteúdo revelou
+recarga indevida da página. Nenhuma dessas rodadas aprova a matriz. Correções
+e probes de regressão em preparação para candidato 02; relatórios preservados.
 Próximo passo: gerar artefato identificado e recibo de validação `mac-local`,
 executar matriz integral de navegador e revisão visual, corrigir/reexecutar,
 atualizar demonstração com backup e registrar hash realmente servido.
