@@ -82,7 +82,33 @@ V15 publica mídia imutável em `bytea`, com tamanho/hash, cota e auditoria na
 mesma transação. V16 liga produto e mídia por FK no próprio schema. A escolha
 e seus limites estão no [ADR 0002](adr/0002-midia-publica-transacional.md).
 Cotação usa snapshot PostgreSQL consistente e devolve composição/valores;
-persistência do pedido continua pertencendo à próxima sprint.
+persistência do pedido pertence ao incremento abaixo.
+
+## Persistência da Sprint 3
+
+V17 acrescenta mesas, atendimentos, comandas, participantes, sessões próprias e
+solicitações. Índice parcial impede dois atendimentos ativos na mesma mesa;
+comanda é única por atendimento. V21 preserva ator e nome originais da intenção
+de criação da mesa, inclusive após editar o cadastro.
+
+V18 acrescenta pedidos, snapshots JSONB, unidades comerciais de produção,
+histórico, comandos idempotentes, solicitações de cancelamento, parâmetros de
+aceite e cobrança/parcelas/ajustes. Histórico, comandos e ajustes não admitem
+UPDATE pela role de runtime. A cobrança de mesa pertence à comanda; rodadas
+somam parcelas sem criar outra dívida. Recebimentos e devoluções permanecem
+contratos para a Sprint 4; valores anteriores nos testes são fixtures explícitas.
+
+V19 acrescenta streams e eventos operacionais persistidos. Cada stream usa um
+contador transacional bloqueado até o commit, evitando avançar o cursor sobre
+uma transação ainda invisível. Streams distinguem operação por unidade,
+cliente, participante e comanda; o evento compartilhado da comanda não expõe o
+identificador da rodada alheia.
+
+V20 acrescenta trabalhos de prazo com lease, tentativas, próximo processamento
+e falha sanitizada. O agendamento acompanha a criação do pedido na mesma
+transação. Vencimentos e alertas são reavaliados sob lock do pedido; eventos,
+histórico e ajustes confirmam juntos. Regras de retomada ficam em
+[Integrações](21_INTEGRATIONS.md).
 
 ## Dados, testes e migrações
 

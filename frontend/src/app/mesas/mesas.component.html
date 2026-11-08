@@ -1,0 +1,192 @@
+<section
+  class="painel-interno"
+  aria-labelledby="operacao-mesas-titulo"
+  [attr.aria-busy]="carregando()"
+>
+  <h3 id="operacao-mesas-titulo">Mesas e atendimentos</h3>
+  <p role="status" class="status-consulta">
+    <span class="status-reserva" aria-hidden="true">
+      Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada. Última
+      atualização: ainda não confirmada.
+    </span>
+    <span>
+      {{ acompanhamento.estado() }} Última atualização:
+      {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+    </span>
+  </p>
+  <button (click)="carregar()" [disabled]="ocupado()">Atualizar mesas</button>
+  @if (administrador()) {
+    <details>
+      <summary>Cadastrar mesa e confirmar acesso administrativo</summary>
+      <label for="senha-mesas">Confirme sua senha para configurar mesas</label>
+      <input
+        id="senha-mesas"
+        #senha
+        type="password"
+        autocomplete="current-password"
+        [disabled]="ocupado()"
+      />
+      <button (click)="confirmarSenha(senha)" [disabled]="ocupado()">
+        Confirmar senha para mesas
+      </button>
+      <form (submit)="criar($event)">
+        <label for="nome-nova-mesa">Nome da mesa</label>
+        <input
+          id="nome-nova-mesa"
+          #nomeMesa
+          [value]="nome"
+          (input)="nome = nomeMesa.value"
+          required
+          maxlength="80"
+          [disabled]="ocupado() || !!criacaoPendente()"
+        />
+        <button type="submit" [disabled]="ocupado()">
+          {{ criacaoPendente() ? 'Recuperar cadastro da mesma mesa' : 'Cadastrar mesa' }}
+        </button>
+      </form>
+    </details>
+  }
+  @if (abertura()?.codigoTemporario; as codigo) {
+    <aside aria-label="Código temporário do atendimento">
+      <p>Forneça este código apenas ao grupo do atendimento. Ele não faz parte do QR público.</p>
+      <output class="codigo">{{ codigo }}</output>
+      <button class="secundario" (click)="abertura.set(null)">Ocultar código temporário</button>
+    </aside>
+  }
+  @for (mesa of mesas(); track mesa.id) {
+    <article [attr.aria-label]="'Mesa ' + mesa.nome">
+      <h4>{{ mesa.nome }} · {{ mesa.ativa ? 'ativa' : 'inativa' }}</h4>
+      <p>
+        {{ mesa.estadoComanda ? 'Comanda ' + nomeEstado(mesa.estadoComanda) : 'Sem atendimento aberto' }}
+      </p>
+      <div class="acoes">
+        @if (tem('pedido.criar_assistido') && !mesa.atendimentoId && mesa.ativa) {
+          <button (click)="abrir(mesa)" [disabled]="ocupado()">
+            Abrir atendimento em {{ mesa.nome }}
+          </button>
+        }
+        @if (tem('pedido.criar_assistido') && mesa.atendimentoId) {
+          <button (click)="gerarCodigo(mesa)" [disabled]="ocupado()">
+            Gerar novo código de {{ mesa.nome }}
+          </button>
+        }
+        @if (mesa.comandaId && financeiro()) {
+          <button (click)="abrirComanda(mesa)" [disabled]="ocupado()">
+            Consultar comanda de {{ mesa.nome }}
+          </button>
+        }
+        <button class="secundario" (click)="mostrarQr(mesa)">Mostrar QR de {{ mesa.nome }}</button>
+        @if (administrador()) {
+          <button class="secundario" (click)="atividade(mesa)" [disabled]="ocupado()">
+            {{ mesa.ativa ? 'Inativar' : 'Reativar' }} {{ mesa.nome }}
+          </button>
+        }
+      </div>
+    </article>
+  } @empty {
+    <p>Nenhuma mesa encontrada nesta página.</p>
+  }
+  <nav aria-label="Páginas de mesas" class="acoes">
+    <button
+      (click)="mudarPaginaMesas(paginaMesas() - 1)"
+      [disabled]="ocupado() || paginaMesas() === 0"
+    >
+      Mesas anteriores
+    </button>
+    <span role="status">Página de mesas {{ paginaMesas() + 1 }}</span>
+    <button (click)="mudarPaginaMesas(paginaMesas() + 1)" [disabled]="ocupado() || !maisMesas()">
+      Próximas mesas
+    </button>
+  </nav>
+  @if (qrMesa(); as mesa) {
+    <section aria-label="QR público da mesa">
+      <h4>{{ mesa.nome }}</h4>
+      <img
+        [src]="qrUrl()"
+        [alt]="'QR para abrir a mesa ' + mesa.nome"
+        style="max-width:100%;height:auto;image-rendering:pixelated"
+      />
+      <p>
+        <a [href]="linkMesa(mesa)" target="_blank" rel="noopener"
+          >Abrir o link público de {{ mesa.nome }}</a
+        >
+      </p>
+      <p>
+        O QR identifica a mesa. O atendimento exige um código temporário fornecido separadamente.
+      </p>
+    </section>
+  }
+  @if (comanda(); as conta) {
+    <section aria-label="Resumo da comanda">
+      <h4>{{ conta.mesaNome }} · {{ nomeEstado(conta.estado) }}</h4>
+      <dl>
+        <dt>Total devido</dt>
+        <dd>{{ moeda(conta.totalDevido) }}</dd>
+        <dt>Recebido confirmado</dt>
+        <dd>{{ moeda(conta.pagoConfirmado) }}</dd>
+        <dt>Saldo a receber</dt>
+        <dd>{{ moeda(conta.saldoAReceber) }}</dd>
+        <dt>Saldo a devolver</dt>
+        <dd>{{ moeda(conta.saldoADevolver) }}</dd>
+      </dl>
+      <p>
+        Registro de pagamentos indisponível neste ambiente. Só é possível concluir com saldos
+        zerados e pedidos resolvidos.
+      </p>
+      <div class="acoes">
+        @if (conta.estado === 'ABERTA' && tem('comanda.iniciar_fechamento')) {
+          <button (click)="fechar('iniciar-fechamento')" [disabled]="ocupado()">
+            Iniciar fechamento da comanda
+          </button>
+        }
+        @if (conta.estado === 'EM_FECHAMENTO' && tem('comanda.reabrir')) {
+          <button (click)="fechar('reabrir')" [disabled]="ocupado()">
+            Reabrir comanda antes de recebimentos
+          </button>
+        }
+        @if (conta.estado === 'EM_FECHAMENTO' && tem('comanda.concluir')) {
+          <button (click)="fechar('concluir')" [disabled]="ocupado()">Concluir fechamento</button>
+        }
+      </div>
+    </section>
+  }
+  @if (tem('mesa.atender')) {
+    <h4>Solicitações da equipe de salão</h4>
+    @for (solicitacao of solicitacoes(); track solicitacao.id) {
+      <article>
+        <p>
+          {{ solicitacao.mesaNome }} · {{ solicitacao.tipo === 'AJUDA' ? 'Ajuda' : 'Conta' }} ·
+          {{ solicitacao.estado }}
+        </p>
+        @if (solicitacao.estado === 'PENDENTE') {
+          <button (click)="atender(solicitacao)" [disabled]="ocupado()">
+            Marcar solicitação atendida
+          </button>
+        }
+      </article>
+    } @empty {
+      <p>Nenhuma solicitação encontrada nesta página.</p>
+    }
+    <nav aria-label="Páginas de solicitações" class="acoes">
+      <button
+        (click)="mudarPaginaSolicitacoes(paginaSolicitacoes() - 1)"
+        [disabled]="ocupado() || paginaSolicitacoes() === 0"
+      >
+        Solicitações anteriores
+      </button>
+      <span role="status">Página de solicitações {{ paginaSolicitacoes() + 1 }}</span>
+      <button
+        (click)="mudarPaginaSolicitacoes(paginaSolicitacoes() + 1)"
+        [disabled]="ocupado() || !maisSolicitacoes()"
+      >
+        Próximas solicitações
+      </button>
+    </nav>
+  }
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

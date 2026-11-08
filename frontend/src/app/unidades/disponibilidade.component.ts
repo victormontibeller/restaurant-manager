@@ -52,7 +52,7 @@ interface FuncionamentoPublico {
       @if (atual(); as unidade) {
         <h3>{{ unidade.nome }}</h3>
         <p>Fuso da unidade: {{ unidade.fuso }}. Consulta confirmada: {{ confirmado() }}.</p>
-        <p>A situação corresponde ao horário consultado. Esta versão ainda não recebe pedidos.</p>
+        <p>A situação corresponde ao horário consultado. A disponibilidade é conferida novamente ao enviar o pedido.</p>
         <div class="canais">
           @for (canal of unidade.canais; track canal.canal) {
             <article>

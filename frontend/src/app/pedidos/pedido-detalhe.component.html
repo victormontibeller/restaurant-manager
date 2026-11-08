@@ -1,0 +1,183 @@
+<article [attr.aria-label]="'Pedido ' + pedido().id">
+  <h3>Pedido {{ pedido().id }}</h3>
+  <p>
+    <strong>{{ nomeEstado(pedido().estado) }}</strong> · {{ pedido().canal }} ·
+    {{ horario(pedido().criadoEm) }}
+  </p>
+  @if (prazo()) {
+    <p [class.aviso]="alertaPrazo()">{{ prazo() }}</p>
+  }
+  @if (pedido().primeiroPreparoEm) {
+    <p>
+      Primeiro preparo: {{ horario(pedido().primeiroPreparoEm) }}. Cancelamento exige avaliação da
+      equipe.
+    </p>
+  }
+  @if (pedido().observacao) {
+    <p>Observação: {{ pedido().observacao }}</p>
+  }
+  @for (linha of pedido().linhas; track linha.id) {
+    <section class="linha-pedido" [attr.aria-label]="linha.nome">
+      <h4>
+        {{ linha.quantidade }} × {{ linha.nome }}
+        {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
+      </h4>
+      @if (pessoal() && linha.subtotal) {
+        <p>Subtotal original: {{ moeda(linha.subtotal!) }}</p>
+      }
+      @for (extra of linha.adicionais; track $index) {
+        <p>Adicional: {{ extra.quantidade }} × {{ extra.nome }}</p>
+      }
+      @for (escolha of linha.escolhas; track $index) {
+        <p>{{ escolha.grupo }}: {{ escolha.quantidade }} × {{ escolha.nome }}</p>
+        @for (extra of escolha.adicionais ?? []; track $index) {
+          <p>Adicional da escolha: {{ extra.quantidade }} × {{ extra.nome }}</p>
+        }
+      }
+      <ul class="unidades-producao">
+        @for (unidade of pedido().unidades; track unidade.id) {
+          @if (unidade.linhaId === linha.id) {
+            <li>
+              @if (podeSelecionar(unidade)) {
+                <label
+                  class="selecao"
+                  [for]="'producao-' + contexto() + '-' + unidade.id"
+                  [attr.title]="'Referência: ' + unidade.id"
+                >
+                  <input
+                    type="checkbox"
+                    [id]="'producao-' + contexto() + '-' + unidade.id"
+                    #selecao
+                    [checked]="selecionadas().includes(unidade.id)"
+                    (change)="selecionar(unidade.id, selecao.checked)"
+                    [disabled]="bloqueado()"
+                  />
+                  <span>Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span>
+                </label>
+              } @else {
+                <span [attr.title]="'Referência: ' + unidade.id"
+                  >Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span
+                >
+              }
+            </li>
+          }
+        }
+      </ul>
+    </section>
+  }
+  @if (pessoal() && pedido().saldo; as saldo) {
+    <dl>
+      <dt>Total devido</dt>
+      <dd>{{ moeda(saldo.totalDevido) }}</dd>
+      <dt>Saldo a receber</dt>
+      <dd>{{ moeda(saldo.saldoAReceber) }}</dd>
+      <dt>Saldo a devolver</dt>
+      <dd>{{ moeda(saldo.saldoADevolver) }}</dd>
+    </dl>
+  }
+  @if (pedeMotivo()) {
+    <label [for]="'motivo-pedido-' + pedido().id"
+      >Motivo de recusa, cancelamento ou avaliação</label
+    >
+    <textarea
+      [id]="'motivo-pedido-' + pedido().id"
+      #motivoInput
+      maxlength="500"
+      [value]="motivo"
+      (input)="motivo = motivoInput.value"
+      [disabled]="bloqueado()"
+    ></textarea>
+  }
+  <div class="acoes">
+    @if (contexto() === 'operacao' && pedido().estado === 'AGUARDANDO_ACEITE') {
+      @if (tem('pedido.aceitar')) {
+        <button (click)="comandar('aceitar')" [disabled]="bloqueado()">Aceitar pedido</button>
+      }
+      @if (tem('pedido.recusar')) {
+        <button (click)="comandar('recusar')" [disabled]="bloqueado()">Recusar pedido</button>
+      }
+    }
+    @if (contexto() === 'cozinha' && ['NA_FILA', 'EM_PREPARO'].includes(pedido().estado)) {
+      @if (tem('cozinha.iniciar')) {
+        <button (click)="comandar('iniciar')" [disabled]="bloqueado() || !selecionadas().length">
+          Iniciar unidades selecionadas
+        </button>
+      }
+      @if (tem('cozinha.concluir')) {
+        <button (click)="comandar('concluir')" [disabled]="bloqueado() || !selecionadas().length">
+          Concluir unidades selecionadas
+        </button>
+      }
+    }
+    @if (pessoal() && !terminal()) {
+      @if (!pedido().primeiroPreparoEm) {
+        <button (click)="comandar('cancelar')" [disabled]="bloqueado()">
+          Cancelar meu pedido integralmente
+        </button>
+      } @else {
+        <button (click)="comandar('solicitar-cancelamento')" [disabled]="bloqueado()">
+          Solicitar avaliação de cancelamento
+        </button>
+      }
+    }
+    @if (contexto() === 'operacao' && !terminal()) {
+      @if (podeCancelarOperacional()) {
+        <button (click)="comandar('cancelar')" [disabled]="bloqueado()">
+          {{ selecionadas().length ? 'Cancelar unidades selecionadas' : 'Cancelar todas as unidades remanescentes' }}
+        </button>
+      }
+      @if (pedido().canal === 'MESA' && pedido().estado === 'PRONTO' && tem('pedido.servir')) {
+        <button (click)="comandar('servir')" [disabled]="bloqueado() || cancelamentoPendente()">
+          Marcar servido na mesa
+        </button>
+        @if (cancelamentoPendente()) {
+          <p role="status">
+            Aguarde a decisão sobre o cancelamento antes de marcar o pedido como servido.
+          </p>
+        }
+      }
+    }
+  </div>
+  @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
+    <p>
+      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
+      decisão.
+    </p>
+    @if (
+      contexto() === 'operacao' && solicitacao.estado === 'PENDENTE' && tem('pedido.cancelar_apos_preparo')
+    ) {
+      <div class="acoes">
+        <button (click)="comandar('aprovar', solicitacao.id)" [disabled]="bloqueado()">
+          Aprovar solicitação
+        </button>
+        <button (click)="comandar('rejeitar', solicitacao.id)" [disabled]="bloqueado()">
+          Rejeitar solicitação
+        </button>
+      </div>
+    }
+  }
+  @if (pendente()) {
+    <p class="aviso">
+      Resultado da ação ainda não confirmado. O reenvio usa o mesmo identificador e os mesmos dados.
+    </p>
+    <button (click)="repetir()" [disabled]="comandos.ocupado() || !online()">
+      Recuperar resultado da mesma ação
+    </button>
+  }
+  @if (pedido().historico?.length) {
+    <details>
+      <summary>Histórico do pedido</summary>
+      <ol>
+        @for (evento of pedido().historico ?? []; track $index) {
+          <li>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</li>
+        }
+      </ol>
+    </details>
+  }
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</article>

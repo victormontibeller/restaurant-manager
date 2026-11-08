@@ -33,7 +33,9 @@ O adaptador traduz resultados do SDK em conceitos do domínio. Retry depende da 
 
 Provedor de e-mail é dependência externa. Preferir SDK oficial adequado; separar transporte de template e regra de notificação. Outbox registra eventos na transação de negócio; worker aplica retry, deduplicação e registro de falha. Ambiente local usa captura de mensagens com dados fictícios, sem envio real implícito.
 
-SSE é proposta para notificações da cozinha/aceite/mesas. A implementação precisa transportar autenticação de forma segura: usar streaming compatível com header Bearer ou mecanismo de sessão especificamente projetado; não colocar JWT em query string para contornar limitações de `EventSource`. Definir replay/cursor e alternativa por polling; a consulta de estado persistido continua sendo fonte de verdade. Reautenticar e revisar permissões em conexão longa e revogação.
+P10 confirma SSE autenticado para cozinha/aceite/mesas, com fallback por polling.
+A implementação da Sprint 3 está descrita abaixo; sua evidência local e as
+pendências de homologação ficam no checkpoint.
 
 ## Captura de identidade — candidato do ciclo 9
 
@@ -54,8 +56,33 @@ O ciclo 11 acrescenta mensagens `CONVITE` preparadas na transação administrati
 Primeiro consumidor de eventos no candidato: acompanhamento de unidade por
 polling autenticado, conforme [Acessos](11_ACCESS_CONTROL.md). Persistência local
 acompanha a transação e o cursor permite replay; não há transporte externo nem
-SSE implementado. A proposta SSE/polling de cozinha/aceite/mesas permanece para a
-Sprint 03, sem converter esta entrega cadastral em notificação operacional pronta.
+SSE nesse consumidor cadastral. Os streams operacionais da Sprint 3 são
+separados e não alteram seu contrato.
+
+## Streams e prazos operacionais — Sprint 3
+
+O frontend abre SSE com `fetch` e Bearer no header; token não integra URL nem
+cache. Cursor e página de eventos são os mesmos do polling de cinco segundos.
+Reconexão retoma o cursor; eventos invalidam o snapshot autorizado, sem repetir
+comandos de negócio. Entrega do evento não significa leitura do alerta.
+
+A API limita conexões simultâneas e duração do stream. Revalida sessão,
+permissões e unidade em cada consulta, encerra na expiração do token e libera a
+transação antes de escrever na conexão. Participantes usam a audiência de mesa,
+seu stream próprio e eventos mínimos da comanda. O cursor é exclusivo desse
+contexto, sem expor atividade de outras unidades ou clientes.
+
+Jobs PostgreSQL são executados no processo da API. Claim limitado usa lease de
+dois minutos; falha tem backoff de trinta segundos multiplicados pela tentativa,
+até cinco tentativas. Lease vencido pode ser retomado; esgotamento fica
+persistido como bloqueado, sem retry infinito. Não existe console operacional
+de desbloqueio nesta sprint. Reinício retoma vencimentos duráveis; unicidade e
+lock do pedido impedem alertas ou cancelamentos duplicados. Prazos de 120/300
+segundos são copiados ao pedido e preservados após alterações administrativas.
+
+Contratos: [eventos](api/eventos-operacionais.yaml), [pedidos](api/pedidos.yaml)
+e [mesas](api/mesas.yaml). Provedor financeiro, recebimento real, envio externo e
+monitoramento com responsáveis continuam pendentes nas sprints correspondentes.
 
 ## Documentos relacionados
 

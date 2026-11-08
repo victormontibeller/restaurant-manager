@@ -86,6 +86,27 @@ export class SessaoService {
     return this.enviar<T>(path, 'POST', arquivo);
   }
 
+  async abrirFluxo(path: string, signal: AbortSignal): Promise<Response> {
+    if (!this.access) throw new ApiFailure(401, 'Entre novamente para acompanhar.');
+    const geracao = this.geracao;
+    const access = this.access;
+    const response = await fetch(path, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      signal,
+      headers: { Accept: 'text/event-stream', Authorization: 'Bearer ' + access },
+    });
+    if (geracao !== this.geracao) {
+      await response.body?.cancel();
+      throw new ApiFailure(401, 'A sessão deste acompanhamento foi encerrada.');
+    }
+    if (!response.ok) {
+      if (response.status === 401 && access === this.access) this.limpar();
+      throw await this.erroComando(response);
+    }
+    return response;
+  }
+
   private async enviar<T>(
     path: string,
     method: string,

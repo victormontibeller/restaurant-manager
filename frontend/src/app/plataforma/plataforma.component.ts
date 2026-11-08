@@ -91,7 +91,7 @@ import { ProvisionamentoComponent } from './provisionamento.component';
         <button (click)="sair()" [disabled]="ocupado()">Sair da plataforma</button>
         <section aria-labelledby="estado-comercial-titulo">
           <h3 id="estado-comercial-titulo">Estado comercial da empresa</h3>
-          <p>Suspensão comercial preserva acesso às operações existentes e à reconciliação. Não revoga contas nem permite impersonação. Pedidos ainda não estão implementados.</p>
+          <p>Suspensão comercial bloqueia novas vendas e preserva consulta e resolução das operações existentes por usuários autorizados. Não revoga contas nem permite impersonação.</p>
           <form (submit)="consultar($event, empresaId.value)">
             <label for="saas-empresa-id">Identificador da empresa</label>
             <input

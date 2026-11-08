@@ -5,6 +5,7 @@ import { PlataformaComponent } from './app/plataforma/plataforma.component';
 import { VitrineComponent } from './app/catalogo/vitrine.component';
 import { PwaComponent } from './app/pwa/pwa.component';
 import { DisponibilidadeComponent } from './app/unidades/disponibilidade.component';
+import { ParticipanteMesaComponent } from './app/mesas/participante-mesa.component';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { DisponibilidadeComponent } from './app/unidades/disponibilidade.compone
     DisponibilidadeComponent,
     PwaComponent,
     VitrineComponent,
+    ParticipanteMesaComponent,
   ],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
@@ -24,7 +26,7 @@ import { DisponibilidadeComponent } from './app/unidades/disponibilidade.compone
     <main id="conteudo">
       <p class="eyebrow">AMBIENTE EM CONSTRUÇÃO</p>
       <h1>O cardápio do seu restaurante, na sua unidade.</h1>
-      <p>Escolha a unidade, conheça o cardápio e configure seu carrinho. Pedidos e pagamentos estarão disponíveis nas próximas etapas.</p>
+      <p>Escolha a unidade, configure seu carrinho e acompanhe o pedido. Na mesa, autorize sua participação com o código do atendimento.</p>
       <section aria-labelledby="saude">
         <h2 id="saude">Conexão com o sistema</h2>
         <p role="status" aria-live="polite">{{ mensagem() }}</p>
@@ -34,14 +36,15 @@ import { DisponibilidadeComponent } from './app/unidades/disponibilidade.compone
         <app-plataforma/>
       } @else {
         <app-disponibilidade/>
+        <app-participante-mesa/>
         <app-vitrine/>
         <app-identidade/>
       }
       <app-pwa/>
       <section aria-labelledby="escopo">
         <h2 id="escopo">O que você pode testar agora</h2>
-        <p>Catálogo, horários, favoritos e cálculo do carrinho com dados fictícios.</p>
-        <p>Nenhum pedido ou pagamento é aceito nesta versão. Não utilize dados pessoais reais.</p>
+        <p>Catálogo, pedidos, mesas e cozinha com dados fictícios. Delivery disponível somente em cenário controlado.</p>
+        <p>Pagamentos e entrega real ainda não estão disponíveis. Não utilize dados pessoais reais.</p>
       </section>
     </main>
     <footer>Ambiente restrito de testes · Sem operação comercial</footer>

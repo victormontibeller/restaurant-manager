@@ -1,0 +1,441 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — mesas, atendimentos e comandas
+  version: 0.1.0
+  description: >-
+    Sprint 3 local. Tenant resolvido pelo domínio; perfis empresariais e sessões
+    de participante usam audiências JWT distintas. Um atendimento ativo por mesa,
+    uma comanda por atendimento. Sem registro de recebimentos nesta entrega.
+    Alteração de estado, revogação, auditoria e eventos confirmam atomicamente.
+paths:
+  /api/v1/operacao/mesas:
+    get:
+      operationId: listarMesas
+      security: [{empresarial: []}]
+      description: Ação pedido.consultar na unidade; inclui recursos existentes de unidade inativa.
+      parameters:
+        - $ref: '#/components/parameters/Unidade'
+        - $ref: '#/components/parameters/Pagina'
+      responses:
+        '200':
+          description: Até cinquenta mesas; nunca retorna código ou identidade de participante
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Mesa'}
+        default: {$ref: '#/components/responses/Erro'}
+    post:
+      operationId: criarMesa
+      security: [{empresarial: []}]
+      description: >-
+        Administrador reautenticado, empresa/unidade ativas. id é a intenção
+        de criação. Replay com mesmo ator, unidade e nome original recupera
+        o cadastro atual, inclusive após edição; divergência retorna 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CriarMesa'}
+      responses:
+        '200': {$ref: '#/components/responses/Mesa'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/mesas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      operationId: alterarMesa
+      security: [{empresarial: []}]
+      description: >-
+        Administrador reautenticado; versão obrigatória. Não desativa mesa com
+        atendimento aberto. Alteração equivalente não avança versão.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlterarMesa'}
+      responses:
+        '200': {$ref: '#/components/responses/Mesa'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/mesas/{id}/abrir:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: abrirAtendimento
+      security: [{empresarial: []}]
+      description: >-
+        Exige pedido.criar_assistido, empresa/unidade/mesa ativas e canal MESA
+        aberto no horário. intencaoId é persistido com ator e mesa. Replay
+        recupera atendimento/comanda sem devolver o código novamente; divergência
+        retorna 409. Após perda de resposta, consultar mesas e gerar novo código.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [intencaoId]
+              properties:
+                intencaoId: {type: string, format: uuid}
+      responses:
+        '200': {$ref: '#/components/responses/Abertura'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/mesas/{id}/codigo:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: rotacionarCodigoMesa
+      security: [{empresarial: []}]
+      description: >-
+        Exige pedido.criar_assistido sobre operação existente e comanda ABERTA.
+        versao corresponde a atendimentoVersao da listagem. Novo código é
+        exibido uma vez, vence em doze horas e invalida o anterior. Participantes
+        já autorizados continuam válidos até logout, prazo absoluto ou fechamento.
+        Resultado incerto exige reconsulta de versão e nova rotação; não há GET de código.
+      requestBody: {$ref: '#/components/requestBodies/Versao'}
+      responses:
+        '200': {$ref: '#/components/responses/Abertura'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/mesas/solicitacoes:
+    get:
+      operationId: listarSolicitacoesMesa
+      security: [{empresarial: []}]
+      description: Exige mesa.atender na unidade; retorna solicitações sem identidade do participante.
+      parameters:
+        - $ref: '#/components/parameters/Unidade'
+        - $ref: '#/components/parameters/Pagina'
+      responses:
+        '200':
+          description: Até cinquenta solicitações, mais recentes primeiro
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Solicitacao'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/operacao/mesas/solicitacoes/{id}/atender:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: atenderSolicitacaoMesa
+      security: [{empresarial: []}]
+      description: Exige mesa.atender; registra ator e instante. Repetir atendimento concluído recupera o estado.
+      requestBody: {$ref: '#/components/requestBodies/Versao'}
+      responses:
+        '200': {$ref: '#/components/responses/Solicitacao'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/comandas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: consultarComandaOperacional
+      security: [{empresarial: []}]
+      description: >-
+        Exige ao menos uma ação financeira comanda.iniciar_fechamento,
+        comanda.concluir, recebimento.registrar ou financeiro.ajustar, na unidade.
+        pedido.consultar isolado não libera valores para a Cozinha.
+      responses:
+        '200': {$ref: '#/components/responses/Comanda'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/comandas/{id}/iniciar-fechamento:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: iniciarFechamentoComanda
+      security: [{empresarial: []}]
+      description: >-
+        Exige comanda.iniciar_fechamento e versão atual. ABERTA passa a EM_FECHAMENTO,
+        bloqueando novas rodadas. Preserva acompanhamento e autocancelamento elegível.
+        Repetição quando já EM_FECHAMENTO recupera estado, sem novo evento.
+      requestBody: {$ref: '#/components/requestBodies/Versao'}
+      responses:
+        '200': {$ref: '#/components/responses/Comanda'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/comandas/{id}/reabrir:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: reabrirComanda
+      security: [{empresarial: []}]
+      description: >-
+        Exige comanda.reabrir e versão atual; EM_FECHAMENTO passa a ABERTA somente
+        antes do primeiro recebimento confirmado. FECHADA não reabre.
+      requestBody: {$ref: '#/components/requestBodies/Versao'}
+      responses:
+        '200': {$ref: '#/components/responses/Comanda'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/comandas/{id}/concluir:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      operationId: concluirComanda
+      security: [{empresarial: []}]
+      description: >-
+        Exige comanda.concluir e versão atual. Somente EM_FECHAMENTO com pedidos
+        resolvidos, ambos os saldos zerados e nenhuma pendência financeira.
+        Fecha comanda, encerra atendimento e revoga todos os participantes.
+        A operação existente continua autorizável após suspensão comercial ou
+        inativação da unidade; revogação de usuário/ação/vínculo continua valendo.
+      requestBody: {$ref: '#/components/requestBodies/Versao'}
+      responses:
+        '200': {$ref: '#/components/responses/Comanda'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/auth/csrf:
+    get:
+      operationId: csrfMesa
+      security: []
+      responses:
+        '200':
+          description: >-
+            Token mascarado e nome do header. Cookie __Host-RM_MESA_CSRF é
+            Secure, HttpOnly, SameSite Strict, host-only, path /.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, headerName]
+                properties:
+                  token: {type: string}
+                  headerName: {type: string}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/auth/autorizar:
+    post:
+      operationId: autorizarParticipanteMesa
+      security: [{csrfCookie: [], csrfHeader: []}]
+      description: >-
+        QR identifica mesa; somente código temporário válido autoriza participante.
+        Nenhum e-mail/conta é exigido. Quotas duráveis em quinze minutos: trinta
+        por origem e cinco por origem/mesa. Origem é a conexão, sem confiar em
+        Forwarded. Código é aleatório, armazenado somente por hash e nunca em URL.
+        Falha não revela existência da mesa. CSRF é obrigatório mesmo com Bearer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mesaId, codigo]
+              properties:
+                mesaId: {type: string, format: uuid}
+                codigo: {type: string, pattern: '^[A-Z2-7]{10}$', writeOnly: true}
+      responses:
+        '200': {$ref: '#/components/responses/Access'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/auth/refresh:
+    post:
+      operationId: renovarSessaoMesa
+      security: [{refreshCookie: [], csrfCookie: [], csrfHeader: []}]
+      description: >-
+        Consome refresh e emite outro; reutilização revoga a família, inclusive
+        access JWT vigente. Prazo absoluto de doze horas não é estendido.
+        Atendimento encerrado ou sessão revogada/expirada retorna 401.
+      responses:
+        '200': {$ref: '#/components/responses/Access'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/auth/logout:
+    post:
+      operationId: encerrarSessaoMesa
+      security: [{refreshCookie: [], csrfCookie: [], csrfHeader: []}]
+      responses:
+        '204':
+          description: Sessão revogada no servidor e cookie de refresh removido
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/sessao:
+    get:
+      operationId: consultarSessaoMesa
+      security: [{participante: []}]
+      responses:
+        '200':
+          description: Vínculos da própria sessão, revalidados no banco
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Participante'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/comanda:
+    get:
+      operationId: consultarComandaParticipante
+      security: [{participante: []}]
+      responses:
+        '200': {$ref: '#/components/responses/Comanda'}
+        default: {$ref: '#/components/responses/Erro'}
+  /api/v1/mesa/solicitacoes:
+    post:
+      operationId: solicitarAtendimentoMesa
+      security: [{participante: []}]
+      description: >-
+        AJUDA ou CONTA na própria comanda. Pedido de conta não inicia fechamento.
+        Mesma intenção/participante/tipo recupera a solicitação; divergência 409.
+        Continua disponível durante EM_FECHAMENTO, sem liberar novas rodadas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [intencaoId, tipo]
+              properties:
+                intencaoId: {type: string, format: uuid}
+                tipo: {type: string, enum: [AJUDA, CONTA]}
+      responses:
+        '200': {$ref: '#/components/responses/Solicitacao'}
+        default: {$ref: '#/components/responses/Erro'}
+components:
+  securitySchemes:
+    empresarial: {type: http, scheme: bearer, bearerFormat: JWT empresarial}
+    participante: {type: http, scheme: bearer, bearerFormat: JWT com audiência restaurant-manager-mesa}
+    csrfCookie: {type: apiKey, in: cookie, name: __Host-RM_MESA_CSRF}
+    csrfHeader: {type: apiKey, in: header, name: X-XSRF-TOKEN}
+    refreshCookie: {type: apiKey, in: cookie, name: RM_MESA_REFRESH}
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    Unidade:
+      name: unidadeId
+      in: query
+      required: true
+      schema: {type: string, format: uuid}
+    Pagina:
+      name: pagina
+      in: query
+      schema: {type: integer, minimum: 0, maximum: 10000, default: 0}
+  requestBodies:
+    Versao:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [versao]
+            properties:
+              versao: {type: integer, format: int64, minimum: 0}
+  schemas:
+    Mesa:
+      type: object
+      required: [id, unidadeId, nome, ativa, versao, atendimentoId, comandaId, estadoComanda, atendimentoVersao]
+      properties:
+        id: {type: string, format: uuid}
+        unidadeId: {type: string, format: uuid}
+        nome: {type: string}
+        ativa: {type: boolean}
+        versao: {type: integer, format: int64}
+        atendimentoId: {type: [string, 'null'], format: uuid}
+        comandaId: {type: [string, 'null'], format: uuid}
+        estadoComanda: {type: [string, 'null'], enum: [ABERTA, EM_FECHAMENTO, FECHADA, null]}
+        atendimentoVersao: {type: [integer, 'null'], format: int64}
+    CriarMesa:
+      type: object
+      required: [id, unidadeId, nome]
+      properties:
+        id: {type: string, format: uuid}
+        unidadeId: {type: string, format: uuid}
+        nome: {type: string, minLength: 1, maxLength: 80}
+    AlterarMesa:
+      type: object
+      required: [versao, nome, ativa]
+      properties:
+        versao: {type: integer, format: int64, minimum: 0}
+        nome: {type: string, minLength: 1, maxLength: 80}
+        ativa: {type: boolean}
+    Abertura:
+      type: object
+      required: [atendimentoId, comandaId, mesaId, unidadeId, codigoTemporario, versao]
+      properties:
+        atendimentoId: {type: string, format: uuid}
+        comandaId: {type: string, format: uuid}
+        mesaId: {type: string, format: uuid}
+        unidadeId: {type: string, format: uuid}
+        codigoTemporario: {type: [string, 'null'], description: Somente resposta original da abertura ou rotação; não persistir no navegador}
+        versao: {type: integer, format: int64}
+    Comanda:
+      type: object
+      required: [id, unidadeId, atendimentoId, mesaId, mesaNome, estado, versao, totalDevido, pagoConfirmado, devolvidoConfirmado, saldoAReceber, saldoADevolver, pendenciaFinanceira]
+      properties:
+        id: {type: string, format: uuid}
+        unidadeId: {type: string, format: uuid}
+        atendimentoId: {type: string, format: uuid}
+        mesaId: {type: string, format: uuid}
+        mesaNome: {type: string}
+        estado: {type: string, enum: [ABERTA, EM_FECHAMENTO, FECHADA]}
+        versao: {type: integer, format: int64}
+        totalDevido: {$ref: '#/components/schemas/Valor'}
+        pagoConfirmado: {$ref: '#/components/schemas/Valor'}
+        devolvidoConfirmado: {$ref: '#/components/schemas/Valor'}
+        saldoAReceber: {$ref: '#/components/schemas/Valor'}
+        saldoADevolver: {$ref: '#/components/schemas/Valor'}
+        pendenciaFinanceira: {type: boolean}
+    Valor:
+      type: string
+      pattern: '^[0-9]+\.[0-9]{2}$'
+      description: Valor decimal BRL calculado no servidor
+    Participante:
+      type: object
+      required: [participanteId, sessaoId, empresaId, atendimentoId, comandaId, unidadeId]
+      properties:
+        participanteId: {type: string, format: uuid}
+        sessaoId: {type: string, format: uuid}
+        empresaId: {type: string, format: uuid}
+        atendimentoId: {type: string, format: uuid}
+        comandaId: {type: string, format: uuid}
+        unidadeId: {type: string, format: uuid}
+    Solicitacao:
+      type: object
+      required: [id, comandaId, mesaNome, tipo, estado, criadaEm, versao]
+      properties:
+        id: {type: string, format: uuid}
+        comandaId: {type: string, format: uuid}
+        mesaNome: {type: string}
+        tipo: {type: string, enum: [AJUDA, CONTA]}
+        estado: {type: string, enum: [PENDENTE, ATENDIDA]}
+        criadaEm: {type: string, format: date-time}
+        versao: {type: integer, format: int64}
+  responses:
+    Mesa:
+      description: Cadastro atual da mesa
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Mesa'}
+    Abertura:
+      description: Atendimento e comanda; código somente quando recém-gerado
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Abertura'}
+    Comanda:
+      description: Estado e saldo autorizado da comanda, sem identidade de participantes ou dados pessoais alheios
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Comanda'}
+    Solicitacao:
+      description: Solicitação e estado atuais
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Solicitacao'}
+    Access:
+      description: >-
+        Access JWT de até cinco minutos. Cookie RM_MESA_REFRESH de 256 bits,
+        HttpOnly/Secure/SameSite Strict, host-only, path /api/v1/mesa/auth.
+        Access permanece em memória; prazo absoluto de sessão é doze horas.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [accessToken, expiresIn]
+            properties:
+              accessToken: {type: string}
+              expiresIn: {type: integer, minimum: 1, maximum: 300}
+    Erro:
+      description: >-
+        400 estrutura inválida; 401 sessão/código inválido; 403 ação,
+        reautenticação ou CSRF ausente; 404 recurso alheio/inexistente;
+        409 versão/estado/intenção em conflito ou novas operações bloqueadas;
+        422 regra de mesa/horário/nome inválido; 429 quota de autorização excedida.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              codigo: {type: string}
+              mensagem: {type: string}
+              correlacao: {type: string}

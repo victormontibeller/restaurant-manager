@@ -18,6 +18,11 @@ const tests = [
   'test_catalog_cart.cjs',
   'test_catalog_media.cjs',
   'test_catalog_recovery.cjs',
+  'test_order_recovery.cjs',
+  'test_operational_events.cjs',
+  'test_mesa_context.cjs',
+  'test_mesa_pagination.cjs',
+  'test_snapshot_queue.cjs',
 ];
 
 for (const test of tests) {

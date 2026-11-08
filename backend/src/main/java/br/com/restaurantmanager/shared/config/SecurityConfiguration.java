@@ -3,6 +3,8 @@ package br.com.restaurantmanager.shared.config;
 import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.services.IdentidadeService;
 import br.com.restaurantmanager.shared.dtos.ApiError;
+import br.com.restaurantmanager.shared.filters.ErroSseDesconectadoFilter;
+import br.com.restaurantmanager.shared.security.DespachoErroSseMatcher;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
 import br.com.restaurantmanager.tenancy.filters.TenantFilter;
 import java.util.List;
@@ -73,7 +75,8 @@ public class SecurityConfiguration {
     SecurityFilterChain security(HttpSecurity http, ObjectMapper mapper, TenantFilter tenants, IdentidadeService identities) throws Exception {
         return common(http, mapper, tenants)
                 .csrf(c -> c.ignoringRequestMatchers("/api/v1/carrinho/calcular"))
-                .authorizeHttpRequests(a -> a.requestMatchers(
+                .authorizeHttpRequests(a -> a.requestMatchers(new DespachoErroSseMatcher()).permitAll()
+                        .requestMatchers(
                                 HttpMethod.GET,
                                 "/",
                                 "/index.html",
@@ -89,6 +92,28 @@ public class SecurityConfiguration {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/catalogo", "/api/v1/catalogo/*", "/api/v1/midias/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/carrinho/calcular").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/operacao/unidades-existentes", "/api/v1/eventos", "/api/v1/eventos/stream",
+                                "/api/v1/me/pedidos", "/api/v1/me/pedidos/*", "/api/v1/me/pedidos/intencoes/*",
+                                "/api/v1/operacao/pedidos", "/api/v1/operacao/pedidos/*", "/api/v1/operacao/pedidos/intencoes/*",
+                                "/api/v1/cozinha", "/api/v1/operacao/mesas", "/api/v1/operacao/mesas/solicitacoes",
+                                "/api/v1/comandas/*", "/api/v1/configuracoes/prazos-aceite",
+                                "/api/v1/configuracoes/unidades/*/prazos-aceite").authenticated()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/pedidos", "/api/v1/operacao/pedidos",
+                                "/api/v1/me/pedidos/*/cancelar", "/api/v1/me/pedidos/*/solicitar-cancelamento",
+                                "/api/v1/operacao/pedidos/*/aceitar", "/api/v1/operacao/pedidos/*/recusar",
+                                "/api/v1/operacao/pedidos/*/cancelar", "/api/v1/operacao/pedidos/*/servir",
+                                "/api/v1/operacao/pedidos/*/solicitacoes/*/aprovar",
+                                "/api/v1/operacao/pedidos/*/solicitacoes/*/rejeitar",
+                                "/api/v1/cozinha/pedidos/*/iniciar", "/api/v1/cozinha/pedidos/*/concluir",
+                                "/api/v1/operacao/mesas", "/api/v1/operacao/mesas/*/abrir", "/api/v1/operacao/mesas/*/codigo",
+                                "/api/v1/operacao/mesas/solicitacoes/*/atender",
+                                "/api/v1/comandas/*/iniciar-fechamento", "/api/v1/comandas/*/reabrir", "/api/v1/comandas/*/concluir")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/operacao/mesas/*", "/api/v1/configuracoes/prazos-aceite",
+                                "/api/v1/configuracoes/unidades/*/prazos-aceite").authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/v1/gestao/catalogo/categorias",
@@ -152,6 +177,7 @@ public class SecurityConfiguration {
     private HttpSecurity common(HttpSecurity http, ObjectMapper mapper, TenantFilter tenants) throws Exception {
         return http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(tenants, SecurityContextHolderFilter.class)
+                .addFilterBefore(new ErroSseDesconectadoFilter(), TenantFilter.class)
                 .exceptionHandling(e -> e.authenticationEntryPoint((request, response, exception) -> {
                     response.setStatus(401);
                     response.setContentType("application/json");

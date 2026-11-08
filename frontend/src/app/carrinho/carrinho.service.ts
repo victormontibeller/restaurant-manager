@@ -24,7 +24,7 @@ export class CarrinhoService {
       this.invalidar(
         navigator.onLine
           ? 'Conexão restabelecida. Confira os itens e recalcule o resumo.'
-          : 'Sem conexão. O resumo foi invalidado; nenhum pedido foi criado.',
+          : 'Sem conexão. O resumo foi invalidado; consulte o resultado de qualquer envio pendente antes de tentar novamente.',
       );
     };
     const timer = setInterval(() => {
@@ -89,6 +89,12 @@ export class CarrinhoService {
   remover(id: string): void {
     this.itens.update((itens) => itens.filter((item) => item.linha.id !== id));
     this.invalidar('Item removido. Recalcule os itens restantes.');
+  }
+
+  concluirPedido(revisao: string): void {
+    if (this.resumo()?.revisao !== revisao) return;
+    this.itens.set([]);
+    this.invalidar('Pedido confirmado pelo servidor. Acompanhe seu pedido abaixo.');
   }
 
   async calcular(confirmar = false): Promise<void> {

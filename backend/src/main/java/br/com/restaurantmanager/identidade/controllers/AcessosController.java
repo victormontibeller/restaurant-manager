@@ -66,4 +66,9 @@ public class AcessosController {
     public UnidadePermitida unidade(@AuthenticationPrincipal IdentidadeAtual ator, @PathVariable UUID id) {
         return service.unidade(ator, id);
     }
+
+    @GetMapping("/api/v1/operacao/unidades-existentes")
+    public List<UnidadePermitida> unidadesExistentes(@AuthenticationPrincipal IdentidadeAtual ator) {
+        return service.unidadesParaOperacoesExistentes(ator);
+    }
 }

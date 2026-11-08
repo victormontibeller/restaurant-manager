@@ -13,6 +13,8 @@ import { EventosUnidadeComponent } from '../unidades/eventos-unidade.component';
 import { GestaoCatalogoComponent } from '../catalogo/gestao-catalogo.component';
 import { CatalogoPendenteService } from '../catalogo/catalogo-pendente.service';
 import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
+import { MeusPedidosComponent } from '../pedidos/meus-pedidos.component';
+import { OperacaoPedidosComponent } from '../pedidos/operacao-pedidos.component';
 
 @Component({
   selector: 'app-identidade',
@@ -26,6 +28,8 @@ import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
     VerificacaoComponent,
     EventosUnidadeComponent,
     GestaoCatalogoComponent,
+    MeusPedidosComponent,
+    OperacaoPedidosComponent,
   ],
   template: `
     <section
@@ -41,7 +45,12 @@ import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
         }
         <p>Acesso autenticado. Os recursos disponíveis respeitam seu perfil e suas unidades.</p>
         <button type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
+        @if (pessoa.perfil === 'CLIENTE') {
+          <app-meus-pedidos/>
+        }
         @if (pessoa.perfil !== 'CLIENTE') {
+          <button type="button" (click)="operacao.set(!operacao())" [attr.aria-expanded]="operacao()">Operar pedidos e mesas</button>
+          @if (operacao()) { <app-operacao-pedidos/> }
           <button
             type="button"
             (click)="acompanhar.set(!acompanhar())"
@@ -207,6 +216,7 @@ export class IdentidadeComponent {
   readonly convite = signal(false);
   readonly verificacao = signal(false);
   readonly acompanhar = signal(false);
+  readonly operacao = signal(false);
   readonly configuracao = signal<'acessos' | 'unidades' | 'convites' | 'catalogo'>('acessos');
   readonly configuracaoBloqueada = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
@@ -267,6 +277,7 @@ export class IdentidadeComponent {
   }
 
   private prepararConta(): void {
+    this.operacao.set(false);
     this.acompanhar.set(false);
     const pessoa = this.sessao.identidade();
     const pendente = !!(pessoa && this.pendencias.daConta(pessoa.usuarioId)());

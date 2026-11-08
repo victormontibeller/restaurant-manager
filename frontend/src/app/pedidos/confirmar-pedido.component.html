@@ -1,0 +1,106 @@
+<section aria-labelledby="enviar-pedido-titulo" [attr.aria-busy]="carregandoMesas()">
+  <h3 id="enviar-pedido-titulo">Enviar pedido</h3>
+  @if (!sessao.identidade() && !sessaoMesa.participante()) {
+    <p>Entre em sua conta para delivery/retirada ou autorize sua participação na mesa.</p>
+  } @else {
+    @if (assistido() && !acoes().includes('pedido.criar_assistido')) {
+      <p>Sua política atual não permite criar pedidos assistidos.</p>
+    }
+    @if (carrinho.contexto()?.canal === 'MESA') {
+      @if (tipoMesa()) {
+        <p>
+          A rodada será vinculada à sua participação no atendimento. Apenas suas rodadas podem ser
+          canceladas por você.
+        </p>
+      } @else if (assistido()) {
+        <label for="comanda-pedido-assistido">Comanda do pedido assistido</label>
+        <select
+          id="comanda-pedido-assistido"
+          #comanda
+          [value]="comandaId"
+          (change)="comandaId = comanda.value"
+          [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+        >
+          <option value="">Selecione uma mesa com comanda aberta</option>
+          @for (mesa of mesas(); track mesa.id) {
+            <option [value]="mesa.comandaId">{{ mesa.nome }}</option>
+          }
+        </select>
+        <nav aria-label="Páginas de mesas para pedido assistido" class="acoes">
+          <button
+            (click)="carregarMesas(paginaMesas() - 1)"
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || paginaMesas() === 0"
+          >
+            Mesas anteriores para pedido assistido
+          </button>
+          <span role="status">Página de mesas {{ paginaMesas() + 1 }}</span>
+          <button
+            (click)="carregarMesas(paginaMesas() + 1)"
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || !maisMesas()"
+          >
+            Próximas mesas para pedido assistido
+          </button>
+        </nav>
+        <p role="status" class="status-consulta">
+          <span class="status-reserva" aria-hidden="true">
+            Nenhuma comanda aberta nesta página. Consulte as próximas mesas, se disponíveis.
+          </span>
+          <span>
+            @if (carregandoMesas()) {
+              Atualizando mesas para o pedido assistido.
+            } @else if (mesas().length === 0) {
+              Nenhuma comanda aberta nesta página. Consulte as próximas mesas, se disponíveis.
+            }
+          </span>
+        </p>
+      } @else {
+        <p>Use o código temporário fornecido pela equipe para autorizar a mesa.</p>
+      }
+    }
+    @if (carrinho.contexto()?.canal === 'DELIVERY') {
+      <p class="aviso">
+        Delivery de teste · taxa R$ 0,00 · sem validação de região. Endereço fictício; entrega real
+        ainda não disponível.
+      </p>
+    }
+    <label for="observacao-pedido">Observação de preparo</label>
+    <textarea
+      id="observacao-pedido"
+      #observacoes
+      maxlength="500"
+      [value]="observacao"
+      (input)="observacao = observacoes.value"
+      [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+    ></textarea>
+    <p>
+      O envio depende da confirmação do servidor. Pedidos de delivery/retirada aguardam aceite; mesa
+      autorizada segue para a cozinha.
+    </p>
+    @if (envio.pendente(tipoMesa())) {
+      <p class="aviso" role="status">
+        Envio sem confirmação. Os dados originais foram preservados nesta aba. Consulte antes de
+        repetir; recarregar a página perde este rascunho.
+      </p>
+      <div class="acoes">
+        <button (click)="reconciliar()" [disabled]="envio.ocupado() || !carrinho.online()">
+          Consultar resultado do envio
+        </button>
+        @if (podeReenviar()) {
+          <button (click)="reenviar()" [disabled]="envio.ocupado() || !carrinho.online()">
+            Reenviar a mesma intenção
+          </button>
+        }
+      </div>
+    } @else {
+      <button (click)="enviar()" [disabled]="!podeEnviar()">
+        {{ envio.ocupado() ? 'Confirmando envio…' : assistido() ? 'Enviar pedido assistido' : tipoMesa() ? 'Enviar rodada para a cozinha' : 'Enviar pedido para aceite' }}
+      </button>
+    }
+  }
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (confirmado(); as pedido) {
+    <p role="status">Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.</p>
+  }
+</section>

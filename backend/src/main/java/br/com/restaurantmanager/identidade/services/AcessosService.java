@@ -9,6 +9,7 @@ import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.models.Acao;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.identidade.models.PoliticaAcesso;
+import br.com.restaurantmanager.identidade.models.Sessao;
 import br.com.restaurantmanager.identidade.models.Usuario;
 import br.com.restaurantmanager.identidade.repositories.AcessosRepository;
 import br.com.restaurantmanager.unidades.models.Unidade;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,11 +176,46 @@ public class AcessosService {
         }
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void bloquearPoliticaOperacional() {
+        repository.politica(false);
+    }
+
+    /** Inativar uma unidade impede novas vendas, mas não abandona sua operação existente. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void autorizarOperacaoExistente(IdentidadeAtual ator, Acao acao, UUID unidade) {
+        repository.politica(false);
+        Usuario usuario = funcionario(ator);
+        if (!acao.escopo().equals("UNIDADE")) {
+            throw invalido("Informe uma ação operacional da unidade.");
+        }
+        if (!usuario.getPerfil().equals("ADMINISTRADOR")
+                && !repository.permissoes(usuario.getPerfil()).contains(acao.codigo())) {
+            throw negado();
+        }
+        if (unidade == null || unidadesExistentesDo(usuario).stream().noneMatch(u -> u.id().equals(unidade))) {
+            throw inexistente();
+        }
+    }
+
+    @Transactional
+    public List<UnidadePermitida> unidadesParaOperacoesExistentes(IdentidadeAtual ator) {
+        repository.politica(false);
+        return unidadesExistentesDo(funcionario(ator));
+    }
+
+    private List<UnidadePermitida> unidadesExistentesDo(Usuario usuario) {
+        var permitidas = repository.unidades(usuario.getId());
+        return repository.unidadesExistentes().stream()
+                .filter(u -> usuario.getPerfil().equals("ADMINISTRADOR") || permitidas.contains(u.getId()))
+                .map(u -> new UnidadePermitida(u.getId(), u.getNome(), u.getFuso())).toList();
+    }
+
     private Usuario usuarioAtual(IdentidadeAtual ator) {
         if (ator == null || !ator.empresaId().equals(IdentidadeService.empresaAtual())) {
             throw AuthFailure.invalid();
         }
-        var session = repository.sessao(ator.sessaoId());
+        var session = sessaoAtual(ator.sessaoId());
         var user = repository.usuario(ator.usuarioId());
         if (session == null || !session.getUsuarioId().equals(ator.usuarioId()) || !session.valida(Instant.now()) || user == null || !user.isAtivo()) {
             throw AuthFailure.invalid();
@@ -194,12 +231,21 @@ public class AcessosService {
         return user;
     }
 
+    private Sessao sessaoAtual(UUID id) {
+        try {
+            return repository.sessao(id);
+        } catch (ObjectOptimisticLockingFailureException erro) {
+            // A leitura do snapshot de sessão conflitou; lock/deadlock têm tipos distintos.
+            throw new AuthFailure(409, "SESSAO_ALTERADA", "A sessão mudou durante a consulta. Atualize antes de continuar.");
+        }
+    }
+
     private void administrador(IdentidadeAtual ator, boolean sensivel) {
         if (!funcionario(ator).getPerfil().equals("ADMINISTRADOR")) {
             throw negado();
         }
         if (sensivel) {
-            Instant reautenticada = repository.sessao(ator.sessaoId()).getReautenticadaEm();
+            Instant reautenticada = sessaoAtual(ator.sessaoId()).getReautenticadaEm();
             if (reautenticada == null || reautenticada.isBefore(Instant.now().minusSeconds(300))) {
                 throw new AuthFailure(403, "REAUTENTICACAO_NECESSARIA", "Confirme sua senha antes de alterar acessos.");
             }

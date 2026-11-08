@@ -1,0 +1,95 @@
+<section aria-labelledby="participante-mesa-titulo">
+  <h2 id="participante-mesa-titulo">Participar de uma mesa</h2>
+  @if (!sessao.participante()) {
+    <p>
+      Abra o link do QR da mesa e informe o código temporário fornecido pela equipe. Não é
+      necessário criar conta.
+    </p>
+    <form (submit)="entrar($event, codigo)">
+      <label for="identificador-mesa">Identificador da mesa</label>
+      <input
+        id="identificador-mesa"
+        #mesa
+        [value]="mesaId"
+        (input)="mesaId = mesa.value"
+        required
+        maxlength="36"
+        autocomplete="off"
+        [disabled]="ocupado()"
+      />
+      <label for="codigo-mesa">Código temporário do atendimento</label>
+      <input
+        id="codigo-mesa"
+        #codigo
+        required
+        maxlength="100"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+        [disabled]="ocupado()"
+      />
+      <button type="submit" [disabled]="ocupado() || encerramentoPendente()">
+        Autorizar participação na mesa
+      </button>
+    </form>
+  } @else {
+    <p>
+      Sua participação está autorizada apenas neste atendimento. Escolha a unidade da mesa e o canal
+      Mesa no cardápio para enviar uma rodada.
+    </p>
+    <button (click)="sair()" [disabled]="ocupado()">Sair da mesa</button>
+    @if (comanda(); as conta) {
+      <h3>{{ conta.mesaNome }} · Comanda {{ nomeEstado(conta.estado) }}</h3>
+      @if (conta.estado === 'EM_FECHAMENTO') {
+        <p class="aviso">
+          A equipe iniciou o fechamento. Novas rodadas estão bloqueadas; você pode acompanhar as
+          anteriores.
+        </p>
+      }
+      <dl>
+        <dt>Total do atendimento</dt>
+        <dd>{{ moeda(conta.totalDevido) }}</dd>
+        <dt>Saldo a receber</dt>
+        <dd>{{ moeda(conta.saldoAReceber) }}</dd>
+        <dt>Saldo a devolver</dt>
+        <dd>{{ moeda(conta.saldoADevolver) }}</dd>
+      </dl>
+      <p>
+        Resumo compartilhado, sem divisão por pessoa. Pagamentos ainda não são registrados nesta
+        versão.
+      </p>
+      <div class="acoes">
+        <button (click)="solicitar('AJUDA')" [disabled]="ocupado() || !!intencao()">
+          Pedir ajuda à equipe
+        </button>
+        <button
+          (click)="solicitar('CONTA')"
+          [disabled]="ocupado() || !!intencao() || conta.estado !== 'ABERTA'"
+        >
+          Solicitar a conta
+        </button>
+      </div>
+      @if (intencao()) {
+        <p class="aviso">Solicitação sem confirmação. Repetir conserva o mesmo identificador.</p>
+        <button (click)="repetirSolicitacao()" [disabled]="ocupado()">
+          Recuperar solicitação enviada
+        </button>
+      }
+    }
+    <p role="status">
+      {{ acompanhamento.estado() }} Última atualização:
+      {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+    </p>
+    <button (click)="consultar()" [disabled]="ocupado()">Consultar comanda da mesa</button>
+    <app-meus-pedidos [mesa]="true" />
+  }
+  @if (encerramentoPendente()) {
+    <button (click)="sair()" [disabled]="ocupado()">Tentar encerrar participação novamente</button>
+  }
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

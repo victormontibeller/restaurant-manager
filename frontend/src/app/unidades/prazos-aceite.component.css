@@ -1,0 +1,11 @@
+.selecao {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+}
+.selecao input {
+  flex: 0 0 1.4rem;
+  width: 1.4rem;
+  min-height: 1.4rem;
+}

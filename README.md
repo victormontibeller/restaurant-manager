@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação, Sprint 01 e revisão pré-Sprint 2 integradas em `main` pelos PRs #3 e #4. A CI da revisão passou; sua homologação operacional continua pendente. A Sprint 2 tem implementação e testes locais concluídos de horários, catálogo, combos, mídia, favoritos, cálculo do carrinho e PWA, conforme o [plano](docs/16_SPRINT_02.md); sua homologação permanece pendente. A organização por domínio foi preservada. Pedidos e pagamentos pertencem às próximas sprints. Versões, testes e pendências ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação e Sprints 1–2 integradas em `main`. A [Sprint 3](docs/17_SPRINT_03.md) implementa pedidos, mesas/comandas, cozinha e eventos, com implementação e revisão concluídas localmente e organização por domínio preservada. Pagamentos reais e expedição pertencem à Sprint 4. Linux e homologação permanecem pendentes. Versões, testes e limitações ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -80,7 +80,7 @@ Formulários/foco/erros locais: `node scripts/test_identity_forms.cjs`.
 Usa os componentes/templates Angular reais com API fictícia em memória, não E2E.
 O probe JIT de formulários testa o handler de retorno; emissão de `output()`
 no template compilado é verificada pelos E2E. `scripts/test-profile-templates.sh`
-executa os probes de perfil, identidade e funcionamento nos três motores durante o build.
+executa os probes de perfil, identidade, funcionamento e navegação de mesas nos três motores durante o build.
 Exige browser Playwright instalado; `RM_TEMPLATE_BROWSER=chromium|firefox|webkit`
 seleciona o motor, Chromium por padrão. A configuração privada de browsers/libs
 é a mesma do E2E; WebKit aceita o wrapper local em `RM_WEBKIT_EXECUTABLE`.
@@ -97,9 +97,16 @@ aceita `RM_TEST_TLS_SPKI`, SHA-256 em base64 da chave pública desse certificado
 A exceção fica restrita a essa chave no navegador de testes; não altera TLS
 da aplicação nem a configuração de homologação.
 
+A Sprint 3 usa `playwright.pedidos.config.ts`, com `RM_PEDIDOS_FIXTURE` privado
+e `RM_BASE_URL` apontando ao runtime HTTPS do projeto. A massa contém duas
+unidades, Administrador, cinco perfis operacionais e dois clientes fictícios;
+o formato é validado em `frontend/e2e-pedidos/apoio.ts`. Execute com um worker,
+sem retries e com quotas reais preservadas. A [evidência local](docs/evidencias/sprint-03-local-2026-11-07.md)
+separa API/PostgreSQL reais, falhas de transporte injetadas, emulação e pendências.
+
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
-A missão anterior do Hermes encerrou a Sprint 01 e preparou a passagem para Codex/Mac. Em 2026-11-06, o proprietário confirmou as premissas e orientou desenvolver a Sprint 2 localmente, deixando o acesso Linux para depois. Homologação exige seus gates; produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade. O [guia](docs/24_AGENT_EXECUTION.md) e o checkpoint registram a autorização e a retomada.
+A missão anterior do Hermes encerrou a Sprint 01 e preparou a passagem para Codex/Mac. O proprietário autorizou as Sprints 2 e 3 localmente, mantendo Linux e homologação pendentes. Homologação exige seus gates; produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade. O [guia](docs/24_AGENT_EXECUTION.md) e o checkpoint registram a autorização e a retomada.
 
 ### Provisionamento local em desenvolvimento/testes
 

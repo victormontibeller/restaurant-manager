@@ -1,0 +1,33 @@
+<section class="painel-interno" aria-labelledby="cozinha-titulo">
+  <h3 id="cozinha-titulo">Cozinha · unidades de produção</h3>
+  <p>
+    Selecione as unidades completas para iniciar ou concluir. Começar qualquer componente inicia o
+    combo inteiro.
+  </p>
+  <p role="status">
+    {{ acompanhamento.estado() }} Última atualização:
+    {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+  </p>
+  <button (click)="carregar()" [disabled]="ocupado()">Atualizar cozinha</button>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @for (pedido of pedidos(); track pedido.id) {
+    <app-pedido-detalhe
+      [pedido]="pedido"
+      contexto="cozinha"
+      [acoes]="acoes()"
+      (atualizar)="carregar()"
+    />
+  } @empty {
+    <p>Nenhum pedido autorizado na fila desta unidade.</p>
+  }
+  <div class="acoes">
+    <button (click)="navegar(pagina() - 1)" [disabled]="ocupado() || pagina() === 0">
+      Página anterior da cozinha
+    </button>
+    <button (click)="navegar(pagina() + 1)" [disabled]="ocupado() || !mais()">
+      Próxima página da cozinha
+    </button>
+  </div>
+</section>

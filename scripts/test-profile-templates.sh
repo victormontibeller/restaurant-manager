@@ -12,4 +12,5 @@ for browser in chromium firefox webkit; do
   RM_TEMPLATE_BROWSER="$browser" node scripts/test_profile_selects.cjs
   RM_TEMPLATE_BROWSER="$browser" node scripts/test_identity_forms.cjs
   RM_TEMPLATE_BROWSER="$browser" node scripts/test_unit_schedule_templates.cjs
+  RM_TEMPLATE_BROWSER="$browser" node scripts/test_mesa_navigation_templates.cjs
 done

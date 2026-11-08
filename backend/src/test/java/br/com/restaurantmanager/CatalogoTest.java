@@ -4,6 +4,8 @@ import static br.com.restaurantmanager.CatalogoCenario.OUTRA_UNIDADE;
 import static br.com.restaurantmanager.CatalogoCenario.UNIDADE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import br.com.restaurantmanager.catalogo.dtos.Adicional;
 import br.com.restaurantmanager.catalogo.dtos.Categoria;
@@ -11,16 +13,28 @@ import br.com.restaurantmanager.catalogo.dtos.Grupo;
 import br.com.restaurantmanager.catalogo.dtos.Opcao;
 import br.com.restaurantmanager.catalogo.dtos.Produto;
 import br.com.restaurantmanager.catalogo.models.TipoProduto;
+import jakarta.servlet.http.Cookie;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -279,50 +293,100 @@ class CatalogoTest {
     }
 
     @Test
-    void logoutDuranteEsperaDoCatalogoImpedeEscritaMesmoAposPrimeiraAutorizacao() throws Exception {
+    void logoutAguardaEscritaDoCatalogoQueJaFoiAutorizada() throws Exception {
         var produto = c.produto(c.categoria("Principal"), "Prato", List.of(), List.of());
-        try (var conexao = c.banco(); var pool = Executors.newSingleThreadExecutor()) {
-            conexao.setAutoCommit(false);
-            try (var sql = conexao.createStatement()) {
-                sql.execute("select versao from " + c.schema + ".catalogo_revisao where id=1 for update");
-            }
-            var escrita = pool.submit(() -> c.enviar("PUT", c.oferta(produto.id(), UNIDADE), c.token, oferta(0, "10.00")).getStatus());
-            try {
-                assertThatThrownBy(() -> escrita.get(1, TimeUnit.SECONDS)).isInstanceOf(TimeoutException.class);
-                try (var sql = conexao.createStatement()) {
-                    sql.execute("update " + c.schema + ".sessao set revogada_em=now()");
-                }
-            } finally {
-                conexao.commit();
-            }
-            assertThat(escrita.get(20, TimeUnit.SECONDS)).isEqualTo(401);
+        confirmarAntesDoLogout(c.token,
+                "select versao from " + c.schema + ".catalogo_revisao where id=1 for update",
+                () -> c.enviar("PUT", c.oferta(produto.id(), UNIDADE), c.token, oferta(0, "10.00")).getStatus(), 200);
+        assertThat(c.contar("produto_unidade")).isEqualTo(1);
+        assertThat(c.contar("auditoria_catalogo")).isEqualTo(3);
+        assertThat(c.enviar("PUT", c.oferta(produto.id(), UNIDADE), c.token, oferta(1, "11.00")).getStatus()).isEqualTo(401);
+        assertThat(c.contar("produto_unidade")).isEqualTo(1);
+        assertThat(c.contar("auditoria_catalogo")).isEqualTo(3);
+        try (var conexao = c.banco(); var sql = conexao.createStatement();
+                var linhas = sql.executeQuery("select preco::text,versao from " + c.schema + ".produto_unidade where produto_id='"
+                        + produto.id() + "' and unidade_id='" + UNIDADE + "'")) {
+            assertThat(linhas.next()).isTrue();
+            assertThat(linhas.getBigDecimal(1)).isEqualByComparingTo("10.00");
+            assertThat(linhas.getLong(2)).isEqualTo(1);
         }
-        assertThat(c.contar("produto_unidade")).isZero();
-        assertThat(c.contar("auditoria_catalogo")).isEqualTo(2);
     }
 
     @Test
-    void favoritosRevalidamSessaoAposEsperaDoLockDoTitular() throws Exception {
+    void logoutAguardaFavoritoQueJaFoiAutorizado() throws Exception {
         var produto = c.produto(c.categoria("Principal"), "Prato", List.of(), List.of());
         UUID usuario = c.usuario("CLIENTE");
         String access = c.login(usuario);
-        try (var conexao = c.banco(); var pool = Executors.newSingleThreadExecutor()) {
-            conexao.setAutoCommit(false);
-            try (var sql = conexao.createStatement()) {
-                sql.execute("select pg_advisory_xact_lock(hashtextextended('favoritos:" + usuario + "',0))");
+        String rota = "/api/v1/clientes/me/favoritos/" + produto.id();
+        confirmarAntesDoLogout(access,
+                "select pg_advisory_xact_lock(hashtextextended('favoritos:" + usuario + "',0))",
+                () -> c.enviar("PUT", rota, access, null).getStatus(), 204);
+        assertThat(c.contar("favorito")).isEqualTo(1);
+        assertThat(c.enviar("DELETE", rota, access, null).getStatus()).isEqualTo(401);
+        assertThat(c.contar("favorito")).isEqualTo(1);
+    }
+
+    private void confirmarAntesDoLogout(String access, String trava, Callable<Integer> acao, int status) throws Exception {
+        String sessao = c.json(c.enviar("GET", "/api/v1/auth/me", access, null)).get("sessaoId").asText();
+        byte[] bytes = new byte[32];
+        new SecureRandom().nextBytes(bytes);
+        String refresh = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(refresh.getBytes(StandardCharsets.UTF_8)));
+        // Refresh fictício identificado, vinculado à sessão real usada nesta disputa.
+        c.executar("insert into " + c.schema + ".refresh_token(hash,sessao_id) values ('" + hash + "','" + sessao + "')");
+        try (var bloqueador = c.banco(); var pool = Executors.newFixedThreadPool(2)) {
+            bloqueador.setAutoCommit(false);
+            try (var sql = bloqueador.createStatement()) {
+                sql.execute(trava);
             }
-            var escrita = pool.submit(() -> c.enviar("PUT", "/api/v1/clientes/me/favoritos/" + produto.id(), access, null).getStatus());
+            var escrita = pool.submit(acao);
             try {
-                assertThatThrownBy(() -> escrita.get(1, TimeUnit.SECONDS)).isInstanceOf(TimeoutException.class);
-                try (var sql = conexao.createStatement()) {
-                    sql.execute("update " + c.schema + ".sessao set revogada_em=now() where usuario_id='" + usuario + "'");
-                }
+                int operacao = aguardarBloqueio(pid(bloqueador), escrita);
+                assertThat(operacao).as("A escrita precisa aguardar o agregado após autorizar a sessão.").isPositive();
+                var logout = pool.submit(() -> logout(refresh));
+                assertThat(aguardarBloqueio(operacao, logout))
+                        .as("Logout deve aguardar a sessão da escrita já autorizada.").isPositive();
+                assertThat(logout.isDone()).isFalse();
+                bloqueador.commit();
+                assertThat(escrita.get(15, TimeUnit.SECONDS)).isEqualTo(status);
+                assertThat(logout.get(15, TimeUnit.SECONDS)).isEqualTo(204);
             } finally {
-                conexao.commit();
+                bloqueador.rollback();
             }
-            assertThat(escrita.get(20, TimeUnit.SECONDS)).isEqualTo(401);
         }
-        assertThat(c.contar("favorito")).isZero();
+    }
+
+    private int logout(String refresh) throws Exception {
+        var csrf = mvc.perform(get("/api/v1/auth/csrf").header("Host", c.host)).andReturn().getResponse();
+        var dados = c.json(csrf);
+        return mvc.perform(post("/api/v1/auth/logout").header("Host", c.host)
+                        .cookie(csrf.getCookie("__Host-RM_CSRF"), new Cookie("RM_REFRESH", refresh))
+                        .header(dados.get("headerName").asText(), dados.get("token").asText()))
+                .andReturn().getResponse().getStatus();
+    }
+
+    private int pid(Connection conexao) throws Exception {
+        try (var sql = conexao.createStatement(); var linhas = sql.executeQuery("select pg_backend_pid()")) {
+            linhas.next();
+            return linhas.getInt(1);
+        }
+    }
+
+    private int aguardarBloqueio(int bloqueador, Future<?> requisicao) throws Exception {
+        Instant limite = Instant.now().plusSeconds(10);
+        try (var observador = c.banco(); var sql = observador.prepareStatement(
+                "select pid from pg_stat_activity where datname=current_database() and usename='rm_test_app' "
+                        + "and ?=any(pg_blocking_pids(pid))")) {
+            sql.setInt(1, bloqueador);
+            while (Instant.now().isBefore(limite)) {
+                try (var linhas = sql.executeQuery()) {
+                    if (linhas.next()) return linhas.getInt(1);
+                }
+                if (requisicao.isDone()) return 0;
+                LockSupport.parkNanos(Duration.ofMillis(10).toNanos());
+            }
+        }
+        throw new AssertionError("A requisição não atingiu a barreira PostgreSQL em dez segundos.");
     }
 
     @Test

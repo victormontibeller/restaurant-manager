@@ -1,5 +1,111 @@
 # Checkpoint de execução
 
+## Sprint 3 — revisão concluída localmente, 2026-11-07
+
+Implementação e revisão local concluídas na branch
+`codex/sprint-03-pedidos-mesas-cozinha`, sobre a base
+`d9fde9968ab2ce154abecffe66e171788aae1770`, reconferida em `origin/main`.
+Commit, push e abertura do PR autorizados e em preparação. Merge e deploy
+não fazem parte desta solicitação; Linux/Hermes e homologação seguem pendentes.
+
+Pedidos, mesas/comandas, cozinha, cobranças/ajustes e eventos implementados
+com organização por domínio. V17–V21 novas; 22 migrations anteriores idênticas
+à base. Dez achados de revisão corrigidos, incluindo autorização concorrente,
+replay, cancelamentos, paginação, foco/layout, erros de ação e recuperação de
+alerta vencido. Fontes canônicas, contratos e [inventário de cobertura](evidencias/cobertura.md)
+reconciliados. A [evidência da revisão](evidencias/revisao-final-sprint-03-2026-11-07.md)
+preserva falhas, diagnósticos e reexecuções, sem aprovar resultados parciais.
+
+**JAR final:** `d41d3bd2fe429b696064832944626ce97af64151b3292462c85083d1a7df1e9d`.
+**365 testes backend/54 XML e 360 pares únicos de navegador aprovados**
+(65 Sprint 3 + 295 regressão), sem falhas, erros, skips, retries ou instabilidade
+nas seleções finais. JDK 21, PostgreSQL real e roles separadas; original
+preservado durante a regressão em clone próprio. 481 insumos conferidos no
+verify; matriz no mesmo JAR/PID, com 378 fontes/configurações e harness congelados.
+
+Formatação, tipos, 19 grupos de lógica (18 casos de mesas e seis de contexto),
+12 combinações de templates e build/PWA aprovados. Os checks frontend anteriores
+permanecem evidência dos mesmos bytes, sem declarar repetição: nove estáticos
+idênticos entre JAR13 arquivado, dist e JAR15. Inicial 457,81 kB,
+`main-XPAP73HY.js`, PWA `a352c7808d76e4216140`; aviso em 450 kB e limite de erro
+em 600 kB preservados. Probes com transporte controlado são distintos dos E2E reais.
+
+Recuperação no mesmo SHA aprovada: API parada antes do alerta e da expiração;
+ambos venceram offline. Reinício recuperou um alerta e uma expiração, nessa
+ordem e com horário real, dois ajustes, saldo zero e nenhum job restante.
+Replay sem duplicação. O alerta recuperado não comprova entrega anterior ao prazo.
+
+Revisão visual: **110 capturas da matriz + cinco complementares Firefox**
+efetivamente inspecionadas. As cinco originais de perfis Firefox tinham
+limitação de enquadramento; os complementos mostram os cartões atuais e ações,
+sem entrar na contagem dos 360 pares. Recortes móveis e prova estática têm
+limites explícitos; dispositivos físicos e tecnologia assistiva não foram aprovados.
+
+Auditoria Java: 94 dependências sem achados; npm sem vulnerabilidades nas
+dependências inalteradas. Scanner estável: 649 valores privados elegíveis
+conhecidos e 311 entradas da aplicação no JAR, sem correspondência privada.
+O falso positivo anterior de um literal público de teste foi diagnosticado e
+preservado; a varredura não constitui detector universal de segredos.
+
+API de testes 59343 encerrada, porta 8089 sem listener. PostgreSQL 59175 em
+55432 foi **preservado ativo**, pois a demonstração manual em 8095 depende dele
+com banco próprio `rm_dev`. Original, clones, artefatos e relatórios preservados.
+O documento não versionado da atividade manual foi preservado fora deste commit.
+
+Linux/Hermes, homologação, UI29/UI31 com worker/gates reais, 50 smokes, restore
+operacional, aparelhos físicos/PWA, tecnologia assistiva e piloto continuam
+pendentes. Delivery é controlado/fictício; recebimentos/devoluções de teste usam
+fixtures. Pagamentos reais e expedição permanecem para a Sprint 4.
+
+## Histórico da Sprint 3 — implementação local, candidatos07/08, 2026-11-07
+
+Plano autorizado pelo proprietário; base reconciliada `main` limpa em
+`d9fde9968ab2ce154abecffe66e171788aae1770` (merge do PR #5). Branch local
+`codex/sprint-03-pedidos-mesas-cozinha`; mudanças ainda sem commit/push.
+P10 e delivery controlado confirmados no [registro central](00_PROJECT_VISION.md).
+
+Pedidos/financeiro/cozinha, mesas/sessões e frontend integrados, preservando
+Controller → Service → Repository e a organização por domínio. V17–V21 novas,
+sem alterar migrations anteriores. PostgreSQL 18 local exclusivo, loopback:55432,
+banco `rm_test`, roles de migração/runtime distintas; bancos anteriores preservados.
+Configuração, fixtures e relatórios ficam fora do checkout, em diretório privado.
+
+**Artefato final08:**
+`e828ec28de90d6fdbc4a302fa4df53296d49df00cc12b09e5cba35d0c67344c7`.
+Regressão completa novamente executada: **347 testes/49 XML**, sem falhas,
+erros ou skips, no JDK 21 e cópia física isolada do PostgreSQL. Cópia encerrada;
+integridade do original conferida antes de religá-lo. Formatação, tipos,
+18 grupos de lógica, nove probes de templates e build Angular/PWA aprovados:
+449,96 kB iniciais, sem avisos, `main-CJUWWDAQ.js`, PWA `d55493c92760c54f75a0`.
+O JAR contém os mesmos bytes do build; manifesto final de 378 fontes/configurações.
+Os probes de lógica/templates incluem simulação e não substituem os E2E reais.
+
+A matriz completa **350 pares únicos (55 novos + 295 de regressão)** foi aprovada
+no candidato07 `2c11a135df8276adc25308d05a594f77c2cb81f5493e7514e0bd85bd1dc6deea`,
+com 55 capturas inspecionadas. O delta final contém sete textos em cinco arquivos
+TypeScript e o literal de etapa de `StatusController`; não altera regras de
+negócio. Os **30 pares dirigidos no candidato 08 passaram**, sem somá-los aos 350
+nem declarar a matriz completa executada no hash final. Falhas originais e
+reexecuções permanecem preservadas, sem skips/retries/flaky aprovados.
+
+Recuperação `final08b` aprovada no SHA final: parada comprovada antes do prazo,
+reinício do mesmo JAR, um alerta, uma expiração, dois ajustes, saldo zerado,
+nenhum job restante e replay sem duplicação. A primeira tentativa 08 parou tarde
+e foi invalidada; não é evidência de recuperação. Nenhum build, reinício ou
+alteração de fixture ocorreu durante os 30 testes no PID 68905. As 30 capturas
+focais do candidato 08 foram inspecionadas, sem cortes ou bloqueadores; os limites móveis
+e de acessibilidade estão na evidência. API e PostgreSQL temporários próprios
+foram encerrados; portas 8089/55432 sem listener. Bancos, cópia e relatórios
+privados preservados. O trabalho permanece local, disponível para revisão.
+Links/âncoras, referências OpenAPI, diff e scanner privado aprovados; auditoria
+independente reconferiu relatórios, fontes e insumos do candidato final.
+
+A [evidência local](evidencias/sprint-03-local-2026-11-07.md) registra os resultados,
+falhas, correções, reexecuções e limites. **Linux/Hermes e homologação permanecem
+pendentes por orientação expressa.** UI29/UI31 com worker/gates reais, 50 smokes,
+restore operacional, dispositivos físicos/PWA, tecnologia assistiva e piloto
+não estão aprovados. Sem acesso Linux, deploy, merge ou alteração de produção.
+
 ## Revisão final do PR #5 — concluída localmente, 2026-11-06
 
 Proprietário autorizou revisão, correções e merge do PR #5, mantendo Linux e
@@ -919,7 +1025,7 @@ lento/cancelado. Ambos checks do d1dc30b ainda IN_PROGRESS na última consulta
 typecheck, mas reexecução ainda pendente; não altera produto nem exige rebuild.
 
 Build97d75b0 aprovado/hash conferido,23XML/174backend sem falha/erro/skip; fonte
-7c8982f compatível e378 entradas não-static iguais ao JARhml. NÃO reconstruir.
+7c8982f compatível e 378 entradas não-static iguais ao JARhml. NÃO reconstruir.
 Worker26/MainPID712879, candidato716860, fonte imutável7c8982f preservados.
 25 pares focados aprovados, JSON/hash/cobertura reabertos; identidade permanece
 em execução na última consulta, sem resultado global aprovado. Recolher antes de

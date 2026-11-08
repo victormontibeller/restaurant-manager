@@ -123,6 +123,7 @@ Cancelar unidades ainda na fila não permite contornar a permissão pós-preparo
 2. Persistir `aguardandoAceiteEm`, `alertarEm` e `expirarEm`, calculados pelo servidor. Padrão: alerta após 2 minutos e cancelamento após 5 minutos.
 3. Alerta exige prazo positivo, inferior ao cancelamento. Configuração é por unidade, com valores iniciais herdados da empresa; alterações valem para entradas futuras e não mudam prazos já prometidos.
 4. Job durável processa vencimentos mesmo após reinício. Alertas não podem se multiplicar a cada tentativa do job. A tela também calcula o atraso a partir dos prazos persistidos.
+   Se o processamento alcançar um pedido ainda aguardando aceite depois de ambos os prazos, registra o alerta devido uma única vez antes da expiração, sob o mesmo lock e na mesma transação. Isso também vale para o aceite recebido no limite. O registro usa o horário real de processamento; não comprova entrega ou leitura anterior à expiração. Pedido já resolvido não recebe alerta tardio.
 5. Aceite e cancelamento automático disputam o mesmo estado de forma atômica. Em `agora >= expirarEm`, a ação de aceitar é recusada e a expiração é aplicada, mesmo se o job atrasou.
 6. Cancelamento de pedido pago cria uma obrigação de devolução e evento durável. A falha do provedor não desfaz o cancelamento nem oculta o dinheiro a devolver.
 
@@ -137,6 +138,13 @@ Cancelamento e início de preparo precisam bloquear/revalidar o mesmo agregado: 
 Após o início, o cliente registra uma solicitação; produção continua até decisão da equipe. Operador com ação específica pode aprovar/rejeitar, com motivo, itens afetados e consequência financeira. Cancelamento pós-preparo é permitido por padrão ao Gerente e Administrador, mas a ação do Gerente é delegável pela matriz. A cozinha recebe a atualização sem perder o histórico do que já preparou.
 
 A equipe pode cancelar uma quantidade de unidades comerciais completas, sem apagar a linha original. Cancelar uma de três unidades extingue a cobrança remanescente daquela unidade, preservando seu preço original no histórico; cancelar um de dois combos afeta somente o combo personalizado selecionado. Cancelar a última unidade ativa torna o cancelamento integral e aplica a política de taxa pertinente. Na mesa, a obrigação de devolução continua calculada pelo saldo agregado da comanda, e não atribuída a uma parcela ou pessoa.
+
+O serviço de mesa exige decidir solicitações de cancelamento pendentes antes de
+encerrar o pedido. Cancelamento integral direto por operador autorizado satisfaz
+a solicitação pendente: registra aprovação, motivo, histórico e evento na mesma
+transação, sem abater o valor novamente. Cancelamento parcial direto preserva a
+solicitação para avaliação do restante. A aprovação explícita registra sua decisão
+na mesma transação do cancelamento; seleção inválida não confirma nenhum efeito.
 
 ## Comanda e recebimentos por valor
 
@@ -203,3 +211,19 @@ Participantes de mesa acompanham pelo navegador, sem e-mail obrigatório. Evento
 - [Permissões](11_ACCESS_CONTROL.md)
 - [Modelo de dados](05_DATABASE.md)
 - [Integrações financeiras e comunicação](21_INTEGRATIONS.md)
+
+## Delimitação de implementação da Sprint 3 local
+
+A fila de delivery é exercitada somente com opt-in de desenvolvimento/testes,
+endereço fictício e taxa zero calculada pelo servidor. Não configura entrega
+comercial nem antecipa regiões ou mínimo. Retirada e mesa preservam suas regras
+operacionais; recebimentos e devoluções reais permanecem na Sprint 4.
+
+Cobranças e abatimentos de cancelamento são persistidos. Saldos recebidos prévios
+usados em testes são fixtures controladas, sem endpoint fictício de pagamento.
+Comandas vazias ou integralmente canceladas podem encerrar após iniciar fechamento,
+quando não existir saldo, pendência financeira ou pedido ativo não resolvido.
+
+Suspensão comercial e inativação de unidade impedem novas vendas/atendimentos,
+mas não revogam por si só a autorização para resolver operações existentes.
+Revogação de sessão, ação ou vínculo de unidade continua sendo aplicada.

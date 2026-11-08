@@ -55,3 +55,51 @@ contexto. A confirmação do resumo não é aceite de pedido.
 - [Jornadas do produto](01_PRD.md)
 - [Permissões e visibilidade](11_ACCESS_CONTROL.md)
 - [API e portabilidade](08_API_STANDARDS.md)
+
+## Operação da Sprint 3 local
+
+Pedidos, mesas/comandas e KDS mantêm áreas por domínio e ações determinadas pela
+política efetiva. Cada unidade comercial pode ser selecionada para um lote; o
+combo é apresentado completo, sem cancelamento ou estado isolado de componente.
+No celular, painéis internos evitam margens e bordas acumuladas. A seleção
+mostra unidades numeradas e estados legíveis; comandos continuam transportando
+os UUIDs completos, sem depender do texto apresentado.
+Envio e comandos conservam a intenção enquanto o resultado estiver incerto e
+consultam/repetem a mesma operação, sem criar pedido substituto silenciosamente.
+
+Acompanhamento usa SSE autenticado com fallback por polling de cinco segundos.
+Páginas de pedidos próprios com mais de uma unidade também reconsultam o
+snapshot autorizado a cada cinco segundos; as consultas são serializadas e
+interrompidas quando muda o contexto ou o componente é destruído.
+Conexão perdida deixa o estado explicitamente desatualizado; retorno reconsulta a
+API. Nenhuma escrita é enviada pelo service worker. Tokens, códigos, dados de
+pedido e intenções permanecem em memória; recarregar não promete recuperar um
+rascunho que não foi persistido no servidor. O QR é gerado localmente e inclui
+somente a URL pública da mesa; há link textual acessível equivalente.
+
+Mesas, solicitações e seleção de comanda assistida oferecem paginação explícita.
+As páginas de mesas e solicitações são independentes: uma navegação recebida
+durante atualização aguarda a consulta em curso e preserva a outra página.
+Consultas em andamento indicam progresso sem desabilitar controles de leitura
+ou retirar seu foco. Seleção e paginação assistidas também serializam consultas;
+a confirmação de novo pedido permanece bloqueada durante a leitura ou incerteza,
+preservando a recuperação da intenção já enviada.
+Trocar unidade ou sessão descarta navegações e respostas do contexto anterior.
+Uma consulta tardia de comanda não substitui a seleção atual nem apaga seu erro.
+Rejeição definitiva do primeiro cadastro permite corrigir o nome; resultado
+incerto conserva intenção e payload até reconciliação.
+
+Delivery desta etapa é controlado e fictício. A interface não oferece recebimento
+ou devolução real; conclusão financeira e expedição ficam para a Sprint 4.
+
+Mensagens de atualização automática devem preservar a posição dos controles.
+Reserve espaço que acompanhe a quebra natural do texto, inclusive para estado
+de conexão e horário ainda desconhecido; não corte avisos nem use uma altura
+fixa que impeça ampliação de fonte. Valide teclado e um clique por ponteiro
+durante a atualização, além do resultado após a consulta.
+
+Erros de consulta e de ação têm ciclos distintos. Uma atualização automática
+ou consulta manual concorrente não apaga rejeição de comando nem seu resultado
+incerto. O sucesso da consulta resolve somente seu erro de leitura; uma nova
+ação ou troca de contexto trata o erro da ação anterior. Falhas de autorização
+e conexão continuam visíveis sem substituir silenciosamente o motivo do comando.

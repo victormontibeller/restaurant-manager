@@ -20,6 +20,6 @@ public class StatusController {
 
     @GetMapping("/api/v1/status")
     Map<String, String> status() {
-        return Map.of("ambiente", ambiente, "etapa", "Catálogo e PWA — Sprint 2");
+        return Map.of("ambiente", ambiente, "etapa", "Pedidos, mesas e cozinha — Sprint 3");
     }
 }

@@ -46,8 +46,8 @@ A preferência por SDKs e o isolamento de credenciais estão em [Integrações](
 ### Legibilidade e organização Angular
 
 - Preserve a divisão por domínio: `identidade`, `acessos`, `unidades`,
-  `plataforma`, `catalogo`, `carrinho` e `pwa`. Componentes, serviços e tipos
-  relacionados permanecem próximos;
+  `plataforma`, `catalogo`, `carrinho`, `pedidos`, `mesas`, `cozinha`, `eventos`
+  e `pwa`. Componentes, serviços e tipos relacionados permanecem próximos;
   novas pastas ou abstrações compartilhadas precisam de consumidores reais.
 - Separe declarações, métodos e etapas de uma jornada com linhas em branco.
   Evite acumular várias instruções na mesma linha. Comentários explicam uma
@@ -59,7 +59,8 @@ A preferência por SDKs e o isolamento de credenciais estão em [Integrações](
   Refatorações de legibilidade preservam asserções, ordem, seletores, massas,
   timeouts e tentativas; não esconda a jornada em helpers genéricos.
 - Use o Prettier fixado em `frontend/package-lock.json`, com a configuração da
-  raiz. `npm --prefix frontend run format` formata TypeScript e probes CJS;
+  raiz. `npm --prefix frontend run format` formata TypeScript, probes CJS e os
+  HTML/CSS dos novos domínios operacionais;
   `npm --prefix frontend run format:check` verifica o padrão no CI e no build
   de release. A formatação automática de linguagens embutidas fica desativada
   para preservar strings executáveis e espaços de templates; esses blocos

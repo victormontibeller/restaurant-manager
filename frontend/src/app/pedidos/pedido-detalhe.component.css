@@ -1,0 +1,29 @@
+.linha-pedido {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 1rem 0;
+}
+.unidades-producao {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+.unidades-producao li {
+  padding: 0.2rem 0;
+}
+.selecao {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+}
+.selecao input {
+  flex: 0 0 1.4rem;
+  width: 1.4rem;
+  min-height: 1.4rem;
+}
+.selecao span {
+  flex: 1;
+  min-width: 0;
+}

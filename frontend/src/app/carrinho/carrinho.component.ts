@@ -1,10 +1,12 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CANAIS, moeda } from '../catalogo/modelos';
 import { CarrinhoService } from './carrinho.service';
+import { ConfirmarPedidoComponent } from '../pedidos/confirmar-pedido.component';
 import { ItemCarrinho } from './modelos';
 
 @Component({
   selector: 'app-carrinho',
+  imports: [ConfirmarPedidoComponent],
   template: `
     <section aria-labelledby="carrinho-titulo" [attr.aria-busy]="carrinho.ocupado()">
       <h2 id="carrinho-titulo">Meu carrinho</h2>
@@ -12,8 +14,8 @@ import { ItemCarrinho } from './modelos';
         <p>{{ contexto.unidadeNome }} · {{ nomeCanal(contexto.canal) }}</p>
       }
       <p>
-        O carrinho fica apenas nesta página. Atualizar ou fechar a página descarta os itens. Nenhum
-        pedido ou pagamento é enviado nesta etapa.
+        O carrinho fica apenas nesta página. Atualizar ou fechar a página descarta os itens. Adicionar
+        itens e calcular o resumo não envia o pedido; confirme o envio para registrá-lo.
       </p>
       @if (carrinho.erro()) {
         <p role="alert" class="erro">{{ carrinho.erro() }}</p>
@@ -131,10 +133,11 @@ import { ItemCarrinho } from './modelos';
               Confirmar composição e valores
             </button>
           } @else {
-            <p role="status">Resumo confirmado. Nenhum pedido foi criado.</p>
+            <p role="status">Resumo confirmado. O envio do pedido exige confirmação separada.</p>
           }
         </section>
       }
+      <app-confirmar-pedido/>
     </section>
   `,
   styleUrl: '../catalogo/catalogo.css',

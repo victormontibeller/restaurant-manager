@@ -190,3 +190,47 @@ pela UI tem contrato próprio em [Tenancy](06_MULTI_TENANT.md#solicitação-saas
 - [Isolamento e contexto](06_MULTI_TENANT.md)
 - [Logs e auditoria](07_OBSERVABILITY.md)
 - [Webhooks e credenciais de provedores](21_INTEGRATIONS.md)
+
+## Sessão empresarial durante comandos operacionais
+
+A autorização transacional bloqueia a sessão para leitura compartilhada e relê
+seu estado persistido antes dos agregados. Logout e detecção de reuso de refresh
+aguardam operações já autorizadas; quando a revogação confirma primeiro, a nova
+operação não pode usar uma sessão antiga do cache JPA. A ordem permanece
+política → acesso/sessão → unidade → comanda → pedido → unidades comerciais.
+As consultas SSE repetem a autorização em transações curtas e não mantêm locks
+enquanto enviam eventos pela rede. JWT expirado na revalidação do controller
+retorna 401 JSON; se expirar durante a consulta inicial, o emitter encerra sem
+enviar dados, embora o HTTP já possa ter sido iniciado. Erros internos alheios
+à validação JWT continuam 500. Em
+REPEATABLE_READ, uma mudança concorrente da sessão que invalide o snapshot
+retorna 409 `SESSAO_ALTERADA`, sem conteúdo privado e sem retry automático;
+essa tradução é restrita à leitura da sessão e ao conflito de serialização.
+
+## Sessões de mesa — Sprint 3 local
+
+O participante usa audiência `restaurant-manager-mesa`, identidade e sessão
+próprias; não se torna cliente nem funcionário. O QR contém somente o identificador
+da mesa. A autorização exige código do atendimento ativo, protegido por hash,
+validade e quota persistida por origem/mesa. Código é mostrado somente na criação
+ou rotação; perda da resposta exige consultar o atendimento e gerar outro código,
+sem expor o anterior por GET.
+
+Access token fica em memória por até cinco minutos. Refresh aleatório de 256 bits
+usa cookie HttpOnly/Secure/SameSite Strict, path `/api/v1/mesa/auth`, e limite
+absoluto de doze horas. Rotação serializada registra consumo; reutilização revoga
+a sessão. Endpoints de cookie possuem CSRF próprio, inclusive com Bearer recebido.
+Ações do participante revalidam atendimento, comanda, sessão e autoria no backend.
+`EM_FECHAMENTO` bloqueia rodadas; `FECHADA` revoga acessos e não admite consumo.
+
+SSE usa Bearer no header via fetch, nunca em query string. Projeções e contexto
+são revalidados em cada lote, com alternativa de polling e expiração da conexão.
+Código, tokens, endereço e payload financeiro não pertencem aos eventos da cozinha.
+O tratamento interno de erro dos streams reconhece apenas `GET`, despacho
+`ERROR`/`INCLUDE`, origem em uma das duas rotas SSE e destino `/error`, com
+exceção registrada pelo contêiner. Se a resposta já foi enviada e a causa
+identifica desconexão, o filtro encerra sem escrever novamente. Erros genuínos
+seguem ao controlador de erro; requisições diretas e autorização inicial mantêm
+suas regras. O despacho `ASYNC` normal não recebe liberação adicional.
+Contratos em [Mesas](api/mesas.yaml) e [Eventos](api/eventos-operacionais.yaml).
+Implementação local em validação; não implica homologação.
