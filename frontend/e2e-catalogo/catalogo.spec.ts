@@ -46,7 +46,10 @@ async function verificarAlvoDeToque(alvo: Locator): Promise<void> {
 }
 
 async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<string> {
-  await navegarUi(page, '/entrar');
+  // Os dois chamadores acabaram de sair da conta. Espere o Router encerrar o
+  // layout anterior antes de procurar links ou controles da próxima sessão.
+  await expect(page).toHaveURL((url) => url.pathname === '/entrar');
+  await expect(page.locator('app-equipe-layout')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
@@ -54,7 +57,17 @@ async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<st
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const autenticada = await login;
   expect(autenticada.status()).toBe(200);
-  await abrirConta(page);
+  const clientes = fixture().contas;
+  if ([clientes.clienteA.email, clientes.clienteB.email].includes(conta.email)) {
+    await abrirConta(page);
+  } else {
+    // O retorno desta equipe possui upload incerto e abre o editor preservado.
+    // Sua proteção de saída deve continuar ativa até a consulta do resultado.
+    await expect(page).toHaveURL((url) => url.pathname === '/gestao/catalogo');
+    await expect(
+      page.getByRole('region', { name: 'Gestão do catálogo', exact: true }),
+    ).toHaveAttribute('aria-busy', 'false');
+  }
   await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
   return (await autenticada.json()).accessToken;
 }
