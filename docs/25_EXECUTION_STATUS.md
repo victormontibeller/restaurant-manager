@@ -2,6 +2,11 @@
 
 ## Redesenho — concluído e publicado na demonstração local, 2026-11-08
 
+Entrega aberta para revisão no [PR #7](https://github.com/victormontibeller/restaurant-manager/pull/7),
+de `codex/redesenho-frontend` para `main`. A implementação e as evidências já
+estavam commitadas em `638e70f`; este incremento documental registra a abertura.
+A CI do head do PR deve ser conferida separadamente dos testes locais abaixo.
+
 Branch `codex/redesenho-frontend`, base `14ca980` (PR #6 integrado). Fonte da
 aplicação `c991bd89eef693901a265f0940ea9830a1472430`; ajuste final exclusivo do
 teste em `a408cae`. Cliente, gestão e cozinha separados, tema de bistrô com
