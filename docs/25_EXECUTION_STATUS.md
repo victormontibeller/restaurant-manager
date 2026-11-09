@@ -7,6 +7,13 @@ integrada em `8888234602d6c2fbbc596a6180e0d2f7349d56c6`; remota conferida no
 mesmo SHA. Atualização pendente do merge da Sprint 4 preservada abaixo.
 Os dois arquivos locais preexistentes permanecem intactos e fora do commit.
 
+Implementação publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`,
+[PR #9 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/9)
+para `main`, com escopo exclusivo de preparação local. Conferir o head e o
+resultado dinâmico da [CI do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks)
+na retomada; a confirmação documental posterior não altera o JAR ou o harness
+ensaiados. Sem merge, auto-merge ou produção.
+
 Escopo autorizado: revisão operacional e ensaios com dados fictícios no Mac.
 Roadmap, fontes de execução e runbook atualizados; ensaio reproduzível e perfil
 de carga versionados. Instalação Linux recusa Mac antes de escrever;

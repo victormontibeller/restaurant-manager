@@ -7,6 +7,11 @@ Preparação autorizada em 2026-11-09 na branch
 `8888234602d6c2fbbc596a6180e0d2f7349d56c6` (PR #8). A atualização pendente do
 checkpoint foi levada à branch, preservando as seções históricas.
 Os dois arquivos não versionados preexistentes permanecem fora da entrega.
+Implementação publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`, no
+[PR #9 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/9).
+Resultado de CI e seu head exato são consultáveis nos
+[checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks);
+CI Linux não substitui implantação/matriz no servidor de homologação.
 
 Ambiente: Mac, PostgreSQL 18.4/Homebrew, Java 21 local; banco fictício exclusivo
 `rm_test`. Nenhum deploy Linux, sandbox Mercado Pago, e-mail real ou produção.
