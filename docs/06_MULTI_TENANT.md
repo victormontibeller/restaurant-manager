@@ -9,7 +9,7 @@
 
 O schema `public` mantém cadastro de empresas, domínios, estado de provisionamento, metadados de assinatura e identidade dos operadores da plataforma. Os schemas empresariais mantêm funcionários, clientes, sessões, unidades, catálogo e registros operacionais/financeiros. O mesmo e-mail em duas empresas representa contas independentes.
 
-Nas requisições empresariais, o tenant é resolvido em registro confiável a partir do domínio autorizado. Administração da plataforma usa o contexto público separado; webhooks seguem validação do provedor e mapeamento de conta/recurso descritos em [Integrações — Mercado Pago](21_INTEGRATIONS.md#mercado-pago). Em desenvolvimento, usar nomes locais mapeados explicitamente; não habilitar header arbitrário de tenant em produção. O identificador externo não é o nome SQL do schema. `Host`/`Forwarded` só são aceitos conforme a configuração do proxy confiável; domínio desconhecido falha fechado.
+Nas requisições empresariais, o tenant é resolvido em registro confiável a partir do domínio autorizado. Administração da plataforma usa o contexto público separado; webhooks seguem validação do provedor e mapeamento de conta/recurso descritos em [Integrações — Mercado Pago](21_INTEGRATIONS.md#mercado-pago-por-restaurante). Em desenvolvimento, usar nomes locais mapeados explicitamente; não habilitar header arbitrário de tenant em produção. O identificador externo não é o nome SQL do schema. `Host`/`Forwarded` só são aceitos conforme a configuração do proxy confiável; domínio desconhecido falha fechado.
 
 Schemas organizam e separam dados, mas não são por si uma barreira de acesso quando um usuário de banco tem privilégios em vários deles. A aplicação deve aplicar o contexto correto, limitar privilégios e comprovar isolamento em pool, consultas e tarefas. Referência: [PostgreSQL — schemas e privilégios](https://www.postgresql.org/docs/current/ddl-schemas.html).
 
@@ -157,4 +157,4 @@ provisionamento. Testes de coordenação não são homologação real; consultar
 - [Modelo de dados](05_DATABASE.md)
 - [Sessões](04_SECURITY.md#jwt-e-sessoes)
 - [Permissões por ação e unidade](11_ACCESS_CONTROL.md)
-- [Webhooks](21_INTEGRATIONS.md#mercado-pago)
+- [Webhooks](21_INTEGRATIONS.md#mercado-pago-por-restaurante)

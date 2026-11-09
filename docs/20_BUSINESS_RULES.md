@@ -38,6 +38,27 @@ ou aceitar pedido. Exceções por feriado/data, agendamento de pedidos e regras
 de entrega por região não estão neste incremento. O catálogo e o envio futuro
 precisam revalidar unidade/canal/horário no servidor no momento da operação.
 
+## Delivery, endereço e expedição
+
+Regiões pertencem à unidade, com nome, faixa inclusiva de CEP, taxa fixa,
+mínimo de itens e situação ativa. Faixas ativas não podem se sobrepor. Mínimo
+não inclui taxa; funcionamento segue os horários do canal da unidade. A cotação
+é vinculada à versão da configuração, CEP e subtotal. API revalida no envio;
+alterações posteriores não mudam o snapshot de endereço/região/taxa do pedido.
+Não há cálculo por distância, mapas ou rastreamento externo nesta entrega.
+
+Endereços salvos pertencem ao cliente autenticado, usam versão e inativação
+lógica. Destinatário e contato são exigidos no envio comercial. Somente cliente
+proprietário e projeção autorizada da expedição recebem o endereço; cozinha e
+consulta operacional mínima não recebem esses campos.
+
+Expedição filtra delivery/retirada prontos e em entrega antes da paginação.
+Despacho presencial pode ocorrer antes do recebimento, para pagamento na entrega.
+Confirmar retirada ou entrega exige saldo quitado e ausência de pendência
+financeira, ocorrência ou solicitação de cancelamento. Servir mesa continua
+independente da quitação da comanda. Receber, despachar, concluir e decidir
+ocorrência são ações distintas.
+
 ## Catálogo e cálculo
 
 Produtos têm nome, descrição, categoria, mídia, composição/configuração permitida e disponibilidade. Adicionais possuem preço e limites de seleção; combos usam composição explícita. Observações de preparo têm limite de tamanho e são texto simples. Informações sobre ingredientes e alergênicos devem ser claras quando fornecidas pelo restaurante; não prometer ausência de contaminação sem validação operacional.
@@ -111,7 +132,7 @@ Os nomes abaixo formam o contrato proposto de domínio. Estado de pagamento e es
 | `CONCLUIDO` | Servido, retirado ou entregue | Terminal operacional; ajustes/devoluções posteriores não reabrem preparo |
 | `CANCELADO` | Cancelamento com origem e motivo | Terminal operacional; pagamento tardio gera devolução/reconciliação, não reativação |
 
-Recusa é um cancelamento com motivo próprio. Pedido de delivery pronto pode ser cancelado por operador autorizado antes do despacho. Após despacho, a proposta é tratar falha de entrega/retorno com ocorrência e ação gerencial específica, sem simular entrega bem-sucedida. Definir submotivos e conclusão dessa ocorrência na Sprint 4.
+Recusa é um cancelamento com motivo próprio. Pedido de delivery pronto pode ser cancelado por operador autorizado antes do despacho. Após despacho, registrar ocorrência com motivo. A ação `entrega.decidir_ocorrencia` autoriza nova tentativa ou cancelamento integral, com escolha explícita de devolver ou reter a taxa. Ocorrência pendente impede conclusão. Nova tentativa mantém `EM_ENTREGA`; o histórico preserva ocorrência e decisão.
 
 Um pedido pode estar `EM_PREPARO` com alguns itens prontos. O primeiro início de preparo bloqueia o autocancelamento do pedido inteiro. Cancelamento parcial de itens exige operador autorizado; o registro original permanece, com ajuste explícito de consumo/valor e eventual devolução. Não inferir esse ajuste apenas do status global.
 
@@ -127,7 +148,7 @@ Cancelar unidades ainda na fila não permite contornar a permissão pós-preparo
 5. Aceite e cancelamento automático disputam o mesmo estado de forma atômica. Em `agora >= expirarEm`, a ação de aceitar é recusada e a expiração é aplicada, mesmo se o job atrasou.
 6. Cancelamento de pedido pago cria uma obrigação de devolução e evento durável. A falha do provedor não desfaz o cancelamento nem oculta o dinheiro a devolver.
 
-Pedidos aceitos ou de mesa não usam esse relógio. O prazo para concluir um checkout online é outro parâmetro, ainda proposto para definição com a modalidade do provedor; não reutilizar os 5 minutos de aceite.
+Pedidos aceitos ou de mesa não usam esse relógio. O prazo local para concluir checkout online é configurado por unidade, de 1 a 1.440 minutos, com padrão de 15 minutos. É copiado no envio e não reutiliza os 5 minutos de aceite. Os prazos de alerta/expiração do aceite só começam após confirmação confiável do pagamento, usando a configuração copiada no pedido. O retorno do checkout nunca confirma recebimento. Pagamento após o prazo local gera cancelamento e obrigação de devolução, mesmo se a consulta ocorrer antes do job de vencimento.
 
 ## Cancelamento e concorrência com preparo
 
@@ -175,18 +196,20 @@ Ajustes comerciais identificam as unidades comerciais e/ou taxa afetadas e o val
 
 Exemplo: combo de R$ 40,00 já pago, com ajuste comercial de R$ 10,00 e devolução confirmada ou em processamento. Seu cancelamento completo abate os R$ 30,00 remanescentes, tornando a cobrança zero. A obrigação financeira considera devoluções confirmadas e valores já reservados; não iniciar novamente a devolução dos R$ 10,00. Nenhum caminho pode tornar a cobrança negativa ou devolver/reservar mais que os R$ 40,00 recebidos.
 
+Comanda sem consumo consulta saldo zero e histórico vazio, sem criar cobrança por leitura. Recebimentos/ajustes aguardam a primeira rodada; uma cobrança existente continua consultável mesmo após cancelamento integral.
+
 Dois operadores não podem aplicar recebimentos acima do saldo. Fechamento exige `saldoAReceber = 0`, `saldoADevolver = 0` e ausência de recebimentos/devoluções incertos; comanda com todos os itens cancelados e sem dívida pode fechar. Ajustes após o fechamento geram uma pendência financeira vinculada, sem reabrir a autorização da mesa.
 
 ## Pagamentos e devoluções
 
-Pagamento possui tentativa, meio, valor, referência externa e estado independente: propostos `PENDENTE`, `CONFIRMADO`, `RECUSADO`, `CANCELADO` e `EM_RECONCILIACAO`. Recusa de uma tentativa não apaga outras tentativas nem o pedido. Repetição de cobrança precisa recuperar o resultado anterior antes de criar outra intenção.
+Checkout possui intenção, valor, conta vendedora, referência externa e estado independente: `SOLICITADO`, `AGUARDANDO`, `CONFIRMADO`, `RECUSADO`, `EM_RECONCILIACAO` e `BLOQUEADO`. Recusa de uma tentativa não apaga outras tentativas nem o pedido. Repetição de cobrança precisa recuperar o resultado anterior antes de criar outra intenção.
 
 Devolução possui valor, motivo, origem automática/manual, vínculo ao recebimento e estados propostos `SOLICITADA`, `EM_PROCESSAMENTO`, `CONFIRMADA`, `FALHOU` e `EM_RECONCILIACAO`. Valor devolvível considera montante confirmado, devoluções já confirmadas e reservas ainda pendentes; duas solicitações concorrentes não podem ultrapassá-lo.
 
 - Recusa, expiração de aceite e autocancelamento elegível de pedido independente pago online iniciam devolução automática integral.
 - Na mesa, cancelar uma rodada ajusta o total da comanda e calcula o excedente agregado, pois pagamentos são por valor. Exemplo: R$ 120,00 de consumo e R$ 50,00 recebidos, com cancelamento de R$ 80,00, deixam R$ 40,00 de cobrança e R$ 10,00 a devolver. O sistema registra a obrigação; a equipe confirma a devolução presencial após realizá-la externamente.
 - Cancelamento integral antes do despacho inclui taxa de entrega. Parcial mantém os preços originais e só devolve taxa se essa parcela for selecionada e justificada por operador autorizado.
-- Depois do despacho, política de taxa/entrega depende da ocorrência; a proposta é decisão gerencial explícita, sem desconto arbitrário calculado pelo frontend.
+- Depois do despacho, a decisão gerencial da ocorrência registra explicitamente devolução ou retenção da taxa; o backend calcula o abatimento remanescente.
 - Pagamento aprovado tardiamente para pedido cancelado não o reativa: registrar o recebimento, iniciar devolução e sinalizar falha/pendência se necessário.
 - Se duas tentativas online forem aprovadas para uma mesma dívida, aplicar apenas o devido e devolver o excedente, com reconciliação.
 - Para dinheiro/cartão/Pix presencial, registrar devolução somente após ação externa confirmada pelo operador autorizado; não afirmar que houve estorno da maquininha pelo sistema.
@@ -204,6 +227,19 @@ Devolução possui valor, motivo, origem automática/manual, vínculo ao recebim
 | Convite / recuperação de conta | Destinatário | Obrigatório para a jornada proposta | Administrador / suporte técnico |
 
 Participantes de mesa acompanham pelo navegador, sem e-mail obrigatório. Eventos essenciais persistem; som e avisos do navegador são complementares. Mensagem enviada por e-mail não equivale a lida. Falha de comunicação não desfaz pedido/pagamento: gera retry e pendência visível, com conteúdo sem dados sensíveis desnecessários.
+
+## Relatório operacional de vendas
+
+Datas inicial/final são inclusivas no fuso da unidade (limite final exclusivo
+no início do dia seguinte). Período máximo: 367 dias. Pedidos e cobranças
+originais usam criação do pedido; cancelamentos mostram o estado atual desse
+conjunto. Ajustes usam registro; recebimentos e devoluções usam confirmação.
+Saldos e reservas mostram a posição atual das cobranças com pedido no período.
+Cada cobrança de comanda aparece uma vez, incluindo suas demais rodadas; não
+somar a cobrança agregada novamente como venda. Os indicadores têm referências
+distintas e não devem ser somados como se fossem receita líquida contábil.
+Consulta exige `relatorio.consultar`, tenant e unidade permitidos, inclusive
+unidade inativa com operações anteriores. Não substitui fechamento fiscal.
 
 ## Documentos relacionados
 

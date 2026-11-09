@@ -1,0 +1,99 @@
+<section>
+  <h2>Expedição e entregas</h2>
+  <button type="button" (click)="carregar(pagina())" [disabled]="carregando() || pendente()">
+    Atualizar expedição
+  </button>
+  @for (e of lista(); track e.pedido.id) {
+    <article>
+      <app-pedido-detalhe
+        [pedido]="e.pedido"
+        contexto="operacao"
+        [acoes]="acoes()"
+        (atualizar)="carregar(pagina())"
+      />
+      @if (e.endereco; as endereco) {
+        <address>
+          {{ endereco.destinatario }} · {{ endereco.contato }}<br />{{ endereco.logradouro }},
+          {{ endereco.numero }} · {{ endereco.complemento }}<br />{{ endereco.bairro }} ·
+          {{ endereco.cidade }}/{{ endereco.uf }} · CEP {{ endereco.cep }}
+        </address>
+      }
+      <div class="acoes">
+        @if (e.pedido.estado==='PRONTO' && e.pedido.canal==='RETIRADA' && tem('pedido.retirar')) {
+          <button (click)="agir(e,'retirar')" [disabled]="comandos.ocupado() || pendente()">
+            Confirmar retirada entregue
+          </button>
+        }
+        @if (e.pedido.estado==='PRONTO' && e.pedido.canal==='DELIVERY' && tem('pedido.despachar')) {
+          <button (click)="agir(e,'despachar')" [disabled]="comandos.ocupado() || pendente()">
+            Registrar saída para entrega
+          </button>
+        }
+        @if (
+          e.pedido.estado==='EM_ENTREGA' && e.ocorrencia?.estado!=='PENDENTE' && tem('pedido.entregar')
+        ) {
+          <button (click)="agir(e,'entregar')" [disabled]="comandos.ocupado() || pendente()">
+            Confirmar entrega realizada
+          </button>
+        }
+      </div>
+      @if (e.ocorrencia) {
+        <p>
+          Ocorrência: {{ e.ocorrencia.motivo }} · {{ e.ocorrencia.estado }} ·
+          {{ e.ocorrencia.decisao }}
+        </p>
+      }
+      @if (
+        e.pedido.estado==='EM_ENTREGA' && (tem('entrega.registrar_ocorrencia') || tem('entrega.decidir_ocorrencia'))
+      ) {
+        <label
+          >Motivo da ocorrência ou decisão<input
+            [(ngModel)]="motivos[e.pedido.id]"
+            maxlength="500"
+            [disabled]="comandos.ocupado() || pendente()"
+        /></label>
+        @if (e.ocorrencia?.estado!=='PENDENTE' && tem('entrega.registrar_ocorrencia')) {
+          <button (click)="ocorrencia(e)" [disabled]="comandos.ocupado() || pendente()">
+            Registrar problema na entrega
+          </button>
+        }
+        @if (e.ocorrencia?.estado==='PENDENTE' && tem('entrega.decidir_ocorrencia')) {
+          <label
+            ><input
+              type="checkbox"
+              [ngModel]="devolverTaxa[e.pedido.id] ?? true"
+              (ngModelChange)="devolverTaxa[e.pedido.id]=$event"
+            />
+            Incluir devolução da taxa no cancelamento</label
+          >
+          <div class="acoes">
+            <button
+              (click)="ocorrencia(e,'NOVA_TENTATIVA')"
+              [disabled]="comandos.ocupado() || pendente()"
+            >
+              Autorizar nova tentativa de entrega</button
+            ><button
+              (click)="ocorrencia(e,'CANCELAMENTO')"
+              [disabled]="comandos.ocupado() || pendente()"
+            >
+              Cancelar entrega conforme decisão financeira
+            </button>
+          </div>
+        }
+      }
+    </article>
+  } @empty {
+    <p>Nenhum pedido pronto ou em entrega nesta página.</p>
+  }
+  <div class="acoes">
+    <button (click)="carregar(pagina()-1)" [disabled]="pagina()===0 || carregando() || pendente()">
+      Página anterior</button
+    ><span>Página {{ pagina()+1 }}</span
+    ><button (click)="carregar(pagina()+1)" [disabled]="!mais() || carregando() || pendente()">
+      Próxima página
+    </button>
+  </div>
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+</section>

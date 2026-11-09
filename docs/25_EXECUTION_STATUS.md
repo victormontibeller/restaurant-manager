@@ -1,5 +1,60 @@
 # Checkpoint de execução
 
+## Sprint 4 — implementação e validação local concluídas, 2026-11-09
+
+Execução autorizada no chat. Branch `codex/sprint-04-delivery-pagamentos`, base
+`7b522e7` (PR #7 integrado). Revisão final local aprovada em 2026-11-09;
+commit e abertura de PR autorizados pelo proprietário neste chat. Sem merge
+ou publicação em produção. Arquivo manual não versionado preservado.
+Organização por domínio e camadas mantida, contratos e fontes normativas atualizados.
+
+Implementados: recebimentos/ajustes/reservas/devoluções, regiões e endereços,
+expedição/ocorrências, OAuth/checkout/inbox/reconciliação, captura operacional
+de e-mail e relatório por unidade/fuso. Migrações public V7 e tenant V22–V27
+aplicadas exclusivamente em `rm_test`. P07/P08 e limites externos estão no
+registro central e nas fontes de negócio/integrações.
+
+**JAR validado localmente:**
+`6afe9354cac1c402672a0dcedab0be97098650d3f45f5b67bb4fbf96601861de`.
+PID observado na matriz: **53922**; raiz privada
+`/private/tmp/rm-sprint04-candidato05`. **435 testes backend/63 XML**, zero
+falhas, erros ou skips. Alterações posteriores foram de frontend; hashes das
+fontes backend e **506 entradas de classes/recursos/libs idênticas** comprovam
+a correspondência do backend empacotado com a regressão completa executada.
+Formatação, tipos, 20 grupos de lógica, 12 combinações de templates, build/PWA,
+npm e OSV aprovados; 37 estáticos conferidos byte a byte, 112 pacotes Java sem avisos.
+
+**405 pares únicos aprovados no mesmo JAR/PID:** 45 Sprint 4, 65 pedidos/mesas/cozinha
+e 295 regressão. Chromium 1280/360/768, Firefox e WebKit; um worker, zero skips,
+retries ou flaky. Consolidação revalidou relatórios originais, fontes e fixtures.
+**13 capturas inspecionadas**, separadas da contagem automatizada.
+Dois reinícios reais após resposta perdida de cobrança/devolução passaram:
+uma cobrança, um recebimento, uma devolução de R$ 20,00 e pedido cancelado.
+Provedor HTTP fictício persistente e captura local de mensagens; sem credenciais reais.
+
+Falhas e reexecuções preservadas: comanda vazia, evento da reconciliação,
+identificação de parcelas pelo snapshot e atualização do painel aberto sem
+apagar rascunhos. A regressão intermediária revelou massa com outros
+administradores; nova massa isolada passou na proteção do último administrador.
+Orientação obsoleta da tela de acessos corrigida. Nenhuma aprovação de navegador
+de candidato anterior foi herdada; nenhuma quota ou conta anterior foi resetada.
+
+Evidências privadas, snapshot das fontes e manifestos em
+`/Users/mac/.local/share/restaurant-manager-manual/evidencias/sprint04-20261109-6afe9354cac1`. Relato:
+[evidência da Sprint 4](evidencias/sprint-04-local-2026-11-09.md).
+Processos do candidato e simulador encerrados após a validação. Demonstração
+8095/`rm_dev` (PID 32641) e PostgreSQL local (PID 59175) preservados.
+
+**Pendentes:** Linux/Hermes e homologação, por solicitação explícita;
+sandbox/habilitação Mercado Pago, URLs públicas, envio real, aparelhos físicos,
+tecnologia assistiva, restauração operacional e piloto. Próximo passo externo:
+homologar o release integrado no Linux quando solicitado, seguindo o runbook
+e a matriz completa. Validação local não encerra esses gates.
+
+Revisão de publicação: [revisão final da Sprint 4](evidencias/revisao-final-sprint-04-2026-11-09.md).
+Fontes e relatórios originais revalidados; formatação, tipos e lógica repetidos
+sem alterar a aplicação. A publicação do commit e a abertura do PR estão em execução.
+
 ## Redesenho — concluído e publicado na demonstração local, 2026-11-08
 
 Entrega aberta para revisão no [PR #7](https://github.com/victormontibeller/restaurant-manager/pull/7),

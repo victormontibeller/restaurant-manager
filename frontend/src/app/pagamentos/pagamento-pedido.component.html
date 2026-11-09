@@ -1,0 +1,19 @@
+<section aria-label="Pagamento online">
+  <h4>Pagamento online</h4>
+  <p>O retorno do checkout não confirma pagamento. Acompanhe a confirmação do servidor.</p>
+  @for (c of tentativas(); track c.id) {
+    <p>{{ estado(c.estado) }}</p>
+    @if (c.checkoutUrl && ['AGUARDANDO','SOLICITADO'].includes(c.estado) && aguardando()) {
+      <a class="botao" [href]="c.checkoutUrl">Abrir checkout do Mercado Pago</a>
+    }
+  }
+  <button type="button" (click)="carregar()" [disabled]="consultando()">Conferir pagamento</button>
+  @if (aguardando() && tentativas().length && podeTentar()) {
+    <button type="button" (click)="tentar()" [disabled]="consultando()">
+      Tentar pagamento novamente
+    </button>
+  }
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+</section>

@@ -91,6 +91,16 @@ atribuídas, inclusive inativas, para resolver operações anteriores; não auto
 novo consumo. A lista pública e a elegibilidade de novas vendas seguem exigindo
 unidade ativa. O checkpoint identifica testes executados e pendências externas.
 
+## Contratos da Sprint 4 local
+
+[Delivery e endereços](api/delivery.yaml), [recebimentos e devoluções](api/financeiro.yaml),
+[pagamentos e comunicações](api/pagamentos.yaml) e [relatório operacional](api/relatorios.yaml)
+complementam [pedidos](api/pedidos.yaml). A versão de configuração/cotação é
+revalidada no backend; intenção financeira é durável e o replay usa o mesmo
+payload. Respostas 204 não contêm JSON. Webhook é público, assinado e neutro;
+callback OAuth usa o state vinculado à sessão original. Credenciais nunca são DTOs.
+Implementação local em validação; resultados e limites ficam no checkpoint.
+
 ## Documentos relacionados
 
 - [JWT e sessões](04_SECURITY.md#jwt-e-sessoes)

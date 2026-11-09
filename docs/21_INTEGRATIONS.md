@@ -16,7 +16,61 @@
 
 O restaurante recebe em sua conta. A integração SaaS precisa identificar o vendedor autorizado, guardar credenciais com segurança e impedir que uma cobrança use a conta de outro tenant. OAuth é a premissa de conexão, sujeita à habilitação real; [documentação oficial dos fluxos OAuth](https://www.mercadopago.com.br/developers/pt/docs/security/oauth/creation).
 
-Na Sprint 0, investigar compatibilidade do SDK Java e requisitos da integração; na Sprint 4, fixar modalidade, métodos de pagamento, URLs, permissões e operação de devolução. Checkout hospedado é proposta, não implementação já escolhida. Não coletar dados brutos de cartão na aplicação.
+P08 confirma OAuth por restaurante e Checkout Pro hospedado pela **Orders API**,
+com Pix e cartão, uma parcela por padrão. A configuração exclui tipos não
+contratados; não usar Preferences. A aplicação não coleta dados brutos de cartão.
+Referências oficiais: [Orders](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro-orders/overview),
+[restrição de meios](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/additional-settings/exclude-payment-methods?scope=prod)
+e [devoluções/cancelamentos](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/refunds-cancellations).
+Habilitação comercial, credenciais adequadas da conta de teste, URLs públicas,
+restrições reais de prazo e comportamento em sandbox ainda exigem validação externa.
+
+O adaptador usa SDK Java oficial 3.7.0 (`OrderClient`) para pedidos, consulta,
+busca, cancelamento e devolução. OAuth usa HTTP dedicado com JSON e PKCE S256:
+o SDK dessa versão não oferece `code_verifier`. Escopos `read write offline_access`;
+state de uso único por sessão/administrador reautenticado, prazo de cinco minutos,
+redirect derivado do domínio registrado. Callback revalida a sessão original.
+Falha após troca incerta do código exige nova autorização, sem reutilizá-lo.
+Credenciais AES-GCM usam AAD de tenant/conexão e chave externa
+`RM_PAGAMENTOS_SECRET`. Renovação usa lease por conta e não repete refresh incerto.
+
+As dependências transitivas são gerenciadas explicitamente para BeanUtils 1.11.0,
+HttpClient 5.6.3 e Core/H2 5.4.3, devido aos avisos
+[BeanUtils](https://github.com/advisories/GHSA-wxr5-93ph-8wr9),
+[HttpClient](https://github.com/advisories/GHSA-hjcp-jmpx-g3qm),
+[Core](https://github.com/advisories/GHSA-hf6x-8p5f-cgmf) e
+[H2](https://github.com/advisories/GHSA-v3jc-474w-2wm6). Revalidar árvore e JAR
+no OSV ao atualizar o SDK; não retirar overrides sem comprovação no artefato.
+
+O transporte do SDK é um `MPHttpClient` pequeno sobre JDK HttpClient. Preserva
+Authorization por requisição (a busca do SDK não preserva o campo accessToken),
+normaliza a única chave de idempotência e não registra headers/corpos. Não usa
+logger de requisições do transporte padrão, retries implícitos ou redirecionamentos.
+Timeout de conexão de cinco segundos e de chamada de dez segundos. Chamadas
+externas ocorrem sem locks/transação de negócio abertos.
+
+Intenção PostgreSQL precede o efeito remoto. Valor, prazo e URL de retorno são
+snapshots imutáveis por intenção. Antes de criar, pesquisar pela mesma referência;
+resultado perdido conserva a intenção. Consulta confere conta, referência, BRL,
+valor e transações. Inbox normaliza o ID alfanumérico para minúsculas antes da assinatura oficial (o SDK não o normaliza), usa contexto neutro e mapeamento
+interno de recurso para empresa; corpo do webhook não informa estado confiável
+nem escolhe schema. Aviso anterior ao mapeamento aguarda; aviso durante lease
+não é descartado. Polling também reconcilia. Recebimentos são únicos por transação.
+Mudança do estado do checkout publica `CHECKOUT_ATUALIZADO` na mesma transação,
+inclusive ao encerrar reconciliação após devolução. O acompanhamento do cliente
+reconsulta o saldo; consultas sem mudança não repetem o evento.
+
+Devoluções reservam saldo antes do efeito remoto, serializam a mesma cobrança e
+consultam antes de repetir. UUID da devolução é a chave estável no provedor;
+confirmação tardia de worker sem lease vigente não altera saldo. Devolução externa
+sem vínculo inequívoco bloqueia a cobrança para revisão. Falha após cinco tentativas
+permanece visível e reservada. Gerente pode acordar a mesma operação pela fila,
+sem criar outra intenção ou liberar reserva.
+
+Configuração local: `rm.pagamentos.client-id`, `client-secret`, `webhook-secret`,
+`porta-publica` e `secret`, obtidas de variáveis/configuração externa. O transporte
+simulado `test-base-url` aceita somente `http://127.0.0.1:porta` e `stage=test`.
+Nunca usar esse transporte como evidência de sandbox ou operação real.
 
 Fluxo de webhook:
 
@@ -50,6 +104,19 @@ O estado `CAPTURADO` significa somente persistência local, nunca entrega/lida p
 Falha terminal/corrupção elimina imediatamente conteúdo cifrado recuperável, conservando estado técnico até o expurgo. A cada ciclo, expurgo limitado remove até cem tokens e cem mensagens por tenant cuja expiração passou há mais de 24 horas. Capturas e temporários próprios com mais de 24 horas são removidos em lotes de até cem arquivos; não segue links simbólicos. Essa retenção técnica de dados fictícios não substitui política jurídica nem backup externo. Ausência de worker impede o expurgo agendado e exige manutenção explícita.
 
 O ciclo 11 acrescenta mensagens `CONVITE` preparadas na transação administrativa, com código único já cifrado. O mesmo lease/retry reutiliza o conteúdo; revogação impede aceite, mas não promete recolher captura em andamento. Captura continua local e fictícia; E05 não está encerrado.
+
+## Comunicações operacionais — Sprint 4 local
+
+Outbox de pedido é gravada na transação do evento: aceite, recusa, cancelamento,
+expiração, retirada pronta, despacho e devolução solicitada/confirmada/falha.
+Deduplicação considera pedido, tipo e referência; mensagens distintas de devolução
+não são colapsadas pela versão do pedido. Worker copia contato verificado e template
+para conteúdo cifrado, depois captura fora da transação. Falha de configuração ou
+captura não desfaz pedido/recebimento. Lease de dois minutos, backoff de trinta
+segundos por tentativa e máximo de cinco tentativas; falha terminal elimina conteúdo.
+Recuperação após captura antes da confirmação reutiliza UUID/conteúdo.
+`CAPTURADO` continua significando arquivo local, sem envio real. A fila mostra
+metadados sem endereço de e-mail/corpo, sob ação `pagamento.reconciliar`.
 
 ## Atualizações cadastrais — retomada ciclo 5
 

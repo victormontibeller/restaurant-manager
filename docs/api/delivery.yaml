@@ -1,0 +1,439 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — delivery, endereços e expedição
+  version: 0.4.0
+  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+    autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
+    envio real ou homologação Linux.
+paths:
+  "/api/v1/configuracoes/unidades/{id}/delivery":
+    get:
+      operationId: consultarDelivery
+      description: Administrador. Padrão versão zero quando ainda não configurado.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ConfigDelivery"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: configurarDelivery
+      description: Administrador reautenticado; versão otimista e nenhuma faixa ativa
+        sobreposta.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ConfigDelivery"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ConfigDelivery"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/delivery/orcamento":
+    post:
+      operationId: orcamentarDelivery
+      description: Público. Não cria pedido; envio revalida CEP, mínimo, subtotal
+        e revisão.
+      security: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OrcamentoEntrega"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/OrcamentarEntrega"
+  "/api/v1/clientes/me/enderecos":
+    get:
+      operationId: listarEnderecos
+      description: Cliente, somente endereços ativos próprios.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/EnderecoCliente"
+                maxItems: 50
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  "/api/v1/clientes/me/enderecos/{id}":
+    put:
+      operationId: salvarEndereco
+      description: Cliente proprietário. Criação usa versão zero; edição/inativação
+        exige versão. Repetição equivalente retorna salvo.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EnderecoCliente"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EnderecoCliente"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/expedicao":
+    get:
+      operationId: listarExpedicao
+      description: Ação de expedição concedida na unidade. Filtra prontos/EM_ENTREGA
+        de delivery/retirada antes da paginação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PedidoExpedicao"
+                    maxItems: 50
+                  mais:
+                    type: boolean
+                required:
+                - itens
+                - mais
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  "/api/v1/expedicao/pedidos/{id}/ocorrencia":
+    post:
+      operationId: ocorrenciaEntrega
+      description: Ação específica por unidade. Decisão exige ocorrência pendente;
+        cancelamento exige devolverTaxa explícito. Mesma intenção/payload para replay.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoExpedicao"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoOcorrencia"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/expedicao/pedidos/{id}/decidir":
+    post:
+      operationId: decidirEntrega
+      description: Ação específica por unidade. Decisão exige ocorrência pendente;
+        cancelamento exige devolverTaxa explícito. Mesma intenção/payload para replay.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoExpedicao"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoOcorrencia"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Erro:
+      description: 400 estrutura; 401 sessão; 403 ação/reautenticação; 404 recurso
+        alheio/inexistente; 409 versão/estado/intenção; 422 regra; 503 integração
+        indisponível. Erro PT-BR sem segredos.
+  schemas:
+    RegiaoDelivery:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 100
+        cepInicial:
+          type: string
+          pattern: "^[0-9]{8}$"
+        cepFinal:
+          type: string
+          pattern: "^[0-9]{8}$"
+        taxa:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        minimo:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        ativa:
+          type: boolean
+      required:
+      - id
+      - nome
+      - cepInicial
+      - cepFinal
+      - taxa
+      - minimo
+      - ativa
+    ConfigDelivery:
+      type: object
+      additionalProperties: false
+      properties:
+        versao:
+          type: integer
+          minimum: 0
+        checkoutSegundos:
+          type: integer
+          minimum: 60
+          maximum: 86400
+        regioes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/RegiaoDelivery"
+          maxItems: 100
+      required:
+      - versao
+      - checkoutSegundos
+      - regioes
+    OrcamentarEntrega:
+      type: object
+      additionalProperties: false
+      properties:
+        unidadeId:
+          type: string
+          format: uuid
+        cep:
+          type: string
+          pattern: "^[0-9]{8}$"
+        subtotal:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+      required:
+      - unidadeId
+      - cep
+      - subtotal
+    OrcamentoEntrega:
+      type: object
+      additionalProperties: false
+      properties:
+        regiaoId:
+          type: string
+          format: uuid
+        regiao:
+          type: string
+        taxa:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        minimo:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        total:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        revisao:
+          type: string
+      required:
+      - regiaoId
+      - regiao
+      - taxa
+      - minimo
+      - total
+      - revisao
+    EnderecoCliente:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        descricao:
+          type: string
+          minLength: 1
+          maxLength: 100
+        endereco:
+          "$ref": pedidos.yaml#/components/schemas/EnderecoEntrega
+        ativo:
+          type: boolean
+      required:
+      - id
+      - versao
+      - descricao
+      - endereco
+      - ativo
+    OcorrenciaEntrega:
+      type: object
+      additionalProperties: false
+      properties:
+        motivo:
+          type: string
+        estado:
+          type: string
+        devolverTaxa:
+          oneOf:
+          - type: boolean
+          - type: 'null'
+        decisao:
+          oneOf:
+          - type: string
+          - type: 'null'
+      required:
+      - motivo
+      - estado
+      - devolverTaxa
+      - decisao
+    ComandoOcorrencia:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        versao:
+          type: integer
+          minimum: 0
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+        decisao:
+          oneOf:
+          - type: string
+            enum:
+            - NOVA_TENTATIVA
+            - CANCELAMENTO
+          - type: 'null'
+        devolverTaxa:
+          oneOf:
+          - type: boolean
+          - type: 'null'
+      required:
+      - intencaoId
+      - versao
+      - motivo
+    PedidoExpedicao:
+      type: object
+      additionalProperties: false
+      properties:
+        pedido:
+          "$ref": pedidos.yaml#/components/schemas/PedidoOperacional
+        endereco:
+          oneOf:
+          - "$ref": pedidos.yaml#/components/schemas/EnderecoEntrega
+          - type: 'null'
+        entrega:
+          oneOf:
+          - "$ref": "#/components/schemas/OrcamentoEntrega"
+          - type: 'null'
+        ocorrencia:
+          oneOf:
+          - "$ref": "#/components/schemas/OcorrenciaEntrega"
+          - type: 'null'
+      required:
+      - pedido
+      - endereco
+      - entrega
+      - ocorrencia

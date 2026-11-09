@@ -45,7 +45,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   }
   await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
   const orientacao = page.getByText(
-    'As permissões controlam catálogo, pedidos, mesas e cozinha conforme o perfil e a unidade. O registro de pagamentos ainda não está disponível.',
+    'As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.',
     { exact: true },
   );
   await expect(orientacao).toBeVisible();

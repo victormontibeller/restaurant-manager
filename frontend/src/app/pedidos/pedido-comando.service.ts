@@ -5,7 +5,15 @@ import { ComandoPedido, Pedido } from './modelos';
 
 export interface IntencaoComando {
   rota: string;
-  corpo: ComandoPedido;
+  corpo:
+    | ComandoPedido
+    | {
+        intencaoId: string;
+        versao: number;
+        motivo: string;
+        decisao: string | null;
+        devolverTaxa: boolean | null;
+      };
 }
 
 @Injectable({ providedIn: 'root' })

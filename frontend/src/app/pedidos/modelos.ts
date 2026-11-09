@@ -2,6 +2,8 @@ import { LinhaCarrinho, SnapshotAdicional, SnapshotEscolha } from '../carrinho/m
 import { Canal, Unidade } from '../catalogo/modelos';
 
 export interface EnderecoPedido {
+  destinatario?: string;
+  contato?: string;
   logradouro: string;
   numero: string;
   complemento: string;
@@ -20,6 +22,8 @@ export interface EnvioPedido {
   linhas: LinhaCarrinho[];
   observacao: string;
   endereco: EnderecoPedido | null;
+  revisaoDelivery?: string | null;
+  pagamento?: 'PRESENCIAL' | 'ONLINE';
 }
 
 export interface UnidadeProducao {
@@ -75,6 +79,8 @@ export interface Pedido {
   historico?: { tipo: string; motivo: string; ocorridoEm: string }[];
   solicitacoes?: SolicitacaoCancelamento[];
   saldo?: SaldoPedido;
+  pagoOnline?: boolean;
+  pagamentoExpiraEm?: string | null;
 }
 
 export interface PaginaPedidos {
@@ -99,6 +105,7 @@ export interface ComandoPedido {
 export function nomeEstado(estado: string): string {
   return (
     {
+      AGUARDANDO_PAGAMENTO: 'Aguardando pagamento',
       AGUARDANDO_ACEITE: 'Aguardando aceite',
       NA_FILA: 'Na fila',
       EM_PREPARO: 'Em preparo',

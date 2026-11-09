@@ -9,8 +9,8 @@
     "test:logic": "node ../scripts/test-frontend.cjs",
     "test:templates": "bash ../scripts/test-profile-templates.sh",
     "e2e": "playwright test",
-    "format": "prettier --write \"src/**/*.ts\" \"src/app/{pedidos,mesas,cozinha}/**/*.{html,css}\" \"src/app/unidades/prazos-aceite.component.{html,css}\" \"src/app/operacao.css\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"src/app/{pedidos,mesas,cozinha}/**/*.{html,css}\" \"src/app/unidades/prazos-aceite.component.{html,css}\" \"src/app/operacao.css\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\""
+    "format": "prettier --write \"src/**/*.ts\" \"src/app/{pedidos,mesas,cozinha,financeiro,delivery,pagamentos,relatorios}/**/*.{html,css}\" \"src/app/unidades/prazos-aceite.component.{html,css}\" \"src/app/operacao.css\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"src/app/{pedidos,mesas,cozinha,financeiro,delivery,pagamentos,relatorios}/**/*.{html,css}\" \"src/app/unidades/prazos-aceite.component.{html,css}\" \"src/app/operacao.css\" \"e2e*/**/*.ts\" \"playwright*.config.ts\" \"../scripts/test*.cjs\""
   },
   "dependencies": {
     "@angular/cdk": "22.2.4",

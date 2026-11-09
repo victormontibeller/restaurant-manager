@@ -1,3 +1,8 @@
+import { ConfigDeliveryComponent } from '../delivery/config-delivery.component';
+import { ExpedicaoComponent } from '../delivery/expedicao.component';
+import { VendasComponent } from '../relatorios/vendas.component';
+import { IntegracaoPagamentoComponent } from '../pagamentos/integracao.component';
+import { PendenciasPagamentoComponent } from '../pagamentos/pendencias.component';
 import { Component, DestroyRef, Directive, inject } from '@angular/core';
 import { AcessosComponent } from '../acessos/acessos.component';
 import { ConvitesComponent } from '../acessos/convites.component';
@@ -95,3 +100,38 @@ export class PaginaAtualizacoesComponent {}
   template: `<app-vitrine [unidadeExterna]="contexto.unidadeId()"/>`,
 })
 export class PaginaPedidoAssistidoComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-delivery',
+  imports: [ConfigDeliveryComponent],
+  template: `@if(contexto.unidadeId()){@for(unidade of [contexto.unidadeId()];track unidade){<app-config-delivery [unidadeId]="unidade"/>}}@else{<p role="status">Selecione uma unidade.</p>}`,
+})
+export class PaginaDeliveryComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-expedicao',
+  imports: [ExpedicaoComponent],
+  template: `@if(contexto.unidadeId()){@for(unidade of [contexto.unidadeId()];track unidade){<app-expedicao [unidadeId]="unidade" [acoes]="contexto.acoes()"/>}}@else{<p role="status">Selecione uma unidade.</p>}`,
+})
+export class PaginaExpedicaoComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-vendas',
+  imports: [VendasComponent],
+  template: `@if(contexto.unidadeId()){@for(unidade of [contexto.unidadeId()];track unidade){<app-vendas [unidadeId]="unidade"/>}}@else{<p role="status">Selecione uma unidade.</p>}`,
+})
+export class PaginaVendasComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-pendencias-pagamento',
+  imports: [PendenciasPagamentoComponent],
+  template: `@if(contexto.unidadeId()){@for(unidade of [contexto.unidadeId()];track unidade){<app-pendencias-pagamento [unidadeId]="unidade"/>}}@else{<p role="status">Selecione uma unidade.</p>}`,
+})
+export class PaginaPendenciasComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-integracoes',
+  imports: [IntegracaoPagamentoComponent],
+  template: `<app-integracao-pagamento/>`,
+})
+export class PaginaIntegracoesComponent extends PaginaProtegida {}

@@ -1,3 +1,4 @@
+import { FinanceiroComponent } from '../financeiro/financeiro.component';
 import {
   Component,
   DestroyRef,
@@ -17,6 +18,7 @@ import { PendenciasMesaService } from './pendencias-mesa.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
 
 @Component({
+  imports: [FinanceiroComponent],
   selector: 'app-mesas',
   templateUrl: './mesas.component.html',
   styleUrls: ['../operacao.css', './mesas.component.css'],

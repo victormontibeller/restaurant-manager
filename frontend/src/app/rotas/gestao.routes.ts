@@ -3,6 +3,46 @@ import { destinoEquipe, equipeObrigatoria, protegerSaida } from './guardas';
 
 export const GESTAO_ROUTES: Routes = [
   {
+    path: 'configuracoes/delivery',
+    title: 'Regiões e checkout · Gestão',
+    data: { titulo: 'Regiões e checkout', unidade: true, administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaDeliveryComponent),
+  },
+  {
+    path: 'expedicao',
+    title: 'Expedição · Gestão',
+    data: { titulo: 'Expedição', unidade: true, expedicao: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaExpedicaoComponent),
+  },
+  {
+    path: 'relatorios',
+    title: 'Vendas e movimentos · Gestão',
+    data: { titulo: 'Vendas e movimentos', unidade: true, acao: 'relatorio.consultar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaVendasComponent),
+  },
+  {
+    path: 'integracoes',
+    title: 'Mercado Pago · Gestão',
+    data: { titulo: 'Mercado Pago', administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaIntegracoesComponent),
+  },
+  {
+    path: 'pendencias',
+    title: 'Pendências e notificações · Gestão',
+    data: { titulo: 'Pendências e notificações', unidade: true, acao: 'pagamento.reconciliar' },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaPendenciasComponent),
+  },
+  {
     path: '',
     pathMatch: 'full',
     canActivate: [destinoEquipe],

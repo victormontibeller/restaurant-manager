@@ -76,6 +76,16 @@ export class ContextoOperacaoService {
     return '/sem-acesso';
   }
 
+  podeExpedicao(): boolean {
+    return [
+      'pedido.retirar',
+      'pedido.despachar',
+      'pedido.entregar',
+      'entrega.registrar_ocorrencia',
+      'entrega.decidir_ocorrencia',
+    ].some((a) => this.tem(a));
+  }
+
   podeCozinha(): boolean {
     return this.tem('cozinha.iniciar') || this.tem('cozinha.concluir');
   }

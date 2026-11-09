@@ -1,0 +1,359 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — OAuth, checkout, inbox e comunicações
+  version: 0.4.0
+  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+    autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
+    envio real ou homologação Linux.
+paths:
+  "/api/v1/integracoes/mercadopago":
+    get:
+      operationId: consultarConexaoPagamento
+      description: Administrador; 204 quando nenhuma conexão. Não retorna tokens.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/StatusConexao"
+        default:
+          "$ref": "#/components/responses/Erro"
+        '204':
+          description: Nenhuma conexão cadastrada
+  "/api/v1/integracoes/mercadopago/autorizar":
+    post:
+      operationId: autorizarConexaoPagamento
+      description: Administrador reautenticado. URL OAuth com state único e PKCE,
+        ligada à sessão original.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AutorizacaoPagamento"
+        default:
+          "$ref": "#/components/responses/Erro"
+  "/api/v1/integracoes/mercadopago/retorno":
+    get:
+      operationId: retornoOAuth
+      description: State/PKCE e sessão original ainda válida. 303 para gestão após
+        conexão; não confirma pedido.
+      security: []
+      responses:
+        '303':
+          description: Resultado atual confirmado
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: state
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: code
+        in: query
+        required: true
+        schema:
+          type: string
+  "/api/v1/me/pedidos/{id}/pagamento":
+    get:
+      operationId: consultarPagamentoPedido
+      description: Somente cliente proprietário; retorno/query do navegador não é
+        confirmação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/CheckoutResumo"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/webhooks/mercadopago":
+    post:
+      operationId: receberWebhookPagamento
+      description: Assinatura oficial obrigatória. Inbox durável em contexto neutro,
+        deduplicação; não aceita tenant/schema/status no corpo. Consulta posterior
+        confere conta/referência/moeda/valor.
+      security: []
+      responses:
+        '204':
+          description: Resultado atual confirmado
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: data.id
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: x-request-id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: x-signature
+        in: header
+        required: true
+        schema:
+          type: string
+  "/api/v1/operacao/pagamentos":
+    get:
+      operationId: listarPendenciasPagamento
+      description: pagamento.reconciliar na unidade. Metadados sem credenciais; até
+        50 por página.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/PendenciaPagamento"
+                maxItems: 50
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  "/api/v1/operacao/pagamentos/{tipo}/{id}/reconciliar":
+    post:
+      operationId: reconciliarPagamento
+      description: pagamento.reconciliar na unidade do recurso. Acorda a mesma operação,
+        conserva intenção e reserva; não confirma efeito externo.
+      security:
+      - empresarial: []
+      responses:
+        '204':
+          description: Resultado atual confirmado
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - checkout
+          - devolucao
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/operacao/notificacoes":
+    get:
+      operationId: listarNotificacoesOperacionais
+      description: pagamento.reconciliar na unidade. CAPTURADO significa arquivo local,
+        não envio/leitura.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/NotificacaoOperacional"
+                maxItems: 50
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: pagina
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  "/api/v1/me/pedidos/{id}/pagamento/tentativas/{intencao}":
+    post:
+      operationId: tentarPagamentoPedido
+      description: Somente após todas as tentativas anteriores RECUSADAS e antes do
+        prazo original. Mesmo UUID para recuperar resposta perdida.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/CheckoutResumo"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: intencao
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Erro:
+      description: 400 estrutura; 401 sessão; 403 ação/reautenticação; 404 recurso
+        alheio/inexistente; 409 versão/estado/intenção; 422 regra; 503 integração
+        indisponível. Erro PT-BR sem segredos.
+  schemas:
+    StatusConexao:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendedor:
+          type: string
+        reautorizar:
+          type: boolean
+        expiraEm:
+          type: string
+          format: date-time
+      required:
+      - id
+      - vendedor
+      - reautorizar
+      - expiraEm
+    AutorizacaoPagamento:
+      type: object
+      additionalProperties: false
+      properties:
+        url:
+          type: string
+          format: uri
+      required:
+      - url
+    CheckoutResumo:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          enum:
+          - SOLICITADO
+          - AGUARDANDO
+          - CONFIRMADO
+          - RECUSADO
+          - EM_RECONCILIACAO
+          - BLOQUEADO
+        checkoutUrl:
+          oneOf:
+          - type: string
+            format: uri
+          - type: 'null'
+        ultimaFalha:
+          oneOf:
+          - type: string
+          - type: 'null'
+      required:
+      - id
+      - estado
+      - checkoutUrl
+      - ultimaFalha
+    PendenciaPagamento:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        pedidoId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum:
+          - CHECKOUT
+          - DEVOLUCAO
+        estado:
+          type: string
+      required:
+      - id
+      - pedidoId
+      - tipo
+      - estado
+    NotificacaoOperacional:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        pedidoId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+        estado:
+          type: string
+          enum:
+          - PENDENTE
+          - CAPTURADO
+          - FALHOU
+        tentativas:
+          type: integer
+          minimum: 0
+          maximum: 5
+      required:
+      - id
+      - pedidoId
+      - tipo
+      - estado
+      - tentativas

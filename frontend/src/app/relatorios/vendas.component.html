@@ -1,0 +1,41 @@
+<section>
+  <h2>Vendas e movimentos financeiros</h2>
+  <form (ngSubmit)="carregar()">
+    <label
+      >Data inicial<input type="date" name="inicioVendas" [(ngModel)]="inicio" required />
+    </label>
+    <label>Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required /> </label>
+    <button type="submit" [disabled]="ocupado()">Consultar relatório</button>
+  </form>
+  @if (dados(); as r) {
+    <p>Fuso da unidade: {{ r.fuso }}. Consulta em {{ r.consultadoEm }}.</p>
+    <dl>
+      <dt>Pedidos criados no período</dt>
+      <dd>{{ r.pedidosCriados }}</dd>
+      <dt>Destes pedidos, cancelados atualmente</dt>
+      <dd>{{ r.canceladosAtualmente }}</dd>
+      <dt>Cobranças originais dos pedidos criados</dt>
+      <dd>{{ moeda(r.cobrancasOriginais) }}</dd>
+      <dt>Ajustes registrados no período</dt>
+      <dd>{{ moeda(r.ajustesNoPeriodo) }}</dd>
+      <dt>Recebimentos confirmados no período</dt>
+      <dd>{{ moeda(r.recebimentosConfirmados) }}</dd>
+      <dt>Devoluções confirmadas no período</dt>
+      <dd>{{ moeda(r.devolucoesConfirmadas) }}</dd>
+      <dt>Saldo atual a receber</dt>
+      <dd>{{ moeda(r.saldoAReceberAtual) }}</dd>
+      <dt>Saldo atual a devolver</dt>
+      <dd>{{ moeda(r.saldoADevolverAtual) }}</dd>
+      <dt>Reservas atuais de devolução</dt>
+      <dd>{{ moeda(r.reservasAtuais) }}</dd>
+    </dl>
+    <p>
+      Os movimentos usam suas datas de confirmação ou registro. Saldos são a posição atual das
+      cobranças com pedidos criados no período; uma comanda é considerada uma vez, incluindo suas
+      outras rodadas. Cobrança e recebimento são indicadores distintos.
+    </p>
+  }
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+</section>

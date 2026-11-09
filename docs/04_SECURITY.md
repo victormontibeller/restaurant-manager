@@ -182,6 +182,21 @@ minutos e limita cinco tentativas por operador em quinze minutos. Senha inválid
 retorna 422 sem invalidar login; quota persistida retorna 429. Provisionamento
 pela UI tem contrato próprio em [Tenancy](06_MULTI_TENANT.md#solicitação-saas-de-provisionamento--retomada-ciclo-4); a cobertura integrada de T28 permanece no checkpoint.
 
+## Fronteiras financeiras da Sprint 4 local
+
+Rotas financeiras, de expedição e de relatório possuem allowlist explícita e
+autorização por ação, unidade e recurso no caso de uso. Replay financeiro adquire
+o lock da intenção, revalida autorização e só então confronta o payload anterior.
+A projeção da cozinha permanece sem endereço/contato/financeiro; expedição recebe
+somente os dados necessários à entrega, após autorização específica.
+
+Webhook é público e assinado, processado em contexto neutro. OAuth inicia por
+Administrador reautenticado; callback valida state e sessão administrativa original,
+sem aceitar tenant ou redirect arbitrário do chamador. Credenciais não aparecem em
+DTOs, eventos ou logs; criptografia, transporte e renovação estão na fonte de
+[Integrações](21_INTEGRATIONS.md#mercado-pago-por-restaurante). O adaptador de teste só aceita
+loopback numérico em `stage=test`; isso não habilita produção.
+
 ## Referências relacionadas
 
 - [Contrato da identidade empresarial](api/identidade.yaml)

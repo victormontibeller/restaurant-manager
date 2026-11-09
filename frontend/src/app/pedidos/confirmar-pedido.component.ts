@@ -1,3 +1,5 @@
+import { EnderecosComponent } from '../delivery/enderecos.component';
+import { EntregaConfirmada } from '../delivery/modelos';
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { ROUTES, RouterLink } from '@angular/router';
 import { CarrinhoService } from '../carrinho/carrinho.service';
@@ -11,7 +13,7 @@ import { AcessosOperacao, EnvioPedido, Pedido, nomeEstado } from './modelos';
 
 @Component({
   selector: 'app-confirmar-pedido',
-  imports: [RouterLink, HlmButton],
+  imports: [RouterLink, HlmButton, EnderecosComponent],
   templateUrl: './confirmar-pedido.component.html',
   styleUrl: '../operacao.css',
 })
@@ -25,6 +27,8 @@ export class ConfirmarPedidoComponent {
   readonly paginaMesas = signal(0);
   readonly maisMesas = signal(false);
   readonly carregandoMesas = signal(false);
+  readonly entrega = signal<EntregaConfirmada | null>(null);
+  pagamento: 'PRESENCIAL' | 'ONLINE' = 'PRESENCIAL';
   readonly erro = signal('');
   readonly confirmado = signal<Pedido | null>(null);
   readonly podeReenviar = signal(false);
@@ -151,6 +155,7 @@ export class ConfirmarPedidoComponent {
     )
       return false;
     const contexto = this.carrinho.contexto();
+    if (contexto?.canal === 'DELIVERY' && !this.entrega()) return false;
     if (contexto?.canal === 'MESA') {
       return this.tipoMesa()
         ? this.sessaoMesa.participante()?.unidadeId === contexto.unidadeId
@@ -179,18 +184,9 @@ export class ConfirmarPedidoComponent {
       revisao: resumo.revisao,
       linhas: structuredClone(this.carrinho.itens().map((item) => item.linha)),
       observacao: this.observacao.trim(),
-      endereco:
-        resumo.canal === 'DELIVERY'
-          ? {
-              logradouro: 'Rua de teste',
-              numero: '100',
-              complemento: 'Cenário controlado',
-              bairro: 'Bairro fictício',
-              cidade: 'Cidade fictícia',
-              uf: 'SP',
-              cep: '01001000',
-            }
-          : null,
+      endereco: resumo.canal === 'DELIVERY' ? structuredClone(this.entrega()!.endereco) : null,
+      revisaoDelivery: resumo.canal === 'DELIVERY' ? this.entrega()!.orcamento.revisao : null,
+      pagamento: resumo.canal === 'MESA' || this.assistido() ? 'PRESENCIAL' : this.pagamento,
     };
     await this.executar(corpo);
   }
