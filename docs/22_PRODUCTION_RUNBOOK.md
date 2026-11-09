@@ -11,23 +11,13 @@ O ambiente principal de desenvolvimento/testes/homologação será o Linux do He
 
 Não guardar dados do cluster, uploads operacionais ou backups dentro do checkout nem da pasta sincronizada do código. O fluxo segue o [guia Hermes/Codex](24_AGENT_EXECUTION.md): deploy de homologação está autorizado automaticamente; produção depende de pedido específico.
 
-Exemplo **ilustrativo**, sem valores reais e ainda sem arquivo de configuração implementado:
-
-```dotenv
-DB_HOST=<HOST_LOCAL>
-DB_PORT=<PORTA_POSTGRES>
-DB_NAME=<BANCO_EXCLUSIVO_DE_DESENVOLVIMENTO>
-DB_TEST_NAME=<BANCO_EXCLUSIVO_DE_TESTES>
-DB_USERNAME=<USUARIO_DO_PROJETO>
-DB_PASSWORD=<SEGREDO_LOCAL>
-JWT_SIGNING_KEY_FILE=<CAMINHO_FORA_DO_REPOSITORIO>
-SECRETS_ENCRYPTION_KEY_FILE=<CAMINHO_FORA_DO_REPOSITORIO>
-APP_BASE_URL=<ORIGEM_LOCAL_AUTORIZADA>
-PAYMENT_MODE=<SIMULADO_OU_SANDBOX>
-EMAIL_MODE=<CAPTURA_LOCAL>
-```
-
-As variáveis finais serão definidas na Sprint 0. `.env.example` terá apenas placeholders; `.env`, chaves, dumps, mídia privada e artefatos temporários serão ignorados. Nenhum segredo “de desenvolvimento” fixo deve ser publicado. Não substituir ferramentas globais da máquina para atender ao projeto; selecionar versões por configuração local.
+O contrato de configuração está em [`.env.example`](../.env.example), somente
+com placeholders. Usar arquivos privados 0600 fora do checkout e separar a
+credencial owner do runtime. O wrapper `with-env.sh` é para configuração privada
+confiável do operador; o ensaio local lê somente atribuições, sem executar shell.
+Chaves, dumps, mídia privada e artefatos temporários não pertencem ao Git.
+Não substituir ferramentas globais da máquina para atender ao projeto;
+selecionar versões por configuração local.
 
 ## Homologação isolada e publicação automática
 
@@ -512,6 +502,103 @@ Backup deve abranger banco, mídias necessárias e recuperação de configuraç�
 Exigir ensaio de restore em ambiente isolado: verificar pelo menos duas empresas, usuários/acessos, pedidos, recebimentos, mídia e separação dos schemas. Reconciliar efeitos externos após restauração, pois o provedor pode ter processado eventos posteriores ao ponto restaurado. Restore integral não comprova automaticamente recuperação seletiva de um tenant.
 
 Plano de contingência do piloto deve dizer como registrar pedidos e recebimentos se Internet/servidor cair e como reconciliá-los depois, sem duplicação. Operação manual alternativa será acordada com o restaurante; PWA não substitui esse procedimento.
+
+<a id="ensaio-local-sprint-5"></a>
+## Preparação local da Sprint 5
+
+`scripts/local_rehearsal.py` usa PostgreSQL, Java e `lsof` já instalados e um JAR de
+hash conhecido com manifesto correspondente às fontes atuais da aplicação.
+Não instala serviços nem publica um release. O diretório de saída deve ser novo,
+privado, externo ao checkout e curto o suficiente para o socket PostgreSQL.
+As portas 55433/8090 precisam estar livres; nenhum ocupante é encerrado.
+O listener HTTPS precisa pertencer ao PID próprio e ao loopback.
+
+```bash
+python3 scripts/local_rehearsal.py \
+  --source-env "<CONFIGURACAO_TEST_PRIVADA_0600>" \
+  --fixture "<MASSA_PEDIDOS_PRIVADA_0600>" \
+  --jar "<JAR_LOCAL_CONFERIDO>" \
+  --jar-sha256 "<SHA256_DO_JAR>" \
+  --source-manifest "<MANIFESTO_DE_FONTES_DO_BUILD_LOCAL>" \
+  --pg-bin "<DIRETORIO_DOS_BINARIOS_POSTGRESQL>" \
+  --java-home "<JAVA_21_HOME>" \
+  --output "<DIRETORIO_PRIVADO_NOVO>"
+```
+
+A fixture de pedidos é o JSON privado das suítes locais, com `host`, `empresa`,
+`schema`, `email`/`senha` do Administrador, `unidadeA` e
+`contas.clienteA.email`/`senha`, todos fictícios (`@example.invalid`). O banco
+precisa conter ao menos duas empresas ativas com identidade e catálogo fictícios.
+As credenciais são testadas por login; fixtures históricas não são presumidas válidas.
+
+O ensaio aceita somente `test`, `rm_test`, `rm_test_owner`/`rm_test_app` em
+127.0.0.1:55432 e comprova a conexão efetiva. Exporta um snapshot somente leitura.
+Inventário por schema e dumps de até dez schemas compartilham esse snapshot;
+savepoints liberam locks de leitura por tabela/schema. Isso limita locks e o
+tamanho das mensagens sem mudar parâmetros/reiniciar o cluster de origem.
+Schemas de aplicação fora de `public`/`t_...` são recusados para revisão de cobertura.
+
+Restaura todos os lotes em cluster novo, com socket 0700 e runtime efêmero em
+127.0.0.1:55433, sem permissões owner. A comparação integral precede as mutações
+do ensaio. Confere linhas, metadados, ACLs, constraints, índices, funções e triggers;
+valida hashes/tamanhos e referências das imagens, bytes HTTP em duas empresas e
+nega sua leitura pelo domínio da outra. Mídia transacional usa o mesmo snapshot.
+Não demonstra recuperação seletiva de tenant nem mídia privada futura.
+
+Para garantir massa de mídia sem escrever na origem, acrescenta dois PNGs
+fictícios de um pixel e suas referências **somente no clone**, em empresas com
+catálogo/Administrador fictícios. Com a aplicação ainda parada, faz um novo
+backup dos dois schemas no mesmo snapshot, remove/restaura esses schemas do
+clone e compara o inventário completo: os demais schemas precisam permanecer
+iguais. Esse segundo roundtrip demonstra recuperação da massa acrescentada,
+sem afirmar que a origem já continha imagens em duas empresas. Não usar esse
+procedimento destrutivo de fixture em dev/hml/produção.
+
+Chaves JWT/comunicação, senha do clone e PKCS12 são novos e exclusivos do ensaio.
+O script faz backup e recuperação desse pacote com conferência de hashes e usa
+somente a cópia recuperada. Isso demonstra o mecanismo local de configuração;
+**não recupera as chaves originais**, sessões, tokens OAuth ou mensagens cifradas
+antes do backup. Workers de pagamentos, e-mail, comunicação e retenção ficam
+desligados; o de prazos só liga na recuperação controlada. Não há envio externo.
+
+O [perfil de carga](../scripts/profiles/sprint05-local.json) fixa duração,
+concorrência, pausa e distribuição catálogo/carrinho. `load.json` registra
+latências, erros, CPU/RSS dos processos próprios, disco, estatísticas PostgreSQL
+e conexões runtime observadas. Essa última medida não é telemetria interna do
+Hikari; o atraso do job é medido separadamente após a falha. Não inferir
+capacidade do Linux de 8 GB nem quantidade suportada de restaurantes.
+
+Na recuperação, cria pedido presencial de R$ 20 no clone, mata somente o processo
+Java próprio, comprova indisponibilidade, interrompe uma conexão com transação
+aberta e verifica rollback. Reinicia o mesmo JAR, reenvia a intenção e observa
+um único pedido, expiração durável, histórico sem duplicação e zero recebimentos.
+A resposta inicial é recebida pelo harness e descartada: não é injeção de perda
+de pacote. Cobrança/devolução e falhas do provedor continuam cenários próprios.
+
+`result.json`, dumps, inventários, configuração e logs são privados. Aprovação
+local exige todos os passos e cleanup confirmado; falha fica registrada e exige
+novo diretório na reexecução. SIGINT/SIGTERM recolhem processos próprios; após
+kill abrupto do harness, conferir o PID registrado e `cluster/postmaster.pid`
+antes de parar somente os processos correspondentes. O script preserva arquivos
+para diagnóstico e não faz limpeza automática de tentativas anteriores.
+As medições de backup/restore/retomada e a idade do snapshot não são metas
+acordadas de RPO/RTO. Transações/efeitos externos posteriores ao snapshot
+exigiriam reconciliação; não são recuperados automaticamente pelo ensaio.
+
+### Revisão operacional antes do Linux
+
+| Área | Situação e ação necessária |
+| --- | --- |
+| Instalação | `bootstrap-database.py` depende do layout privado PostgreSQL 16/Linux e systemd; agora recusa Mac antes de escrever. Não instala ferramentas globais. Revalidar distribuição, binários, privilégios e serviços antes da retomada Linux. |
+| Configuração | `.env.example` documenta identidade/TLS/captura e grupo opcional de pagamentos. `runtime_config` exporta apenas o contrato explícito, recusa grupo financeiro parcial/chave inválida/porta inválida e não exporta override de provedor fictício nem credencial owner. Sandbox requer credenciais de teste e validação própria. |
+| Build | `build-release.sh` exige checkout limpo e `flock`; os dois arquivos locais preexistentes impedem usá-lo neste checkout. Preparar checkout Linux limpo do commit revisado; build identificado e gates completos são obrigatórios. JAR local reutilizado não constitui novo release homologado. |
+| Deploy/retorno | `deploy-hml.py` mantém lock, hash/SHA e recusa migrations divergentes sem manutenção. A manutenção histórica é específica da transição fundação→identidade; não é promotor genérico das Sprints 2–4. Inventariar banco/serviço atuais e preparar caminho compatível antes de migrar. |
+| Verificação | `/proc`, `systemctl` e verificação de listeners são Linux. `e2e-hml.py`/`validate-hml.py` continuam restritos à fundação; smoke de identidade não substitui matriz mutante integrada. Integrar o gate da matriz final antes de promover o release. |
+| Proxy/HTTPS | Não há configuração Caddy de produção pronta neste incremento. Domínio, ingresso, certificado/renovação e callbacks precisam de implantação/verificação próprias (E01–E03). |
+| Backup e operação | Ensaio local é no mesmo disco. Agendamento, criptografia/destino externo, retenção, alertas, responsáveis, RPO/RTO e reconciliação permanecem E07/E11. Captura local não comprova entrega de e-mail (E05). |
+
+Resultados observados e falhas/reexecuções ficam na
+[evidência da preparação local](evidencias/sprint-05-preparacao-local-2026-11-09.md).
 
 ## Documentos relacionados
 

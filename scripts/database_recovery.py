@@ -56,7 +56,7 @@ def safe_cleanup(session, stop=None):
 def canonical_constraint(value):
     # PostgreSQL pode distribuir o cast varchar[] -> text[] entre constantes
     # após reparse do pg_dump. Normalizar SOMENTE este formato literal restrito.
-    pattern = r"\(ARRAY\[((?:'[A-Z_]+'::character varying(?:, )?)+)\]\)::text\[\]"
+    pattern = r"\(ARRAY\[((?:'[A-Za-z0-9_./-]+'::character varying(?:, )?)+)\]\)::text\[\]"
     return re.sub(pattern, lambda m: 'ARRAY[' + ', '.join('(' + x + ')::text' for x in m[1].split(', ')) + ']', value)
 
 
@@ -105,7 +105,7 @@ class Session:
         self.process.stdout.close()
 
 
-def snapshot_inventory(command, env, log, snapshot):
+def snapshot_inventory(command, env, log, snapshot, release_table_locks=False):
     # Exportador mantém o ponto MVCC, não os locks de todas as tabelas/índices.
     # Encerrar o leitor antes do pg_dump evita duplicar entradas de locks por PID.
     validate_snapshot(snapshot)
@@ -113,18 +113,25 @@ def snapshot_inventory(command, env, log, snapshot):
     try:
         reader.query('begin isolation level repeatable read read only')
         reader.query("set transaction snapshot '" + snapshot + "'")
-        return inventory(reader)
+        return inventory(reader, release_table_locks=release_table_locks)
     finally:
         reader.close()
 
 
-def inventory(session, require_identity=True, release_table_locks=False):
+def inventory(session, require_identity=True, release_table_locks=False, schema=None):
+    if schema is not None:
+        identifier(schema)
+
+    def scope(column):
+        return (column + "='" + schema + "'" if schema is not None else
+                "(" + column + "='public' or " + column + " like 't\\_%' escape '\\')")
+
     tables = session.query("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace "
-                           "where c.relkind='r' and (n.nspname='public' or n.nspname like 't\\_%' escape '\\') order by 1")
+                           "where c.relkind='r' and " + scope('n.nspname') + " order by 1")
     result = {}
     for table in tables:
-        schema, name = table.split('.')
-        qualified = identifier(schema) + '.' + identifier(name)
+        table_schema, name = table.split('.')
+        qualified = identifier(table_schema) + '.' + identifier(name)
         # Somente hashes saem da consulta: nenhuma senha, token ou e-mail no relatório.
         # Modo de manutenção: escritores próprios parados e transação RR ativa.
         # Rollback do savepoint libera locks da leitura sem trocar snapshot MVCC.
@@ -143,34 +150,37 @@ def inventory(session, require_identity=True, release_table_locks=False):
         result[table] = dict(rows=len(rows), sha256=hashlib.sha256('\n'.join(rows).encode()).hexdigest())
     metadata = session.query("select json_build_object('schemas',(select json_agg(x order by name) from "
         "(select nspname name,pg_get_userbyid(nspowner) owner,nspacl::text acl from pg_namespace "
-        "where nspname='public' or nspname like 't\\_%' escape '\\') x),"
+        "where " + scope('nspname') + ") x),"
         "'constraints',(select json_agg(x order by name) from (select n.nspname||'.'||c.relname||'.'||k.conname name,"
         "pg_get_constraintdef(k.oid) definition,k.convalidated validated from pg_constraint k join pg_class c on c.oid=k.conrelid "
-        "join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' or n.nspname like 't\\_%' escape '\\') x),"
+        "join pg_namespace n on n.oid=c.relnamespace where " + scope('n.nspname') + ") x),"
         "'relations',(select json_agg(x order by name) from (select n.nspname||'.'||c.relname name,c.relkind kind,"
         "pg_get_userbyid(c.relowner) owner,coalesce(c.relacl,case when c.relkind='r' then acldefault('r',c.relowner) "
         "when c.relkind='S' then acldefault('S',c.relowner) end)::text acl from pg_class c join pg_namespace n on n.oid=c.relnamespace "
-        "where n.nspname='public' or n.nspname like 't\\_%' escape '\\') x),"
+        "where " + scope('n.nspname') + ") x),"
         "'indexes',(select json_agg(x order by name) from (select schemaname||'.'||indexname name,indexdef definition "
-        "from pg_indexes where schemaname='public' or schemaname like 't\\_%' escape '\\') x),"
+        "from pg_indexes where " + scope('schemaname') + ") x),"
         "'triggers',(select json_agg(x order by name) from (select n.nspname||'.'||c.relname||'.'||t.tgname name,"
         "pg_get_triggerdef(t.oid) definition,t.tgenabled enabled from pg_trigger t join pg_class c on c.oid=t.tgrelid "
-        "join pg_namespace n on n.oid=c.relnamespace where not t.tgisinternal and (n.nspname='public' or n.nspname like 't\\_%' escape '\\')) x),"
+        "join pg_namespace n on n.oid=c.relnamespace where not t.tgisinternal and " + scope('n.nspname') + ") x),"
         "'functions',(select json_agg(x order by name) from (select n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||')' name,"
         "pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,p.proacl::text acl from pg_proc p "
-        "join pg_namespace n on n.oid=p.pronamespace where p.prokind in ('f','p') and (n.nspname='public' or n.nspname like 't\\_%' escape '\\')) x))")
-    tenants = session.query("select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') order by schema_name")
+        "join pg_namespace n on n.oid=p.pronamespace where p.prokind in ('f','p') and " + scope('n.nspname') + ") x))")
+    tenant_filter = " and schema_name='" + schema + "'" if schema is not None else ''
+    tenants = session.query("select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO')" + tenant_filter + " order by schema_name")
     with_identity = 0
-    for schema in tenants:
-        identifier(schema)
-        if schema + '.usuario' not in result or schema + '.unidade' not in result:
+    for tenant_schema in tenants:
+        identifier(tenant_schema)
+        if tenant_schema + '.usuario' not in result or tenant_schema + '.unidade' not in result:
             if require_identity:
                 raise ValueError('Empresa ativa sem schema recuperável.')
             continue  # Fundação anterior à identidade; não inventar contas recuperadas.
-        if result[schema + '.usuario']['rows'] > 0 and result[schema + '.unidade']['rows'] > 0:
+        if result[tenant_schema + '.usuario']['rows'] > 0 and result[tenant_schema + '.unidade']['rows'] > 0:
             with_identity += 1
     definitions = json.loads('\n'.join(metadata))
     for entry in definitions['constraints'] or []:
+        entry['definition'] = canonical_constraint(entry['definition'])
+    for entry in definitions.get('indexes') or []:
         entry['definition'] = canonical_constraint(entry['definition'])
     for entries in definitions.values():
         for entry in entries or []:

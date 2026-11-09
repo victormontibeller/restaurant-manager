@@ -1,0 +1,7 @@
+{
+  "duration_seconds": 20,
+  "concurrency": 4,
+  "pause_seconds": 0.1,
+  "operations": ["catalogo", "catalogo", "catalogo", "carrinho"],
+  "scope": "API HTTPS e PostgreSQL reais; massa fictícia restaurada; sem pagamentos ou e-mail externos"
+}

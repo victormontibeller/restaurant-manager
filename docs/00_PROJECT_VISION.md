@@ -44,6 +44,12 @@ Regras detalhadas sem uma decisão anterior explícita são especificações pro
 
 Continuidade local autorizada em 2026-11-06: após a integração do PR #4, o proprietário orientou desenvolver a Sprint 2 no Mac, deixando o acesso Linux para depois. Isso amplia o trabalho local descrito no [guia](24_AGENT_EXECUTION.md), sem reativar a missão anterior do Hermes nem aprovar gates pendentes de homologação.
 
+Em 2026-11-09, após a integração da Sprint 4 pelo PR #8, o proprietário autorizou
+a preparação local da Sprint 5: revisão dos procedimentos operacionais,
+backup/restore isolado, carga sintética e recuperação com dados fictícios no Mac.
+Implantação e matriz completa no Linux serão uma etapa própria. Responsáveis,
+treinamento e serviços externos continuam condicionando o piloto real.
+
 D12 e D16 foram atualizadas em 2026-11-02 para execução principal no Linux e publicação autônoma em homologação. Isso não autoriza reutilizar banco de produção ou de outro projeto. A política e a retomada estão no [guia de execução](24_AGENT_EXECUTION.md); a cobertura final de D18 está na [estratégia de testes](26_TEST_STRATEGY.md).
 
 <a id="premissas-propostas"></a>
