@@ -1,5 +1,32 @@
 # Checkpoint de execução
 
+## Sprint 5 — revisão final do PR #9, 2026-11-09
+
+Revisão solicitada pelo proprietário na mesma branch, base `main` em `8888234`.
+Corrigidos manifesto incompleto, omissão de tenant com schema ausente e caminho
+inseguro nas opções do PostgreSQL. A [revisão final](evidencias/revisao-final-sprint-05-2026-11-09.md)
+registra cenários, correções e reexecução independente da tentativa 07.
+
+**50 testes focados aprovados**, mais positivo/negativo da guarda de cobertura
+em PostgreSQL real somente leitura. **Tentativa 08 aprovada integralmente**:
+517 fontes/configurações/assets conferidos, mesmo JAR `6afe9354cac1`,
+17.467 tabelas/146.623 linhas restauradas, 104 imagens verificadas,
+625 requisições sem erros e recuperação sem duplicação. Processos próprios
+encerrados; serviços e dois arquivos locais originais preservados.
+
+O [PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9) recebe
+as correções e deve sair de rascunho somente com a CI aprovada no head final.
+Descrição e [checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks)
+registram SHA/resultado da publicação, conferíveis na retomada. Sem merge,
+auto-merge, deploy ou produção. Não reutilizar a CI #184 do head inicial para
+aprovar o novo commit.
+
+**Linux/homologação e piloto continuam pendentes**, inclusive implantação e
+matriz completa, Mercado Pago sandbox, domínio/HTTPS externo, e-mail real,
+backup operacional, responsáveis, treinamento e aceite de operação.
+Próxima ação após a revisão: merge pelo proprietário; implantação Linux em
+etapa própria autorizada, com inventário do estado real e gates correspondentes.
+
 ## Sprint 5 — preparação local concluída, 2026-11-09
 
 Branch `codex/sprint-05-preparacao-homologacao`, criada a partir da `main`
@@ -7,8 +34,8 @@ integrada em `8888234602d6c2fbbc596a6180e0d2f7349d56c6`; remota conferida no
 mesmo SHA. Atualização pendente do merge da Sprint 4 preservada abaixo.
 Os dois arquivos locais preexistentes permanecem intactos e fora do commit.
 
-Implementação publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`,
-[PR #9 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/9)
+Implementação inicial publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`,
+[PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9)
 para `main`, com escopo exclusivo de preparação local. Conferir o head e o
 resultado dinâmico da [CI do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks)
 na retomada; a confirmação documental posterior não altera o JAR ou o harness
@@ -36,8 +63,12 @@ SIGKILL/restart da API e interrupção de conexão transacional passaram: um ped
 cancelado pelo prazo durável, sem histórico duplicado nem recebimentos. Retomada
 24,840 s; atraso sintético de job 20,712390 s. Medições não definem capacidade
 do Linux nem metas de RPO/RTO. **43 testes focados passaram**; a exploração geral
-no Mac registrou dependências `/proc` ainda a validar no Linux/CI, sem skips
-ou aprovação artificial. Links/segredos, âncoras, compilação Python e diff conferidos.
+no Mac registrou dependências `/proc`, sem skips ou aprovação artificial.
+Esses testes passaram na [CI Fundação #184](https://github.com/victormontibeller/restaurant-manager/actions/runs/42667236141),
+head `26084bf363cd615435fc6c0fd28ca30bc2eefd46`: 173 testes de scripts e
+435 backend, zero falhas/erros/skips no backend, checks Angular e auditorias.
+CI não é implantação/matriz no servidor Linux. Links/segredos, âncoras,
+compilação Python e diff conferidos.
 
 API/cluster próprios encerrados; portas 8090/55433 livres, demonstração saudável
 no mesmo PID 32641 e PostgreSQL original preservado. Tentativas e recibos privados

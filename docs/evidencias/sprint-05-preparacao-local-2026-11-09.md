@@ -7,11 +7,14 @@ Preparação autorizada em 2026-11-09 na branch
 `8888234602d6c2fbbc596a6180e0d2f7349d56c6` (PR #8). A atualização pendente do
 checkpoint foi levada à branch, preservando as seções históricas.
 Os dois arquivos não versionados preexistentes permanecem fora da entrega.
-Implementação publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`, no
-[PR #9 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/9).
+Implementação inicial publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`, no
+[PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9).
 Resultado de CI e seu head exato são consultáveis nos
 [checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks);
 CI Linux não substitui implantação/matriz no servidor de homologação.
+As correções e a reexecução posteriores estão na
+[revisão final do PR #9](revisao-final-sprint-05-2026-11-09.md);
+as medições da tentativa 07 abaixo identificam o harness inicial.
 
 Ambiente: Mac, PostgreSQL 18.4/Homebrew, Java 21 local; banco fictício exclusivo
 `rm_test`. Nenhum deploy Linux, sandbox Mercado Pago, e-mail real ou produção.
@@ -94,7 +97,7 @@ SHA-256 de `result.json`:
 SHA-256 de `load.json`:
 `94412772eaf9594065718891c9f8345c48403fbde2e5323ea1f082e723e3d30b`.
 Os recibos contêm hashes dos 31 dumps, do segundo backup de mídia, do perfil e
-dos três módulos do harness; estes conferiram com os arquivos finais do checkout.
+dos três módulos do harness; estes conferiram com o checkout da implementação inicial.
 Relatórios detalhados, configuração e dumps permanecem privados, sob o rótulo
 `sprint05-20261109-6afe9354cac1`; não são publicados no Git.
 
@@ -109,14 +112,19 @@ A execução exploratória anterior da suíte geral (`python3 -m unittest discov
 -s scripts -p 'test_*.py'`) executou 171 testes e registrou 15 erros em dez métodos,
 incluindo subcasos. Todos dependem de `/proc` na coordenação de build/fila,
 smoke, provisionamento ou listener. A suíte geral não foi marcada como aprovada
-nem recebeu skips para ficar verde. Reexecutá-la integralmente no Linux/CI;
-testes novos posteriores à exploração estão cobertos na seleção focada.
+nem recebeu skips para ficar verde. A reexecução integral passou na
+[CI Fundação #184](https://github.com/victormontibeller/restaurant-manager/actions/runs/42667236141),
+head `26084bf363cd615435fc6c0fd28ca30bc2eefd46`: 173 testes dos scripts.
+A mesma CI executou 435 testes backend, zero falhas/erros/skips, checks Angular
+e auditorias. Isso encerra a dependência de CI daquela rodada; implantação e
+matriz no servidor Linux continuam pendentes.
 
 `check-repository.py`: 830 arquivos conferidos, links locais/padrões de segredo
 aprovados; 13 âncoras locais das alterações conferidas separadamente.
 `git diff --check` e compilação Python dos scripts alterados aprovados.
-Nenhum código de aplicação, contrato HTTP ou migration foi alterado; as suítes
-históricas da Sprint 4 não são apresentadas como reexecutadas neste incremento.
+Nenhum código de aplicação, contrato HTTP ou migration foi alterado. A matriz
+de jornadas UI/API da Sprint 4 não foi reexecutada neste incremento; as suítes
+automatizadas executadas pela CI acima têm escopo próprio.
 
 ## Dependências e critérios ainda pendentes
 

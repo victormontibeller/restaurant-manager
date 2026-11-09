@@ -30,7 +30,7 @@ import zlib
 from datetime import datetime, timezone
 
 from database_recovery import (Session, inventory, identifier,
-                               validate_snapshot, validate_source, verify_inventory)
+                               validate_snapshot, validate_source, validate_tenant_coverage, verify_inventory)
 from release_support import atomic_json
 
 REPO = Path(__file__).resolve().parents[1]
@@ -78,8 +78,23 @@ def validate_profile(profile):
             'Carga excede os limites do ensaio local.')
 
 
-def partitioned_inventory(session, schemas):
+def validate_source_manifest(manifest, repo=REPO):
+    paths = {p.relative_to(repo).as_posix()
+             for directory in ('backend/src/main', 'frontend/src', 'frontend/public')
+             for p in (repo / directory).rglob('*') if p.is_file()}
+    paths.update(('backend/pom.xml', 'frontend/package.json', 'frontend/package-lock.json',
+                  'frontend/angular.json', 'frontend/.postcssrc.json', 'frontend/tsconfig.json',
+                  'frontend/tsconfig.app.json', 'frontend/tsconfig.e2e.json', 'scripts/build-pwa.cjs'))
+    require(isinstance(manifest, dict) and set(manifest) == paths
+            and all((repo / name).is_file() and manifest[name] == digest(repo / name) for name in paths),
+            'Manifesto não corresponde ao conjunto completo das fontes e configurações do build.')
+    return len(paths)
+
+
+def partitioned_inventory(session, schemas, require_complete=True):
     """Mesmo snapshot; metadados limitados a um schema por mensagem/lock."""
+    if require_complete:
+        validate_tenant_coverage(session, schemas)
     result = dict(tables={}, metadata={}, tenants=0, tenants_with_identity=0)
     for schema in schemas:
         session.query('savepoint inventory_schema')
@@ -146,6 +161,10 @@ class Rehearsal:
     def __init__(self, args):
         self.args = args
         self.root = args.output.resolve()
+        # pg_ctl repassa -o por shell e PostgreSQL interpreta uma lista de sockets.
+        # Recusar espaços/metacaracteres antes de criar qualquer arquivo do ensaio.
+        require(re.fullmatch(r'/[A-Za-z0-9_./-]+', str(self.root)),
+                'Diretório de saída aceita somente letras ASCII, números, /, _, ponto e hífen.')
         require(not self.root.exists() and not self.root.is_relative_to(REPO)
                 and len(str(self.root / 'socket')) < 90, 'Use diretório novo, externo e de caminho curto.')
         self.root.mkdir(mode=0o700)
@@ -189,14 +208,10 @@ class Rehearsal:
         uuid.UUID(f['unidadeA'])
         require(digest(a.jar) == a.jar_sha256, 'Hash do JAR divergente.')
         manifest = json.loads(a.source_manifest.read_text())
-        paths = {p.relative_to(REPO).as_posix() for directory in ('backend/src/main', 'frontend/src')
-                 for p in (REPO / directory).rglob('*') if p.is_file()}
-        paths.update(('backend/pom.xml', 'frontend/package.json', 'frontend/package-lock.json'))
-        require(all(manifest.get(name) == digest(REPO / name) for name in paths),
-                'Manifesto não corresponde às fontes atuais da aplicação.')
+        source_files_checked = validate_source_manifest(manifest)
         self.record.update(git_head=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
                            artifact_sha256=a.jar_sha256, source_manifest_sha256=digest(a.source_manifest),
-                           profile_sha256=digest(a.profile), source_files_checked=len(paths),
+                           profile_sha256=digest(a.profile), source_files_checked=source_files_checked,
                            postgres_version=subprocess.check_output([str(self.pg / 'postgres'), '--version'], text=True).strip())
         self.record['harness_sha256'] = {name:digest(REPO/'scripts'/name)
             for name in ('local_rehearsal.py','database_recovery.py','release_support.py')}
@@ -344,7 +359,7 @@ class Rehearsal:
         names = [s for s,_,_ in selected]
         self.sql('begin isolation level repeatable read read only')
         snapshot = validate_snapshot(self.sql('select pg_export_snapshot()')[0])
-        before = partitioned_inventory(self.session, names)
+        before = partitioned_inventory(self.session, names, require_complete=False)
         atomic_json(self.root/'media-inventory.json', before)
         archive = self.root/'media-fixture.dump'
         self.run_command([self.pg/'pg_dump', '-h', self.socket, '-p', '55433', '-d', 'rm_test', '-Fc',

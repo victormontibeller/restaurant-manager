@@ -67,6 +67,16 @@ def identifier(value):
     return '"' + value + '"'
 
 
+def validate_tenant_coverage(session, schemas):
+    """Inventário completo não pode omitir empresa cujo schema desapareceu."""
+    available = set(schemas)
+    tenants = session.query("select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') order by schema_name")
+    for schema in tenants:
+        identifier(schema)
+        if schema not in available:
+            raise ValueError('Empresa ativa ou suspensa sem schema incluído no inventário.')
+
+
 class Session:
     def __init__(self, command, env, log):
         self.process = subprocess.Popen(command, env=env, stdin=subprocess.PIPE,

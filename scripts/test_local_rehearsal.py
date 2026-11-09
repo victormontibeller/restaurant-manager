@@ -2,12 +2,14 @@
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import runpy
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
-from local_rehearsal import REPO, private_file, read_env, validate_profile, partitioned_inventory, verify_local_listener
+from local_rehearsal import (REPO, Rehearsal, digest, private_file, read_env, validate_profile,
+                            partitioned_inventory, validate_source_manifest, verify_local_listener)
 import database_recovery
 
 
@@ -47,6 +49,13 @@ class LocalRehearsalTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             private_file(link)
 
+    def test_diretorio_de_saida_recusa_sintaxe_shell_antes_de_escrever(self):
+        for name in ['com espaco', 'com;comando', '$(comando)', 'com,virgula', "com'aspas", 'com\nlinha']:
+            with self.subTest(name=name), patch('pathlib.Path.mkdir') as mkdir:
+                with self.assertRaises(ValueError):
+                    Rehearsal(SimpleNamespace(output=self.root/name))
+                mkdir.assert_not_called()
+
     def test_perfil_limita_duracao_concorrencia_e_operacoes(self):
         profile = json.loads((REPO/'scripts/profiles/sprint05-local.json').read_text())
         validate_profile(profile)
@@ -57,6 +66,7 @@ class LocalRehearsalTest(unittest.TestCase):
 
     def test_inventory_particionado_preserva_metadados_e_snapshot(self):
         session = MagicMock()
+        session.query.return_value = ['t_a', 't_b']
         def part(session, schema, **kwargs):
             return dict(tables={schema+'.unidade':{'rows':1}}, metadata={'schemas':[{'name':schema}]},
                         tenants=1, tenants_with_identity=1)
@@ -67,6 +77,50 @@ class LocalRehearsalTest(unittest.TestCase):
         queries = [c.args[0] for c in session.query.call_args_list]
         self.assertEqual(queries.count('rollback to savepoint inventory_schema'),2)
         self.assertFalse(any(q in ('commit','rollback') for q in queries))
+
+    def test_inventory_integral_recusa_empresa_com_schema_ausente(self):
+        session = MagicMock()
+        session.query.return_value = ['t_a', 't_b', 't_ausente']
+        with patch('local_rehearsal.inventory') as inventory, self.assertRaises(ValueError):
+            partitioned_inventory(session, ['public', 't_a', 't_b'])
+        inventory.assert_not_called()
+
+    def test_inventory_parcial_de_midia_nao_exige_empresas_fora_da_selecao(self):
+        session = MagicMock()
+        part = dict(tables={}, metadata={}, tenants=1, tenants_with_identity=1)
+        with patch('local_rehearsal.inventory', return_value=part), \
+                patch('local_rehearsal.validate_tenant_coverage') as coverage:
+            partitioned_inventory(session, ['t_a'], require_complete=False)
+        coverage.assert_not_called()
+
+    def test_manifesto_recusa_fonte_removida_nova_e_alterada(self):
+        repo = self.root / 'repo'
+        names = ('backend/src/main/App.java', 'frontend/src/main.ts', 'frontend/public/manifest.webmanifest',
+                 'backend/pom.xml', 'frontend/package.json', 'frontend/package-lock.json',
+                 'frontend/angular.json', 'frontend/.postcssrc.json', 'frontend/tsconfig.json',
+                 'frontend/tsconfig.app.json', 'frontend/tsconfig.e2e.json', 'scripts/build-pwa.cjs')
+        for name in names:
+            path = repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('original')
+        manifest = {name: digest(repo / name) for name in names}
+        self.assertEqual(validate_source_manifest(manifest, repo), len(names))
+        removed = repo / 'backend/src/main/App.java'
+        removed.unlink()
+        with self.assertRaises(ValueError):
+            validate_source_manifest(manifest, repo)
+        removed.write_text('original')
+        added = repo / 'frontend/src/new.ts'
+        added.write_text('novo')
+        with self.assertRaises(ValueError):
+            validate_source_manifest(manifest, repo)
+        added.unlink()
+        for name in names:
+            with self.subTest(name=name):
+                (repo / name).write_text('alterado')
+                with self.assertRaises(ValueError):
+                    validate_source_manifest(manifest, repo)
+                (repo / name).write_text('original')
 
     def test_filtro_schema_recusa_injecao_antes_de_consultar(self):
         session = MagicMock()

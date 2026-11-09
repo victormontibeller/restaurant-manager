@@ -9,6 +9,25 @@ from database_recovery import canonical_constraint, safe_cleanup, validate_sourc
 
 
 class DatabaseRecoveryTest(unittest.TestCase):
+    def test_cobertura_completa_recusa_schema_ausente_mesmo_com_duas_empresas_validas(self):
+        session = MagicMock()
+        session.query.return_value = ['t_a', 't_b', 't_ausente']
+        with self.assertRaisesRegex(ValueError, 'schema incluído'):
+            database_recovery.validate_tenant_coverage(session, ['public', 't_a', 't_b'])
+        session.query.assert_called_once_with(
+            "select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') order by schema_name")
+
+    def test_cobertura_completa_aceita_todos_os_tenants_e_schemas_adicionais(self):
+        session = MagicMock()
+        session.query.return_value = ['t_a', 't_b']
+        database_recovery.validate_tenant_coverage(session, ['public', 't_a', 't_b', 't_provisionando'])
+
+    def test_cobertura_completa_recusa_identificador_invalido_do_catalogo(self):
+        session = MagicMock()
+        session.query.return_value = ["t_invalido';--"]
+        with self.assertRaisesRegex(ValueError, 'Identificador'):
+            database_recovery.validate_tenant_coverage(session, ["t_invalido';--"])
+
     def test_manutencao_libera_locks_de_tabela_sem_encerrar_snapshot(self):
         session = MagicMock()
         session.query.side_effect = [['public.empresa'], [], ['a'*64], [], [], ['{"constraints":[]}'], []]

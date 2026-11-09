@@ -508,8 +508,16 @@ Plano de contingência do piloto deve dizer como registrar pedidos e recebimento
 
 `scripts/local_rehearsal.py` usa PostgreSQL, Java e `lsof` já instalados e um JAR de
 hash conhecido com manifesto correspondente às fontes atuais da aplicação.
+O manifesto deve conter exatamente os arquivos de `backend/src/main`,
+`frontend/src` e `frontend/public`, mais `backend/pom.xml`, `frontend/package.json`,
+`frontend/package-lock.json`, `frontend/angular.json`, `frontend/.postcssrc.json`,
+os três `frontend/tsconfig*.json` versionados e `scripts/build-pwa.cjs`.
+Inclusão, remoção ou mudança de conteúdo exige manifesto/artefato correspondente.
 Não instala serviços nem publica um release. O diretório de saída deve ser novo,
 privado, externo ao checkout e curto o suficiente para o socket PostgreSQL.
+Seu caminho absoluto aceita somente letras ASCII, números, `/`, `_`, ponto e
+hífen; espaços e metacaracteres são recusados antes de criar arquivos, pois
+`pg_ctl` interpreta as opções de startup por shell.
 As portas 55433/8090 precisam estar livres; nenhum ocupante é encerrado.
 O listener HTTPS precisa pertencer ao PID próprio e ao loopback.
 
@@ -537,6 +545,9 @@ Inventário por schema e dumps de até dez schemas compartilham esse snapshot;
 savepoints liberam locks de leitura por tabela/schema. Isso limita locks e o
 tamanho das mensagens sem mudar parâmetros/reiniciar o cluster de origem.
 Schemas de aplicação fora de `public`/`t_...` são recusados para revisão de cobertura.
+Antes de cada inventário integral, também confere que todas as empresas ativas
+ou suspensas do registro central têm schema incluído; schema ausente é falha,
+mesmo que outras empresas tenham sido restauradas corretamente.
 
 Restaura todos os lotes em cluster novo, com socket 0700 e runtime efêmero em
 127.0.0.1:55433, sem permissões owner. A comparação integral precede as mutações
