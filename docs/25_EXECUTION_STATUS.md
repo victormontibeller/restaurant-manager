@@ -1,5 +1,46 @@
 # Checkpoint de execução
 
+## Sprint 5 — consolidação documental, 2026-11-09
+
+Publicação autorizada pelo proprietário em nova branch
+`codex/sprint-05-registro-entregas`, baseada na `main` integrada em `5ea8324`.
+Alteração restrita ao arquivo da Sprint 5 e a este checkpoint: entregas locais,
+resultados já executados, confirmação do merge do PR #9 e pendências explícitas.
+Homologação Linux e piloto permanecem pendentes; nenhum critério externo é
+aprovado por esta atualização. Os dois arquivos locais preexistentes continuam
+fora do commit. Validação desta mudança é documental, sem reexecução da aplicação.
+Conferidos 831 arquivos, links/padrões de segredo, seis âncoras locais e
+`git diff --check`; sete entregas locais marcadas, sem fechamento de Linux/piloto.
+
+## Sprint 5 — merge confirmado, 2026-11-09
+
+Por autorização explícita do proprietário no chat, o
+[PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9) foi
+mesclado em `main`: head `c768c808eba4e7e8ab072591f44a6f89b643f3e1`,
+merge `5ea8324ab9dfeeba53d09f5ea9caa7f0c1e7a6c7`.
+A árvore do merge é idêntica à do head revisado, sem alteração adicional.
+
+A [CI Fundação #186](https://github.com/victormontibeller/restaurant-manager/actions/runs/42692093114)
+foi reconferida como aprovada no head do PR: 180 testes de scripts,
+435 backend, checks Angular e auditorias. A `main` local foi atualizada por
+fast-forward e seu HEAD coincide com `origin/main` em `5ea8324`.
+Os dois arquivos não versionados preexistentes mantiveram seus hashes.
+
+Esta confirmação foi inicialmente mantida como atualização local do checkpoint
+e acompanha agora a consolidação documental em branch própria, sem commit/push
+direto em `main`. As seções abaixo preservam o
+histórico anterior ao merge. **Homologação Linux e piloto continuam pendentes**,
+assim como matriz completa, sandbox Mercado Pago, domínio/HTTPS externo,
+e-mail real e demais dependências operacionais. Nenhum deploy, reinício de
+serviço ou migration foi executado durante esta integração.
+
+Complemento documental solicitado pelo proprietário: o
+[arquivo da Sprint 5](19_SPRINT_05.md) passou a marcar as entregas locais
+concluídas e registrar os resultados finais da tentativa 08, da CI #186 e do
+merge. Os critérios de fechamento técnico/Linux e piloto permanecem abertos.
+Os critérios de carga, restore e recuperação identificam a evidência local
+parcial e a validação ainda necessária para seu fechamento no Linux.
+
 ## Sprint 5 — revisão final do PR #9, 2026-11-09
 
 Revisão solicitada pelo proprietário na mesma branch, base `main` em `8888234`.
