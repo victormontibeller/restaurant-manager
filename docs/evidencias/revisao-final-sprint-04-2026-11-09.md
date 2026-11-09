@@ -1,6 +1,7 @@
 # Revisão final da Sprint 4 — 2026-11-09
 
-**Resultado:** revisão local aprovada para commit e abertura de PR. Linux/Hermes
+**Resultado:** revisão local aprovada; implementação publicada no
+[PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8). Linux/Hermes
 e homologação continuam pendentes por solicitação do proprietário; não houve
 merge, deploy ou validação externa nesta revisão.
 
@@ -49,6 +50,15 @@ Artefatos privados e snapshot das fontes em
 `/Users/mac/.local/share/restaurant-manager-manual/evidencias/sprint04-20261109-6afe9354cac1`.
 Logs e prova da revisão em `/private/tmp/rm-sprint04-review-20261109`.
 Credenciais fictícias, traces e mensagens capturadas não são publicados no Git.
+
+## Publicação
+
+Commit de implementação `d356ef10c4843aadfe0247b66bc3e072bd6abb8b` publicado na branch da sprint.
+[PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8) aberto para `main`, sem merge ou auto-merge.
+Este incremento registra a abertura e atualiza somente documentação; não muda
+as fontes da aplicação nem invalida a correspondência com o candidato local.
+CI do head publicado deve ser conferida separadamente; não foi tratada como
+homologação Linux nem como resultado aprovado antes de sua execução.
 
 ## Limites mantidos
 

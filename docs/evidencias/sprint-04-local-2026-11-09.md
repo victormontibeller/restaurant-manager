@@ -3,8 +3,9 @@
 **Situação:** implementação e validação técnica local concluídas.
 Linux/Hermes e homologação permanecem pendentes por solicitação do proprietário.
 
-Branch `codex/sprint-04-delivery-pagamentos`, base `7b522e7`; alterações ainda no
-checkout de trabalho. Demonstração em 8095/`rm_dev` preservada. Validação usa
+Branch `codex/sprint-04-delivery-pagamentos`, base `7b522e7`;
+commit de implementação `d356ef1`, publicado no [PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8).
+Demonstração em 8095/`rm_dev` preservada. Validação usa
 macOS, JDK 21.0.9, PostgreSQL 18.4 em `rm_test`, Node 26 e Playwright 1.64.1.
 Não houve merge, publicação em produção ou uso de credenciais reais do provedor.
 
@@ -156,7 +157,8 @@ Conteúdo privado de mensagens e credenciais fictícias não foi versionado.
 
 Candidato e simulador próprios encerrados após a consolidação. Demonstração
 8095/`rm_dev` e PostgreSQL mantidos, com saúde/identidade conferidas. Não houve
-commit, push, merge ou publicação em produção nesta execução.
+merge ou publicação em produção. Commit/push e abertura do PR ocorreram
+na [revisão final](revisao-final-sprint-04-2026-11-09.md), após os testes locais.
 
 ## Pendências externas
 

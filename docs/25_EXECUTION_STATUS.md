@@ -4,7 +4,8 @@
 
 Execução autorizada no chat. Branch `codex/sprint-04-delivery-pagamentos`, base
 `7b522e7` (PR #7 integrado). Revisão final local aprovada em 2026-11-09;
-commit e abertura de PR autorizados pelo proprietário neste chat. Sem merge
+implementação commitada em `d356ef10c4843aadfe0247b66bc3e072bd6abb8b` e publicada no
+[PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8), aberto para `main`. Sem merge
 ou publicação em produção. Arquivo manual não versionado preservado.
 Organização por domínio e camadas mantida, contratos e fontes normativas atualizados.
 
@@ -53,7 +54,8 @@ e a matriz completa. Validação local não encerra esses gates.
 
 Revisão de publicação: [revisão final da Sprint 4](evidencias/revisao-final-sprint-04-2026-11-09.md).
 Fontes e relatórios originais revalidados; formatação, tipos e lógica repetidos
-sem alterar a aplicação. A publicação do commit e a abertura do PR estão em execução.
+sem alterar a aplicação. PR aberto; CI deve ser conferida no head publicado,
+separadamente da validação local e da homologação Linux pendente.
 
 ## Redesenho — concluído e publicado na demonstração local, 2026-11-08
 

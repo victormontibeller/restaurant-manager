@@ -5,7 +5,7 @@
 
 [Índice da documentação](README.md)
 
-**Status:** implementada e validada localmente. Linux/homologação pendentes.
+**Status:** implementada, revisada e validada localmente; [PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8) aberto. Linux/homologação pendentes.
 
 Os itens marcados têm [evidência local do candidato integrado](evidencias/sprint-04-local-2026-11-09.md): 435 testes backend e 405 pares de navegador. Provedor financeiro HTTP fictício e captura de e-mail; sandbox, envio real e homologação continuam pendentes.
 
