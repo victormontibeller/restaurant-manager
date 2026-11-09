@@ -20,6 +20,8 @@ IDENTITY_KEYS = ('RM_JWT_SECRET', 'RM_JWT_KEY_ID', 'RM_EMAIL_SECRET',
                  'RM_EMAIL_CAPTURE_DIRECTORY', 'SERVER_SSL_KEY_STORE',
                  'SERVER_SSL_KEY_STORE_PASSWORD', 'SERVER_SSL_KEY_STORE_TYPE',
                  'RM_TLS_TRUST_CERTIFICATE')
+PAYMENT_KEYS = ('RM_PAGAMENTOS_SECRET', 'RM_PAGAMENTOS_CLIENT_ID',
+                'RM_PAGAMENTOS_CLIENT_SECRET', 'RM_PAGAMENTOS_WEBHOOK_SECRET')
 
 
 def private_config(path):
@@ -90,6 +92,20 @@ def runtime_config(values, identity=False):
         keys.extend(IDENTITY_KEYS)
         if previous:
             keys.extend(('RM_JWT_PREVIOUS_SECRET', 'RM_JWT_PREVIOUS_KEY_ID'))
+    if any(key in values for key in PAYMENT_KEYS + ('RM_PAGAMENTOS_PORTA_PUBLICA',)):
+        if not identity or any(not values.get(key) for key in PAYMENT_KEYS):
+            raise ValueError('Configuração de pagamentos exige identidade/TLS e grupo completo.')
+        try:
+            if len(base64.b64decode(values['RM_PAGAMENTOS_SECRET'], validate=True)) != 32:
+                raise ValueError()
+            port = values.get('RM_PAGAMENTOS_PORTA_PUBLICA', '443')
+            if not re.fullmatch(r'[0-9]{1,5}', port) or not 1 <= int(port) <= 65535:
+                raise ValueError()
+        except ValueError:
+            raise ValueError('Chave de pagamentos ou porta pública inválida.') from None
+        keys.extend(PAYMENT_KEYS)
+        if 'RM_PAGAMENTOS_PORTA_PUBLICA' in values:
+            keys.append('RM_PAGAMENTOS_PORTA_PUBLICA')
     if any(not isinstance(values.get(key), str) or not re.fullmatch(r'[A-Za-z0-9_:/+.@=-]+', values[key]) for key in keys):
         raise ValueError('Valor de runtime inválido; configuração não será exibida.')
     return ''.join(f'{key}={values[key]}\n' for key in keys)

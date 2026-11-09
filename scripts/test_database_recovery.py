@@ -9,6 +9,25 @@ from database_recovery import canonical_constraint, safe_cleanup, validate_sourc
 
 
 class DatabaseRecoveryTest(unittest.TestCase):
+    def test_cobertura_completa_recusa_schema_ausente_mesmo_com_duas_empresas_validas(self):
+        session = MagicMock()
+        session.query.return_value = ['t_a', 't_b', 't_ausente']
+        with self.assertRaisesRegex(ValueError, 'schema incluído'):
+            database_recovery.validate_tenant_coverage(session, ['public', 't_a', 't_b'])
+        session.query.assert_called_once_with(
+            "select schema_name from public.empresa where estado in ('ATIVO','SUSPENSO') order by schema_name")
+
+    def test_cobertura_completa_aceita_todos_os_tenants_e_schemas_adicionais(self):
+        session = MagicMock()
+        session.query.return_value = ['t_a', 't_b']
+        database_recovery.validate_tenant_coverage(session, ['public', 't_a', 't_b', 't_provisionando'])
+
+    def test_cobertura_completa_recusa_identificador_invalido_do_catalogo(self):
+        session = MagicMock()
+        session.query.return_value = ["t_invalido';--"]
+        with self.assertRaisesRegex(ValueError, 'Identificador'):
+            database_recovery.validate_tenant_coverage(session, ["t_invalido';--"])
+
     def test_manutencao_libera_locks_de_tabela_sem_encerrar_snapshot(self):
         session = MagicMock()
         session.query.side_effect = [['public.empresa'], [], ['a'*64], [], [], ['{"constraints":[]}'], []]
@@ -17,6 +36,7 @@ class DatabaseRecoveryTest(unittest.TestCase):
         queries = [call.args[0] for call in session.query.call_args_list]
         self.assertEqual(queries[1], 'savepoint inventory_table')
         self.assertEqual(queries[3:5], ['rollback to savepoint inventory_table', 'release savepoint inventory_table'])
+        self.assertIn("like 't\\_%'", queries[5])
         self.assertFalse(any(q.lower().startswith(('commit', 'begin')) for q in queries))
 
     def test_inventario_fundacao_nao_inventa_identidade(self):
@@ -38,6 +58,15 @@ class DatabaseRecoveryTest(unittest.TestCase):
             'begin isolation level repeatable read read only', "set transaction snapshot '00000003-0000001B-1'"])
         session.close.assert_called_once()
 
+    def test_inventario_por_schema_nao_agrega_metadados_de_outras_empresas(self):
+        session = MagicMock()
+        session.query.side_effect = [[], ['{"constraints":[]}'], []]
+        database_recovery.inventory(session, schema='t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        queries = [c.args[0] for c in session.query.call_args_list]
+        self.assertTrue(all('like' not in query.lower() for query in queries))
+        self.assertIn("n.nspname='t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'", queries[0])
+        self.assertIn("schema_name='t_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'", queries[-1])
+
     def test_inventario_com_falha_tambem_libera_locks(self):
         session = MagicMock()
         with patch('database_recovery.Session', return_value=session), patch('database_recovery.inventory', side_effect=RuntimeError):
@@ -52,6 +81,11 @@ class DatabaseRecoveryTest(unittest.TestCase):
         self.assertNotEqual(canonical_constraint(source.replace('SUSPENSO', 'FALHOU')), restored)
         untouched = "CHECK (x = ANY ((ARRAY['1'::integer])::text[]))"
         self.assertEqual(canonical_constraint(untouched), untouched)
+        mime = "CHECK (tipo = ANY ((ARRAY['image/png'::character varying, 'image/jpeg'::character varying])::text[]))"
+        normalized = canonical_constraint(mime)
+        self.assertIn("('image/png'::character varying)::text", normalized)
+        self.assertNotEqual(canonical_constraint(mime.replace('image/png','image/gif')), normalized)
+        self.assertNotEqual(canonical_constraint(mime.replace('tipo =','tipo <>')), normalized)
 
     def test_fonte_somente_teste_e_identidade_exata(self):
         env = dict(RM_STAGE='test', RM_DB_URL='jdbc:postgresql://127.0.0.1:55432/rm_test',

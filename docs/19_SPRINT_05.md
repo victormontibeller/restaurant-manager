@@ -5,13 +5,27 @@
 
 [Índice da documentação](README.md)
 
-**Status:** não iniciada.
+**Status:** incremento de preparação local concluído em 2026-11-09, sobre a `main`
+integrada em `8888234`, na branch `codex/sprint-05-preparacao-homologacao`.
+Implantação e matriz completa no Linux ficam para etapa própria.
 
-Entregas, testes e homologações abaixo estão planejados; nenhum item está marcado como concluído.
+Os critérios de fechamento abaixo permanecem pendentes. Os ensaios locais têm
+escopo e evidências próprios e não encerram homologação ou piloto.
 
 Esta sprint tem dois fechamentos separados: **homologação técnica**, executável autonomamente com dados fictícios/sandbox, e **piloto real**, dependente de pessoas, serviços reais e autorização de produção. Pode haver homologação técnica concluída com piloto pendente; não marcar a sprint inteira como concluída nesse caso.
 
 ## Entregáveis
+
+### Incremento local autorizado
+
+- Preservar a atualização pendente do checkpoint e os dois arquivos locais preexistentes.
+- Atualizar roadmap e revisar instalação/configuração/build/deploy/recuperação;
+  procedimentos e comandos ficam no [runbook](22_PRODUCTION_RUNBOOK.md#ensaio-local-sprint-5).
+- Ensaiar backup/restore de PostgreSQL, mídia e configuração em cluster privado,
+  carga sintética com [perfil versionado](../scripts/profiles/sprint05-local.json)
+  e retomada após falha restrita à aplicação/conexão próprias.
+- Registrar falhas e reexecuções, limites das medições e dependências externas
+  na [evidência local](evidencias/sprint-05-preparacao-local-2026-11-09.md).
 
 ### Homologação técnica autônoma
 

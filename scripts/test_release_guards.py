@@ -128,6 +128,27 @@ class ReleaseGuardsTest(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 runtime_config({k: v for k, v in values.items() if k != key}, identity=True)
 
+    def test_pagamentos_so_exportam_grupo_completo_sem_override_de_provedor(self):
+        import base64
+        values = dict(self.identity_values(), RM_PAGAMENTOS_SECRET=base64.b64encode(b'p'*32).decode(),
+                      RM_PAGAMENTOS_CLIENT_ID='fixture', RM_PAGAMENTOS_CLIENT_SECRET='fixture',
+                      RM_PAGAMENTOS_WEBHOOK_SECRET='fixture', RM_PAGAMENTOS_PORTA_PUBLICA='443',
+                      RM_PAGAMENTOS_TEST_BASE_URL='http://127.0.0.1:12345')
+        result = runtime_config(values, identity=True)
+        for key in release_support.PAYMENT_KEYS + ('RM_PAGAMENTOS_PORTA_PUBLICA',):
+            self.assertIn(key + '=' + values[key] + '\n', result)
+        self.assertNotIn('TEST_BASE_URL', result)
+        self.assertNotIn('MIGRATION', result)
+        for key in release_support.PAYMENT_KEYS:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                runtime_config({k:v for k,v in values.items() if k != key}, identity=True)
+        for invalid in [dict(RM_PAGAMENTOS_SECRET='curta'), dict(RM_PAGAMENTOS_PORTA_PUBLICA='0'),
+                        dict(RM_PAGAMENTOS_PORTA_PUBLICA='65536'), dict(RM_PAGAMENTOS_CLIENT_SECRET='x\nOVERRIDE=true')]:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                runtime_config(dict(values, **invalid), identity=True)
+        with self.assertRaises(ValueError):
+            runtime_config(values, identity=False)
+
     def test_runtime_identidade_recusa_chaves_e_arquivos_inseguros(self):
         values = self.identity_values()
         invalid = [dict(RM_JWT_SECRET='curta'), dict(RM_EMAIL_SECRET='invalida'),

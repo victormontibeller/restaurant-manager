@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação e Sprints 1–2 integradas em `main`. A [Sprint 3](docs/17_SPRINT_03.md) implementa pedidos, mesas/comandas, cozinha e eventos, com implementação e revisão concluídas localmente e organização por domínio preservada. Pagamentos reais e expedição pertencem à Sprint 4. Linux e homologação permanecem pendentes. Versões, testes e limitações ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
+**Estado atual:** fundação e Sprints 1–4 integradas em `main`. A [Sprint 5](docs/19_SPRINT_05.md) está em preparação local no Mac, com ensaios fictícios e revisão operacional. Implantação e matriz completa no Linux, Mercado Pago sandbox e serviços reais permanecem pendentes. Versões, testes e limitações ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). O nome comercial será definido posteriormente.
 
 ## Stack e arquitetura
 
@@ -106,7 +106,7 @@ separa API/PostgreSQL reais, falhas de transporte injetadas, emulação e pendê
 
 `python3 scripts/e2e-hml.py` envolve a suíte com verificação do mesmo SHA/hash/PID antes e depois, sem aprovar revisão visual automaticamente. Testes das travas de release: `python3 -m unittest discover -s scripts -p 'test_*.py'`, com `TMPDIR` apontando para scratch privado. Os testes de migration usam somente schema de ensaio em `rm_test` após validar a conexão; não limpam homologação.
 
-A missão anterior do Hermes encerrou a Sprint 01 e preparou a passagem para Codex/Mac. O proprietário autorizou as Sprints 2 e 3 localmente, mantendo Linux e homologação pendentes. Homologação exige seus gates; produção permanece separada. A entrega técnica final exige todas as telas/jornadas por perfil e unidade. O [guia](docs/24_AGENT_EXECUTION.md) e o checkpoint registram a autorização e a retomada.
+A missão anterior do Hermes encerrou a Sprint 01 e preparou a passagem para Codex/Mac. As Sprints 2–4 foram implementadas localmente e integradas. A autorização vigente cobre a preparação local da Sprint 5; implantação e matriz completa Linux ficam para etapa própria. Homologação exige seus gates; produção permanece separada. O [guia](docs/24_AGENT_EXECUTION.md) e o checkpoint registram a autorização e a retomada.
 
 ### Provisionamento local em desenvolvimento/testes
 

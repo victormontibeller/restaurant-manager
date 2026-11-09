@@ -2,8 +2,12 @@
 """Cluster nativo exclusivo; não altera PostgreSQL global nem imprime segredos."""
 import os
 from pathlib import Path
+import platform
 import secrets
 import subprocess
+
+if platform.system() != 'Linux':
+    raise SystemExit('Instalação nativa exclusiva do Linux/systemd; no Mac, use o ensaio local isolado do runbook.')
 
 ROOT = Path(os.environ.get('RM_HOME', Path.home() / '.local/share/restaurant-manager')).resolve()
 PG = ROOT / 'toolchains/postgres'

@@ -51,8 +51,8 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 | [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | PRs #3 e [#4](https://github.com/victormontibeller/restaurant-manager/pull/4) integrados; CI da revisão aprovada e homologação do novo release pendente |
 | [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Implementação, revisão final e testes locais concluídos; publicação/integração rastreáveis no [PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5); Linux/homologação pendentes |
 | [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Implementação e revisão local concluídas; [PR #6 integrado](https://github.com/victormontibeller/restaurant-manager/pull/6); Linux/homologação pendentes |
-| [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | Implementação, revisão e testes locais concluídos; [PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8) aberto; [435 backend + 405 pares UI](evidencias/sprint-04-local-2026-11-09.md); Linux/homologação pendentes |
-| [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Não iniciada |
+| [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | [PR #8 integrado](https://github.com/victormontibeller/restaurant-manager/pull/8) em `8888234`; [435 backend + 405 pares UI locais](evidencias/sprint-04-local-2026-11-09.md); Linux/homologação pendentes |
+| [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Incremento de preparação local concluído; [ensaios e pendências](evidencias/sprint-05-preparacao-local-2026-11-09.md); fechamento técnico e piloto pendentes |
 
 ## Decisões, evidências e manutenção
 

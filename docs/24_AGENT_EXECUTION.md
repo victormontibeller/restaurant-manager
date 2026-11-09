@@ -7,8 +7,16 @@
 
 ## Fluxo e responsabilidades
 
-Na preparação de 2026-11-06, os PRs #3 e #4 foram confirmados como integrados
-pelo proprietário; a base atual é `19dff9d`. O proprietário confirmou as
+Orientação vigente de 2026-11-09: preparar localmente a Sprint 5 sobre `main`
+integrada em `8888234`, na branch `codex/sprint-05-preparacao-homologacao`.
+Preservar o checkpoint pendente e os dois arquivos locais; revisar procedimentos
+e executar ensaios isolados com massa fictícia no Mac. Implantação e matriz
+completa no Linux ficam para etapa própria. Não reativar o supervisor anterior
+nem tratar ensaio local como homologação ou produção. Resultados e próximo passo
+ficam no [checkpoint](25_EXECUTION_STATUS.md).
+
+Historicamente, na preparação de 2026-11-06, os PRs #3 e #4 foram confirmados como integrados
+pelo proprietário; a base era `19dff9d`. O proprietário confirmou as
 premissas da Sprint 2 e orientou avançar no desenvolvimento local da aplicação,
 deixando o acesso Linux para depois. A execução local ocorre na branch
 `codex/sprint-02-catalogo-pwa`, começando por horários/canais de unidades.

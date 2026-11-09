@@ -1,5 +1,108 @@
 # Checkpoint de execução
 
+## Sprint 5 — revisão final do PR #9, 2026-11-09
+
+Revisão solicitada pelo proprietário na mesma branch, base `main` em `8888234`.
+Corrigidos manifesto incompleto, omissão de tenant com schema ausente e caminho
+inseguro nas opções do PostgreSQL. A [revisão final](evidencias/revisao-final-sprint-05-2026-11-09.md)
+registra cenários, correções e reexecução independente da tentativa 07.
+
+**50 testes focados aprovados**, mais positivo/negativo da guarda de cobertura
+em PostgreSQL real somente leitura. **Tentativa 08 aprovada integralmente**:
+517 fontes/configurações/assets conferidos, mesmo JAR `6afe9354cac1`,
+17.467 tabelas/146.623 linhas restauradas, 104 imagens verificadas,
+625 requisições sem erros e recuperação sem duplicação. Processos próprios
+encerrados; serviços e dois arquivos locais originais preservados.
+
+O [PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9) recebe
+as correções e deve sair de rascunho somente com a CI aprovada no head final.
+Descrição e [checks do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks)
+registram SHA/resultado da publicação, conferíveis na retomada. Sem merge,
+auto-merge, deploy ou produção. Não reutilizar a CI #184 do head inicial para
+aprovar o novo commit.
+
+**Linux/homologação e piloto continuam pendentes**, inclusive implantação e
+matriz completa, Mercado Pago sandbox, domínio/HTTPS externo, e-mail real,
+backup operacional, responsáveis, treinamento e aceite de operação.
+Próxima ação após a revisão: merge pelo proprietário; implantação Linux em
+etapa própria autorizada, com inventário do estado real e gates correspondentes.
+
+## Sprint 5 — preparação local concluída, 2026-11-09
+
+Branch `codex/sprint-05-preparacao-homologacao`, criada a partir da `main`
+integrada em `8888234602d6c2fbbc596a6180e0d2f7349d56c6`; remota conferida no
+mesmo SHA. Atualização pendente do merge da Sprint 4 preservada abaixo.
+Os dois arquivos locais preexistentes permanecem intactos e fora do commit.
+
+Implementação inicial publicada em `d57d8df2341c5791049da23ebc42c07132c5d217`,
+[PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9)
+para `main`, com escopo exclusivo de preparação local. Conferir o head e o
+resultado dinâmico da [CI do PR](https://github.com/victormontibeller/restaurant-manager/pull/9/checks)
+na retomada; a confirmação documental posterior não altera o JAR ou o harness
+ensaiados. Sem merge, auto-merge ou produção.
+
+Escopo autorizado: revisão operacional e ensaios com dados fictícios no Mac.
+Roadmap, fontes de execução e runbook atualizados; ensaio reproduzível e perfil
+de carga versionados. Instalação Linux recusa Mac antes de escrever;
+contrato de runtime acrescenta grupo opcional validado de pagamentos, preservando
+isolamento da credencial owner e sem override de provedor fictício em hml.
+Tentativas, correções e limites estão na
+[evidência local](evidencias/sprint-05-preparacao-local-2026-11-09.md).
+
+**Tentativa 07 aprovada integralmente no Mac**, JAR
+`6afe9354cac1c402672a0dcedab0be97098650d3f45f5b67bb4fbf96601861de`;
+507 fontes/configurações de aplicação conferidas com o manifesto do build local.
+Backup de 31 lotes no mesmo snapshot; restore comparou 17.467 tabelas e
+146.623 linhas. Massa de mídia acrescentada apenas no clone teve segundo
+backup/restore com escritores parados: 104 imagens/3 empresas, bytes/referências
+conferidos e negativos HTTP entre empresas aprovados. Pacote de configuração
+efêmero recuperado por hash; não demonstra recuperação das chaves originais.
+
+**635 requisições de carga, zero erros**, quatro clientes/20 s; p95 29,028 ms.
+SIGKILL/restart da API e interrupção de conexão transacional passaram: um pedido,
+cancelado pelo prazo durável, sem histórico duplicado nem recebimentos. Retomada
+24,840 s; atraso sintético de job 20,712390 s. Medições não definem capacidade
+do Linux nem metas de RPO/RTO. **43 testes focados passaram**; a exploração geral
+no Mac registrou dependências `/proc`, sem skips ou aprovação artificial.
+Esses testes passaram na [CI Fundação #184](https://github.com/victormontibeller/restaurant-manager/actions/runs/42667236141),
+head `26084bf363cd615435fc6c0fd28ca30bc2eefd46`: 173 testes de scripts e
+435 backend, zero falhas/erros/skips no backend, checks Angular e auditorias.
+CI não é implantação/matriz no servidor Linux. Links/segredos, âncoras,
+compilação Python e diff conferidos.
+
+API/cluster próprios encerrados; portas 8090/55433 livres, demonstração saudável
+no mesmo PID 32641 e PostgreSQL original preservado. Tentativas e recibos privados
+mantidos para diagnóstico, rótulo `sprint05-20261109-6afe9354cac1`; nenhum processo
+temporário ativo. Hash do recibo integrado:
+`25b41c1a7c28535128e793c1ac2ae79d26fe4fea3e179c20455f48619e83e148`.
+
+**Deploy: não publicado.** Nenhum novo SHA observado ou último release validado
+no Linux é atribuído a esta preparação. Implantação e matriz completa Linux,
+Mercado Pago sandbox, domínio/HTTPS externo, e-mail real e piloto continuam
+pendentes. Próxima etapa própria: inventariar o Linux, preparar checkout limpo e
+build identificado, revisar manutenção/retorno para o schema realmente existente,
+implantar em homologação e executar a matriz completa no SHA servido. Responsáveis,
+treinamento, serviços externos e aceite de operação condicionam o piloto real.
+
+## Sprint 4 — merge confirmado, 2026-11-09
+
+O proprietário informou o merge e a integração foi conferida no GitHub:
+[PR #8](https://github.com/victormontibeller/restaurant-manager/pull/8),
+head `182fcabaa2d0824bcaf3c92543a8bbc8e9014de5`, integrado em
+`8888234602d6c2fbbc596a6180e0d2f7349d56c6`. A árvore do merge é idêntica à
+do head revisado, sem mudança adicional na aplicação.
+
+[CI Fundação #180](https://github.com/victormontibeller/restaurant-manager/actions/runs/42611802725)
+concluída com sucesso no head do PR. Isso é CI, não homologação no Linux.
+A `main` local foi sincronizada por fast-forward com `origin/main` em `8888234`.
+Os dois arquivos não versionados preexistentes foram preservados integralmente.
+
+Esta confirmação atualiza somente o checkpoint local, sem commit/push direto
+em `main`. As seções abaixo conservam o histórico anterior à integração.
+**Linux/Hermes e homologação continuam pendentes**, assim como as integrações
+reais e demais gates externos já registrados. Nenhum deploy, reinício de serviço,
+migração de ambiente ou avanço para a Sprint 5 foi realizado nesta confirmação.
+
 ## Sprint 4 — implementação e validação local concluídas, 2026-11-09
 
 Execução autorizada no chat. Branch `codex/sprint-04-delivery-pagamentos`, base
