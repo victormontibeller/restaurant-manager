@@ -77,8 +77,52 @@ export async function ok<T>(response: APIResponse | Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+const equipes = new WeakMap<Page, boolean>();
+
+export async function navegarUi(page: Page, destino: string): Promise<void> {
+  if (new URL(page.url()).pathname === destino) return;
+  if (destino.startsWith('/gestao/') || destino === '/cozinha') {
+    if (new URL(page.url()).pathname === '/cozinha') {
+      await page.getByRole('link', { name: 'Gestão', exact: true }).click();
+      await expect(page).toHaveURL((url) => url.pathname === '/gestao/pedidos');
+    } else if (
+      !new URL(page.url()).pathname.startsWith('/gestao/') ||
+      new URL(page.url()).pathname === '/gestao/entrar'
+    ) {
+      const abrirEquipe = page.getByRole('link', { name: 'Abrir área da equipe', exact: true });
+      if (!(await abrirEquipe.isVisible())) {
+        await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
+        await expect(page).toHaveURL((url) => url.pathname === '/gestao/entrar');
+      }
+      await abrirEquipe.click();
+      await expect(page.locator('app-equipe-layout')).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Unidade da operação', exact: true }),
+      ).toBeVisible();
+    }
+    if (destino === '/gestao/pedidos/novo') await navegarUi(page, '/gestao/pedidos');
+  }
+  if (new URL(page.url()).pathname === destino) return;
+  const menu = page.getByRole('button', { name: 'Abrir menu de gestão', exact: true });
+  if (
+    (await page.locator('.sidebar a[href="' + destino + '"]').count()) > 0 &&
+    (await menu.isVisible()) &&
+    (await menu.getAttribute('aria-expanded')) !== 'true'
+  ) {
+    await menu.click();
+  }
+  await page
+    .locator('a[href="' + destino + '"]:visible')
+    .first()
+    .click();
+  await expect(page).toHaveURL((url) => url.pathname === destino);
+}
+
 export async function loginUi(page: Page, conta: Conta): Promise<string> {
-  await page.goto('/');
+  const clientes = fixture().contas;
+  const equipe = ![clientes.clienteA.email, clientes.clienteB.email].includes(conta.email);
+  equipes.set(page, equipe);
+  await page.goto(equipe ? '/gestao/entrar' : '/entrar');
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
@@ -87,7 +131,22 @@ export async function loginUi(page: Page, conta: Conta): Promise<string> {
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const token = (await ok<{ accessToken: string }>(await resposta)).accessToken;
-  await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
+  if (equipe) {
+    const destino = conta.email === clientes.cozinha.email ? '/cozinha' : '/gestao/pedidos';
+    // A sessão aparece no formulário antes de o Router concluir a troca de área.
+    await expect(page).toHaveURL((url) => url.pathname === destino);
+    const area = page.locator('app-equipe-layout');
+    await expect(area).toBeVisible();
+    await expect(area.getByRole('main')).toBeVisible();
+    await expect(
+      area.getByRole('combobox', { name: 'Unidade da operação', exact: true }),
+    ).toBeVisible();
+  } else {
+    await expect(page).toHaveURL((url) => url.pathname === '/cardapio');
+    await expect(page.locator('a[href="/conta"]:visible').first()).toBeVisible();
+    await navegarUi(page, '/pedidos');
+    await expect(page.getByRole('region', { name: 'Meus pedidos', exact: true })).toBeVisible();
+  }
   return token;
 }
 
@@ -110,11 +169,27 @@ export async function operacao(
     | 'Mesas e comandas'
     | 'Configurar prazos de aceite' = 'Fila de pedidos',
 ): Promise<Locator> {
-  const botao = page.getByRole('button', { name: 'Operar pedidos e mesas', exact: true });
-  if ((await botao.getAttribute('aria-expanded')) !== 'true') await botao.click();
-  const painel = page.getByRole('region', { name: 'Operação de pedidos e mesas', exact: true });
-  await painel.getByLabel('Unidade da operação', { exact: true }).selectOption(fixture().unidadeA);
-  await painel.getByRole('button', { name: area, exact: true }).click();
+  const destinos = {
+    'Fila de pedidos': '/gestao/pedidos',
+    'Painel da cozinha': '/cozinha',
+    'Mesas e comandas': '/gestao/mesas',
+    'Configurar prazos de aceite': '/gestao/configuracoes/prazos',
+  };
+  await navegarUi(page, destinos[area]);
+  const painel = page.getByRole('main');
+  if (area === 'Configurar prazos de aceite') {
+    await expect(
+      painel.getByRole('button', { name: 'Consultar prazos atuais', exact: true }),
+    ).toBeEnabled();
+  }
+  const unidade = page.getByRole('combobox', { name: 'Unidade da operação', exact: true });
+  if ((await unidade.inputValue()) !== fixture().unidadeA)
+    await unidade.selectOption(fixture().unidadeA);
+  await expect(unidade).toHaveValue(fixture().unidadeA);
+  if (area === 'Painel da cozinha') {
+    // A cozinha abre pelos mais antigos; esta massa compartilhada busca o pedido recém-criado.
+    await painel.getByLabel('Ordenar pedidos', { exact: true }).selectOption('RECENTES');
+  }
   return painel;
 }
 
@@ -291,8 +366,22 @@ export async function montarCarrinho(
   canal: 'RETIRADA' | 'MESA' | 'DELIVERY',
   quantidade: number,
 ): Promise<void> {
-  const vitrine = page.getByRole('region', { name: 'Cardápio', exact: true });
-  await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
+  const equipe = equipes.get(page) === true;
+  await navegarUi(page, equipe ? '/gestao/pedidos/novo' : '/cardapio');
+  const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
+  if (equipe) {
+    const unidade = page.getByRole('combobox', { name: 'Unidade da operação', exact: true });
+    if ((await unidade.inputValue()) !== fixture().unidadeA)
+      await unidade.selectOption(fixture().unidadeA);
+    await expect(unidade).toHaveValue(fixture().unidadeA);
+    await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
+      fixture().unidadeA,
+    );
+  } else {
+    await vitrine
+      .getByLabel('Unidade do cardápio', { exact: true })
+      .selectOption(fixture().unidadeA);
+  }
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
   await vitrine.getByLabel('Canal do cardápio', { exact: true }).selectOption(canal);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
@@ -300,10 +389,12 @@ export async function montarCarrinho(
   await vitrine.getByRole('button', { name: 'Buscar no cardápio', exact: true }).click();
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
   await vitrine.getByRole('button', { name: 'Ver opções de ' + produto.nome, exact: true }).click();
-  const configurador = vitrine.getByRole('region', {
-    name: 'Configurar ' + produto.nome,
-    exact: true,
-  });
+  const configurador = page
+    .getByRole('dialog', { name: 'Configurar produto', exact: true })
+    .getByRole('region', {
+      name: 'Configurar ' + produto.nome,
+      exact: true,
+    });
   await configurador.getByLabel('Quantidade do produto', { exact: true }).fill(String(quantidade));
   if (produto.opcaoId) {
     await configurador
@@ -314,7 +405,17 @@ export async function montarCarrinho(
       .selectOption(produto.opcaoId);
   }
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
-  await page.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Configurar produto', exact: true })).toBeHidden();
+  const revisar = page.getByRole('button', {
+    name: 'Revisar meu pedido',
+    exact: true,
+    includeHidden: true,
+  });
+  // O clique fecha o diálogo antes do Angular renderizar o novo item. Aguarde
+  // o carrinho também no mobile, onde seu resumo lateral fica oculto por CSS.
+  await expect(revisar).toBeAttached();
+  if (!(await revisar.isVisible())) await navegarUi(page, '/carrinho');
+  await revisar.click();
   await page.getByRole('button', { name: 'Confirmar composição e valores', exact: true }).click();
   await expect(
     page.getByText('Resumo confirmado. O envio do pedido exige confirmação separada.', {
@@ -337,6 +438,10 @@ export async function enviarUi(page: Page, mesa = false): Promise<Pedido> {
   const pedido = await ok<Pedido>(await resposta);
   await expect(
     page.getByText('Pedido confirmado: ' + pedido.id + '.', { exact: false }),
+  ).toBeVisible();
+  await navegarUi(page, mesa ? '/mesa' : '/pedidos');
+  await expect(
+    page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }),
   ).toBeVisible();
   return pedido;
 }

@@ -4,10 +4,11 @@ import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { PaginaPedidos, Pedido } from '../pedidos/modelos';
 import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
+import { RM_TABS } from '../ui/tabs';
 
 @Component({
   selector: 'app-cozinha',
-  imports: [PedidoDetalheComponent],
+  imports: [PedidoDetalheComponent, RM_TABS],
   templateUrl: './cozinha.component.html',
   styleUrl: '../operacao.css',
 })
@@ -21,6 +22,15 @@ export class CozinhaComponent {
   readonly ocupado = signal(false);
   readonly pagina = signal(0);
   readonly mais = signal(false);
+  readonly filtroEstado = signal('');
+  readonly etapas = [
+    { valor: 'TODAS', nome: 'Todas' },
+    { valor: 'NA_FILA', nome: 'Na fila' },
+    { valor: 'EM_PREPARO', nome: 'Em preparo' },
+    { valor: 'PRONTO', nome: 'Prontos' },
+  ];
+  readonly filtroCanal = signal('');
+  readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('ANTIGOS');
   private geracao = 0;
   private carregamento: Promise<void> | null = null;
 
@@ -70,7 +80,13 @@ export class CozinhaComponent {
     try {
       const resultado = await this.sessao.api<PaginaPedidos>(
         '/api/v1/cozinha?' +
-          new URLSearchParams({ unidadeId: this.unidadeId(), pagina: String(this.pagina()) }),
+          new URLSearchParams({
+            unidadeId: this.unidadeId(),
+            pagina: String(this.pagina()),
+            ...(this.filtroEstado() ? { estados: this.filtroEstado() } : {}),
+            ...(this.filtroCanal() ? { canal: this.filtroCanal() } : {}),
+            ordenacao: this.ordenacao(),
+          }),
       );
       if (geracao !== this.geracao) return;
       this.pedidos.set(resultado.itens);
@@ -96,5 +112,17 @@ export class CozinhaComponent {
     } catch {
       this.pagina.set(anterior);
     }
+  }
+
+  filtrar(campo: 'estado' | 'canal' | 'ordem', valor: string): void {
+    if (campo === 'estado') this.filtroEstado.set(valor);
+    if (campo === 'canal') this.filtroCanal.set(valor);
+    if (campo === 'ordem') this.ordenacao.set(valor === 'RECENTES' ? 'RECENTES' : 'ANTIGOS');
+    this.geracao++;
+    this.carregamento = null;
+    this.pagina.set(0);
+    this.mais.set(false);
+    this.pedidos.set([]);
+    void this.carregar();
   }
 }

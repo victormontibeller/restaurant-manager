@@ -1,3 +1,4 @@
+import { abrirConta, navegarUi, nomePerfil } from '../e2e-identidade/apoio';
 import { APIRequestContext, Page, expect, test } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { fixture, loginApi, loginUi } from './apoio';
@@ -128,7 +129,7 @@ function oferta(produto: string, unidade: string): string {
 }
 
 async function abrirGestao(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Gerenciar catálogo', exact: true }).click();
+  await navegarUi(page, '/gestao/catalogo');
   await expect(
     page.getByRole('heading', { name: 'Gestão do catálogo', exact: true }),
   ).toBeVisible();
@@ -161,6 +162,7 @@ async function localizarOferta(page: Page, nome: string): Promise<void> {
 }
 
 async function procurarNoCardapio(page: Page, produto: ProdutoPreparado): Promise<void> {
+  await navegarUi(page, '/cardapio');
   await page.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
   await expect(page.getByLabel('Buscar produtos', { exact: true })).toBeVisible();
   await page.getByLabel('Buscar produtos', { exact: true }).fill(produto.nome);
@@ -216,7 +218,8 @@ for (const [perfil, chave] of perfis) {
       await configurarPerfil(request, admin, perfil, [...outrasAcoes, ...acoes]);
       const produto = await prepararProduto(request, admin);
       const token = await loginUi(page, conta);
-      await expect(page.getByText('Perfil: ' + perfil, { exact: true })).toBeVisible();
+      await abrirConta(page);
+      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
       await abrirGestao(page);
       await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toBeVisible();
 
@@ -256,7 +259,8 @@ for (const [perfil, chave] of perfis) {
       ).toBe(403);
 
       await page.reload();
-      await expect(page.getByText('Perfil: ' + perfil, { exact: true })).toBeVisible();
+      await abrirConta(page);
+      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
       await abrirGestao(page);
       await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toHaveCount(0);
       await expect(
@@ -317,14 +321,16 @@ for (const [perfil, chave] of perfis) {
         ).status(),
       ).toBe(403);
       await page.reload();
-      await expect(page.getByText('Perfil: ' + perfil, { exact: true })).toBeVisible();
-      await abrirGestao(page);
+      await expect(page).toHaveURL(/\/sem-acesso$/);
       await expect(
-        page.getByText(
-          'Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.',
-          { exact: true },
-        ),
+        page.getByRole('heading', { name: 'Esta área não está no seu acesso.', exact: true }),
       ).toBeVisible();
+      await expect(
+        page.getByRole('region', { name: 'Gestão do catálogo', exact: true }),
+      ).toHaveCount(0);
+      await abrirConta(page);
+      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
+      await expect(page.locator('a[href="/gestao/catalogo"]')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         page.viewportSize()!.width,
       );
@@ -383,9 +389,7 @@ test('S02-UI-PERFIS-CLIENTES: favoritos pessoais de duas contas e gestão negada
   const admin = await loginApi(request);
   const produto = await prepararProduto(request, admin);
   const tokenA = await loginUi(page, massa.contas.clienteA);
-  await expect(page.getByRole('button', { name: 'Gerenciar catálogo', exact: true })).toHaveCount(
-    0,
-  );
+  await expect(page.locator('a[href="/gestao/catalogo"]')).toHaveCount(0);
   await procurarNoCardapio(page, produto);
   const adicionar = page.waitForResponse(
     (item) =>
@@ -401,7 +405,7 @@ test('S02-UI-PERFIS-CLIENTES: favoritos pessoais de duas contas e gestão negada
     headers: headers(tokenA),
   });
   expect((await favoritosA.json()).produtoIds).toContain(produto.id);
-  const cardapio = page.getByRole('region', { name: 'Cardápio', exact: true });
+  const cardapio = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
   const buscaPorDescricao = 'Produto fictício da matriz de acessos';
   expect(produto.nome).not.toContain(buscaPorDescricao);
   await cardapio.getByLabel('Buscar produtos', { exact: true }).fill(buscaPorDescricao);
@@ -426,12 +430,11 @@ test('S02-UI-PERFIS-CLIENTES: favoritos pessoais de duas contas e gestão negada
     ).status(),
   ).toBe(403);
 
+  await abrirConta(page);
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
+  await expect(page).toHaveURL(/\/entrar$/);
   const tokenB = await loginUi(page, massa.contas.clienteB);
-  await expect(page.getByRole('button', { name: 'Gerenciar catálogo', exact: true })).toHaveCount(
-    0,
-  );
+  await expect(page.locator('a[href="/gestao/catalogo"]')).toHaveCount(0);
   await procurarNoCardapio(page, produto);
   await expect(
     page.getByRole('button', { name: 'Favoritar: ' + produto.nome, exact: true }),

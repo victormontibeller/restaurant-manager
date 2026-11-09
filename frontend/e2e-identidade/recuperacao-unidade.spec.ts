@@ -1,3 +1,4 @@
+import { navegarGestao, confirmarNavegacaoBloqueada } from './apoio';
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 
@@ -11,7 +12,7 @@ const fixture = JSON.parse(fs.readFileSync(process.env['RM_AUTH_FIXTURE']!, 'utf
 };
 
 test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.senha);
   const login = page.waitForResponse(
@@ -19,7 +20,7 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await login).status()).toBe(200);
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await navegarGestao(page, '/gestao/unidades');
   // A tela anterior também contém "Confirme sua senha"; aguarde a navegação real.
   await expect(
     page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
@@ -61,23 +62,23 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
   await page.getByRole('button', { name: 'Criar unidade', exact: true }).click();
   await persistida;
   try {
-    await expect(
-      page.getByRole('button', { name: 'Gerenciar acessos', exact: true }),
-    ).toBeDisabled();
+    await confirmarNavegacaoBloqueada(page, '/gestao/equipe');
   } finally {
     liberar();
   }
   await expect(page.getByRole('alert')).toContainText('Conexão interrompida');
   await expect(page.getByLabel('Nome da nova unidade')).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toBeDisabled();
+  await confirmarNavegacaoBloqueada(page, '/gestao/equipe');
   await page.getByRole('button', { name: 'Reconciliar criação' }).click();
   await expect(
     page.getByText('Unidade criada no servidor. Recarregue para ordenar a lista.'),
   ).toBeVisible();
   await expect(page.getByRole('heading', { name: nome, exact: true })).toHaveCount(1);
   await expect(page.getByLabel('Nome da nova unidade')).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Gerenciar acessos', exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: 'Gerenciar acessos', exact: true }).click();
+  await expect(
+    page.getByRole('link', { name: 'Equipe e acessos', exact: true, includeHidden: true }),
+  ).toHaveAttribute('href', '/gestao/equipe');
+  await navegarGestao(page, '/gestao/equipe');
   await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
 });

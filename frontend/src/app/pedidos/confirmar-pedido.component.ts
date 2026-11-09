@@ -1,14 +1,17 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { ROUTES, RouterLink } from '@angular/router';
 import { CarrinhoService } from '../carrinho/carrinho.service';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 import { Mesa } from '../mesas/modelos';
 import { SessaoMesaService } from '../mesas/sessao-mesa.service';
+import { HlmButton } from '../ui/button';
 import { PedidoEnvioService } from './pedido-envio.service';
 import { AcessosOperacao, EnvioPedido, Pedido, nomeEstado } from './modelos';
 
 @Component({
   selector: 'app-confirmar-pedido',
+  imports: [RouterLink, HlmButton],
   templateUrl: './confirmar-pedido.component.html',
   styleUrl: '../operacao.css',
 })
@@ -17,6 +20,7 @@ export class ConfirmarPedidoComponent {
   readonly sessao = inject(SessaoService);
   readonly sessaoMesa = inject(SessaoMesaService);
   readonly envio = inject(PedidoEnvioService);
+  readonly navegacaoDisponivel = inject(ROUTES, { optional: true }) !== null;
   readonly mesas = signal<Mesa[]>([]);
   readonly paginaMesas = signal(0);
   readonly maisMesas = signal(false);
@@ -26,8 +30,23 @@ export class ConfirmarPedidoComponent {
   readonly podeReenviar = signal(false);
   readonly acoes = signal<string[]>([]);
   readonly nomeEstado = nomeEstado;
-  observacao = '';
-  comandaId = '';
+  get observacao(): string {
+    return this.rascunho().observacao;
+  }
+  set observacao(valor: string) {
+    this.rascunho().observacao = valor;
+  }
+  get comandaId(): string {
+    return this.rascunho().comandaId;
+  }
+  set comandaId(valor: string) {
+    this.rascunho().comandaId = valor;
+  }
+
+  private rascunho() {
+    const contexto = this.carrinho.contexto();
+    return this.envio.rascunho(this.tipoMesa(), contexto?.unidadeId ?? '', contexto?.canal ?? '');
+  }
   private consulta = 0;
   private consultaMesas = 0;
   private carregamentoMesas: Promise<void> | null = null;
@@ -39,13 +58,12 @@ export class ConfirmarPedidoComponent {
       const participante = this.sessaoMesa.participante();
       this.confirmado.set(null);
       this.mesas.set([]);
-      this.paginaMesas.set(0);
+      this.paginaMesas.set(this.rascunho().paginaMesas);
       this.maisMesas.set(false);
       this.carregandoMesas.set(false);
       this.carregamentoMesas = null;
       this.consultaMesas++;
       this.acoes.set([]);
-      this.comandaId = '';
       const consulta = ++this.consulta;
       if (identidade && identidade.perfil !== 'CLIENTE' && !participante) {
         void this.sessao
@@ -54,7 +72,7 @@ export class ConfirmarPedidoComponent {
             if (consulta !== this.consulta) return;
             this.acoes.set(acessos.acoes);
             if (contexto?.canal === 'MESA' && acessos.acoes.includes('pedido.criar_assistido')) {
-              await this.carregarMesas(0);
+              await this.carregarMesas(this.rascunho().paginaMesas);
             }
           })
           .catch((error) => {
@@ -104,6 +122,7 @@ export class ConfirmarPedidoComponent {
       const abertas = mesas.filter((mesa) => mesa.estadoComanda === 'ABERTA');
       this.mesas.set(abertas);
       this.paginaMesas.set(pagina);
+      this.rascunho().paginaMesas = pagina;
       this.maisMesas.set(mesas.length === 50);
       if (!abertas.some((mesa) => mesa.comandaId === this.comandaId)) this.comandaId = '';
       this.erro.set('');

@@ -11,6 +11,9 @@ const signal = (initial) => {
     set: (next) => {
       value = next;
     },
+    update: (fn) => {
+      value = fn(value);
+    },
   });
 };
 class ApiFailure extends Error {
@@ -24,6 +27,8 @@ class SessaoService {}
 class SessaoMesaService {}
 class CarrinhoService {}
 class PedidoEnvioService {}
+class PendenciasMesaService {}
+class NavegacaoProtegidaService {}
 class AcompanhamentoEventos {
   iniciar() {}
   encerrar() {}
@@ -34,19 +39,23 @@ function componente(arquivo, nome, api) {
   const destruidores = [];
   const sessao = { identidade: signal({ usuarioId: 'admin', perfil: 'ADMINISTRADOR' }), api };
   const carrinho = { contexto: signal({ unidadeId: 'unidade-a', canal: 'MESA' }) };
+  const raiz = {};
   const input = Object.assign((initial) => signal(initial), {
     required: () => signal('unidade-a'),
   });
   const context = {
     exports: {},
     Error,
+    structuredClone,
     URLSearchParams,
     crypto: require('node:crypto').webcrypto,
     location: { origin: 'https://empresa.invalid' },
+    window: { addEventListener() {}, confirm: () => false },
     require: (name) => {
       if (name === '@angular/core')
         return {
           Component: () => (value) => value,
+          Injectable: () => (value) => value,
           signal,
           computed: (fn) => fn,
           input,
@@ -62,17 +71,46 @@ function componente(arquivo, nome, api) {
                   ? carrinho
                   : type === SessaoMesaService
                     ? { participante: () => null }
-                    : { ocupado: () => false, pendente: () => null },
+                    : type === PendenciasMesaService
+                      ? (raiz.pendencias ??= servicoReal(
+                          'mesas/pendencias-mesa.service.ts',
+                          'PendenciasMesaService',
+                        ))
+                      : type === NavegacaoProtegidaService
+                        ? (raiz.navegacao ??= servicoReal(
+                            'rotas/navegacao-protegida.service.ts',
+                            'NavegacaoProtegidaService',
+                          ))
+                        : (raiz.envio ??= servicoReal(
+                            'pedidos/pedido-envio.service.ts',
+                            'PedidoEnvioService',
+                          )),
         };
       if (name.includes('sessao-mesa')) return { SessaoMesaService };
       if (name.includes('sessao.service')) return { SessaoService, ApiFailure };
       if (name.includes('carrinho.service')) return { CarrinhoService };
       if (name.includes('pedido-envio.service')) return { PedidoEnvioService };
+      if (name.includes('pendencias-mesa.service')) return { PendenciasMesaService };
+      if (name.includes('navegacao-protegida.service')) return { NavegacaoProtegidaService };
       if (name.includes('acompanhamento')) return { AcompanhamentoEventos };
       if (name.includes('catalogo/modelos')) return { mensagemErro: (error) => error.message };
       return {};
     },
   };
+  function servicoReal(relative, exported) {
+    const modulo = { ...context, exports: {} };
+    vm.runInNewContext(
+      ts.transpileModule(fs.readFileSync(repo + '/frontend/src/app/' + relative, 'utf8'), {
+        compilerOptions: {
+          target: ts.ScriptTarget.ES2022,
+          module: ts.ModuleKind.CommonJS,
+          experimentalDecorators: true,
+        },
+      }).outputText,
+      modulo,
+    );
+    return new modulo.exports[exported]();
+  }
   vm.runInNewContext(
     ts.transpileModule(fs.readFileSync(repo + '/frontend/src/app/' + arquivo, 'utf8'), {
       compilerOptions: {
@@ -199,11 +237,11 @@ async function respostaPerdidaPreservaUuidMesmoDepoisDeRecusaDoReplay() {
   const original = f.instance.criacaoPendente();
   f.instance.nome = 'Não deve substituir o payload';
   await f.instance.criar({ preventDefault() {} });
-  assert.equal(f.instance.criacaoPendente(), original);
+  assert.deepEqual(f.instance.criacaoPendente(), original);
   await f.instance.criar({ preventDefault() {} });
   assert.equal(f.instance.criacaoPendente(), null);
   assert(
-    corpos.every((corpo) => corpo === original),
+    corpos.every((corpo) => JSON.stringify(corpo) === JSON.stringify(original)),
     'Todos os reenvios usam UUID e payload originais.',
   );
 }

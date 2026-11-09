@@ -18,7 +18,8 @@ function credenciais(): { email: string; senha: string } {
 const base = '/api/v1/plataforma/provisionamentos';
 async function entrar(page: Page): Promise<string> {
   const fixture = credenciais();
-  await page.goto('/?area=plataforma');
+  await page.goto('/plataforma');
+  await expect(page).toHaveURL(/\/plataforma$/);
   await expect(
     page.getByRole('button', { name: 'Entrar na plataforma', exact: true }),
   ).toBeEnabled();

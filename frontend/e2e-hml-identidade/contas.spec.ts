@@ -1,3 +1,4 @@
+import { abrirConta, navegarGestao, nomePerfil } from '../e2e-identidade/apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 
@@ -85,7 +86,10 @@ for (const [index, account] of fixture.accounts.entries()) {
     const platform = account.perfil === 'OPERADOR_SAAS';
     const base = origin(account.host);
     const prefix = platform ? '/api/v1/plataforma/auth' : '/api/v1/auth';
-    await page.goto(base + (platform ? '/?area=plataforma' : '/'));
+    await page.goto(
+      base +
+        (platform ? '/plataforma' : account.perfil === 'CLIENTE' ? '/entrar' : '/gestao/entrar'),
+    );
     const login = page.getByRole('button', {
       name: platform ? 'Entrar na plataforma' : 'Entrar',
       exact: true,
@@ -107,7 +111,12 @@ for (const [index, account] of fixture.accounts.entries()) {
     expect(response.status()).toBe(200);
     const token = (await response.json()).accessToken as string;
     const headers = { Authorization: 'Bearer ' + token };
-    await expect(page.getByText('Perfil: ' + account.perfil, { exact: true })).toBeVisible();
+    if (!platform) await abrirConta(page);
+    await expect(
+      page.getByText(platform ? 'Perfil: OPERADOR_SAAS' : nomePerfil[account.perfil], {
+        exact: true,
+      }),
+    ).toBeVisible();
     const cookieName = platform ? 'RM_PLATFORM_REFRESH' : 'RM_REFRESH';
     const refresh = (await context.cookies()).find((c) => c.name === cookieName);
     expect(refresh).toBeTruthy();
@@ -153,6 +162,7 @@ for (const [index, account] of fixture.accounts.entries()) {
         ).status(),
       ).toBe(401);
       if (account.perfil === 'ADMINISTRADOR') {
+        await navegarGestao(page, '/gestao/equipe');
         await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
         const select = page.getByLabel('Perfil operacional');
         await expect(select).toBeEnabled();
@@ -160,7 +170,7 @@ for (const [index, account] of fixture.accounts.entries()) {
         await expect(select).toHaveValue('COZINHA');
         await expect(page.getByLabel('Iniciar preparo', { exact: true })).toBeChecked();
         await screen(page, 'administracao-acessos');
-        await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+        await navegarGestao(page, '/gestao/unidades');
         await expect(
           page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
         ).toBeVisible();
@@ -169,14 +179,17 @@ for (const [index, account] of fixture.accounts.entries()) {
         const list = (await units.json()) as Array<{ id: string }>;
         expect(list.map((u) => u.id)).toContain(account.unit);
         if (account.second_unit) expect(list.map((u) => u.id)).toContain(account.second_unit);
-        await page.getByRole('button', { name: 'Gerenciar convites', exact: true }).click();
+        await navegarGestao(page, '/gestao/equipe/convites');
         await expect(
           page.getByRole('heading', { name: 'Convites de funcionários', exact: true }),
         ).toBeVisible();
         expect((await api.get(base + '/api/v1/equipe/convites', { headers })).status()).toBe(200);
       } else {
+        if (account.perfil !== 'CLIENTE') await navegarGestao(page, '/gestao/atualizacoes');
         await expect(
-          page.getByRole('navigation', { name: 'Configurações da empresa' }),
+          page.locator(
+            'a[href="/gestao/equipe"], a[href="/gestao/unidades"], a[href="/gestao/equipe/convites"]',
+          ),
         ).toHaveCount(0);
         for (const path of [
           '/api/v1/equipe',
@@ -187,9 +200,7 @@ for (const [index, account] of fixture.accounts.entries()) {
           expect((await api.get(base + path, { headers })).status()).toBe(403);
         }
         if (account.perfil === 'CLIENTE') {
-          await expect(
-            page.getByRole('button', { name: 'Acompanhar atualizações da unidade' }),
-          ).toHaveCount(0);
+          await expect(page.locator('a[href="/gestao/atualizacoes"]')).toHaveCount(0);
           expect(
             (
               await api.get(
@@ -199,7 +210,7 @@ for (const [index, account] of fixture.accounts.entries()) {
             ).status(),
           ).toBe(403);
         } else {
-          await page.getByRole('button', { name: 'Acompanhar atualizações da unidade' }).click();
+          await navegarGestao(page, '/gestao/atualizacoes');
           const select = page.getByLabel('Unidade acompanhada', { exact: true });
           await expect(select.locator(`option[value="${account.allowed_unit}"]`)).toHaveCount(1);
           await expect(select.locator(`option[value="${account.forbidden_unit}"]`)).toHaveCount(0);
@@ -225,7 +236,12 @@ for (const [index, account] of fixture.accounts.entries()) {
       }
     }
     await page.reload();
-    await expect(page.getByText('Perfil: ' + account.perfil, { exact: true })).toBeVisible();
+    if (!platform) await abrirConta(page);
+    await expect(
+      page.getByText(platform ? 'Perfil: OPERADOR_SAAS' : nomePerfil[account.perfil], {
+        exact: true,
+      }),
+    ).toBeVisible();
     expect((await context.cookies()).find((c) => c.name === cookieName)?.value).not.toBe(
       refresh?.value,
     );
@@ -247,6 +263,10 @@ for (const [index, account] of fixture.accounts.entries()) {
     expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
     await page.reload();
     await expect(login).toBeEnabled();
-    await expect(page.getByText('Perfil: ' + account.perfil, { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText(platform ? 'Perfil: OPERADOR_SAAS' : nomePerfil[account.perfil], {
+        exact: true,
+      }),
+    ).toHaveCount(0);
   });
 }

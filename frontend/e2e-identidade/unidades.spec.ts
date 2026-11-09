@@ -1,3 +1,4 @@
+import { navegarGestao } from './apoio';
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 const file = process.env['RM_AUTH_FIXTURE'];
@@ -31,7 +32,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
       await carregar(() => next.click());
     await expect(heading).toBeVisible();
   }
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.senha);
   const login = page.waitForResponse(
@@ -41,7 +42,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   const autenticada = await login;
   expect(autenticada.status()).toBe(200);
   const access = (await autenticada.json()).accessToken;
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await navegarGestao(page, '/gestao/unidades');
   await expect(page.getByRole('heading', { name: 'Configurações de unidades' })).toBeVisible();
   const orientacao = page.getByText(
     'Configure horários e canais em cada unidade. Ajuste os prazos de aceite em Operar pedidos e mesas. Regiões de entrega ainda não estão disponíveis.',

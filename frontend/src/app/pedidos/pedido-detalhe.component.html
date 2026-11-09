@@ -1,20 +1,47 @@
-<article [attr.aria-label]="'Pedido ' + pedido().id">
-  <h3>Pedido {{ pedido().id }}</h3>
-  <p>
-    <strong>{{ nomeEstado(pedido().estado) }}</strong> · {{ pedido().canal }} ·
-    {{ horario(pedido().criadoEm) }}
-  </p>
+<article
+  class="cartao-pedido"
+  [class.cartao-cozinha]="contexto() === 'cozinha'"
+  [attr.data-estado]="pedido().estado"
+  [attr.aria-label]="'Pedido ' + pedido().id"
+>
+  <header class="cabecalho-pedido">
+    <div>
+      <span class="sobretitulo">{{ canal() }}</span>
+      <h3>Pedido #{{ referencia() }}</h3>
+    </div>
+    <div class="tempo-pedido">
+      <strong>{{ tempoDecorrido() }}</strong>
+      <span [attr.title]="horario(pedido().criadoEm)">às {{ horaCriacao() }}</span>
+    </div>
+  </header>
+  <div class="estado-pedido">
+    <span
+      class="etiqueta"
+      [attr.data-estado]="pedido().estado"
+      >{{ nomeEstado(pedido().estado) }}</span
+    >
+    @if (cancelamentoPendente()) {
+      <span class="etiqueta" data-estado="AGUARDANDO_ACEITE">Cancelamento em avaliação</span>
+    }
+  </div>
   @if (prazo()) {
-    <p [class.aviso]="alertaPrazo()">{{ prazo() }}</p>
+    <p class="prazo-pedido" [class.aviso]="alertaPrazo()">{{ prazo() }}</p>
   }
   @if (pedido().primeiroPreparoEm) {
-    <p>
+    <p class="texto-secundario">
       Primeiro preparo: {{ horario(pedido().primeiroPreparoEm) }}. Cancelamento exige avaliação da
       equipe.
     </p>
   }
   @if (pedido().observacao) {
-    <p>Observação: {{ pedido().observacao }}</p>
+    <p class="observacao-pedido"><strong>Observação</strong> {{ pedido().observacao }}</p>
+  }
+  @if (contexto() === 'cozinha') {
+    <div class="resumo-producao" aria-label="Resumo das unidades de produção">
+      <span>{{ quantidadeEstado('NA_FILA') }} na fila</span>
+      <span>{{ quantidadeEstado('EM_PREPARO') }} em preparo</span>
+      <span>{{ quantidadeEstado('PRONTO') }} prontas</span>
+    </div>
   }
   @for (linha of pedido().linhas; track linha.id) {
     <section class="linha-pedido" [attr.aria-label]="linha.nome">
@@ -23,15 +50,19 @@
         {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
       </h4>
       @if (pessoal() && linha.subtotal) {
-        <p>Subtotal original: {{ moeda(linha.subtotal!) }}</p>
+        <p class="texto-secundario">Subtotal original: {{ moeda(linha.subtotal!) }}</p>
       }
       @for (extra of linha.adicionais; track $index) {
-        <p>Adicional: {{ extra.quantidade }} × {{ extra.nome }}</p>
+        <p class="componente-item">Adicional: {{ extra.quantidade }} × {{ extra.nome }}</p>
       }
       @for (escolha of linha.escolhas; track $index) {
-        <p>{{ escolha.grupo }}: {{ escolha.quantidade }} × {{ escolha.nome }}</p>
+        <p class="componente-item">
+          <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
+        </p>
         @for (extra of escolha.adicionais ?? []; track $index) {
-          <p>Adicional da escolha: {{ extra.quantidade }} × {{ extra.nome }}</p>
+          <p class="componente-item">
+            Adicional da escolha: {{ extra.quantidade }} × {{ extra.nome }}
+          </p>
         }
       }
       <ul class="unidades-producao">
@@ -41,6 +72,8 @@
               @if (podeSelecionar(unidade)) {
                 <label
                   class="selecao"
+                  [class.marcada]="selecionadas().includes(unidade.id)"
+                  [attr.data-estado]="unidade.estado"
                   [for]="'producao-' + contexto() + '-' + unidade.id"
                   [attr.title]="'Referência: ' + unidade.id"
                 >
@@ -88,13 +121,15 @@
       [disabled]="bloqueado()"
     ></textarea>
   }
-  <div class="acoes">
+  <div class="acoes acoes-pedido">
     @if (contexto() === 'operacao' && pedido().estado === 'AGUARDANDO_ACEITE') {
       @if (tem('pedido.aceitar')) {
         <button (click)="comandar('aceitar')" [disabled]="bloqueado()">Aceitar pedido</button>
       }
       @if (tem('pedido.recusar')) {
-        <button (click)="comandar('recusar')" [disabled]="bloqueado()">Recusar pedido</button>
+        <button class="perigo" (click)="comandar('recusar')" [disabled]="bloqueado()">
+          Recusar pedido
+        </button>
       }
     }
     @if (contexto() === 'cozinha' && ['NA_FILA', 'EM_PREPARO'].includes(pedido().estado)) {
@@ -111,18 +146,22 @@
     }
     @if (pessoal() && !terminal()) {
       @if (!pedido().primeiroPreparoEm) {
-        <button (click)="comandar('cancelar')" [disabled]="bloqueado()">
+        <button class="perigo" (click)="comandar('cancelar')" [disabled]="bloqueado()">
           Cancelar meu pedido integralmente
         </button>
       } @else {
-        <button (click)="comandar('solicitar-cancelamento')" [disabled]="bloqueado()">
+        <button
+          class="secundario"
+          (click)="comandar('solicitar-cancelamento')"
+          [disabled]="bloqueado()"
+        >
           Solicitar avaliação de cancelamento
         </button>
       }
     }
     @if (contexto() === 'operacao' && !terminal()) {
       @if (podeCancelarOperacional()) {
-        <button (click)="comandar('cancelar')" [disabled]="bloqueado()">
+        <button class="perigo" (click)="comandar('cancelar')" [disabled]="bloqueado()">
           {{ selecionadas().length ? 'Cancelar unidades selecionadas' : 'Cancelar todas as unidades remanescentes' }}
         </button>
       }
@@ -165,8 +204,9 @@
     </button>
   }
   @if (pedido().historico?.length) {
-    <details>
+    <details class="historico-pedido">
       <summary>Histórico do pedido</summary>
+      <p class="referencia-completa">Referência completa: {{ pedido().id }}</p>
       <ol>
         @for (evento of pedido().historico ?? []; track $index) {
           <li>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</li>

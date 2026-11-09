@@ -5,11 +5,12 @@ test('S00-UI01: shell conecta à API e PostgreSQL reais', async ({ page }) => {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await page.locator('.app-utilities > details > summary').click();
+  await expect(page.locator('.app-utilities > details').getByRole('status')).toHaveText(
+    'Sistema conectado. Banco de dados disponível.',
+  );
   await expect(
-    page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
-  ).toHaveText('Sistema conectado. Banco de dados disponível.');
-  await expect(
-    page.getByText('Pagamentos e entrega real ainda não estão disponíveis.', { exact: false }),
+    page.getByText('Ambiente de testes · Dados fictícios', { exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
@@ -33,26 +34,46 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({
 }) => {
   await page.goto('/');
   await expect(
-    page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
+    page.locator('.app-utilities > details').getByRole('status', { includeHidden: true }),
   ).toContainText('Sistema conectado');
+  await expect(page.getByLabel('Unidade do cardápio', { exact: true })).toBeEnabled();
+  await expect(page.locator('main#conteudo')).toBeFocused();
   // No WebKit/macOS, Option-Tab inclui links na navegação nativa por teclado.
-  await page.keyboard.press(
-    browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab',
+  // O router posiciona o foco no conteúdo; percorra o cabeçalho em sentido inverso.
+  const voltar =
+    browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Shift+Tab' : 'Shift+Tab';
+  const pular = page.getByRole('link', { name: 'Pular para o conteúdo' });
+  for (let passo = 0; passo < 30; passo++) {
+    await page.keyboard.press(voltar);
+    if (await pular.evaluate((elemento) => elemento === document.activeElement)) break;
+  }
+  await expect(pular).toBeFocused();
+  const urlAntesDoAtalho = page.url();
+  await page.evaluate(() => {
+    document.documentElement.dataset['contextoAtalho'] = 'preservado';
+  });
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(urlAntesDoAtalho);
+  expect(await page.evaluate(() => document.documentElement.dataset['contextoAtalho'])).toBe(
+    'preservado',
   );
-  await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeFocused();
+  await expect(page.locator('main#conteudo')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByLabel('Unidade do cardápio', { exact: true })).toBeFocused();
+  await page.locator('.app-utilities > details > summary').focus();
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeFocused();
   await context.setOffline(true);
   await page.getByRole('button', { name: 'Verificar conexão' }).click();
-  await expect(
-    page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
-  ).toContainText('Sem conexão com o sistema');
+  await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
+    'Sem conexão com o sistema',
+  );
   await context.setOffline(false);
   await page.getByRole('button', { name: 'Verificar conexão' }).click();
-  await expect(
-    page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
-  ).toContainText('Sistema conectado');
+  await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
+    'Sistema conectado',
+  );
 });
 
 test.describe('Fronteira de rede S00-UI03', () => {
@@ -72,16 +93,17 @@ test.describe('Fronteira de rede S00-UI03', () => {
     });
     try {
       await page.goto('/');
-      await expect(
-        page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
-      ).toHaveText('Verificando conexão…');
+      await page.locator('.app-utilities > details > summary').click();
+      await expect(page.locator('.app-utilities > details').getByRole('status')).toHaveText(
+        'Verificando conexão…',
+      );
       await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeDisabled();
     } finally {
       release();
     }
-    await expect(
-      page.getByRole('region', { name: 'Conexão com o sistema' }).getByRole('status'),
-    ).toContainText('Sistema conectado');
+    await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
+      'Sistema conectado',
+    );
     await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeEnabled();
   });
 });

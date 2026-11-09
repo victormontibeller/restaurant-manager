@@ -1,5 +1,6 @@
 import { expect, test, APIRequestContext, Locator, Page } from '@playwright/test';
 import { ContaCatalogo, fixture, loginUi } from './apoio';
+import { abrirConta, navegarUi } from '../e2e-identidade/apoio';
 
 interface ProdutoCriado {
   id: string;
@@ -45,6 +46,10 @@ async function verificarAlvoDeToque(alvo: Locator): Promise<void> {
 }
 
 async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<string> {
+  // Os dois chamadores acabaram de sair da conta. Espere o Router encerrar o
+  // layout anterior antes de procurar links ou controles da próxima sessão.
+  await expect(page).toHaveURL((url) => url.pathname === '/entrar');
+  await expect(page.locator('app-equipe-layout')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
@@ -52,6 +57,17 @@ async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<st
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const autenticada = await login;
   expect(autenticada.status()).toBe(200);
+  const clientes = fixture().contas;
+  if ([clientes.clienteA.email, clientes.clienteB.email].includes(conta.email)) {
+    await abrirConta(page);
+  } else {
+    // O retorno desta equipe possui upload incerto e abre o editor preservado.
+    // Sua proteção de saída deve continuar ativa até a consulta do resultado.
+    await expect(page).toHaveURL((url) => url.pathname === '/gestao/catalogo');
+    await expect(
+      page.getByRole('region', { name: 'Gestão do catálogo', exact: true }),
+    ).toHaveAttribute('aria-busy', 'false');
+  }
   await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
   return (await autenticada.json()).accessToken;
 }
@@ -184,12 +200,28 @@ async function configurarCombo(
   escolhas: string,
   adicional: boolean,
 ): Promise<void> {
-  const vitrine = page.getByRole('region', { name: 'Cardápio', exact: true });
-  await vitrine.getByRole('button', { name: 'Ver opções de ' + combo.nome, exact: true }).click();
-  const configurador = vitrine.getByRole('region', {
-    name: 'Configurar ' + combo.nome,
-    exact: true,
+  await navegarUi(page, '/cardapio');
+  const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
+  const detalhe = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      response.request().method() === 'GET' &&
+      url.pathname === '/api/v1/catalogo/' + combo.id &&
+      url.searchParams.get('unidadeId') === fixture().unidadeA &&
+      url.searchParams.get('canal') === 'DELIVERY'
+    );
   });
+  await vitrine.getByRole('button', { name: 'Ver opções de ' + combo.nome, exact: true }).click();
+  const produtoDisponivel = await detalhe;
+  expect(produtoDisponivel.status()).toBe(200);
+  expect((await produtoDisponivel.json()).disponivel).toBe(true);
+  const configurador = page
+    .getByRole('dialog', { name: 'Configurar produto', exact: true })
+    .getByRole('region', {
+      name: 'Configurar ' + combo.nome,
+      exact: true,
+    });
+  await expect(configurador.getByLabel('Quantidade do produto', { exact: true })).toBeEnabled();
   await configurador.getByLabel('Quantidade do produto', { exact: true }).fill(quantidade);
   await configurador
     .getByRole('button', { name: 'Adicionar escolha de Escolha principal', exact: true })
@@ -241,6 +273,9 @@ async function configurarCombo(
   }
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
   await expect(configurador).toHaveCount(0);
+  await expect(
+    vitrine.getByRole('button', { name: 'Ver opções de ' + combo.nome, exact: true }),
+  ).toBeFocused();
 }
 
 async function atualizarOferta(
@@ -281,7 +316,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
       chamadasPedido.push(req.method());
   });
   const token = await loginUi(page);
-  await page.getByRole('button', { name: 'Gerenciar catálogo', exact: true }).click();
+  await navegarUi(page, '/gestao/catalogo');
   const gestao = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
   await expect(gestao).toHaveAttribute('aria-busy', 'false');
   const sufixo = crypto.randomUUID().slice(0, 8);
@@ -372,9 +407,29 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   const combo = await salvarProduto(page, comboEditor);
   await ofertar(page, gestao, combo, '30.00');
 
-  const vitrine = page.getByRole('region', { name: 'Cardápio', exact: true });
+  await navegarUi(page, '/cardapio');
+  const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
   await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
+    fixture().unidadeA,
+  );
+  const canal = vitrine.getByLabel('Canal do cardápio', { exact: true });
+  if ((await canal.inputValue()) !== 'DELIVERY') {
+    const trocaCanal = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === 'GET' &&
+        url.pathname === '/api/v1/catalogo' &&
+        url.searchParams.get('unidadeId') === fixture().unidadeA &&
+        url.searchParams.get('canal') === 'DELIVERY'
+      );
+    });
+    await canal.selectOption('DELIVERY');
+    expect((await trocaCanal).status()).toBe(200);
+  }
+  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(canal).toHaveValue('DELIVERY');
   await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(combo.nome);
   await vitrine.getByLabel('Categoria do cardápio', { exact: true }).selectOption(categoriaId);
   const busca = page.waitForResponse((response) => {
@@ -382,6 +437,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     return (
       response.request().method() === 'GET' &&
       url.pathname === '/api/v1/catalogo' &&
+      url.searchParams.get('canal') === 'DELIVERY' &&
       url.searchParams.get('busca') === combo.nome &&
       url.searchParams.get('categoriaId') === categoriaId &&
       url.searchParams.get('unidadeId') === fixture().unidadeA
@@ -391,6 +447,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   const resultadoBusca = await busca;
   expect(resultadoBusca.status()).toBe(200);
   const catalogo = await resultadoBusca.json();
+  expect(catalogo.aberto).toBe(true);
   expect(catalogo.itens.map((item: { id: string }) => item.id)).toEqual([combo.id]);
   expect(catalogo.temMais).toBe(false);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
@@ -400,9 +457,10 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   await expect(comboEncontrado.getByText('Sugestão da casa', { exact: true })).toBeVisible();
   await configurarCombo(page, combo, '2', '2', true);
   await configurarCombo(page, combo, '1', '1', false);
+  await navegarUi(page, '/carrinho');
   const carrinho = page.getByRole('region', { name: 'Meu carrinho', exact: true });
   let calculo = resposta(page, '/api/v1/carrinho/calcular', 'POST');
-  await carrinho.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }).click();
+  await carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }).click();
   const cotacao = await calculo;
   expect(cotacao.status()).toBe(200);
   const resumo = await cotacao.json();
@@ -448,7 +506,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
 
   await atualizarOferta(request, token, simples.id, { disponivel: false });
   calculo = resposta(page, '/api/v1/carrinho/calcular', 'POST');
-  await carrinho.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }).click();
+  await carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }).click();
   expect((await calculo).status()).toBe(422);
   await expect(carrinho.getByRole('article')).toHaveCount(2);
   await expect(
@@ -461,12 +519,13 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
 
   await context.setOffline(true);
   await expect(
-    carrinho.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }),
+    carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }),
   ).toBeDisabled();
   await context.setOffline(false);
   await expect(
-    carrinho.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }),
+    carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }),
   ).toBeEnabled();
+  await navegarUi(page, '/cardapio');
   await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeB);
   await expect(
     vitrine.getByRole('button', { name: 'Trocar e esvaziar carrinho', exact: true }),
@@ -474,9 +533,12 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   await vitrine
     .getByRole('button', { name: 'Manter unidade, canal e carrinho', exact: true })
     .click();
+  await navegarUi(page, '/carrinho');
   await expect(carrinho.getByRole('article')).toHaveCount(2);
+  await navegarUi(page, '/cardapio');
   await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeB);
   await vitrine.getByRole('button', { name: 'Trocar e esvaziar carrinho', exact: true }).click();
+  await navegarUi(page, '/carrinho');
   await expect(carrinho.getByText('Seu carrinho está vazio.', { exact: true })).toBeVisible();
   expect(chamadasPedido).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -489,7 +551,7 @@ test('S02-UI04: conflito de edição recupera versão atual e mídia inválida n
   request,
 }) => {
   const token = await loginUi(page);
-  await page.getByRole('button', { name: 'Gerenciar catálogo', exact: true }).click();
+  await navegarUi(page, '/gestao/catalogo');
   const gestao = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
   await expect(gestao).toHaveAttribute('aria-busy', 'false');
   const categoriaId = await criarCategoria(
@@ -562,7 +624,7 @@ test.describe('Fronteira de resposta perdida do upload', () => {
     browserName,
   }) => {
     await loginUi(page);
-    await page.getByRole('button', { name: 'Gerenciar catálogo', exact: true }).click();
+    await navegarUi(page, '/gestao/catalogo');
     const gestao = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
     await expect(gestao).toHaveAttribute('aria-busy', 'false');
     const categoriaId = await criarCategoria(
@@ -640,6 +702,7 @@ test.describe('Fronteira de resposta perdida do upload', () => {
     ).toHaveCount(0);
     await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
     const token = await entrarSemRecarregar(page, fixture());
+    await navegarUi(page, '/gestao/catalogo');
     await expect(gestao).toHaveAttribute('aria-busy', 'false');
     await expect(editor.getByLabel('Nome do produto', { exact: true })).toHaveValue(nomeProduto);
     await expect(editor.getByRole('button', { name: 'Enviar imagem', exact: true })).toBeDisabled();

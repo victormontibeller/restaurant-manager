@@ -16,7 +16,7 @@ import { Categoria, Produto } from './modelos';
   selector: 'app-produto-editor',
   imports: [AdicionaisEditorComponent, GruposEditorComponent, MidiaEditorComponent],
   template: `
-    <form (submit)="salvar($event)" aria-label="Editor de produto">
+    <form [attr.data-rascunho]="'produto-' + produto.id" (submit)="salvar($event)" aria-label="Editor de produto">
       <h3>{{ novo ? 'Novo produto' : 'Editar produto' }}</h3>
       <p class="aviso">
         Nome, descrição, categoria, composição e sugestão são compartilhados por todas as unidades.
@@ -91,7 +91,7 @@ import { Categoria, Produto } from './modelos';
         <app-adicionais-editor
           [adicionais]="rascunho.adicionais"
           [bloqueado]="bloqueado || midiaBloqueada()"
-          (adicionaisChange)="rascunho.adicionais = $event"
+          (adicionaisChange)="rascunho.adicionais = $event; marcarAlterado()"
         />
       } @else {
         <app-grupos-editor
@@ -99,7 +99,7 @@ import { Categoria, Produto } from './modelos';
           [componentes]="componentes"
           [bloqueado]="bloqueado || midiaBloqueada()"
           [temMaisComponentes]="temMaisComponentes"
-          (gruposChange)="rascunho.grupos = $event"
+          (gruposChange)="rascunho.grupos = $event; marcarAlterado()"
           (maisComponentes)="maisComponentes.emit()"
         />
       }
@@ -108,8 +108,9 @@ import { Categoria, Produto } from './modelos';
         [novo]="novo"
         [midiaId]="rascunho.midiaId"
         [bloqueado]="bloqueado"
-        (midiaIdChange)="rascunho.midiaId = $event"
+        (midiaIdChange)="rascunho.midiaId = $event; marcarAlterado()"
         (bloqueio)="bloquearMidia($event)"
+        (salvo)="salvo.emit($event)"
       />
       <div class="acoes">
         <button [disabled]="bloqueado || midiaBloqueada() || tipoPendente() !== null">
@@ -139,6 +140,8 @@ export class ProdutoEditorComponent implements OnChanges {
   @Output() cancelar = new EventEmitter<void>();
   @Output() maisComponentes = new EventEmitter<void>();
   @Output() bloqueio = new EventEmitter<boolean>();
+  @Output() salvo = new EventEmitter<string>();
+  @Output() rascunhoAlterado = new EventEmitter<string>();
   readonly midiaBloqueada = signal(false);
   readonly tipoPendente = signal<'SIMPLES' | 'COMBO' | null>(null);
   rascunho!: Produto;
@@ -167,6 +170,10 @@ export class ProdutoEditorComponent implements OnChanges {
     this.rascunho.grupos = [];
     this.rascunho.adicionais = [];
     this.tipoPendente.set(null);
+  }
+
+  marcarAlterado(): void {
+    this.rascunhoAlterado.emit('produto-' + this.produto.id);
   }
 
   bloquearMidia(bloqueado: boolean): void {

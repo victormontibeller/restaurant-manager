@@ -22,6 +22,7 @@ import { CANAIS, Canal, Oferta, Unidade, mensagemErro } from './modelos';
       <select
         #unidade
         id="oferta-unidade"
+        data-sem-rascunho
         [value]="unidadeId()"
         [disabled]="ocupado() || incerto() || bloqueado"
         (change)="selecionarUnidade(unidade.value)"
@@ -54,7 +55,7 @@ import { CANAIS, Canal, Oferta, Unidade, mensagemErro } from './modelos';
         </button>
       }
       @if (oferta(); as atual) {
-        <form (submit)="salvar($event)">
+        <form [attr.data-rascunho]="grupoRascunho()" (submit)="salvar($event)">
           <fieldset [disabled]="ocupado() || incerto() || bloqueado || !podeAlterar" class="campos">
             <legend>Oferta desta unidade</legend>
             <p>
@@ -112,6 +113,7 @@ export class OfertaUnidadeComponent implements OnChanges {
   @Input() podeAlterar = false;
   @Input() bloqueado = false;
   @Output() bloqueio = new EventEmitter<boolean>();
+  @Output() salvo = new EventEmitter<string>();
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(CatalogoPendenteService);
   private destruido = false;
@@ -169,6 +171,8 @@ export class OfertaUnidadeComponent implements OnChanges {
       this.incerto.set(false);
       this.limparPendencia();
       this.aviso.set('Oferta consultada no servidor.');
+      // A consulta explícita substitui o rascunho pela versão confirmada do servidor.
+      this.salvo.emit(this.grupoRascunho());
     } catch (error) {
       if (!this.destruido && geracao === this.geracao) this.erro.set(mensagemErro(error));
     } finally {
@@ -225,6 +229,7 @@ export class OfertaUnidadeComponent implements OnChanges {
       if (this.destruido) return;
       this.oferta.set(oferta);
       this.aviso.set('Oferta da unidade salva no servidor.');
+      this.salvo.emit(this.grupoRascunho());
     } catch (error) {
       const incerto = !(
         error instanceof ApiFailure &&
@@ -242,6 +247,10 @@ export class OfertaUnidadeComponent implements OnChanges {
         this.bloqueio.emit(this.incerto());
       }
     }
+  }
+
+  grupoRascunho(): string {
+    return 'oferta-' + this.produtoId + '-' + this.unidadeId();
   }
 
   private rota(): string {

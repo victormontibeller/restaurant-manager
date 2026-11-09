@@ -8,8 +8,9 @@ interface PedidoInstalacao extends Event {
 @Component({
   selector: 'app-pwa',
   template: `
-    <section aria-labelledby="aplicativo">
-      <h2 id="aplicativo">Aplicativo e conexão</h2>
+    @if (!online()) { <p class="offline-notice" role="status">Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.</p> }
+    <details [open]="atualizacao()">
+      <summary id="aplicativo">{{ atualizacao() ? 'Nova versão disponível' : 'Aplicativo e conexão' }}</summary>
       <p role="status" aria-live="polite">
         @if (online()) {
           Rede disponível. Consultas e cálculos dependem da conexão com o restaurante.
@@ -32,8 +33,9 @@ interface PedidoInstalacao extends Event {
         <button (click)="atualizar()" [disabled]="ocupado()">Atualizar aplicativo</button>
       }
       <p role="status" aria-live="polite">{{ mensagem() }}</p>
-    </section>
+    </details>
   `,
+  styles: `:host{display:block;max-width:520px}summary{min-height:44px;align-content:center;cursor:pointer;list-style:none}details p{line-height:1.6}button{margin:.5rem .5rem .5rem 0}.offline-notice{max-width:640px;margin:0 0 1rem;padding:1rem;border-radius:12px;background:#fff1d7;color:#694d1a;box-shadow:0 8px 32px #0002;font-size:.85rem}`,
 })
 export class PwaComponent implements OnDestroy {
   readonly online = signal(navigator.onLine);

@@ -12,6 +12,10 @@ A organização segue o padrão do Schools: documentos por assunto, roadmap cent
 
 As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresentação está no [README do repositório](../README.md).
 
+O [redesenho com Spartan](evidencias/redesenho-frontend-2026-11-08.md) foi validado
+localmente e publicado na demonstração, com cliente, gestão e cozinha separados.
+O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externas pendentes.
+
 ## Fontes por assunto
 
 | Assunto | Arquivo | Conteúdo |
@@ -46,7 +50,7 @@ As instruções de contribuição ficam no [AGENTS.md](../AGENTS.md); a apresent
 | [Sprint 0 — Fundação](14_SPRINT_00.md) | Fundação validada; PR #2 mesclado |
 | [Sprint 1 — Tenant, autenticação e acessos](15_SPRINT_01.md) | PRs #3 e [#4](https://github.com/victormontibeller/restaurant-manager/pull/4) integrados; CI da revisão aprovada e homologação do novo release pendente |
 | [Sprint 2 — Catálogo e PWA](16_SPRINT_02.md) | Implementação, revisão final e testes locais concluídos; publicação/integração rastreáveis no [PR #5](https://github.com/victormontibeller/restaurant-manager/pull/5); Linux/homologação pendentes |
-| [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Implementação e revisão local concluídas; [PR #6 aberto](https://github.com/victormontibeller/restaurant-manager/pull/6); Linux/homologação pendentes |
+| [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Implementação e revisão local concluídas; [PR #6 integrado](https://github.com/victormontibeller/restaurant-manager/pull/6); Linux/homologação pendentes |
 | [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | Não iniciada |
 | [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Não iniciada |
 

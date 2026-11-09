@@ -1,6 +1,7 @@
 import { APIRequestContext, Page, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { abrirConta } from '../e2e-identidade/apoio';
 
 export interface ContaCatalogo {
   id?: string;
@@ -30,7 +31,9 @@ export function fixture(): FixtureCatalogo {
 }
 
 export async function loginUi(page: Page, conta: ContaCatalogo = fixture()): Promise<string> {
-  await page.goto('/');
+  const clientes = fixture().contas;
+  const cliente = [clientes.clienteA.email, clientes.clienteB.email].includes(conta.email);
+  await page.goto(cliente ? '/entrar' : '/gestao/entrar');
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeEnabled();
   await page.getByLabel('E-mail', { exact: true }).fill(conta.email);
   await page.getByLabel('Senha', { exact: true }).fill(conta.senha);
@@ -40,6 +43,7 @@ export async function loginUi(page: Page, conta: ContaCatalogo = fixture()): Pro
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const login = await resposta;
   expect(login.status()).toBe(200);
+  await abrirConta(page);
   await expect(page.getByRole('button', { name: 'Sair da conta', exact: true })).toBeVisible();
   return ((await login.json()) as { accessToken: string }).accessToken;
 }

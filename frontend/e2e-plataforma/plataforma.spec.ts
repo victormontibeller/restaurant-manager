@@ -4,7 +4,9 @@ const arquivo = process.env['RM_PLATFORM_FIXTURE'];
 if (!arquivo) throw new Error('Fixture privada de operador SaaS obrigatória.');
 const fixture = JSON.parse(fs.readFileSync(arquivo, 'utf8')) as { email: string; senha: string };
 async function abrir(page: Page): Promise<void> {
+  // A entrada histórica continua redirecionando para a área SaaS separada.
   await page.goto('/?area=plataforma');
+  await expect(page).toHaveURL(/\/plataforma$/);
   await expect(
     page.getByRole('button', { name: 'Entrar na plataforma', exact: true }),
   ).toBeEnabled();

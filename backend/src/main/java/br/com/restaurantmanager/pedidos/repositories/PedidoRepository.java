@@ -7,6 +7,7 @@ import br.com.restaurantmanager.pedidos.dtos.SolicitacaoCancelamento;
 import br.com.restaurantmanager.pedidos.dtos.UnidadeProducao;
 import br.com.restaurantmanager.pedidos.models.EstadoPedido;
 import br.com.restaurantmanager.pedidos.models.EstadoProducao;
+import br.com.restaurantmanager.pedidos.models.OrdenacaoPedidos;
 import br.com.restaurantmanager.pedidos.models.PedidoRegistro;
 import br.com.restaurantmanager.unidades.models.CanalAtendimento;
 import jakarta.persistence.EntityManager;
@@ -47,11 +48,22 @@ public class PedidoRepository {
     }
 
     public List<UUID> listar(UUID unidade, UUID usuario, UUID participante, int pagina, boolean cozinha) {
+        return listar(unidade, usuario, participante, pagina, cozinha, null, null, OrdenacaoPedidos.RECENTES);
+    }
+
+    public List<UUID> listar(UUID unidade, UUID usuario, UUID participante, int pagina, boolean cozinha,
+            List<EstadoPedido> estados, CanalAtendimento canal, OrdenacaoPedidos ordenacao) {
         String filtro = unidade != null ? "unidade_id = :dono" : usuario != null ? "usuario_id = :dono and autoria = 'CLIENTE'" : "participante_id = :dono";
         if (cozinha) filtro += " and estado in ('NA_FILA','EM_PREPARO','PRONTO')";
-        return consulta("select id from pedido where " + filtro + " order by criado_em desc, id", UUID.class)
-                .setParameter("dono", unidade != null ? unidade : usuario != null ? usuario : participante)
-                .setFirstResult(pagina * 50).setMaxResults(51).getResultList();
+        boolean filtrarEstados = estados != null && !estados.isEmpty();
+        if (filtrarEstados) filtro += " and estado in (:estados)";
+        if (canal != null) filtro += " and canal = :canal";
+        String direcao = ordenacao == OrdenacaoPedidos.ANTIGOS ? "asc" : "desc";
+        var query = consulta("select id from pedido where " + filtro + " order by criado_em " + direcao + ", id", UUID.class)
+                .setParameter("dono", unidade != null ? unidade : usuario != null ? usuario : participante);
+        if (filtrarEstados) query.setParameterList("estados", estados.stream().map(Enum::name).distinct().toList());
+        if (canal != null) query.setParameter("canal", canal.name());
+        return query.setFirstResult(pagina * 50).setMaxResults(51).getResultList();
     }
 
     public void criar(EnviarPedido entrada, UUID usuario, UUID participante, String autoria,

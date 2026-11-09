@@ -103,3 +103,13 @@ ou consulta manual concorrente não apaga rejeição de comando nem seu resultad
 incerto. O sucesso da consulta resolve somente seu erro de leitura; uma nova
 ação ou troca de contexto trata o erro da ação anterior. Falhas de autorização
 e conexão continuam visíveis sem substituir silenciosamente o motivo do comando.
+
+## Redesenho por área — 2026-11-08
+
+Implementação validada localmente, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Cliente inicia no cardápio; gestão possui entrada própria e abre pedidos em andamento; cozinha é uma tela dedicada. O tema de bistrô usa a mesma fundação Spartan/Tailwind nas três áreas. Acessos e unidades refletem ações efetivas e continuam garantidos pela API.
+
+A navegação mantém sessão, carrinho e pendências em memória. Rascunhos de formulários pedem confirmação ao sair; comandos em andamento impedem saída até reconciliação, e logout permanece possível. Upload confirmado ainda exige salvar a associação ao produto. Recarregar continua descartando o rascunho. Links antigos de mesa e plataforma redirecionam para as novas rotas.
+
+Páginas usam carregamento sob demanda. O service worker enumera chunks completos do build e um banner público ilustrativo, além do shell já permitido; imagens de catálogo, APIs e operações privadas não entram no cache. O catálogo interno de componentes está em `/design-system`. Evidências de validação são registradas no checkpoint; esta descrição não aprova homologação Linux, aparelhos físicos ou piloto.
+
+A cozinha oferece abas Todas, Na fila, Em preparo e Prontos com comportamento Spartan Brain. Setas e Home/End movimentam o foco; Enter ou espaço ativa a aba. O filtro usa o estado do pedido no servidor, preservando a exibição e seleção de unidades em estados distintos dentro do mesmo pedido. Os controles têm alvo mínimo de 48 pixels e não apresentam contagens globais inferidas da página atual.

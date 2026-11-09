@@ -2,7 +2,118 @@
   border: 0;
   border-radius: 0;
   padding: 0;
-  margin: 1rem 0;
+  margin: 0;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border, #dedfd8);
+}
+.linha-pedido h4 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.cartao-pedido {
+  border-top: 4px solid var(--border, #dedfd8);
+}
+.cartao-pedido[data-estado='AGUARDANDO_ACEITE'] {
+  border-top-color: #d39134;
+}
+.cartao-pedido[data-estado='NA_FILA'] {
+  border-top-color: #8190c7;
+}
+.cartao-pedido[data-estado='EM_PREPARO'] {
+  border-top-color: #cd7d37;
+}
+.cartao-pedido[data-estado='PRONTO'] {
+  border-top-color: #659c71;
+}
+.cartao-pedido[data-estado='CANCELADO'] {
+  border-top-color: #b86156;
+}
+.cabecalho-pedido {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.cabecalho-pedido h3 {
+  margin: 0.35rem 0 0.7rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+}
+.tempo-pedido {
+  display: grid;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tempo-pedido strong {
+  font-size: 1rem;
+}
+.tempo-pedido span {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #68736b);
+}
+.estado-pedido {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.observacao-pedido {
+  display: grid;
+  gap: 0.25rem;
+  background: var(--muted, #f1f3ed);
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+}
+.observacao-pedido strong {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.componente-item {
+  margin: 0.35rem 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--border, #dedfd8);
+  font-size: 0.9rem;
+}
+.resumo-producao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #68736b);
+}
+.prazo-pedido {
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+.acoes-pedido {
+  margin-bottom: 0;
+}
+.acoes-pedido button {
+  flex: 1 1 10rem;
+}
+.historico-pedido {
+  font-size: 0.8rem;
+  background: var(--muted, #f5f6f2);
+  border: 0;
+  margin-bottom: 0;
+}
+.historico-pedido ol {
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.6rem;
+}
+.referencia-completa {
+  overflow-wrap: anywhere;
+  font-family: monospace;
+  font-size: 0.72rem;
+}
+.cartao-cozinha .linha-pedido h4 {
+  font-size: 1.15rem;
 }
 .unidades-producao {
   list-style: none;
@@ -17,6 +128,18 @@
   align-items: center;
   gap: 0.65rem;
   min-height: 48px;
+  border: 1px solid var(--border, #dedfd8);
+  border-radius: 0.6rem;
+  padding: 0.65rem;
+  margin: 0;
+  background: var(--background, #fff);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.selecao.marcada {
+  border-color: var(--primary, #8c4824);
+  background: var(--accent, #f6efe8);
+  box-shadow: inset 0 0 0 1px var(--primary, #8c4824);
 }
 .selecao input {
   flex: 0 0 1.4rem;

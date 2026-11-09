@@ -1,16 +1,21 @@
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { MeusPedidosComponent } from '../pedidos/meus-pedidos.component';
 import { nomeEstado } from '../pedidos/modelos';
 import { Comanda, SolicitacaoMesa } from './modelos';
 import { SessaoMesaService } from './sessao-mesa.service';
-
-interface IntencaoSolicitacao {
-  intencaoId: string;
-  tipo: 'AJUDA' | 'CONTA';
-  participante: string;
-}
+import { PendenciasMesaService, SolicitacaoMesaPendente } from './pendencias-mesa.service';
+import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
 
 @Component({
   selector: 'app-participante-mesa',
@@ -19,7 +24,11 @@ interface IntencaoSolicitacao {
   styleUrl: '../operacao.css',
 })
 export class ParticipanteMesaComponent {
+  readonly mesaInicial = input<string | undefined>(undefined);
   readonly sessao = inject(SessaoMesaService);
+  private readonly pendencias = inject(PendenciasMesaService);
+  private readonly navegacao = inject(NavegacaoProtegidaService);
+  private readonly chaveNavegacao = 'participante:' + crypto.randomUUID();
   readonly comanda = signal<Comanda | null>(null);
   readonly ocupado = signal(false);
   private readonly erroAcao = signal('');
@@ -30,9 +39,11 @@ export class ParticipanteMesaComponent {
       .join(' '),
   );
   readonly aviso = signal('');
-  readonly encerramentoPendente = signal(false);
-  readonly intencao = signal<IntencaoSolicitacao | null>(null);
-  private readonly pendentes = new Map<string, IntencaoSolicitacao>();
+  readonly encerramentoPendente = this.sessao.encerramentoPendente;
+  readonly intencao = computed(() => {
+    const participante = this.sessao.participante();
+    return participante ? this.pendencias.solicitacao(participante.participanteId) : null;
+  });
   readonly acompanhamento = new AcompanhamentoEventos();
   readonly nomeEstado = nomeEstado;
   readonly moeda = moeda;
@@ -40,13 +51,15 @@ export class ParticipanteMesaComponent {
   private geracao = 0;
 
   constructor() {
+    effect(() => this.navegacao.bloquear(this.chaveNavegacao, this.ocupado()));
+    effect(() => {
+      const mesa = this.mesaInicial();
+      if (mesa !== undefined) this.mesaId = mesa;
+    });
     effect(() => {
       const participante = this.sessao.participante();
       this.geracao++;
       this.comanda.set(null);
-      this.intencao.set(
-        participante ? (this.pendentes.get(participante.participanteId) ?? null) : null,
-      );
       this.ocupado.set(false);
       this.aviso.set('');
       this.erroAcao.set('');
@@ -66,9 +79,10 @@ export class ParticipanteMesaComponent {
     inject(DestroyRef).onDestroy(() => {
       this.geracao++;
       this.acompanhamento.encerrar();
+      this.navegacao.liberar(this.chaveNavegacao);
     });
     void this.sessao
-      .restaurar()
+      .inicializar()
       .catch(() =>
         this.erroConsulta.set('Não foi possível restaurar a participação. Confira a conexão.'),
       );
@@ -107,13 +121,12 @@ export class ParticipanteMesaComponent {
   async solicitar(tipo: 'AJUDA' | 'CONTA'): Promise<void> {
     const participante = this.sessao.participante();
     if (!participante || this.ocupado() || this.intencao()) return;
-    const intencao: IntencaoSolicitacao = {
+    const intencao: SolicitacaoMesaPendente = {
       intencaoId: crypto.randomUUID(),
       tipo,
       participante: participante.participanteId,
     };
-    this.pendentes.set(participante.participanteId, intencao);
-    this.intencao.set(intencao);
+    this.pendencias.guardarSolicitacao(intencao);
     await this.repetirSolicitacao();
   }
 
@@ -136,9 +149,8 @@ export class ParticipanteMesaComponent {
         intencaoId: intencao.intencaoId,
         tipo: intencao.tipo,
       });
-      this.pendentes.delete(intencao.participante);
+      this.pendencias.concluirSolicitacao(intencao.participante);
       if (!vigente()) return;
-      this.intencao.set(null);
       this.aviso.set(
         intencao.tipo === 'AJUDA'
           ? 'Pedido de ajuda registrado. Aguarde a equipe.'

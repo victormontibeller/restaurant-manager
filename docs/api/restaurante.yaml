@@ -1,0 +1,44 @@
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — identificação pública do restaurante
+  version: 0.1.0
+  description: >-
+    Nome público da empresa resolvida exclusivamente pelo domínio cadastrado.
+    Não permite selecionar empresa, schema ou unidade por parâmetros ou headers.
+paths:
+  /api/v1/restaurante:
+    get:
+      operationId: consultarRestaurantePublico
+      security: []
+      description: >-
+        Disponível para empresas ATIVO e SUSPENSO, preservando a identificação
+        durante operações existentes. Host desconhecido ou empresa em outro
+        estado retorna 404. Não informa identificadores, schema ou estado comercial.
+      responses:
+        '200':
+          description: Nome cadastrado do restaurante
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [nome]
+                properties:
+                  nome:
+                    type: string
+        '404':
+          description: Empresa indisponível
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [codigo, mensagem, correlacao]
+                properties:
+                  codigo:
+                    type: string
+                    const: EMPRESA_INDISPONIVEL
+                  mensagem:
+                    type: string
+                  correlacao:
+                    type: string

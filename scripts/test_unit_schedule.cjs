@@ -33,6 +33,7 @@ function fixture() {
   const callbacks = [];
   const requests = [];
   const blocked = [];
+  const saved = [];
   const identity = signal({ usuarioId: 'conta' });
   let responder = async () => snapshot();
   const sessao = {
@@ -48,9 +49,7 @@ function fixture() {
     Output: () => () => {},
     ViewChild: () => () => {},
     EventEmitter: class {
-      emit(value) {
-        blocked.push(value);
-      }
+      emit() {}
     },
     DestroyRef: destroy,
     signal,
@@ -79,12 +78,15 @@ function fixture() {
     context,
   );
   const component = new context.exports.FuncionamentoUnidadeComponent();
+  component.bloqueio.emit = (value) => blocked.push(value);
+  component.salvo.emit = () => saved.push(true);
   component.unidadeId = 'A';
   component.nome = 'Unidade fictícia';
   return {
     component,
     requests,
     blocked,
+    saved,
     identity,
     effects,
     callbacks,
@@ -123,6 +125,7 @@ async function consultaExplicitaEPayloadDaVersaoAtual() {
   });
   assert.equal(c.versao(), 1);
   assert.equal(c.aviso(), 'Funcionamento salvo no servidor.');
+  assert.equal(f.saved.length, 1, 'Somente save confirmado limpa o rascunho de navegação');
 }
 
 async function conflitoOuFalhaIncertaExigeConsultaAntesDeReenviar() {
@@ -135,6 +138,7 @@ async function conflitoOuFalhaIncertaExigeConsultaAntesDeReenviar() {
     });
     await c.salvar(event());
     assert.equal(c.reconsultaObrigatoria(), true);
+    assert.equal(f.saved.length, 0, 'Falha não limpa o rascunho de navegação');
     assert.equal(c.ocupado(), false);
     assert.equal(f.blocked.at(-1), false, 'Reconciliação não bloqueia navegação indefinidamente');
     c.adicionar();

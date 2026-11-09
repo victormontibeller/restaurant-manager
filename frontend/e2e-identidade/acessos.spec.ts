@@ -1,3 +1,4 @@
+import { navegarGestao } from './apoio';
 import { test, expect, Page } from '@playwright/test';
 import fs from 'node:fs';
 const file = process.env['RM_AUTH_FIXTURE'];
@@ -23,7 +24,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   // Trace medido: Firefox gasta 16s no setup e WebKit chega ao último
   // comando após 60s. Prazo da jornada, não retry nem relaxamento de assertivas.
   test.setTimeout(120000);
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.senha);
   const login = page.waitForResponse(
@@ -37,6 +38,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await login).status()).toBe(200);
+  await navegarGestao(page, '/gestao/equipe');
   for (const response of await loaded) {
     expect(response.status()).toBe(200);
     await response.finished();

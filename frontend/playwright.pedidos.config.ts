@@ -1,11 +1,22 @@
 import { defineConfig } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
 import foundation from './playwright.config';
 
 const target = process.env['RM_BASE_URL'];
 if (!target) throw new Error('RM_BASE_URL é obrigatório para a Sprint 3.');
 const url = new URL(target);
+const fixturePath = process.env['RM_PEDIDOS_FIXTURE'];
+if (!fixturePath || !path.isAbsolute(fixturePath))
+  throw new Error('Fixture privada absoluta obrigatória.');
+const fixtureHost = JSON.parse(fs.readFileSync(fixturePath, 'utf8')).host as string;
 if (
-  url.hostname !== 'sprint03.localhost' ||
+  fixtureHost !== 'sprint03.localhost' &&
+  !/^sprint03-redesenho-[a-f0-9]{12}\.localhost$/.test(fixtureHost)
+)
+  throw new Error('Host de testes não autorizado.');
+if (
+  url.hostname !== fixtureHost ||
   url.protocol !== 'https:' ||
   url.port !== '8089' ||
   url.username ||

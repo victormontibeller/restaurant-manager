@@ -3,18 +3,28 @@
   aria-labelledby="operacao-mesas-titulo"
   [attr.aria-busy]="carregando()"
 >
-  <h3 id="operacao-mesas-titulo">Mesas e atendimentos</h3>
-  <p role="status" class="status-consulta">
-    <span class="status-reserva" aria-hidden="true">
-      Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada. Última
-      atualização: ainda não confirmada.
-    </span>
-    <span>
-      {{ acompanhamento.estado() }} Última atualização:
-      {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
-    </span>
-  </p>
-  <button (click)="carregar()" [disabled]="ocupado()">Atualizar mesas</button>
+  <header class="cabecalho-painel">
+    <div>
+      <span class="sobretitulo">Salão</span>
+      <h2 id="operacao-mesas-titulo">Mesas e atendimentos</h2>
+      <p class="texto-secundario">
+        Abra atendimentos, acompanhe comandas e responda às solicitações do salão.
+      </p>
+    </div>
+  </header>
+  <div class="barra-conexao">
+    <p role="status" class="status-consulta">
+      <span class="status-reserva" aria-hidden="true">
+        Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada. Última
+        atualização: ainda não confirmada.
+      </span>
+      <span>
+        {{ acompanhamento.estado() }} Última atualização:
+        {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+      </span>
+    </p>
+    <button class="secundario" (click)="carregar()" [disabled]="ocupado()">Atualizar mesas</button>
+  </div>
   @if (administrador()) {
     <details>
       <summary>Cadastrar mesa e confirmar acesso administrativo</summary>
@@ -47,46 +57,79 @@
     </details>
   }
   @if (abertura()?.codigoTemporario; as codigo) {
-    <aside aria-label="Código temporário do atendimento">
+    <aside class="codigo-atendimento" aria-label="Código temporário do atendimento">
       <p>Forneça este código apenas ao grupo do atendimento. Ele não faz parte do QR público.</p>
       <output class="codigo">{{ codigo }}</output>
       <button class="secundario" (click)="abertura.set(null)">Ocultar código temporário</button>
     </aside>
   }
-  @for (mesa of mesas(); track mesa.id) {
-    <article [attr.aria-label]="'Mesa ' + mesa.nome">
-      <h4>{{ mesa.nome }} · {{ mesa.ativa ? 'ativa' : 'inativa' }}</h4>
-      <p>
-        {{ mesa.estadoComanda ? 'Comanda ' + nomeEstado(mesa.estadoComanda) : 'Sem atendimento aberto' }}
-      </p>
-      <div class="acoes">
-        @if (tem('pedido.criar_assistido') && !mesa.atendimentoId && mesa.ativa) {
-          <button (click)="abrir(mesa)" [disabled]="ocupado()">
-            Abrir atendimento em {{ mesa.nome }}
-          </button>
+  <div class="resumo-listagem">
+    <span>{{ mesas().length }} mesas nesta página</span><span>Página {{ paginaMesas() + 1 }}</span>
+  </div>
+  <div class="grade-mesas">
+    @for (mesa of mesas(); track mesa.id) {
+      <article
+        class="cartao-mesa"
+        [class.mesa-ocupada]="!!mesa.atendimentoId"
+        [attr.aria-label]="'Mesa ' + mesa.nome"
+      >
+        <header class="mesa-cabecalho">
+          <h3>{{ mesa.nome }}</h3>
+          <span
+            class="etiqueta"
+            [attr.data-estado]="mesa.ativa ? (mesa.estadoComanda || 'LIVRE') : 'INATIVA'"
+            >{{ !mesa.ativa ? 'Inativa' : mesa.estadoComanda ? 'Comanda ' + nomeEstado(mesa.estadoComanda) : 'Livre' }}</span
+          >
+        </header>
+        <p class="texto-secundario">
+          {{ mesa.atendimentoId ? 'Atendimento em andamento' : 'Sem atendimento aberto' }}
+        </p>
+        @if (aberturaPendente(mesa)) {
+          <p class="aviso">
+            A abertura ainda não foi confirmada. Recupere o mesmo atendimento antes de gerar outro
+            código.
+          </p>
         }
-        @if (tem('pedido.criar_assistido') && mesa.atendimentoId) {
-          <button (click)="gerarCodigo(mesa)" [disabled]="ocupado()">
-            Gerar novo código de {{ mesa.nome }}
+        <div class="acoes">
+          @if (
+            tem('pedido.criar_assistido') && ((!mesa.atendimentoId && mesa.ativa) || aberturaPendente(mesa))
+          ) {
+            <button (click)="abrir(mesa)" [disabled]="ocupado()">
+              {{ (aberturaPendente(mesa) ? 'Recuperar atendimento de ' : 'Abrir atendimento em ') + mesa.nome }}
+            </button>
+          }
+          @if (tem('pedido.criar_assistido') && mesa.atendimentoId) {
+            <button
+              class="secundario"
+              (click)="gerarCodigo(mesa)"
+              [disabled]="ocupado() || aberturaPendente(mesa)"
+            >
+              Gerar novo código de {{ mesa.nome }}
+            </button>
+          }
+          @if (mesa.comandaId && financeiro()) {
+            <button (click)="abrirComanda(mesa)" [disabled]="ocupado()">
+              Consultar comanda de {{ mesa.nome }}
+            </button>
+          }
+          <button class="secundario" (click)="mostrarQr(mesa)">
+            Mostrar QR de {{ mesa.nome }}
           </button>
-        }
-        @if (mesa.comandaId && financeiro()) {
-          <button (click)="abrirComanda(mesa)" [disabled]="ocupado()">
-            Consultar comanda de {{ mesa.nome }}
-          </button>
-        }
-        <button class="secundario" (click)="mostrarQr(mesa)">Mostrar QR de {{ mesa.nome }}</button>
-        @if (administrador()) {
-          <button class="secundario" (click)="atividade(mesa)" [disabled]="ocupado()">
-            {{ mesa.ativa ? 'Inativar' : 'Reativar' }} {{ mesa.nome }}
-          </button>
-        }
+          @if (administrador()) {
+            <button class="secundario" (click)="atividade(mesa)" [disabled]="ocupado()">
+              {{ mesa.ativa ? 'Inativar' : 'Reativar' }} {{ mesa.nome }}
+            </button>
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="vazio">
+        <h3>{{ carregando() ? 'Atualizando o salão…' : 'Nenhuma mesa nesta página' }}</h3>
+        <p>As mesas cadastradas na unidade aparecem aqui.</p>
       </div>
-    </article>
-  } @empty {
-    <p>Nenhuma mesa encontrada nesta página.</p>
-  }
-  <nav aria-label="Páginas de mesas" class="acoes">
+    }
+  </div>
+  <nav aria-label="Páginas de mesas" class="paginacao">
     <button
       (click)="mudarPaginaMesas(paginaMesas() - 1)"
       [disabled]="ocupado() || paginaMesas() === 0"
@@ -99,7 +142,7 @@
     </button>
   </nav>
   @if (qrMesa(); as mesa) {
-    <section aria-label="QR público da mesa">
+    <section class="qr-painel" aria-label="QR público da mesa">
       <h4>{{ mesa.nome }}</h4>
       <img
         [src]="qrUrl()"
@@ -117,7 +160,7 @@
     </section>
   }
   @if (comanda(); as conta) {
-    <section aria-label="Resumo da comanda">
+    <section class="comanda-resumo" aria-label="Resumo da comanda">
       <h4>{{ conta.mesaNome }} · {{ nomeEstado(conta.estado) }}</h4>
       <dl>
         <dt>Total devido</dt>
@@ -151,23 +194,39 @@
     </section>
   }
   @if (tem('mesa.atender')) {
-    <h4>Solicitações da equipe de salão</h4>
-    @for (solicitacao of solicitacoes(); track solicitacao.id) {
-      <article>
-        <p>
-          {{ solicitacao.mesaNome }} · {{ solicitacao.tipo === 'AJUDA' ? 'Ajuda' : 'Conta' }} ·
-          {{ solicitacao.estado }}
-        </p>
-        @if (solicitacao.estado === 'PENDENTE') {
-          <button (click)="atender(solicitacao)" [disabled]="ocupado()">
-            Marcar solicitação atendida
-          </button>
-        }
-      </article>
-    } @empty {
-      <p>Nenhuma solicitação encontrada nesta página.</p>
-    }
-    <nav aria-label="Páginas de solicitações" class="acoes">
+    <header class="cabecalho-painel solicitacoes-titulo">
+      <div>
+        <span class="sobretitulo">Chamados do salão</span>
+        <h3>Solicitações da equipe de salão</h3>
+      </div>
+    </header>
+    <div class="grade-mesas">
+      @for (solicitacao of solicitacoes(); track solicitacao.id) {
+        <article class="cartao-solicitacao">
+          <header class="mesa-cabecalho">
+            <h4>{{ solicitacao.mesaNome }}</h4>
+            <span
+              class="etiqueta"
+              >{{ solicitacao.estado === 'PENDENTE' ? 'Pendente' : 'Atendida' }}</span
+            >
+          </header>
+          <p>
+            {{ solicitacao.tipo === 'AJUDA' ? 'Solicitou ajuda da equipe' : 'Solicitou a conta' }}
+          </p>
+          @if (solicitacao.estado === 'PENDENTE') {
+            <button (click)="atender(solicitacao)" [disabled]="ocupado()">
+              Marcar solicitação atendida
+            </button>
+          }
+        </article>
+      } @empty {
+        <div class="vazio">
+          <h4>Nenhuma solicitação nesta página</h4>
+          <p>Pedidos de ajuda e de conta aparecerão aqui.</p>
+        </div>
+      }
+    </div>
+    <nav aria-label="Páginas de solicitações" class="paginacao">
       <button
         (click)="mudarPaginaSolicitacoes(paginaSolicitacoes() - 1)"
         [disabled]="ocupado() || paginaSolicitacoes() === 0"

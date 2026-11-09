@@ -255,6 +255,22 @@ async function selecaoSobreviveSnapshotDaMesmaVersao() {
   assert.equal(componente.cancelamentoPendente(), false);
 }
 
+async function rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal() {
+  const f = preparar('pedido-envio.service.ts', 'PedidoEnvioService');
+  const original = f.service.rascunho(false, 'unidade-a', 'MESA');
+  Object.assign(original, { observacao: 'Sem cebola', comandaId: 'comanda-51', paginaMesas: 1 });
+  assert.equal(f.service.rascunho(false, 'unidade-b', 'MESA').observacao, '');
+  assert.equal(f.service.rascunho(false, 'unidade-a', 'RETIRADA').comandaId, '');
+  assert.equal(f.service.rascunho(true, 'unidade-a', 'MESA').observacao, '');
+  f.trocarConta('cliente-b');
+  assert.equal(f.service.rascunho(false, 'unidade-a', 'MESA').observacao, '');
+  f.trocarConta('cliente-a');
+  const recuperado = f.service.rascunho(false, 'unidade-a', 'MESA');
+  assert.equal(recuperado.observacao, 'Sem cebola');
+  assert.equal(recuperado.comandaId, 'comanda-51');
+  assert.equal(recuperado.paginaMesas, 1);
+}
+
 (async () => {
   for (const test of [
     envioIncertoConservaIntencaoEReconciliaSemDuplicar,
@@ -263,6 +279,7 @@ async function selecaoSobreviveSnapshotDaMesmaVersao() {
     respostaDeOutraContaNaoApareceNaSessaoAtual,
     comandoIncertoReutilizaMesmasUnidadesEVersao,
     selecaoSobreviveSnapshotDaMesmaVersao,
+    rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal,
   ]) {
     await test();
     console.log(test.name + ': aprovado');

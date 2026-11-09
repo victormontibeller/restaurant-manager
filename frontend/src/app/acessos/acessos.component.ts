@@ -70,7 +70,7 @@ interface Funcionario {
         </select>
         <label for="buscar-acao">Buscar ação</label>
         <input id="buscar-acao" type="search" (input)="busca.set($any($event.target).value)">
-        <fieldset [disabled]="ocupado()">
+        <fieldset data-rascunho="matriz" [disabled]="ocupado()">
           <legend>Permissões de {{ perfil() }} · versão {{ m.versao }}</legend>
           @for (a of acoesFiltradas(); track a.codigo) {
             <div class="acao">
@@ -88,7 +88,7 @@ interface Funcionario {
         <h3>Funcionários existentes</h3>
         <p>Para cadastrar um funcionário novo, use Gerenciar convites. Clientes não aparecem nesta lista.</p>
         @for (f of equipe(); track f.id) {
-          <article>
+          <article [attr.data-rascunho]="'funcionario-' + f.id">
             <h4>{{ f.email }}</h4>
             <label [for]="'perfil-' + f.id">Perfil do funcionário</label>
             <select
@@ -236,6 +236,7 @@ export class AcessosComponent implements OnInit {
   readonly pagina = signal(0);
   readonly funcionarioExpandido = signal<string | null>(null);
   readonly bloqueio = output<boolean>();
+  readonly salvo = output<string>();
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
@@ -308,6 +309,7 @@ export class AcessosComponent implements OnInit {
       this.matriz.set(m);
       this.selecionar(this.perfil());
       this.aviso.set('Permissões salvas no servidor.');
+      this.salvo.emit('matriz');
     });
   }
 
@@ -344,6 +346,7 @@ export class AcessosComponent implements OnInit {
       this.equipe.update((rows) => rows.map((row) => (row.id === result.id ? result : row)));
       this.vinculosOriginais.update((rows) => ({ ...rows, [result.id]: [...result.unidades] }));
       this.aviso.set('Funcionário atualizado no servidor.');
+      this.salvo.emit('funcionario-' + result.id);
       await this.sessao.atualizarIdentidade();
     });
   }

@@ -13,6 +13,7 @@ import {
   loginUi,
   localizarMesa,
   montarCarrinho,
+  navegarUi,
   ok,
   operacao,
   prepararCatalogo,
@@ -54,6 +55,42 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     const tokenCozinha = await loginUi(cozinha.page, fixture().contas.cozinha);
     const kds = await operacao(cozinha.page, 'Painel da cozinha');
     const preparo = kds.getByRole('article', { name: 'Pedido ' + enviado.id, exact: true });
+    const etapas = kds.getByRole('tablist', { name: 'Etapas da cozinha', exact: true });
+    const filaTab = etapas.getByRole('tab', { name: 'Na fila', exact: true });
+    const preparoTab = etapas.getByRole('tab', { name: 'Em preparo', exact: true });
+    const prontoTab = etapas.getByRole('tab', { name: 'Prontos', exact: true });
+    const todasTab = etapas.getByRole('tab', { name: 'Todas', exact: true });
+    const filtrarEtapa = async (estado: string, acionar: () => Promise<void>) => {
+      const consulta = cozinha.page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === '/api/v1/cozinha' && (url.searchParams.get('estados') ?? '') === estado
+        );
+      });
+      await acionar();
+      const pagina = await ok<{ itens: Pedido[] }>(await consulta);
+      if (estado) expect(pagina.itens.every((pedido) => pedido.estado === estado)).toBe(true);
+      await expect(kds.locator('app-cozinha > section')).toHaveAttribute('aria-busy', 'false');
+    };
+    await filtrarEtapa('NA_FILA', () => filaTab.click());
+    await expect(filaTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toBeVisible();
+    expect((await filaTab.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+    await filaTab.press('ArrowRight');
+    await expect(preparoTab).toBeFocused();
+    await filtrarEtapa('EM_PREPARO', () => preparoTab.press('Enter'));
+    await expect(preparoTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toHaveCount(0);
+    await preparoTab.press('ArrowRight');
+    await expect(prontoTab).toBeFocused();
+    await filtrarEtapa('PRONTO', () => prontoTab.press('Enter'));
+    await expect(prontoTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toHaveCount(0);
+    await prontoTab.press('Home');
+    await expect(todasTab).toBeFocused();
+    await filtrarEtapa('', () => todasTab.press('Enter'));
+    await expect(todasTab).toHaveAttribute('aria-selected', 'true');
+    await expect(preparo).toBeVisible();
     await preparo.getByRole('checkbox').nth(0).check();
     await preparo
       .getByRole('button', { name: 'Iniciar unidades selecionadas', exact: true })
@@ -174,10 +211,10 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     });
     await expect(link).toHaveAttribute(
       'href',
-      process.env['RM_BASE_URL']!.replace(/\/$/, '') + '/?mesa=' + mesa.id,
+      process.env['RM_BASE_URL']!.replace(/\/$/, '') + '/mesa/' + mesa.id,
     );
     expect(await link.getAttribute('href')).not.toContain(abertura.codigoTemporario!);
-    await page.goto('/?mesa=' + mesa.id);
+    await page.goto('/mesa/' + mesa.id);
     await page
       .getByLabel('Código temporário do atendimento', { exact: true })
       .fill(abertura.codigoTemporario!);
@@ -239,13 +276,16 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     await page.getByRole('button', { name: 'Solicitar a conta', exact: true }).click();
     await expect(page.getByText('Pedido de conta registrado.', { exact: false })).toBeVisible();
     // Aguarde as duas inserções via SSE antes de clicar na lista que muda de posição.
-    for (const tipo of ['Ajuda', 'Conta']) {
+    for (const texto of ['Solicitou ajuda da equipe', 'Solicitou a conta']) {
       await expect(
-        salao.getByRole('article').filter({ hasText: mesa.nome + ' · ' + tipo }),
-      ).toContainText('PENDENTE');
+        salao.getByRole('article').filter({ hasText: mesa.nome }).filter({ hasText: texto }),
+      ).toContainText('Pendente');
     }
-    for (const tipo of ['Ajuda', 'Conta']) {
-      const solicitacao = salao.getByRole('article').filter({ hasText: mesa.nome + ' · ' + tipo });
+    for (const texto of ['Solicitou ajuda da equipe', 'Solicitou a conta']) {
+      const solicitacao = salao
+        .getByRole('article')
+        .filter({ hasText: mesa.nome })
+        .filter({ hasText: texto });
       const atendimentoConfirmado = atendimento.page.waitForResponse(
         (r) =>
           /^\/api\/v1\/operacao\/mesas\/solicitacoes\/[^/]+\/atender$/.test(
@@ -256,7 +296,7 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
         .getByRole('button', { name: 'Marcar solicitação atendida', exact: true })
         .click();
       expect((await atendimentoConfirmado).status()).toBe(200);
-      await expect(solicitacao).toContainText('ATENDIDA');
+      await expect(solicitacao).toContainText('Atendida');
     }
     await loginUi(caixa.page, fixture().contas.caixa);
     const contas = await operacao(caixa.page, 'Mesas e comandas');
@@ -331,8 +371,9 @@ test.describe(() => {
   }) => {
     const token = await loginUi(page, fixture().contas.clienteA);
     await montarCarrinho(page, catalogo.simples, 'RETIRADA', 1);
+    await page.getByText('Sobre o carrinho e os valores', { exact: true }).click();
     const orientacao = page.getByText(
-      'O carrinho fica apenas nesta página. Atualizar ou fechar a página descarta os itens. Adicionar itens e calcular o resumo não envia o pedido; confirme o envio para registrá-lo.',
+      'Os itens ficam nesta aba durante a navegação. Atualizar ou fechar a página descarta o rascunho. O resumo é validado pelo restaurante antes do envio.',
       { exact: true },
     );
     await expect(orientacao).toBeVisible();
@@ -379,6 +420,12 @@ test.describe(() => {
     });
     await page.context().setOffline(false);
     await page.unroute('**/api/v1/pedidos');
+    await navegarUi(page, '/pedidos');
+    await expect(
+      page.getByRole('article', { name: 'Pedido ' + pedido!.id, exact: true }),
+    ).toBeVisible();
+    await navegarUi(page, '/carrinho');
+    await expect(page.getByText('Envio sem confirmação.', { exact: false })).toBeVisible();
     await page.getByRole('button', { name: 'Consultar resultado do envio', exact: true }).click();
     await expect(
       page.getByText('Pedido confirmado: ' + pedido!.id + '.', { exact: false }),
@@ -460,7 +507,10 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
       .click();
     const resumo = salao.getByRole('region', { name: 'Resumo da comanda', exact: true });
     await expect(resumo).toContainText(mesa.nome);
-    const solicitacao = salao.getByRole('article').filter({ hasText: mesa.nome + ' · Conta' });
+    const solicitacao = salao
+      .getByRole('article')
+      .filter({ hasText: mesa.nome })
+      .filter({ hasText: 'Solicitou a conta' });
     await expect(solicitacao).toHaveCount(0);
     const paginasSolicitacoes = salao.getByRole('navigation', {
       name: 'Páginas de solicitações',
@@ -479,7 +529,7 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
       await proxima.press('Enter');
     }
     await expect(paginasSolicitacoes.getByRole('status')).toHaveText('Página de solicitações 2');
-    await expect(solicitacao).toContainText('PENDENTE');
+    await expect(solicitacao).toContainText('Pendente');
     const atendida = page.waitForResponse(
       (r) =>
         new URL(r.url()).pathname ===
@@ -490,7 +540,7 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
       .getByRole('button', { name: 'Marcar solicitação atendida', exact: true })
       .click();
     expect((await atendida).status()).toBe(200);
-    await expect(solicitacao).toContainText('ATENDIDA');
+    await expect(solicitacao).toContainText('Atendida');
     await expect(paginasMesas.getByRole('status')).toHaveText(paginaMesa);
     await expect(paginasSolicitacoes.getByRole('status')).toHaveText('Página de solicitações 2');
     await capturar(page, paginasSolicitacoes, 's03-paginacao-solicitacoes');
@@ -584,6 +634,14 @@ test.describe(() => {
       name: 'Recuperar cadastro da mesma mesa',
       exact: true,
     });
+    await expect(recuperar).toBeEnabled();
+    await navegarUi(page, '/gestao/pedidos');
+    await navegarUi(page, '/gestao/mesas');
+    await salao
+      .getByText('Cadastrar mesa e confirmar acesso administrativo', { exact: true })
+      .click();
+    await expect(nome).toHaveValue(nomeCorrigido);
+    await expect(nome).toBeDisabled();
     await expect(recuperar).toBeEnabled();
     await page.unroute('**/api/v1/operacao/mesas');
     const recuperacao = page.waitForResponse(
@@ -747,7 +805,13 @@ test('S03-UI04 combo cancela unidade completa e preserva primeiro preparo', asyn
   const primeiro = pedido.primeiroPreparoEm;
   const fila = await operacao(page);
   const card = fila.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
-  await card.getByRole('checkbox').nth(0).check();
+  // O login já abre a fila; aguarde o snapshot posterior ao preparo feito pelo setup.
+  const unidadeEmPreparo = card.getByRole('checkbox', {
+    name: 'Unidade 1 · Em preparo',
+    exact: true,
+  });
+  await expect(unidadeEmPreparo).toBeVisible();
+  await unidadeEmPreparo.check();
   await card
     .getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true })
     .fill('Cancelamento da unidade inteira do combo');
@@ -895,15 +959,18 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
           await api(request, token, '/api/v1/operacao/pedidos?unidadeId=' + fixture().unidadeB)
         ).status(),
       ).toBe(404);
+      const menu = atual.page.getByRole('button', { name: 'Abrir menu de gestão', exact: true });
+      if (await menu.isVisible()) await menu.click();
+      const navegacao = atual.page.getByRole('navigation', {
+        name: 'Gestão do restaurante',
+        exact: true,
+      });
       if (perfil === 'cozinha') {
-        await expect(
-          painel.getByRole('button', { name: 'Painel da cozinha', exact: true }),
-        ).toBeVisible();
+        await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toBeVisible();
       }
       if (perfil === 'atendimento' || perfil === 'caixa' || perfil === 'expedicao')
-        await expect(
-          painel.getByRole('button', { name: 'Painel da cozinha', exact: true }),
-        ).toHaveCount(0);
+        await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toHaveCount(0);
+      if (await menu.isVisible()) await atual.page.keyboard.press('Escape');
       const negado = await api(
         request,
         token,
@@ -967,9 +1034,14 @@ test('S03-UI08 offline invalida confirmação e mantém formulário utilizável 
   await expect(enviar).toBeEnabled();
   await context.setOffline(true);
   await expect(enviar).toBeDisabled();
-  await expect(page.getByText('Você está offline.', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText(
+      'Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.',
+      { exact: true },
+    ),
+  ).toBeVisible();
   await context.setOffline(false);
-  await page.getByRole('button', { name: 'Calcular resumo no servidor', exact: true }).click();
+  await page.getByRole('button', { name: 'Revisar meu pedido', exact: true }).click();
   await page.getByRole('button', { name: 'Confirmar composição e valores', exact: true }).click();
   await expect(
     page.getByText('Resumo confirmado. O envio do pedido exige confirmação separada.', {
@@ -1048,6 +1120,10 @@ test('S03-UI09 pedido assistido e serviço na mesa seguem ações próprias', as
     '/api/v1/cozinha/pedidos',
   );
   const fila = await operacao(page);
+  await expect(fila.getByLabel('Estado dos pedidos', { exact: true })).toHaveValue(
+    'AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO',
+  );
+  await fila.getByLabel('Estado dos pedidos', { exact: true }).selectOption('');
   const card = fila.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
   await card.getByRole('button', { name: 'Marcar servido na mesa', exact: true }).click();
   await expect(card.getByText('Concluído', { exact: true }).first()).toBeVisible();
@@ -1074,11 +1150,11 @@ test('S03-UI10 revogação encerra acompanhamento e remove ações com JWT ainda
   const cliente = await loginApi(request, fixture().contas.clienteA);
   const criado = await enviarApi(request, cliente, catalogo.simples);
   await comando(request, admin, criado.pedido, 'aceitar');
-  const token = await loginUi(page, fixture().contas.cozinha);
   const requests: string[] = [];
   page.on('request', (req) => {
     if (req.url().includes('/eventos')) requests.push(req.url());
   });
+  const token = await loginUi(page, fixture().contas.cozinha);
   const painel = await operacao(page, 'Painel da cozinha');
   await expect(
     painel.getByRole('article', { name: 'Pedido ' + criado.pedido.id, exact: true }),
@@ -1107,7 +1183,7 @@ test('S03-UI10 revogação encerra acompanhamento e remove ações com JWT ainda
       }),
     );
     await expect(
-      painel.getByText('Sua política atual não permite consultar pedidos.', { exact: true }),
+      painel.getByRole('heading', { name: 'Seu acesso foi atualizado', exact: true }),
     ).toBeVisible({ timeout: 15000 });
     await expect(painel.getByRole('article')).toHaveCount(0);
     expect(

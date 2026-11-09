@@ -48,7 +48,7 @@ interface Unidade {
         <p aria-label="Intenção preservada">{{ pendente()?.nome }} · {{ pendente()?.fuso }}</p>
         <button type="button" (click)="reconciliar(nome)" [disabled]="ocupado()">Reconciliar criação</button>
       }
-      <form (submit)="criar($event, nome, fuso)">
+      <form data-rascunho="nova-unidade" (submit)="criar($event, nome, fuso)">
         <label for="nova-unidade-nome">Nome da nova unidade</label>
         <input
           #nome
@@ -75,7 +75,7 @@ interface Unidade {
         <article>
           <h4>{{ u.nome }}</h4>
           <p>Versão {{ u.versao }} · {{ u.ativa ? 'Ativa' : 'Inativa' }}</p>
-          <form (submit)="salvar($event, u, nomeEditado.value, fusoEditado.value, ativa.checked)">
+          <form [attr.data-rascunho]="u.id" (submit)="salvar($event, u, nomeEditado.value, fusoEditado.value, ativa.checked)">
             <label [for]="'nome-' + u.id">Nome da unidade</label>
             <input
               #nomeEditado
@@ -107,6 +107,7 @@ interface Unidade {
             [nome]="u.nome"
             [bloqueado]="ocupado() || !!pendente()"
             (bloqueio)="bloquearFuncionamento($event)"
+            (salvo)="salvo.emit('funcionamento-' + u.id)"
           />
         </article>
       } @empty {
@@ -171,6 +172,7 @@ export class UnidadesComponent implements OnInit {
   readonly aviso = signal('');
   readonly pendente = inject(CriacaoPendenteService).daConta(this.sessao.identidade()!.usuarioId);
   readonly bloqueio = output<boolean>();
+  readonly salvo = output<string>();
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
@@ -242,6 +244,7 @@ export class UnidadesComponent implements OnInit {
       );
       this.unidades.update((rows) => rows.map((row) => (row.id === u.id ? atual : row)));
       this.aviso.set('Unidade atualizada no servidor.');
+      this.salvo.emit(u.id);
     });
   }
 
@@ -259,6 +262,7 @@ export class UnidadesComponent implements OnInit {
     nome.value = '';
     this.unidades.update((rows) => [u, ...rows.filter((row) => row.id !== u.id)].slice(0, 50));
     this.aviso.set('Unidade criada no servidor. Recarregue para ordenar a lista.');
+    this.salvo.emit('nova-unidade');
   }
 
   mudarPagina(delta: number): void {

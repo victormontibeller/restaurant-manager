@@ -1,3 +1,4 @@
+import { abrirConta, navegarUi, nomePerfil } from '../e2e-identidade/apoio';
 import { expect, test, APIRequestContext, Locator, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,14 +35,15 @@ function resposta(page: Page, pathname: string, method: string) {
 }
 
 async function autenticarUi(page: Page): Promise<string> {
-  await page.goto('/');
+  await page.goto('/gestao/entrar');
   await page.getByLabel('E-mail', { exact: true }).fill(fixture.email);
   await page.getByLabel('Senha', { exact: true }).fill(fixture.senha);
   const login = resposta(page, '/api/v1/auth/login', 'POST');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   const result = await login;
   expect(result.status()).toBe(200);
-  await expect(page.getByText('Perfil: ADMINISTRADOR', { exact: true })).toBeVisible();
+  await abrirConta(page);
+  await expect(page.getByText(nomePerfil['ADMINISTRADOR'], { exact: true })).toBeVisible();
   return (await result.json()).accessToken;
 }
 
@@ -111,7 +113,7 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
 }) => {
   const access = await autenticarUi(page);
   const headers = { Authorization: 'Bearer ' + access };
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await navegarUi(page, '/gestao/unidades');
   const admin = page.getByRole('region', { name: 'Configurações de unidades', exact: true });
   await expect(admin).toBeVisible();
   await admin.getByLabel('Confirme sua senha', { exact: true }).fill(fixture.senha);
@@ -221,8 +223,9 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
 
   // Recarregar a página restaura a sessão, consulta o cadastro e preserva o funcionamento.
   await page.reload();
-  await expect(page.getByText('Perfil: ADMINISTRADOR', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Gerenciar unidades', exact: true }).click();
+  await abrirConta(page);
+  await expect(page.getByText(nomePerfil['ADMINISTRADOR'], { exact: true })).toBeVisible();
+  await navegarUi(page, '/gestao/unidades');
   const reabertura = resposta(page, rota(unidade.id), 'GET');
   await editor.getByRole('button', { name: 'Configurar horários e canais', exact: true }).click();
   expect((await reabertura).status()).toBe(200);
@@ -231,6 +234,8 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
   await expect(primeiro.getByLabel('Fim (HH:mm ou 24:00)', { exact: true })).toHaveValue('02:00');
   await editor.screenshot({ path: test.info().outputPath('funcionamento-administrativo.png') });
 
+  await navegarUi(page, '/cardapio');
+  await page.locator('summary').filter({ hasText: 'Horários e atendimento' }).click();
   const painel = page.getByRole('region', { name: 'Unidades e horários', exact: true });
   const consultaPublica = resposta(page, publica(unidade.id), 'GET');
   await painel.getByLabel('Unidade', { exact: true }).selectOption(unidade.id);
@@ -261,6 +266,7 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
   await semOverflow(page);
   await painel.screenshot({ path: test.info().outputPath('funcionamento-publico.png') });
 
+  await abrirConta(page);
   const logout = resposta(page, '/api/v1/auth/logout', 'POST');
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
   expect((await logout).status()).toBe(204);
@@ -300,7 +306,8 @@ test('S02-UI02: consulta pública limpa disponibilidade offline e revalida após
   await sairApi(request);
   expect((await request.get(rota(id), { headers })).status()).toBe(401);
 
-  await page.goto('/');
+  await page.goto('/cardapio');
+  await page.locator('summary').filter({ hasText: 'Horários e atendimento' }).click();
   const painel = page.getByRole('region', { name: 'Unidades e horários', exact: true });
   await expect(
     painel.getByLabel('Unidade', { exact: true }).locator('option[value="' + id + '"]'),
@@ -336,7 +343,5 @@ test('S02-UI02: consulta pública limpa disponibilidade offline e revalida após
 
   // A navegação pública não criou uma sessão empresarial implicitamente.
   expect((await page.request.get(rota(id))).status()).toBe(401);
-  await expect(
-    page.getByRole('heading', { name: 'Acessar minha conta', exact: true }),
-  ).toBeVisible();
+  await expect(page.locator('a[href="/entrar"]:visible').first()).toBeVisible();
 });

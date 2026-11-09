@@ -43,7 +43,7 @@ interface Convite {
         <button (click)="enviar()" [disabled]="ocupado()">Reenviar mesma intenção</button>
         <button (click)="consultar(p.id)" [disabled]="ocupado()">Conferir intenção pendente</button>
       } @else {
-        <form (submit)="criar($event, email.value)">
+        <form data-rascunho="convite" (submit)="criar($event, email.value)">
           <label for="email-convite">E-mail do funcionário convidado</label>
           <input
             #email
@@ -179,6 +179,7 @@ export class ConvitesComponent implements OnInit {
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly bloqueio = output<boolean>();
+  readonly salvo = output<string>();
   readonly senhaInvalida = signal(false);
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
@@ -237,6 +238,7 @@ export class ConvitesComponent implements OnInit {
         });
         this.encontrado.set(c);
         this.pendente.set(null);
+        this.salvo.emit('convite');
         this.aviso.set(
           'Convite registrado no servidor: ' +
             c.id +
@@ -269,7 +271,10 @@ export class ConvitesComponent implements OnInit {
         throw new Error('Informe um identificador UUID válido.');
       const c = await this.sessao.api<Convite>('/api/v1/equipe/convites/' + id);
       this.encontrado.set(c);
-      if (this.pendente()?.id === c.id) this.pendente.set(null);
+      if (this.pendente()?.id === c.id) {
+        this.pendente.set(null);
+        this.salvo.emit('convite');
+      }
       this.aviso.set('Resultado consultado no servidor.');
     });
   }

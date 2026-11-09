@@ -135,6 +135,11 @@ async function logoutPreservaIntencaoEOutraContaNaoRecebeArquivo() {
   const primeiro = f.criar(produto);
   primeiro.component.selecionar({ files: [arquivo] });
   await primeiro.component.enviar();
+  assert.equal(
+    primeiro.component.salvo.values.length,
+    0,
+    'Resposta perdida mantém rascunho do upload.',
+  );
   const pendente = f.pendencias.daConta('conta-a')();
   assert.ok(pendente.id);
   assert.equal(pendente.arquivo, arquivo);
@@ -154,6 +159,11 @@ async function logoutPreservaIntencaoEOutraContaNaoRecebeArquivo() {
   assert.equal(retomada.component.selecionado, arquivo);
   await retomada.component.consultar();
   assert.equal(retomada.component.midiaIdChange.values[0], pendente.id);
+  assert.equal(
+    retomada.component.salvo.values[0],
+    'midia-produto-a',
+    'Reconciliação confirma apenas o grupo do upload.',
+  );
   assert.equal(f.pendencias.daConta('conta-a')(), null);
   assert.equal(f.uploads.length, 1);
   assert.equal(f.bloqueiaSaida(), false);
@@ -176,6 +186,11 @@ async function respostaPosteriorADestruicaoNaoApagaIntencao() {
   concluir({ id });
   await envio;
   assert.equal(primeiro.component.midiaIdChange.values.length, 0);
+  assert.equal(
+    primeiro.component.salvo.values.length,
+    0,
+    'Resposta após destruir não limpa rascunho de outra tela.',
+  );
   assert.equal(f.pendencias.daConta('conta-a')().id, id);
   const retomada = f.criar(produto);
   await retomada.component.consultar();
@@ -195,11 +210,17 @@ async function consultaNaoEncontradaMantemMesmoArquivoEIdentificadorNoReenvio() 
   await component.consultar();
   assert.equal(component.incerto(), false);
   assert.equal(component.temPendencia(), true);
+  assert.equal(component.salvo.values.length, 0, 'Consulta sem resultado não confirma o upload.');
   component.selecionar({ files: [new File(['outro'], 'outro.png')] });
   assert.equal(component.selecionado, arquivo);
   f.responderUpload(async () => ({ id }));
   await component.enviar();
   assert.equal(f.uploads[1].path, f.uploads[0].path);
+  assert.equal(
+    component.salvo.values[0],
+    'midia-produto-a',
+    'Resposta confirmada limpa somente o upload.',
+  );
   assert.equal(f.pendencias.daConta('conta-a')(), null);
 }
 

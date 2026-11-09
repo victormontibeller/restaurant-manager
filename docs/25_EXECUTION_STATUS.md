@@ -1,5 +1,61 @@
 # Checkpoint de execução
 
+## Redesenho — concluído e publicado na demonstração local, 2026-11-08
+
+Entrega aberta para revisão no [PR #7](https://github.com/victormontibeller/restaurant-manager/pull/7),
+de `codex/redesenho-frontend` para `main`. A implementação e as evidências já
+estavam commitadas em `638e70f`; este incremento documental registra a abertura.
+A CI do head do PR deve ser conferida separadamente dos testes locais abaixo.
+
+Branch `codex/redesenho-frontend`, base `14ca980` (PR #6 integrado). Fonte da
+aplicação `c991bd89eef693901a265f0940ea9830a1472430`; ajuste final exclusivo do
+teste em `a408cae`. Cliente, gestão e cozinha separados, tema de bistrô com
+Spartan/Tailwind, abas da cozinha e navegação por ações/unidades, conforme
+[ADR 0003](adr/0003-spartan-navegacao-por-area.md). Nome público, filtros antes da
+paginação e fallback SPA explícito implementados. Migrações e escritas preservadas.
+
+**JAR validado e servido em `https://demo.localhost:8095`:**
+`3df1f92ce34dd9cc1868a1fdc76252b980e5a4294ebf9c6ed3f909eb26fa9411`.
+Estado `validado-localmente`, escopo `mac-local`. Acessos, certificado e dados
+anteriores preservados; backup consistente e arquivos de reversão disponíveis.
+Quatro exemplos de fila/preparo parcial acrescentados às duas unidades, sem
+pagamentos reais. Sete acessos conferidos. O arquivo manual preexistente do
+proprietário permanece fora do commit.
+
+**407 testes backend completos + 360 pares únicos de navegador aprovados**,
+sem falhas/erros/skips na suíte backend e sem skips, retries ou instabilidade na
+seleção final da matriz. 65 pedidos/mesas/cozinha + 295 de regressão, 72 por
+projeto: Chromium 360/768/1280, Firefox e WebKit. Mesmo JAR/PID, PostgreSQL real
+exclusivo `rm_test`; demonstração em `rm_dev`. PostgreSQL local 18.4/Homebrew,
+Java 21.0.9, Node 26.0.0 e Playwright 1.64.1. As rodadas históricas 402 + 38 não
+são somadas aos 407 finais.
+
+Formatação, tipos, 20 grupos de lógica, 12 grupos de templates nos três motores,
+build/PWA e npm audit aprovados. Inicial 286,19 kB; limites 450/600 kB mantidos;
+33 arquivos públicos PWA. Catálogo interno: nove combinações de motor/largura,
+teclado, painéis e toque 48 px. Demonstração: 42 verificações de rotas/navegação,
+30 de smoke e nove combinações área/largura. Vinte capturas efetivamente
+inspecionadas; uma captura prematura rejeitada foi substituída com espera correta.
+
+Chrome nativo no release final: zoom 200%, viewport/scrollWidth 896 px, diálogo
+clientWidth/scrollWidth 638 px e retorno de foco ao acionador. Zoom restaurado a
+100%. Pares principais de contraste calculados; aparelhos físicos/leitores de
+tela permanecem pendentes. PWA mantém APIs/dados privados/escritas fora do cache.
+
+A correção final alterou somente a sincronização do teste de upload. Todo o
+catálogo foi repetido; 77 pares de famílias inalteradas do mesmo JAR/PID foram
+revalidados por recibos, sem aprovações de outros candidatos. Snapshots, política
+restrita e falhas preservados. Consolidação SHA-256:
+`7d1fd87308224eabe802bb92bc9d2cf340ff5e0f41df1e37981121e4ffe0e978`.
+
+Relato completo: [evidência do redesenho](evidencias/redesenho-frontend-2026-11-08.md).
+Cópia privada permanente dos relatórios/JAR/capturas:
+`/Users/mac/.local/share/restaurant-manager-manual/evidencias/redesenho-20261108-3df1f92ce34d`.
+API de testes 32335 encerrada; 8089 liberada. Demonstração 8095 saudável e
+PostgreSQL preservado.
+Sem merge em main nem publicação em produção. Próximo passo externo: Linux/Hermes
+(S01-UI29/31), aparelhos físicos/PWA, tecnologia assistiva e critérios do piloto.
+
 ## Sprint 3 — revisão concluída localmente, 2026-11-07
 
 Implementação e revisão local concluídas na branch

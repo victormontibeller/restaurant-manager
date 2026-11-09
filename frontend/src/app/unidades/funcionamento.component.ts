@@ -37,7 +37,7 @@ interface Funcionamento {
 @Component({
   selector: 'app-funcionamento-unidade',
   template: `
-    <section [attr.aria-labelledby]="'funcionamento-titulo-' + unidadeId" [attr.aria-busy]="ocupado()">
+    <section [attr.data-rascunho]="'funcionamento-' + unidadeId" [attr.aria-labelledby]="'funcionamento-titulo-' + unidadeId" [attr.aria-busy]="ocupado()">
       <h5 [id]="'funcionamento-titulo-' + unidadeId">Horários e canais de {{ nome }}</h5>
       <button
         type="button"
@@ -221,6 +221,7 @@ export class FuncionamentoUnidadeComponent {
   @Input() nome = '';
   @Input() bloqueado = false;
   @Output() readonly bloqueio = new EventEmitter<boolean>();
+  @Output() readonly salvo = new EventEmitter<void>();
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
   private readonly sessao = inject(SessaoService);
@@ -353,6 +354,7 @@ export class FuncionamentoUnidadeComponent {
       if (!this.vigente(geracao, unidade)) return;
       this.receber(dados, unidade);
       this.aviso.set('Funcionamento salvo no servidor.');
+      this.salvo.emit();
     } catch (error) {
       if (this.vigente(geracao, unidade)) this.falhar(error, true);
     } finally {

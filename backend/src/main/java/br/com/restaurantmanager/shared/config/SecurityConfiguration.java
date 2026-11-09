@@ -76,6 +76,7 @@ public class SecurityConfiguration {
         return common(http, mapper, tenants)
                 .csrf(c -> c.ignoringRequestMatchers("/api/v1/carrinho/calcular"))
                 .authorizeHttpRequests(a -> a.requestMatchers(new DespachoErroSseMatcher()).permitAll()
+                        .requestMatchers(HttpMethod.GET, FrontendConfiguration.rotas()).permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/",
@@ -85,7 +86,9 @@ public class SecurityConfiguration {
                                 "/favicon.ico",
                                 "/manifest.webmanifest",
                                 "/icons/*.png",
+                                "/assets/bistro-banner.jpg",
                                 "/api/v1/status",
+                                "/api/v1/restaurante",
                                 "/api/v1/unidades",
                                 "/api/v1/unidades/*/funcionamento",
                                 "/actuator/health"
