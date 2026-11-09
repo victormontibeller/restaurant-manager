@@ -172,10 +172,17 @@
         <dt>Saldo a devolver</dt>
         <dd>{{ moeda(conta.saldoADevolver) }}</dd>
       </dl>
-      <p>
-        Registro de pagamentos indisponível neste ambiente. Só é possível concluir com saldos
-        zerados e pedidos resolvidos.
-      </p>
+      @if (
+        tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar') || tem('comanda.concluir')
+      ) {
+        <app-financeiro
+          tipo="comandas"
+          [recurso]="conta.id"
+          [acoes]="acoes()"
+          [atualizacao]="conta"
+          (atualizar)="carregar(true)"
+        />
+      }
       <div class="acoes">
         @if (conta.estado === 'ABERTA' && tem('comanda.iniciar_fechamento')) {
           <button (click)="fechar('iniciar-fechamento')" [disabled]="ocupado()">

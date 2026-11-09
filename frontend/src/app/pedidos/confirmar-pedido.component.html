@@ -67,10 +67,31 @@
       }
     }
     @if (carrinho.contexto()?.canal === 'DELIVERY') {
-      <p class="aviso">
-        Delivery de teste · taxa R$ 0,00 · sem validação de região. Endereço fictício; entrega real
-        ainda não disponível.
-      </p>
+      <app-enderecos
+        [unidadeId]="carrinho.contexto()!.unidadeId"
+        [subtotal]="carrinho.resumo()?.subtotal ?? '0.00'"
+        [bloqueado]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+        (entrega)="entrega.set($event)"
+      />
+    }
+    @if (!assistido() && carrinho.contexto()?.canal !== 'MESA') {
+      <label for="pagamento-pedido">Como deseja pagar?</label>
+      <select
+        id="pagamento-pedido"
+        #meio
+        [value]="pagamento"
+        (change)="pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'"
+        [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+      >
+        <option value="PRESENCIAL">Pagar presencialmente ao restaurante</option>
+        <option value="ONLINE">Pagar online com Mercado Pago</option>
+      </select>
+      @if (pagamento === 'ONLINE') {
+        <p>
+          O pedido aguardará confirmação do pagamento antes do aceite do restaurante. O prazo
+          inicial é de 15 minutos, conforme a unidade.
+        </p>
+      }
     }
     <label for="observacao-pedido">Observação de preparo</label>
     <textarea

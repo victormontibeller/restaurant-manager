@@ -2,12 +2,11 @@
 openapi: 3.1.1
 info:
   title: Restaurant Manager — pedidos, cozinha e contratos de cobrança
-  version: 0.3.0
-  description: Sprint 3 local. Tenant resolvido pelo domínio; JWT empresarial ou audiência
-    exclusiva de mesa. Respostas no-store. Não implementa recebimentos/devoluções
-    reais, regiões/mínimo de delivery ou expedição. Cobrança pertence ao pedido externo
-    ou à comanda; cancelamento gera ajuste somente do remanescente. Saldo informa
-    obrigação, não execução de devolução. Eventos/replay têm contrato próprio.
+  version: 0.4.0
+  description: Sprint 4 local em validação. Tenant por domínio; JWT empresarial ou
+    audiência exclusiva de mesa. Pedidos online aguardam confirmação confiável antes
+    do aceite. Contratos financeiros, delivery e pagamentos estão em arquivos próprios.
+    Não comprova sandbox ou homologação Linux.
 paths:
   "/api/v1/me/pedidos":
     get:
@@ -152,10 +151,10 @@ paths:
     post:
       operationId: enviarPedidoCliente
       description: Novo pedido recalcula após locks e exige revisão atual e vendas
-        habilitadas. Cliente delivery/retirada entra em aceite. Delivery somente
-        dev/test com opt-in, endereço fictício obrigatório e taxa de teste R$ 0,00.
-        Replay idêntico recupera o pedido sob lock, inclusive com vendas suspensas,
-        se a autorização permanece válida; mesmo UUID com payload divergente retorna 409.
+        habilitadas. Cliente delivery/retirada entra em aceite. Delivery somente dev/test
+        com opt-in, endereço fictício obrigatório e taxa de teste R$ 0,00. Replay
+        idêntico recupera o pedido sob lock, inclusive com vendas suspensas, se a
+        autorização permanece válida; mesmo UUID com payload divergente retorna 409.
       security:
       - empresarial: []
       responses:
@@ -211,10 +210,10 @@ paths:
           default: 0
     post:
       operationId: enviarPedidoMesa
-      description: Nova rodada recalcula após locks, exige revisão atual, vendas
-        habilitadas e comanda aberta. Replay idêntico recupera o pedido sob lock,
-        inclusive durante fechamento ou suspensão, se a sessão de participante
-        permanece válida; mesmo UUID com payload divergente retorna 409.
+      description: Nova rodada recalcula após locks, exige revisão atual, vendas habilitadas
+        e comanda aberta. Replay idêntico recupera o pedido sob lock, inclusive durante
+        fechamento ou suspensão, se a sessão de participante permanece válida; mesmo
+        UUID com payload divergente retorna 409.
       security:
       - mesa: []
       responses:
@@ -340,9 +339,9 @@ paths:
       operationId: criarPedidoAssistido
       description: Exige pedido.criar_assistido; autoria permanece do funcionário.
         Novo pedido recalcula após locks e exige revisão atual e vendas habilitadas;
-        mesa exige comanda aberta. Replay idêntico recupera o pedido sob lock,
-        inclusive durante fechamento ou suspensão, se a autorização permanece válida.
-        Mesmo UUID com payload divergente retorna 409. Retorno mínimo sem preço/endereço/saldo.
+        mesa exige comanda aberta. Replay idêntico recupera o pedido sob lock, inclusive
+        durante fechamento ou suspensão, se a autorização permanece válida. Mesmo
+        UUID com payload divergente retorna 409. Retorno mínimo sem preço/endereço/saldo.
       security:
       - empresarial: []
       responses:
@@ -452,11 +451,11 @@ paths:
   "/api/v1/operacao/pedidos/{id}/aceitar":
     post:
       operationId: aceitarPedido
-      description: Ação específica e versão atual obrigatórias; não recebe seleção de unidades.
-        Exige AGUARDANDO_ACEITE. Em agora >= expirarEm confirma o cancelamento
-        durável e retorna 409, mesmo se o job atrasou. Alerta devido ainda não
-        registrado é recuperado uma única vez antes da expiração, na mesma
-        transação e com horário real de processamento.
+      description: Ação específica e versão atual obrigatórias; não recebe seleção
+        de unidades. Exige AGUARDANDO_ACEITE. Em agora >= expirarEm confirma o cancelamento
+        durável e retorna 409, mesmo se o job atrasou. Alerta devido ainda não registrado
+        é recuperado uma única vez antes da expiração, na mesma transação e com horário
+        real de processamento.
       security:
       - empresarial: []
       responses:
@@ -485,8 +484,8 @@ paths:
     post:
       operationId: recusarPedido
       description: Exige ação específica, versão atual, motivo e pedido AGUARDANDO_ACEITE.
-        Não recebe seleção de unidades; cancela integralmente e abate somente
-        o valor remanescente.
+        Não recebe seleção de unidades; cancela integralmente e abate somente o valor
+        remanescente.
       security:
       - empresarial: []
       responses:
@@ -515,10 +514,10 @@ paths:
     post:
       operationId: cancelarPedido
       description: Exige versão atual e motivo. Seleção vazia cancela todas as unidades
-        ativas; parcial recebe UUIDs de unidades completas. Componentes de combo
-        são negados. Após qualquer preparo exige pedido.cancelar_apos_preparo.
-        Cancelamento integral resolve solicitação PENDENTE como APROVADA na mesma
-        transação, sem segundo abatimento; parcial preserva a solicitação.
+        ativas; parcial recebe UUIDs de unidades completas. Componentes de combo são
+        negados. Após qualquer preparo exige pedido.cancelar_apos_preparo. Cancelamento
+        integral resolve solicitação PENDENTE como APROVADA na mesma transação, sem
+        segundo abatimento; parcial preserva a solicitação.
       security:
       - empresarial: []
       responses:
@@ -546,9 +545,9 @@ paths:
   "/api/v1/operacao/pedidos/{id}/servir":
     post:
       operationId: servirPedido
-      description: Exige ação específica, versão atual e pedido de mesa PRONTO.
-        Não recebe seleção de unidades. Solicitação de cancelamento PENDENTE
-        deve ser decidida antes do serviço; pagamento não é pré-requisito.
+      description: Exige ação específica, versão atual e pedido de mesa PRONTO. Não
+        recebe seleção de unidades. Solicitação de cancelamento PENDENTE deve ser
+        decidida antes do serviço; pagamento não é pré-requisito.
       security:
       - empresarial: []
       responses:
@@ -650,8 +649,8 @@ paths:
       operationId: listarKds
       description: Somente NA_FILA/EM_PREPARO/PRONTO da unidade autorizada. Não expõe
         dados financeiros, endereço ou contato. Filtros e ordenação são aplicados
-        antes da paginação. Estados solicitados são intersectados com a fila da
-        cozinha; estados externos à fila nunca ampliam o resultado.
+        antes da paginação. Estados solicitados são intersectados com a fila da cozinha;
+        estados externos à fila nunca ampliam o resultado.
       security:
       - empresarial: []
       responses:
@@ -835,33 +834,137 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/AlterarPrazos"
+  "/api/v1/operacao/pedidos/{id}/retirar":
+    post:
+      operationId: retirarPedido
+      description: Ação pedido.retirar por unidade. Estado e canal corretos. Retirada/entrega
+        exigem quitação sem pendências. Despacho presencial permite pagamento na entrega.
+        Intenção e versão obrigatórias.
+      security:
+      - empresarial: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+      responses:
+        '200':
+          description: Estado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+  "/api/v1/operacao/pedidos/{id}/despachar":
+    post:
+      operationId: despacharPedido
+      description: Ação pedido.despachar por unidade. Estado e canal corretos. Retirada/entrega
+        exigem quitação sem pendências. Despacho presencial permite pagamento na entrega.
+        Intenção e versão obrigatórias.
+      security:
+      - empresarial: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+      responses:
+        '200':
+          description: Estado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
+  "/api/v1/operacao/pedidos/{id}/entregar":
+    post:
+      operationId: entregarPedido
+      description: Ação pedido.entregar por unidade. Estado e canal corretos. Retirada/entrega
+        exigem quitação sem pendências. Despacho presencial permite pagamento na entrega.
+        Intenção e versão obrigatórias.
+      security:
+      - empresarial: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ComandoPedido"
+      responses:
+        '200':
+          description: Estado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PedidoOperacional"
+        default:
+          "$ref": "#/components/responses/Erro"
 components:
   parameters:
     EstadosPedidos:
       name: estados
       in: query
-      description: Estados separados por vírgula. Omissão ou lista vazia não adiciona filtro.
+      description: Estados separados por vírgula. Omissão ou lista vazia não adiciona
+        filtro.
       style: form
       explode: false
       schema:
         type: array
         items:
           type: string
-          enum: [AGUARDANDO_ACEITE, NA_FILA, EM_PREPARO, PRONTO, CONCLUIDO, CANCELADO]
+          enum: &1
+          - AGUARDANDO_PAGAMENTO
+          - AGUARDANDO_ACEITE
+          - NA_FILA
+          - EM_PREPARO
+          - PRONTO
+          - EM_ENTREGA
+          - CONCLUIDO
+          - CANCELADO
     CanalPedidos:
       name: canal
       in: query
       description: Canal de atendimento; omissão preserva todos os canais permitidos.
       schema:
         type: string
-        enum: [DELIVERY, RETIRADA, MESA]
+        enum:
+        - DELIVERY
+        - RETIRADA
+        - MESA
     OrdenacaoPedidos:
       name: ordenacao
       in: query
       description: Ordem de criação; empates são resolvidos pelo UUID crescente.
       schema:
         type: string
-        enum: [ANTIGOS, RECENTES]
+        enum:
+        - ANTIGOS
+        - RECENTES
         default: RECENTES
   securitySchemes:
     empresarial:
@@ -912,6 +1015,19 @@ components:
           oneOf:
           - "$ref": "#/components/schemas/EnderecoEntrega"
           - type: 'null'
+        revisaoDelivery:
+          type:
+          - string
+          - 'null'
+          description: Cotação vigente obrigatória no delivery comercial.
+        pagamento:
+          type: string
+          enum:
+          - PRESENCIAL
+          - ONLINE
+          default: PRESENCIAL
+          description: ONLINE somente cliente próprio em delivery/retirada, com conexão
+            ativa.
       required:
       - intencaoId
       - unidadeId
@@ -949,6 +1065,18 @@ components:
         cep:
           type: string
           pattern: "^[0-9]{8}$"
+        destinatario:
+          type:
+          - string
+          - 'null'
+          maxLength: 100
+          description: Obrigatório no envio comercial.
+        contato:
+          type:
+          - string
+          - 'null'
+          maxLength: 40
+          description: Obrigatório no envio comercial.
       required:
       - logradouro
       - numero
@@ -1107,13 +1235,7 @@ components:
           - MESA
         estado:
           type: string
-          enum:
-          - AGUARDANDO_ACEITE
-          - NA_FILA
-          - EM_PREPARO
-          - PRONTO
-          - CONCLUIDO
-          - CANCELADO
+          enum: *1
         versao:
           type: integer
           minimum: 0
@@ -1155,6 +1277,21 @@ components:
             "$ref": carrinho.yaml#/components/schemas/SnapshotLinha
         saldo:
           "$ref": "#/components/schemas/SaldoCobranca"
+        endereco:
+          oneOf:
+          - "$ref": "#/components/schemas/EnderecoEntrega"
+          - type: 'null'
+        entrega:
+          oneOf:
+          - "$ref": delivery.yaml#/components/schemas/OrcamentoEntrega
+          - type: 'null'
+        pagoOnline:
+          type: boolean
+        pagamentoExpiraEm:
+          type:
+          - string
+          - 'null'
+          format: date-time
       required:
       - id
       - unidadeId
@@ -1259,13 +1396,7 @@ components:
           - MESA
         estado:
           type: string
-          enum:
-          - AGUARDANDO_ACEITE
-          - NA_FILA
-          - EM_PREPARO
-          - PRONTO
-          - CONCLUIDO
-          - CANCELADO
+          enum: *1
         versao:
           type: integer
           minimum: 0

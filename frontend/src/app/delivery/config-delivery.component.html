@@ -1,0 +1,92 @@
+<section aria-labelledby="regioes-titulo">
+  <h2 id="regioes-titulo">Regiões de entrega e checkout</h2>
+  <p>
+    As faixas de CEP são inclusivas e não podem se sobrepor quando ativas. O mínimo considera os
+    itens, sem a taxa de entrega. Os horários seguem a configuração da unidade.
+  </p>
+  <button type="button" (click)="carregar()" [disabled]="ocupado()">
+    Consultar configuração salva
+  </button>
+  <form #form="ngForm" (ngSubmit)="salvar(senha)">
+    <fieldset [disabled]="ocupado() || incerto()">
+      <legend>Configuração da unidade</legend>
+      <label
+        >Prazo para pagar online, em minutos<input
+          type="number"
+          name="minutosCheckout"
+          [(ngModel)]="minutos"
+          min="1"
+          max="1440"
+          step="1"
+          required
+      /></label>
+      @for (r of regioes; track r.id) {
+        <fieldset>
+          <legend>{{ r.nome || 'Nova região' }}</legend>
+          <label
+            >Nome da região<input
+              [name]="'nome-'+r.id"
+              [(ngModel)]="r.nome"
+              required
+              maxlength="100"
+          /></label>
+          <label
+            >CEP inicial<input
+              [name]="'inicio-'+r.id"
+              [(ngModel)]="r.cepInicial"
+              required
+              maxlength="9"
+          /></label>
+          <label
+            >CEP final<input [name]="'fim-'+r.id" [(ngModel)]="r.cepFinal" required maxlength="9"
+          /></label>
+          <label
+            >Taxa fixa em reais<input
+              [name]="'taxa-'+r.id"
+              [(ngModel)]="r.taxa"
+              required
+              inputmode="decimal"
+          /></label>
+          <label
+            >Pedido mínimo de itens em reais<input
+              [name]="'minimo-'+r.id"
+              [(ngModel)]="r.minimo"
+              required
+              inputmode="decimal"
+          /></label>
+          <label class="checkbox"
+            ><input type="checkbox" [name]="'ativa-'+r.id" [(ngModel)]="r.ativa" /> Região
+            ativa</label
+          ><button type="button" (click)="remover(r.id)">Remover região {{ r.nome }}</button>
+        </fieldset>
+      }
+      <button type="button" (click)="adicionar()" [disabled]="regioes.length >= 100">
+        Adicionar região
+      </button>
+      <label
+        >Confirme sua senha<input
+          #senha
+          type="password"
+          name="senhaDelivery"
+          autocomplete="current-password"
+          required
+      /></label>
+      <button type="submit" [disabled]="!form.valid">Salvar regiões e prazo</button>
+    </fieldset>
+  </form>
+  @if (incerto()) {
+    <p class="aviso">
+      Resultado de salvamento ainda não confirmado. Consulte a configuração antes de outra
+      alteração.
+    </p>
+    <button type="button" (click)="usarServidor()" [disabled]="ocupado()">
+      Usar versão do servidor e descartar rascunho
+    </button>
+  }
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

@@ -118,6 +118,22 @@ histórico e ajustes confirmam juntos. Regras de retomada ficam em
 - Provisionamento só ativa a empresa após concluir schema, migrações, configuração e administrador. Falhas devem ser retomáveis e visíveis.
 - Não apague pedidos, recebimentos, devoluções ou auditoria para corrigir histórico; registre cancelamentos/ajustes rastreáveis. Política de retenção precisa respeitar as dependências definidas no projeto.
 
+## Persistência da Sprint 4 local
+
+Novas migrações: tenant V22–V27 e public V7. Ledger financeiro conserva intenções,
+recebimentos, abatimentos e reservas vinculadas; constraints de moeda, método e
+referência complementam locks do agregado. Runtime não pode atualizar recebimentos
+ou intenções. Regiões usam versão e pedidos preservam seus snapshots de entrega.
+Checkout guarda payload de criação imutável, estado e lease; snapshot ausente em
+intenção antiga sem referência externa fica bloqueado para revisão.
+
+Inbox financeira pública usa transação JDBC neutra, com referências internamente
+mapeadas para empresas registradas. Só esse mapeamento validado escolhe schema no
+worker; caller não fornece schema. Outboxes/leases de pagamentos, devoluções e
+comunicações ficam no tenant. Contatos e credenciais têm proteção descrita em
+[Integrações](21_INTEGRATIONS.md); nenhum dump/chave entra no Git. Evidências de
+concorrência e isolamento usam PostgreSQL real exclusivo do projeto.
+
 ## Documentos relacionados
 
 - [Tenancy e provisionamento](06_MULTI_TENANT.md)

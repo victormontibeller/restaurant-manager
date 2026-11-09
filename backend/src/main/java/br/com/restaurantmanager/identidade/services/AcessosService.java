@@ -13,6 +13,12 @@ import br.com.restaurantmanager.identidade.models.Sessao;
 import br.com.restaurantmanager.identidade.models.Usuario;
 import br.com.restaurantmanager.identidade.repositories.AcessosRepository;
 import br.com.restaurantmanager.unidades.models.Unidade;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -20,14 +26,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AcessosService {
-    static final List<String> PERFIS = List.of("GERENTE", "ATENDIMENTO", "CAIXA", "COZINHA", "EXPEDICAO");
+    static final List<String> PERFIS =
+            List.of("GERENTE", "ATENDIMENTO", "CAIXA", "COZINHA", "EXPEDICAO");
     private final AcessosRepository repository;
 
     public AcessosService(AcessosRepository repository) {
@@ -42,7 +45,8 @@ public class AcessosService {
     }
 
     @Transactional
-    public MatrizAcessos atualizarMatriz(IdentidadeAtual ator, long versao, String perfil, Set<String> acoes) {
+    public MatrizAcessos atualizarMatriz(
+            IdentidadeAtual ator, long versao, String perfil, Set<String> acoes) {
         var politica = repository.politica(true);
         administrador(ator, true);
         if (!PERFIS.contains(perfil)) {
@@ -62,7 +66,8 @@ public class AcessosService {
         var antes = repository.permissoes(perfil);
         repository.substituirPermissoes(perfil, novas);
         repository.incrementarPolitica(politica);
-        repository.auditar(ator.usuarioId(), null, "MATRIZ_" + perfil, antes.toString(), novas.toString());
+        repository.auditar(
+                ator.usuarioId(), null, "MATRIZ_" + perfil, antes.toString(), novas.toString());
         return matrizAtual(politica);
     }
 
@@ -97,16 +102,21 @@ public class AcessosService {
             throw conflito("O funcionário foi alterado. Recarregue antes de salvar.");
         }
         if (perfil.equals("ADMINISTRADOR") && !unidades.isEmpty()) {
-            throw invalido("Administrador cobre todas as unidades; não informe vínculos individuais.");
+            throw invalido(
+                    "Administrador cobre todas as unidades; não informe vínculos individuais.");
         }
-        Set<UUID> validas = new HashSet<>(repository.unidadesAtivas().stream().map(Unidade::getId).toList());
+        Set<UUID> validas =
+                new HashSet<>(repository.unidadesAtivas().stream().map(Unidade::getId).toList());
         // Inativar unidade não pode impedir revogar o funcionário. Vínculos já
         // existentes podem permanecer/remover-se, sem novas concessões inativas.
         validas.addAll(repository.unidades(id));
         if (!validas.containsAll(unidades)) {
             throw inexistente();
         }
-        if (alvo.isAtivo() && alvo.getPerfil().equals("ADMINISTRADOR") && (!ativo || !perfil.equals("ADMINISTRADOR")) && repository.administradores() <= 1) {
+        if (alvo.isAtivo()
+                && alvo.getPerfil().equals("ADMINISTRADOR")
+                && (!ativo || !perfil.equals("ADMINISTRADOR"))
+                && repository.administradores() <= 1) {
             throw conflito("Mantenha pelo menos um Administrador ativo.");
         }
         String antes = estado(alvo, repository.unidades(id));
@@ -116,7 +126,12 @@ public class AcessosService {
         if (revogar) {
             repository.revogarSessoes(id);
         }
-        repository.auditar(ator.usuarioId(), id, "FUNCIONARIO_ALTERADO", antes, estado(alvo, unidades.stream().sorted().toList()));
+        repository.auditar(
+                ator.usuarioId(),
+                id,
+                "FUNCIONARIO_ALTERADO",
+                antes,
+                estado(alvo, unidades.stream().sorted().toList()));
         repository.flush();
         return resumo(alvo);
     }
@@ -125,8 +140,12 @@ public class AcessosService {
     public AcessosEfetivos efetivo(IdentidadeAtual ator) {
         var politica = repository.politica(false);
         var usuario = funcionario(ator);
-        var acoes = usuario.getPerfil().equals("ADMINISTRADOR") ? Acao.catalogo().stream().map(DescricaoAcao::codigo).toList() : repository.permissoes(usuario.getPerfil());
-        return new AcessosEfetivos(usuario.getPerfil(), politica.getVersao(), acoes, unidadesDo(usuario));
+        var acoes =
+                usuario.getPerfil().equals("ADMINISTRADOR")
+                        ? Acao.catalogo().stream().map(DescricaoAcao::codigo).toList()
+                        : repository.permissoes(usuario.getPerfil());
+        return new AcessosEfetivos(
+                usuario.getPerfil(), politica.getVersao(), acoes, unidadesDo(usuario));
     }
 
     @Transactional
@@ -137,11 +156,16 @@ public class AcessosService {
 
     @Transactional
     public UnidadePermitida unidade(IdentidadeAtual ator, UUID id) {
-        return unidades(ator).stream().filter(u -> u.id().equals(id)).findFirst().orElseThrow(AcessosService::inexistente);
+        return unidades(ator).stream()
+                .filter(u -> u.id().equals(id))
+                .findFirst()
+                .orElseThrow(AcessosService::inexistente);
     }
 
-    /** Chamado dentro da transação do caso de uso: lock compartilhado impede revogação no meio da escrita. */
-
+    /**
+     * Chamado dentro da transação do caso de uso: lock compartilhado impede revogação no meio da
+     * escrita.
+     */
     @Transactional(propagation = Propagation.MANDATORY)
     public void autorizarAdministrador(IdentidadeAtual ator, boolean escrita) {
         repository.politica(escrita);
@@ -149,23 +173,34 @@ public class AcessosService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void auditarConfiguracao(IdentidadeAtual ator, UUID recurso, String evento, String antes, String depois) {
+    public void auditarConfiguracao(
+            IdentidadeAtual ator, UUID recurso, String evento, String antes, String depois) {
         autorizarAdministrador(ator, true);
         repository.auditar(ator.usuarioId(), recurso, evento, antes, depois);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void auditarOperacao(
+            IdentidadeAtual ator, Acao acao, UUID unidade, UUID recurso, String evento) {
+        autorizarOperacaoExistente(ator, acao, unidade);
+        repository.auditar(ator.usuarioId(), recurso, evento, "", "");
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void autorizar(IdentidadeAtual ator, Acao acao, UUID unidade) {
         repository.politica(false);
         Usuario user = funcionario(ator);
-        if (!user.getPerfil().equals("ADMINISTRADOR") && !repository.permissoes(user.getPerfil()).contains(acao.codigo())) {
+        if (!user.getPerfil().equals("ADMINISTRADOR")
+                && !repository.permissoes(user.getPerfil()).contains(acao.codigo())) {
             throw negado();
         }
         if (acao.escopo().equals("UNIDADE")) {
-            if (unidade == null || unidadesDo(user).stream().noneMatch(u -> u.id().equals(unidade))) {
+            if (unidade == null
+                    || unidadesDo(user).stream().noneMatch(u -> u.id().equals(unidade))) {
                 throw inexistente();
             }
-        } else if (unidade != null) throw invalido("Ação de escopo empresarial não recebe unidade.");
+        } else if (unidade != null)
+            throw invalido("Ação de escopo empresarial não recebe unidade.");
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -193,7 +228,8 @@ public class AcessosService {
                 && !repository.permissoes(usuario.getPerfil()).contains(acao.codigo())) {
             throw negado();
         }
-        if (unidade == null || unidadesExistentesDo(usuario).stream().noneMatch(u -> u.id().equals(unidade))) {
+        if (unidade == null
+                || unidadesExistentesDo(usuario).stream().noneMatch(u -> u.id().equals(unidade))) {
             throw inexistente();
         }
     }
@@ -207,8 +243,12 @@ public class AcessosService {
     private List<UnidadePermitida> unidadesExistentesDo(Usuario usuario) {
         var permitidas = repository.unidades(usuario.getId());
         return repository.unidadesExistentes().stream()
-                .filter(u -> usuario.getPerfil().equals("ADMINISTRADOR") || permitidas.contains(u.getId()))
-                .map(u -> new UnidadePermitida(u.getId(), u.getNome(), u.getFuso())).toList();
+                .filter(
+                        u ->
+                                usuario.getPerfil().equals("ADMINISTRADOR")
+                                        || permitidas.contains(u.getId()))
+                .map(u -> new UnidadePermitida(u.getId(), u.getNome(), u.getFuso()))
+                .toList();
     }
 
     private Usuario usuarioAtual(IdentidadeAtual ator) {
@@ -217,7 +257,11 @@ public class AcessosService {
         }
         var session = sessaoAtual(ator.sessaoId());
         var user = repository.usuario(ator.usuarioId());
-        if (session == null || !session.getUsuarioId().equals(ator.usuarioId()) || !session.valida(Instant.now()) || user == null || !user.isAtivo()) {
+        if (session == null
+                || !session.getUsuarioId().equals(ator.usuarioId())
+                || !session.valida(Instant.now())
+                || user == null
+                || !user.isAtivo()) {
             throw AuthFailure.invalid();
         }
         return user;
@@ -236,7 +280,10 @@ public class AcessosService {
             return repository.sessao(id);
         } catch (ObjectOptimisticLockingFailureException erro) {
             // A leitura do snapshot de sessão conflitou; lock/deadlock têm tipos distintos.
-            throw new AuthFailure(409, "SESSAO_ALTERADA", "A sessão mudou durante a consulta. Atualize antes de continuar.");
+            throw new AuthFailure(
+                    409,
+                    "SESSAO_ALTERADA",
+                    "A sessão mudou durante a consulta. Atualize antes de continuar.");
         }
     }
 
@@ -247,15 +294,23 @@ public class AcessosService {
         if (sensivel) {
             Instant reautenticada = sessaoAtual(ator.sessaoId()).getReautenticadaEm();
             if (reautenticada == null || reautenticada.isBefore(Instant.now().minusSeconds(300))) {
-                throw new AuthFailure(403, "REAUTENTICACAO_NECESSARIA", "Confirme sua senha antes de alterar acessos.");
+                throw new AuthFailure(
+                        403,
+                        "REAUTENTICACAO_NECESSARIA",
+                        "Confirme sua senha antes de alterar acessos.");
             }
         }
     }
 
     private List<UnidadePermitida> unidadesDo(Usuario usuario) {
         var permitidas = repository.unidades(usuario.getId());
-        return repository.unidadesAtivas().stream().filter(u -> usuario.getPerfil().equals("ADMINISTRADOR") || permitidas.contains(u.getId()))
-                .map(u -> new UnidadePermitida(u.getId(), u.getNome(), u.getFuso())).toList();
+        return repository.unidadesAtivas().stream()
+                .filter(
+                        u ->
+                                usuario.getPerfil().equals("ADMINISTRADOR")
+                                        || permitidas.contains(u.getId()))
+                .map(u -> new UnidadePermitida(u.getId(), u.getNome(), u.getFuso()))
+                .toList();
     }
 
     private MatrizAcessos matrizAtual(PoliticaAcesso politica) {
@@ -265,7 +320,13 @@ public class AcessosService {
     }
 
     private FuncionarioResumo resumo(Usuario u) {
-        return new FuncionarioResumo(u.getId(), u.getEmail(), u.getPerfil(), u.isAtivo(), u.getVersao(), repository.unidades(u.getId()));
+        return new FuncionarioResumo(
+                u.getId(),
+                u.getEmail(),
+                u.getPerfil(),
+                u.isAtivo(),
+                u.getVersao(),
+                repository.unidades(u.getId()));
     }
 
     private String estado(Usuario u, List<UUID> unidades) {

@@ -49,6 +49,15 @@ D12 e D16 foram atualizadas em 2026-11-02 para execução principal no Linux e p
 <a id="premissas-propostas"></a>
 ## Premissas propostas para detalhamento
 
+Na abertura local da Sprint 4, em 2026-11-08, o proprietário confirmou P07 e P08:
+regiões por CEP, taxa fixa e mínimo, e OAuth com Checkout Pro hospedado pela
+Orders API por restaurante. Meios iniciais: Pix/cartão; checkout local padrão de 15 minutos,
+configurável por unidade. Pós-despacho exige decisão gerencial sobre nova
+tentativa ou cancelamento e tratamento explícito da taxa. Simulação local e
+captura de e-mails autorizadas; sandbox, envio externo e Linux/homologação
+continuam pendentes. O aceite não comprova implementação ou habilitação externa.
+
+
 Em 2026-11-06, o proprietário confirmou P05, P06, P12 e P13 para a Sprint 2.
 O aceite valida essas escolhas de produto; não comprova implementação nem
 homologação. As demais premissas mantêm seus registros e prazos próprios.

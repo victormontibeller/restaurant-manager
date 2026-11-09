@@ -50,6 +50,31 @@ depende de funcionamento atual e recálculo pelo servidor. Resumo expira após
 e exige consentimento para esvaziar o carrinho antes de consultar o novo
 contexto. A confirmação do resumo não é aceite de pedido.
 
+## Interfaces da Sprint 4 local
+
+Conta/checkout reutilizam endereços pessoais; delivery exige cotação confirmada
+antes do envio. Configuração de regiões e integração ficam na gestão administrativa;
+expedição, financeiro, pendências e relatórios seguem ações/unidade. Componentes
+e serviços permanecem nos domínios correspondentes, com carregamento lazy das rotas.
+O painel financeiro só consulta ao ser aberto no pedido, evitando consultas em lote
+invisíveis para todos os cartões da fila.
+A escolha de abatimento mostra nome preservado no pedido, posição do item,
+unidade comercial e pedido de origem; a taxa aparece separadamente. O item
+selecionado também é descrito fora do select para leitura em tela estreita.
+Recebimentos têm numeração correspondente na lista e na escolha de devolução.
+
+Recebimento, abatimento, reserva e confirmação são formulários distintos. Resultado
+incerto conserva intenção/payload e bloqueia nova escrita até recuperar a mesma
+operação. Atualização do pedido/comanda reconsulta o painel financeiro aberto
+sem apagar o rascunho do mesmo recurso; troca de identidade/recurso limpa o
+formulário. Resultado incerto é resolvido antes dessa atualização.
+Navegação/fechamento da página avisam sobre intenção pendente; logout
+mantém sua regra de segurança. Troca de identidade/unidade descarta respostas antigas.
+Checkout abre no provedor e retorna ao acompanhamento; query de retorno não muda
+estado. Valores recebidos, devolvidos e pendências são mostrados separadamente.
+Expedição não oferece entrega bem-sucedida enquanto houver ocorrência pendente.
+Critérios e evidências ficam na [estratégia](26_TEST_STRATEGY.md) e no checkpoint.
+
 ## Documentos relacionados
 
 - [Jornadas do produto](01_PRD.md)

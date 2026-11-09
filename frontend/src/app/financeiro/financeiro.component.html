@@ -1,0 +1,188 @@
+<section aria-label="Recebimentos e devoluções">
+  <h3>Recebimentos e devoluções</h3>
+  <button type="button" (click)="carregar()" [disabled]="carregando() || movimentos.ocupado()">
+    Atualizar financeiro
+  </button>
+  @if (carregando()) {
+    <p role="status">Consultando valores…</p>
+  }
+  @if (dados(); as detalhe) {
+    @if (detalhe.cobrancaId === null) {
+      <p>Nenhum consumo foi registrado nesta comanda.</p>
+    }
+    <dl>
+      <dt>Total devido</dt>
+      <dd>{{ moeda(detalhe.saldo.totalDevido) }}</dd>
+      <dt>Recebido</dt>
+      <dd>{{ moeda(detalhe.saldo.pagoConfirmado) }}</dd>
+      <dt>Devolvido</dt>
+      <dd>{{ moeda(detalhe.saldo.devolvidoConfirmado) }}</dd>
+      <dt>A receber</dt>
+      <dd>{{ moeda(detalhe.saldo.saldoAReceber) }}</dd>
+      <dt>A devolver</dt>
+      <dd>{{ moeda(detalhe.saldo.saldoADevolver) }}</dd>
+      <dt>Reservado para devolução</dt>
+      <dd>{{ moeda(detalhe.reservado) }}</dd>
+    </dl>
+    @if (detalhe.saldo.pendenciaFinanceira) {
+      <p class="aviso">Há uma operação financeira pendente. Confira antes do fechamento.</p>
+    }
+    @if (tem('recebimento.registrar')) {
+      <form (ngSubmit)="receber()">
+        <fieldset [disabled]="bloqueado()">
+          <legend>Registrar recebimento presencial</legend>
+          <label
+            >Meio<select name="metodo" [(ngModel)]="metodo">
+              <option value="PIX">Pix presencial conferido</option>
+              <option value="CARTAO">Cartão presencial conferido</option>
+              <option value="DINHEIRO">Dinheiro</option>
+            </select></label
+          >
+          <label
+            >Valor aplicado (ex.: 20.00)<input
+              name="valor"
+              [(ngModel)]="valor"
+              inputmode="decimal"
+              required
+              pattern="[0-9]+([.][0-9]{1,2})?"
+          /></label>
+          @if (metodo === 'DINHEIRO') {
+            <label
+              >Dinheiro entregue<input
+                name="entregue"
+                [(ngModel)]="entregue"
+                inputmode="decimal"
+                required
+            /></label>
+          }
+          <p>
+            Confirme somente após conferir o recebimento fora do sistema. O troco não gera crédito.
+          </p>
+          <button type="submit">Confirmar recebimento presencial</button>
+        </fieldset>
+      </form>
+    }
+    @if (tem('financeiro.ajustar')) {
+      <details>
+        <summary>Ajustar cobrança por valor</summary>
+        <form (ngSubmit)="ajustar()">
+          <fieldset [disabled]="bloqueado()">
+            <legend>Abatimento comercial</legend>
+            <label
+              >Unidade comercial ou taxa<select name="parcela" [(ngModel)]="parcela" required>
+                <option value="">Selecione</option>
+                @for (p of detalhe.parcelas; track p.id) {
+                  <option [value]="p.id">
+                    {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0,8).toUpperCase() }} · original
+                    {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
+                  </option>
+                }
+              </select></label
+            >
+            @for (p of detalhe.parcelas; track p.id) {
+              @if (p.id === parcela) {
+                <p>
+                  <span>Item selecionado: {{ p.descricao }}</span>
+                  <span> · pedido #{{ p.pedidoId.slice(0,8).toUpperCase() }}.</span>
+                </p>
+              }
+            }
+            <label
+              >Valor do abatimento<input
+                name="valorAjuste"
+                [(ngModel)]="valorAjuste"
+                inputmode="decimal"
+                required
+            /></label>
+            <label
+              >Motivo<input name="motivoAjuste" [(ngModel)]="motivoAjuste" maxlength="500" required
+            /></label>
+            <button type="submit">Confirmar ajuste de cobrança</button>
+          </fieldset>
+        </form>
+      </details>
+    }
+    <h4>Recebimentos confirmados</h4>
+    <ul>
+      @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+        <li>
+          Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }} · entregue
+          {{ moeda(r.entregue) }} · troco
+          {{ moeda(r.troco) }}
+        </li>
+      } @empty {
+        <li>Nenhum recebimento confirmado.</li>
+      }
+    </ul>
+    @if (tem('devolucao.solicitar')) {
+      <form (ngSubmit)="devolver()">
+        <fieldset [disabled]="bloqueado()">
+          <legend>Solicitar devolução</legend>
+          <p>
+            Recebimentos online são devolvidos pelo provedor. Para recebimentos presenciais,
+            confirme a realização externa após reservar o valor.
+          </p>
+          <label
+            >Recebimento<select name="recebimento" [(ngModel)]="recebimento" required>
+              <option value="">Selecione</option>
+              @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+                <option [value]="r.id">
+                  Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
+                </option>
+              }
+            </select></label
+          >
+          <label
+            >Valor a devolver<input
+              name="valorDevolucao"
+              [(ngModel)]="valorDevolucao"
+              inputmode="decimal"
+              required
+          /></label>
+          <label
+            >Motivo<input
+              name="motivoDevolucao"
+              [(ngModel)]="motivoDevolucao"
+              maxlength="500"
+              required
+          /></label>
+          <button type="submit">Reservar devolução</button>
+        </fieldset>
+      </form>
+    }
+    <h4>Devoluções</h4>
+    <ul>
+      @for (d of detalhe.devolucoes; track d.id) {
+        <li>
+          {{ moeda(d.valor) }} · {{ d.estado }} · {{ d.motivo }}
+          @if (
+            d.estado === 'SOLICITADA' && tem('devolucao.solicitar') && !online(d.recebimentoId)
+          ) {
+            <button type="button" (click)="confirmar(d.id)" [disabled]="bloqueado()">
+              Confirmar devolução realizada externamente
+            </button>
+          }
+        </li>
+      } @empty {
+        <li>Nenhuma devolução registrada.</li>
+      }
+    </ul>
+  }
+  @if (movimentos.pendente(base())) {
+    <p class="aviso">
+      Resultado ainda não confirmado. Recupere a mesma operação antes de continuar.
+    </p>
+    <button type="button" (click)="repetir()" [disabled]="movimentos.ocupado()">
+      Recuperar mesma operação financeira
+    </button>
+  }
+  @if (erroConsulta()) {
+    <p role="alert">Consulta: {{ erroConsulta() }}</p>
+  }
+  @if (erroAcao()) {
+    <p role="alert">{{ erroAcao() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

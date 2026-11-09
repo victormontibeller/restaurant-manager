@@ -39,6 +39,7 @@ export const equipeObrigatoria: CanActivateFn = async (route, state) => {
   const autorizado =
     (!route.data['administrador'] || contexto.administrador()) &&
     (!route.data['cozinha'] || contexto.podeCozinha()) &&
+    (!route.data['expedicao'] || contexto.podeExpedicao()) &&
     (!acao || contexto.tem(acao));
   return autorizado ? true : router.parseUrl('/sem-acesso');
 };

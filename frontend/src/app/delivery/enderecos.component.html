@@ -1,0 +1,99 @@
+<section aria-label="Endereço de entrega">
+  <h3>{{ unidadeId() ? 'Entrega e endereço' : 'Meus endereços' }}</h3>
+  @if (cliente()) {
+    <ul>
+      @for (e of lista(); track e.id) {
+        <li>
+          <strong>{{ e.descricao }}</strong> · {{ e.endereco.logradouro }}, {{ e.endereco.numero }}
+          <button
+            type="button"
+            (click)="usar(e)"
+            [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
+          >
+            Usar endereço {{ e.descricao }}
+          </button>
+          <button
+            type="button"
+            (click)="remover(e)"
+            [disabled]="store.ocupado() || !!store.pendente() || bloqueado()"
+          >
+            Remover {{ e.descricao }}
+          </button>
+        </li>
+      }
+    </ul>
+    <div class="acoes">
+      <button
+        type="button"
+        (click)="carregar(pagina()-1)"
+        [disabled]="consultando() || pagina() === 0"
+      >
+        Endereços anteriores</button
+      ><span>Página {{ pagina()+1 }}</span
+      ><button
+        type="button"
+        (click)="carregar(pagina()+1)"
+        [disabled]="consultando() || lista().length < 50"
+      >
+        Próximos endereços
+      </button>
+    </div>
+  }
+  <form #form="ngForm" (ngSubmit)="salvar()">
+    <fieldset [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()">
+      <legend>Dados do endereço</legend>
+      @if (cliente()) {
+        <label
+          >Nome deste endereço<input
+            name="descricaoEndereco"
+            [(ngModel)]="descricao"
+            maxlength="100"
+            placeholder="Casa, trabalho…"
+        /></label>
+      }
+      @for (campo of campos; track campo.chave) {
+        <label
+          ><span>{{ campo.rotulo }}</span
+          ><input
+            [name]="'endereco-'+campo.chave"
+            [(ngModel)]="endereco[campo.chave]"
+            (ngModelChange)="alterar()"
+            [required]="!campo.opcional"
+            [maxlength]="campo.max"
+            [attr.autocomplete]="campo.autocomplete"
+        /></label>
+      }
+      <div class="acoes">
+        @if (cliente()) {
+          <button type="submit" [disabled]="!form.valid">Salvar endereço na minha conta</button>
+        }
+        <button type="button" (click)="novo()">Novo endereço</button>
+        @if (unidadeId()) {
+          <button type="button" (click)="calcular()" [disabled]="!form.valid">
+            Calcular e confirmar entrega
+          </button>
+        }
+      </div>
+    </fieldset>
+  </form>
+  @if (cotacao(); as c) {
+    <p role="status">
+      {{ c.regiao }} · Entrega {{ moeda(c.taxa) }} · mínimo de itens {{ moeda(c.minimo) }} · total
+      com entrega {{ moeda(c.total) }}.
+    </p>
+  }
+  @if (store.pendente()) {
+    <p class="aviso">
+      O salvamento não foi confirmado. Recupere o mesmo endereço antes de continuar.
+    </p>
+    <button type="button" (click)="recuperar()" [disabled]="store.ocupado()">
+      Recuperar salvamento do endereço
+    </button>
+  }
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

@@ -1,5 +1,23 @@
 # Inventário rastreável de cobertura
 
+## Sprint 4 — implementação validada localmente
+
+A [evidência local](sprint-04-local-2026-11-09.md) identifica o candidato atual,
+com **435 testes backend/63 XML**, zero falhas, erros ou skips. Dois reinícios
+reais após resposta perdida do provedor HTTP fictício comprovaram recuperação
+sem duplicar cobrança ou devolução. A matriz integrada de **405 pares aprovados**
+foi consolidada no mesmo JAR/PID, sem skips/retries/flaky; capturas revisadas
+separadamente. Resultados históricos não foram herdados.
+Linux/homologação e integrações reais permanecem pendentes.
+
+| Cobertura acrescentada | Prova local |
+| --- | --- |
+| RecebimentosTest / FinanceiroComandaTest | Recebimento, troco, autorização antes de replay, excesso concorrente, reservas concorrentes, combo com abatimento anterior e comanda R$ 120/R$ 50/R$ 80; comanda vazia consultada sem criar cobrança; identificação da parcela pelo snapshot após renomear o produto (teste dirigido e regressão final aprovados) |
+| DeliveryTest / Sprint04OperacaoTest | Regiões/CEP/mínimo, versões e snapshot, endereços próprios, expedição/ocorrências, decisão financeira pós-despacho, quitação de retirada e relatório conhecido por unidade/fuso |
+| PagamentosOnlineTest | SDK real com HTTP fictício, OAuth/PKCE/sessão, isolamento de credenciais e refresh, assinatura/inbox, resposta perdida, pagamento tardio e reconciliação gerencial |
+| NotificacaoOperacionalTest | Captura local, falha sem rollback da venda, tentativas limitadas e recuperação após captura anterior ao reconhecimento no banco |
+| S04-UI01–09 | 45 pares aprovados nos cinco projetos: endereços, regiões, financeiro, resposta perdida, expedição, relatório, conexão, checkout/devolução e fila gerencial |
+
 ## Sprint 3 — revisão final concluída localmente
 
 A [revisão final](revisao-final-sprint-03-2026-11-07.md) registra as correções

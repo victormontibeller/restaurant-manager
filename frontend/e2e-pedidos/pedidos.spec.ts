@@ -349,6 +349,16 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
       data: { mesaId: mesa.id, codigo: abertura.codigoTemporario },
     });
     expect(repetir.status()).toBe(401);
+    const financeiroComanda = contas.getByRole('region', {
+      name: 'Recebimentos e devoluções',
+      exact: true,
+    });
+    await expect(
+      financeiroComanda
+        .locator('dt')
+        .filter({ hasText: /^Total devido$/ })
+        .locator('xpath=following-sibling::dd[1]'),
+    ).toContainText('0,00');
     await capturar(
       caixa.page,
       contas.getByRole('region', { name: 'Resumo da comanda', exact: true }),
@@ -1004,18 +1014,53 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
   }
 });
 
-test('S03-UI07 delivery controlado informa taxa e admite recusa por atendimento', async ({
+test('S03-UI07 delivery comercial confirma endereço e taxa e admite recusa por atendimento', async ({
   page,
   request,
 }) => {
+  const admin = await loginApi(request);
+  await ok(
+    await api(request, admin, '/api/v1/auth/reautenticar', 'POST', { senha: fixture().senha }),
+  );
+  const rota = '/api/v1/configuracoes/unidades/' + fixture().unidadeA + '/delivery';
+  const atual = await ok<{ versao: number }>(await api(request, admin, rota));
+  await ok(
+    await api(request, admin, rota, 'PUT', {
+      versao: atual.versao,
+      checkoutSegundos: 900,
+      regioes: [
+        {
+          id: randomUUID(),
+          nome: 'Centro',
+          cepInicial: '01000000',
+          cepFinal: '01999999',
+          taxa: '5.00',
+          minimo: '10.00',
+          ativa: true,
+        },
+      ],
+    }),
+  );
   const cliente = await loginUi(page, fixture().contas.clienteA);
   await montarCarrinho(page, catalogo.simples, 'DELIVERY', 1);
-  await expect(
-    page.getByText('Delivery de teste · taxa R$ 0,00 · sem validação de região.', { exact: false }),
-  ).toBeVisible();
+  for (const [rotulo, valor] of Object.entries({
+    'Nome de quem recebe': 'Cliente fictício',
+    'Telefone para contato': '11999999999',
+    'Rua ou avenida': 'Rua fictícia',
+    Número: '42',
+    Bairro: 'Centro',
+    Cidade: 'Cidade fictícia',
+    UF: 'SP',
+    CEP: '01000000',
+  }))
+    await page.getByLabel(rotulo, { exact: true }).fill(valor);
+  await page.getByRole('button', { name: 'Calcular e confirmar entrega', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: /Centro.*Entrega/ })).toContainText(
+    '5,00',
+  );
   const pedido = await enviarUi(page);
   expect(pedido.estado).toBe('AGUARDANDO_ACEITE');
-  expect(pedido.saldo!.totalDevido).toBe('10.00');
+  expect(pedido.saldo!.totalDevido).toBe('15.00');
   const equipe = await loginApi(request, fixture().contas.atendimento);
   const recusado = await comando(request, equipe, pedido, 'recusar');
   expect(recusado.estado).toBe('CANCELADO');

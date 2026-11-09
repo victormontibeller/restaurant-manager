@@ -30,7 +30,7 @@ Um backend atende todas as empresas. Separação de módulos é organização de
 
 ## Organização de código
 
-Estrutura da implementação local, incluindo os domínios da Sprint 2:
+Estrutura da implementação local, incluindo os domínios da Sprint 4 local:
 
 ```text
 restaurant-manager/
@@ -59,6 +59,10 @@ restaurant-manager/
       mesas/
       cozinha/
       financeiro/
+      delivery/
+      pagamentos/
+      comunicacoes/
+      relatorios/
       eventos/
       shared/
     src/main/resources/db/migration/
@@ -77,6 +81,10 @@ restaurant-manager/
       pedidos/
       mesas/
       cozinha/
+      financeiro/
+      delivery/
+      pagamentos/
+      relatorios/
       eventos/
   scripts/
 ```
@@ -93,8 +101,12 @@ mídia segue o [ADR 0002](adr/0002-midia-publica-transacional.md). Na Sprint 3 l
 `cozinha` oferece o KDS sem duplicar essa persistência; `mesas` possui atendimentos,
 participantes e estado da comanda; `financeiro` possui cobranças/ajustes/saldos;
 `eventos` publica fatos persistidos. Serviços de caso de uso coordenam serviços de
-agregado, que não injetam os orquestradores. Entrega comercial e recebimentos
-continuam planejados para a Sprint 4. Componentes, serviços e tipos Angular ficam
+agregado, que não injetam os orquestradores. Na Sprint 4, `delivery` possui regiões, endereços pessoais e ocorrências;
+`financeiro` possui ledger de recebimentos e reservas/devoluções; `pagamentos`
+isola OAuth, checkout, inbox e adaptador do provedor; `comunicacoes` possui outbox
+e captura; `relatorios` contém projeção somente de leitura dos fatos financeiros.
+Mutações entre domínios passam por serviços. Projeções de relatório/fila podem
+ler tabelas de outros domínios sem alterar suas invariantes. Componentes, serviços e tipos Angular ficam
 próximos no domínio correspondente, conforme os [padrões de código](10_CODING_STANDARDS.md#legibilidade-e-organização-angular).
 
 Cada módulo separa suas camadas em pacotes `controllers`, `services`,

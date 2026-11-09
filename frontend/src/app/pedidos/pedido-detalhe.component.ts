@@ -1,9 +1,12 @@
+import { PagamentoPedidoComponent } from '../pagamentos/pagamento-pedido.component';
+import { FinanceiroComponent } from '../financeiro/financeiro.component';
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { Pedido, UnidadeProducao, horario, nomeEstado } from './modelos';
 import { PedidoComandoService } from './pedido-comando.service';
 
 @Component({
+  imports: [FinanceiroComponent, PagamentoPedidoComponent],
   selector: 'app-pedido-detalhe',
   templateUrl: './pedido-detalhe.component.html',
   styleUrls: ['../operacao.css', './pedido-detalhe.component.css'],
@@ -15,6 +18,7 @@ export class PedidoDetalheComponent {
   readonly atualizar = output<void>();
   readonly comandos = inject(PedidoComandoService);
   readonly selecionadas = signal<string[]>([]);
+  readonly financeiroAberto = signal(false);
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly agora = signal(Date.now());

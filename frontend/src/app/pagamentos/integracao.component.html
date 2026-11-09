@@ -1,0 +1,22 @@
+<section>
+  <h2>Mercado Pago do restaurante</h2>
+  <p>O restaurante recebe em sua própria conta. Autorize a conexão no ambiente do Mercado Pago.</p>
+  @if (dados(); as c) {
+    <p>
+      Conta vendedora: {{ c.vendedor }}.
+      {{ c.reautorizar ? 'Nova autorização necessária.' : 'Conectada.' }}
+    </p>
+  } @else {
+    <p>Nenhuma conta conectada.</p>
+  }
+  <form (submit)="autorizar($event,senha)">
+    <label
+      >Confirme sua senha<input #senha type="password" autocomplete="current-password" required />
+    </label>
+    <button type="submit" [disabled]="ocupado()">Conectar ou autorizar novamente</button>
+  </form>
+  <button (click)="carregar()" [disabled]="ocupado()">Consultar conexão</button>
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+</section>

@@ -34,7 +34,7 @@ interface Funcionario {
     <section aria-labelledby="acessos-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="acessos-titulo">Configurações de acessos</h2>
       <p>Administrador é protegido e cobre todas as unidades. Alterações valem na próxima operação, sem novo login.</p>
-      <p>As permissões controlam catálogo, pedidos, mesas e cozinha conforme o perfil e a unidade. O registro de pagamentos ainda não está disponível.</p>
+      <p>As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.</p>
       <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar acessos</button>
       <form (submit)="confirmar($event, senha)">
         <label for="confirmar-senha">Confirme sua senha</label>

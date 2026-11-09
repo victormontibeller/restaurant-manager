@@ -1,0 +1,48 @@
+<section>
+  <h2>Pendências financeiras e notificações</h2>
+  <button (click)="carregar(pagina())" [disabled]="ocupado()">Atualizar pendências</button>
+  <h3>Pagamentos e devoluções</h3>
+  <ul>
+    @for (p of lista(); track p.id) {
+      <li>
+        Pedido {{ p.pedidoId.slice(0,8) }} · {{ p.tipo==='CHECKOUT'?'Pagamento':'Devolução' }} ·
+        {{ p.estado }}
+        <button (click)="reconciliar(p)" [disabled]="ocupado()">
+          Reconciliar a mesma operação
+        </button>
+      </li>
+    } @empty {
+      <li>Nenhuma pendência financeira nesta página.</li>
+    }
+  </ul>
+  <h3>Notificações por e-mail</h3>
+  <p>Capturado significa salvo localmente. Não comprova envio ou leitura por destinatário.</p>
+  <ul>
+    @for (n of notificacoes(); track n.id) {
+      <li>
+        Pedido {{ n.pedidoId.slice(0,8) }} · {{ n.tipo }} · {{ n.estado }} · tentativas
+        {{ n.tentativas }}
+      </li>
+    } @empty {
+      <li>Nenhuma notificação nesta página.</li>
+    }
+  </ul>
+  <div class="acoes">
+    <button (click)="carregar(pagina()-1)" [disabled]="ocupado() || pagina()===0">
+      Página anterior
+    </button>
+    <span>Página {{ pagina()+1 }}</span>
+    <button
+      (click)="carregar(pagina()+1)"
+      [disabled]="ocupado() || (lista().length<50 && notificacoes().length<50)"
+    >
+      Próxima página
+    </button>
+  </div>
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

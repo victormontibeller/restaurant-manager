@@ -1,0 +1,118 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — vendas e movimentos por unidade
+  version: 0.4.0
+  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+    autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
+    envio real ou homologação Linux.
+paths:
+  "/api/v1/relatorios/vendas":
+    get:
+      operationId: consultarRelatorioVendas
+      description: relatorio.consultar na unidade; datas inclusivas no fuso da unidade,
+        até 367 dias. Pedidos/cobranças usam criação; ajustes usam registro e movimentos
+        confirmação. Saldos/reservas são atuais para cobranças com pedido no período.
+        Cada comanda contada uma vez, incluindo outras rodadas.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RelatorioVendas"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: inicio
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: fim
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Erro:
+      description: 400 estrutura; 401 sessão; 403 ação/reautenticação; 404 recurso
+        alheio/inexistente; 409 versão/estado/intenção; 422 regra; 503 integração
+        indisponível. Erro PT-BR sem segredos.
+  schemas:
+    RelatorioVendas:
+      type: object
+      additionalProperties: false
+      properties:
+        unidadeId:
+          type: string
+          format: uuid
+        inicio:
+          type: string
+          format: date
+        fim:
+          type: string
+          format: date
+        fuso:
+          type: string
+        consultadoEm:
+          type: string
+          format: date-time
+        pedidosCriados:
+          type: integer
+          minimum: 0
+        canceladosAtualmente:
+          type: integer
+          minimum: 0
+        cobrancasOriginais:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        ajustesNoPeriodo:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        recebimentosConfirmados:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        devolucoesConfirmadas:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        saldoAReceberAtual:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        saldoADevolverAtual:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        reservasAtuais:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+      required:
+      - unidadeId
+      - inicio
+      - fim
+      - fuso
+      - consultadoEm
+      - pedidosCriados
+      - canceladosAtualmente
+      - cobrancasOriginais
+      - ajustesNoPeriodo
+      - recebimentosConfirmados
+      - devolucoesConfirmadas
+      - saldoAReceberAtual
+      - saldoADevolverAtual
+      - reservasAtuais

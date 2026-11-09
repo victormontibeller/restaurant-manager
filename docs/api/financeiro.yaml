@@ -1,0 +1,444 @@
+---
+openapi: 3.1.1
+info:
+  title: Restaurant Manager — recebimentos, ajustes e devoluções
+  version: 0.4.0
+  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+    autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
+    envio real ou homologação Linux.
+paths:
+  "/api/v1/financeiro/{tipo}/{id}":
+    get:
+      operationId: consultarFinanceiro
+      description: Consulta com ação financeira concedida. Cobrança agregada da comanda;
+        reservas incluem falhas ainda não confirmadas.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DetalheFinanceiro"
+        default:
+          "$ref": "#/components/responses/Erro"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pedidos
+          - comandas
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/financeiro/{tipo}/{id}/recebimentos":
+    post:
+      operationId: registrarRecebimentos
+      description: recebimento.registrar. Conferência externa; valor positivo até
+        saldo. Dinheiro exige entregue >= valor; demais meios não aceitam troco. UUID
+        idempotente persistido na mesma transação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DetalheFinanceiro"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EntradaRecebimento"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pedidos
+          - comandas
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/financeiro/{tipo}/{id}/ajustes":
+    post:
+      operationId: registrarAjustes
+      description: financeiro.ajustar. Valor positivo alocado a parcelas existentes,
+        até remanescente. Não cancela produção. UUID idempotente persistido na mesma
+        transação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DetalheFinanceiro"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EntradaAjuste"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pedidos
+          - comandas
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/financeiro/{tipo}/{id}/devolucoes":
+    post:
+      operationId: registrarDevolucoes
+      description: devolucao.solicitar. Reserva até excedente livre e remanescente
+        do recebimento. Online segue worker; presencial exige confirmação externa
+        posterior. UUID idempotente persistido na mesma transação.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DetalheFinanceiro"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EntradaDevolucao"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pedidos
+          - comandas
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  "/api/v1/financeiro/{tipo}/{id}/devolucoes/{devolucao}/confirmar":
+    post:
+      operationId: confirmarDevolucaoPresencial
+      description: devolucao.solicitar. Somente presencial após efeito externo; ONLINE
+        é recusado. Replay da mesma intenção não duplica.
+      security:
+      - empresarial: []
+      responses:
+        '200':
+          description: Resultado atual confirmado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DetalheFinanceiro"
+        default:
+          "$ref": "#/components/responses/Erro"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ConfirmarDevolucao"
+      parameters:
+      - name: tipo
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - pedidos
+          - comandas
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: devolucao
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+components:
+  securitySchemes:
+    empresarial:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Erro:
+      description: 400 estrutura; 401 sessão; 403 ação/reautenticação; 404 recurso
+        alheio/inexistente; 409 versão/estado/intenção; 422 regra; 503 integração
+        indisponível. Erro PT-BR sem segredos.
+  schemas:
+    EntradaRecebimento:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        metodo:
+          type: string
+          enum:
+          - DINHEIRO
+          - CARTAO
+          - PIX
+        valor:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        entregue:
+          oneOf:
+          - type: string
+            pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+          - type: 'null'
+      required:
+      - intencaoId
+      - metodo
+      - valor
+    AlocacaoAjuste:
+      type: object
+      additionalProperties: false
+      properties:
+        parcelaId:
+          type: string
+          format: uuid
+        valor:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+      required:
+      - parcelaId
+      - valor
+    EntradaAjuste:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+        alocacoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AlocacaoAjuste"
+          maxItems: 100
+          minItems: 1
+      required:
+      - intencaoId
+      - motivo
+      - alocacoes
+    EntradaDevolucao:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+        recebimentoId:
+          type: string
+          format: uuid
+        valor:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - intencaoId
+      - recebimentoId
+      - valor
+      - motivo
+    ConfirmarDevolucao:
+      type: object
+      additionalProperties: false
+      properties:
+        intencaoId:
+          type: string
+          format: uuid
+      required:
+      - intencaoId
+    ParcelaCobranca:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        pedidoId:
+          type: string
+          format: uuid
+        unidadeComercialId:
+          oneOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        tipo:
+          type: string
+          enum:
+          - UNIDADE
+          - TAXA
+        original:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        abatido:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        descricao:
+          type: string
+          minLength: 1
+          description: Nome preservado no pedido, posição do item e unidade comercial, ou identificação da taxa de entrega.
+      required:
+      - id
+      - pedidoId
+      - unidadeComercialId
+      - tipo
+      - original
+      - abatido
+      - descricao
+    Recebimento:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        metodo:
+          type: string
+          enum:
+          - DINHEIRO
+          - CARTAO
+          - PIX
+          - ONLINE
+        valor:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        entregue:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        troco:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        confirmadoEm:
+          type: string
+          format: date-time
+      required:
+      - id
+      - metodo
+      - valor
+      - entregue
+      - troco
+      - confirmadoEm
+    Devolucao:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        recebimentoId:
+          type: string
+          format: uuid
+        valor:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        motivo:
+          type: string
+        estado:
+          type: string
+          enum:
+          - SOLICITADA
+          - EM_PROCESSAMENTO
+          - EM_RECONCILIACAO
+          - CONFIRMADA
+          - FALHOU
+        criadaEm:
+          type: string
+          format: date-time
+        confirmadaEm:
+          oneOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+      required:
+      - id
+      - recebimentoId
+      - valor
+      - motivo
+      - estado
+      - criadaEm
+      - confirmadaEm
+    DetalheFinanceiro:
+      type: object
+      additionalProperties: false
+      properties:
+        cobrancaId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Nulo enquanto a comanda ainda não possui consumo; consulta
+            não cria cobrança.
+        saldo:
+          "$ref": pedidos.yaml#/components/schemas/SaldoCobranca
+        reservado:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        parcelas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ParcelaCobranca"
+        recebimentos:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Recebimento"
+        devolucoes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Devolucao"
+      required:
+      - cobrancaId
+      - saldo
+      - reservado
+      - parcelas
+      - recebimentos
+      - devolucoes

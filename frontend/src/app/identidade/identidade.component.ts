@@ -1,3 +1,4 @@
+import { EnderecosComponent } from '../delivery/enderecos.component';
 import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { ActivatedRoute, ROUTES, Router, RouterLink } from '@angular/router';
 import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
@@ -20,6 +21,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
 @Component({
   selector: 'app-identidade',
   imports: [
+    EnderecosComponent,
     RouterLink,
     HlmButton,
     RecuperacaoComponent,
@@ -43,6 +45,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
             <a hlmBtn variant="outline" routerLink="/cardapio">Explorar cardápio</a>
           </div>
         }
+        @if (pessoa.perfil === 'CLIENTE') { <app-enderecos /> }
         <button hlmBtn variant="ghost" type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
       } @else if (pagina() === 'verificacao') {
         <app-verificacao (voltar)="voltarAoLogin()"/>

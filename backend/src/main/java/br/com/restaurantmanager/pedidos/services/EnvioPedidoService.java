@@ -2,15 +2,18 @@ package br.com.restaurantmanager.pedidos.services;
 
 import br.com.restaurantmanager.carrinho.dtos.Calcular;
 import br.com.restaurantmanager.carrinho.services.CarrinhoService;
+import br.com.restaurantmanager.delivery.dtos.OrcamentoEntrega;
+import br.com.restaurantmanager.delivery.services.DeliveryService;
 import br.com.restaurantmanager.eventos.services.EventoOperacionalService;
-import br.com.restaurantmanager.financeiro.services.CobrancaService;
 import br.com.restaurantmanager.financeiro.dtos.ParcelaInicial;
+import br.com.restaurantmanager.financeiro.services.CobrancaService;
 import br.com.restaurantmanager.identidade.models.Acao;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.identidade.services.AcessosService;
 import br.com.restaurantmanager.mesas.models.ParticipanteAtual;
 import br.com.restaurantmanager.mesas.services.ComandaService;
 import br.com.restaurantmanager.mesas.services.MesaSessaoService;
+import br.com.restaurantmanager.pagamentos.services.CheckoutIntencaoService;
 import br.com.restaurantmanager.pedidos.dtos.EnviarPedido;
 import br.com.restaurantmanager.pedidos.dtos.PedidoDetalhe;
 import br.com.restaurantmanager.pedidos.dtos.PedidoOperacional;
@@ -19,14 +22,16 @@ import br.com.restaurantmanager.pedidos.models.PedidoRegistro;
 import br.com.restaurantmanager.pedidos.repositories.PedidoRepository;
 import br.com.restaurantmanager.tenancy.services.TenantService;
 import br.com.restaurantmanager.unidades.models.CanalAtendimento;
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
 
 @Service
 public class EnvioPedidoService {
@@ -43,14 +48,29 @@ public class EnvioPedidoService {
     private final Clock clock;
     private final PedidoDeadlineService deadlines;
     private final boolean deliveryControlado;
+    private final DeliveryService delivery;
+    private final CheckoutIntencaoService checkouts;
 
-    public EnvioPedidoService(PedidoRepository repository, AcessosService acessos, TenantService tenants,
-            CarrinhoService carrinho, ComandaService comandas, MesaSessaoService sessoes, CobrancaService cobrancas,
-            PrazosAceiteService prazos, PedidoConsultaService consultas, EventoOperacionalService eventos, PedidoDeadlineService deadlines,
+    public EnvioPedidoService(
+            PedidoRepository repository,
+            AcessosService acessos,
+            TenantService tenants,
+            CarrinhoService carrinho,
+            ComandaService comandas,
+            MesaSessaoService sessoes,
+            CobrancaService cobrancas,
+            DeliveryService delivery,
+            CheckoutIntencaoService checkouts,
+            PrazosAceiteService prazos,
+            PedidoConsultaService consultas,
+            EventoOperacionalService eventos,
+            PedidoDeadlineService deadlines,
             @Qualifier("pedidosClock") Clock clock,
             @Value("${rm.pedidos.delivery-controlado:false}") boolean deliveryControlado,
             @Value("${rm.stage:dev}") String ambiente) {
         this.repository = repository;
+        this.delivery = delivery;
+        this.checkouts = checkouts;
         this.acessos = acessos;
         this.tenants = tenants;
         this.carrinho = carrinho;
@@ -80,7 +100,11 @@ public class EnvioPedidoService {
         return consultas.detalhe(enviar(null, ator, entrada, false));
     }
 
-    private PedidoRegistro enviar(IdentidadeAtual ator, ParticipanteAtual participante, EnviarPedido entrada, boolean assistido) {
+    private PedidoRegistro enviar(
+            IdentidadeAtual ator,
+            ParticipanteAtual participante,
+            EnviarPedido entrada,
+            boolean assistido) {
         // A intenção serializa retries antes de qualquer nova persistência. Replay
         // recupera uma compra existente mesmo que a empresa já tenha suspendido vendas.
         repository.bloquearIntencao(entrada.intencaoId());
@@ -88,14 +112,22 @@ public class EnvioPedidoService {
         PedidoRegistro existente = repository.consultar(entrada.intencaoId(), false).orElse(null);
         if (existente != null) {
             autorizar(ator, participante, entrada, assistido, true);
-            boolean mesmoAtor = participante == null
-                    ? ator.usuarioId().equals(existente.usuarioId()) && existente.autoria().equals(assistido ? "FUNCIONARIO" : "CLIENTE")
-                    : participante.participanteId().equals(existente.participanteId());
-            if (!mesmoAtor || !payload.equals(existente.payload())) throw ErrosPedido.conflito("Esta intenção já foi utilizada com outros dados.");
+            boolean mesmoAtor =
+                    participante == null
+                            ? ator.usuarioId().equals(existente.usuarioId())
+                                    && existente
+                                            .autoria()
+                                            .equals(assistido ? "FUNCIONARIO" : "CLIENTE")
+                            : participante.participanteId().equals(existente.participanteId());
+            if (!mesmoAtor || !payload.equals(existente.payload()))
+                throw ErrosPedido.conflito("Esta intenção já foi utilizada com outros dados.");
             // A resposta inclui unidades, histórico e saldo. Releia o agregado sob
             // os mesmos locks das mutações para não misturar versões no replay.
             if (existente.comandaId() != null) comandas.bloquear(existente.comandaId());
-            PedidoRegistro atual = repository.consultar(existente.id(), true).orElseThrow(ErrosPedido::inexistente);
+            PedidoRegistro atual =
+                    repository
+                            .consultar(existente.id(), true)
+                            .orElseThrow(ErrosPedido::inexistente);
             autorizar(ator, participante, entrada, assistido, true);
             return atual;
         }
@@ -111,48 +143,140 @@ public class EnvioPedidoService {
         }
         // Sessão e autorização são novamente lidas depois de esperar catálogo/comanda.
         autorizar(ator, participante, entrada, assistido, false);
-        var resumo = carrinho.calcularParaPedido(new Calcular(entrada.unidadeId(), entrada.canal(), entrada.linhas(), entrada.revisao()));
-        if (resumo.requerConfirmacao()) throw ErrosPedido.conflito("O catálogo ou o funcionamento mudou. Recalcule e confirme o novo resumo.");
+        var resumo =
+                carrinho.calcularParaPedido(
+                        new Calcular(
+                                entrada.unidadeId(),
+                                entrada.canal(),
+                                entrada.linhas(),
+                                entrada.revisao()));
+        if (resumo.requerConfirmacao())
+            throw ErrosPedido.conflito(
+                    "O catálogo ou o funcionamento mudou. Recalcule e confirme o novo resumo.");
+        OrcamentoEntrega entrega = null;
+        if (entrada.canal() == CanalAtendimento.DELIVERY) {
+            boolean controlado =
+                    deliveryControlado && delivery.paraPedido(entrada.unidadeId()).versao() == 0;
+            if (!controlado) {
+                if (entrada.endereco().destinatario() == null
+                        || entrada.endereco().destinatario().isBlank()
+                        || entrada.endereco().contato() == null
+                        || entrada.endereco().contato().isBlank())
+                    throw ErrosPedido.regra("Informe quem recebe e um contato para entrega.");
+                entrega =
+                        delivery.orcar(
+                                entrada.unidadeId(),
+                                entrada.endereco().cep(),
+                                new BigDecimal(resumo.subtotal()));
+                if (!entrega.revisao().equals(entrada.revisaoDelivery()))
+                    throw ErrosPedido.conflito(
+                            "A entrega mudou. Consulte e confirme o novo orçamento antes de"
+                                + " enviar.");
+            }
+        }
         Instant agora = clock.instant();
         var prazo = prazos.paraEntrada(entrada.unidadeId());
-        repository.criar(entrada, ator == null ? null : ator.usuarioId(), participante == null ? null : participante.participanteId(),
-                participante != null ? "PARTICIPANTE" : assistido ? "FUNCIONARIO" : "CLIENTE", resumo.linhas(),
-                agora, prazo.alertaSegundos(), prazo.expiracaoSegundos(), payload);
-        if (entrada.canal() != CanalAtendimento.MESA) deadlines.agendar(entrada.intencaoId(), agora.plusSeconds(prazo.alertaSegundos()));
-        // Frete gratuito explicitamente controlado; regras comerciais de entrega são Sprint 4.
-        var parcelas = repository.unidades(entrada.intencaoId()).stream().map(unidade -> {
-            var linha = resumo.linhas().stream().filter(l -> l.id().equals(unidade.linhaId())).findFirst().orElseThrow();
-            return new ParcelaInicial(unidade.id(), new BigDecimal(linha.precoUnitario()));
-        }).toList();
-        cobrancas.registrar(entrada.unidadeId(), entrada.intencaoId(), entrada.comandaId(), parcelas, BigDecimal.ZERO);
-        repository.historico(entrada.intencaoId(), ator == null ? participante.participanteId() : ator.usuarioId(), "PEDIDO_ENVIADO", "Pedido confirmado pelo servidor.", agora);
-        eventos.registrar(entrada.unidadeId(), "PEDIDO_ENVIADO", entrada.intencaoId(), entrada.comandaId(),
-                ator == null ? null : ator.usuarioId(), participante == null ? null : participante.participanteId());
+        repository.criar(
+                entrada,
+                ator == null ? null : ator.usuarioId(),
+                participante == null ? null : participante.participanteId(),
+                participante != null ? "PARTICIPANTE" : assistido ? "FUNCIONARIO" : "CLIENTE",
+                resumo.linhas(),
+                agora,
+                prazo.alertaSegundos(),
+                prazo.expiracaoSegundos(),
+                delivery.paraPedido(entrada.unidadeId()).checkoutSegundos(),
+                payload);
+        if (entrada.canal() != CanalAtendimento.MESA)
+            deadlines.agendar(
+                    entrada.intencaoId(),
+                    agora.plusSeconds(
+                            entrada.pagamento().equals("ONLINE")
+                                    ? delivery.paraPedido(entrada.unidadeId()).checkoutSegundos()
+                                    : prazo.alertaSegundos()));
+        if (entrega != null) repository.registrarEntrega(entrada.intencaoId(), entrega);
+        var parcelas =
+                repository.unidades(entrada.intencaoId()).stream()
+                        .map(
+                                unidade -> {
+                                    var linha =
+                                            resumo.linhas().stream()
+                                                    .filter(l -> l.id().equals(unidade.linhaId()))
+                                                    .findFirst()
+                                                    .orElseThrow();
+                                    return new ParcelaInicial(
+                                            unidade.id(), new BigDecimal(linha.precoUnitario()));
+                                })
+                        .toList();
+        cobrancas.registrar(
+                entrada.unidadeId(),
+                entrada.intencaoId(),
+                entrada.comandaId(),
+                parcelas,
+                entrega == null ? BigDecimal.ZERO : new BigDecimal(entrega.taxa()));
+        if (entrada.pagamento().equals("ONLINE"))
+            checkouts.preparar(
+                    entrada.intencaoId(),
+                    entrega == null ? resumo.total() : entrega.total(),
+                    delivery.paraPedido(entrada.unidadeId()).checkoutSegundos());
+        repository.historico(
+                entrada.intencaoId(),
+                ator == null ? participante.participanteId() : ator.usuarioId(),
+                "PEDIDO_ENVIADO",
+                "Pedido confirmado pelo servidor.",
+                agora);
+        eventos.registrar(
+                entrada.unidadeId(),
+                "PEDIDO_ENVIADO",
+                entrada.intencaoId(),
+                entrada.comandaId(),
+                ator == null ? null : ator.usuarioId(),
+                participante == null ? null : participante.participanteId());
         return repository.consultar(entrada.intencaoId(), false).orElseThrow();
     }
 
-    private void autorizar(IdentidadeAtual ator, ParticipanteAtual participante, EnviarPedido entrada, boolean assistido, boolean existente) {
+    private void autorizar(
+            IdentidadeAtual ator,
+            ParticipanteAtual participante,
+            EnviarPedido entrada,
+            boolean assistido,
+            boolean existente) {
         if (participante != null) {
             acessos.bloquearPoliticaOperacional();
-            if (!participante.comandaId().equals(entrada.comandaId()) || !participante.unidadeId().equals(entrada.unidadeId())) throw ErrosPedido.inexistente();
+            if (!participante.comandaId().equals(entrada.comandaId())
+                    || !participante.unidadeId().equals(entrada.unidadeId()))
+                throw ErrosPedido.inexistente();
             sessoes.validar(participante);
         } else if (assistido) {
-            if (existente) acessos.autorizarOperacaoExistente(ator, Acao.PEDIDO_CRIAR, entrada.unidadeId());
+            if (existente)
+                acessos.autorizarOperacaoExistente(ator, Acao.PEDIDO_CRIAR, entrada.unidadeId());
             else acessos.autorizar(ator, Acao.PEDIDO_CRIAR, entrada.unidadeId());
         } else {
             acessos.autorizarCliente(ator);
         }
     }
 
-    private void validarCanal(EnviarPedido entrada, ParticipanteAtual participante, boolean assistido) {
-        if ((entrada.canal() == CanalAtendimento.MESA) != (entrada.comandaId() != null)) throw ErrosPedido.regra("Informe a comanda somente para pedidos de mesa.");
-        if (entrada.canal() == CanalAtendimento.MESA && participante == null && !assistido) throw ErrosPedido.regra("Autorize a sessão da mesa antes de enviar uma rodada.");
-        if (participante != null && entrada.canal() != CanalAtendimento.MESA) throw ErrosPedido.regra("Esta sessão permite somente pedidos da mesa.");
+    private void validarCanal(
+            EnviarPedido entrada, ParticipanteAtual participante, boolean assistido) {
+        if (entrada.pagamento().equals("ONLINE")
+                && (assistido || participante != null || entrada.canal() == CanalAtendimento.MESA))
+            throw ErrosPedido.regra(
+                    "Pagamento online está disponível somente para pedidos próprios de delivery ou"
+                        + " retirada.");
+        if ((entrada.canal() == CanalAtendimento.MESA) != (entrada.comandaId() != null))
+            throw ErrosPedido.regra("Informe a comanda somente para pedidos de mesa.");
+        if (entrada.canal() == CanalAtendimento.MESA && participante == null && !assistido)
+            throw ErrosPedido.regra("Autorize a sessão da mesa antes de enviar uma rodada.");
+        if (participante != null && entrada.canal() != CanalAtendimento.MESA)
+            throw ErrosPedido.regra("Esta sessão permite somente pedidos da mesa.");
         if (entrada.canal() == CanalAtendimento.DELIVERY) {
-            if (!deliveryControlado) throw ErrosPedido.regra("Delivery disponível somente no cenário controlado de desenvolvimento e testes.");
-            if (entrada.endereco() == null) throw ErrosPedido.regra("Informe o endereço fictício de entrega.");
-        } else if (entrada.endereco() != null) throw ErrosPedido.regra("Este canal não recebe endereço de entrega.");
+            if (entrada.endereco() == null)
+                throw ErrosPedido.regra("Informe o endereço de entrega.");
+        } else if (entrada.endereco() != null)
+            throw ErrosPedido.regra("Este canal não recebe endereço de entrega.");
         String observacao = entrada.observacao();
-        if (observacao != null && observacao.chars().anyMatch(c -> Character.isISOControl(c) && c != '\n')) throw ErrosPedido.regra("Observação contém caracteres de controle.");
+        if (observacao != null
+                && observacao.chars().anyMatch(c -> Character.isISOControl(c) && c != '\n'))
+            throw ErrosPedido.regra("Observação contém caracteres de controle.");
     }
 }

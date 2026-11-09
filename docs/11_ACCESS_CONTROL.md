@@ -163,6 +163,22 @@ antecipa relatórios da Sprint04. O checkpoint registra testes de lógica,
 E2E/UI42–43, build e revisão visual do artefato correspondente; aprovação de uma
 versão anterior não aprova o Angular alterado.
 
+## Ações acrescentadas na Sprint 4 local
+
+`entrega.registrar_ocorrencia` é concedida inicialmente a Gerente e Expedição;
+`entrega.decidir_ocorrencia` e `pagamento.reconciliar` ao Gerente. Todas são de
+unidade e dependem de `pedido.consultar`. Administrador conserva escopo empresarial.
+Configuração de regiões/checkout e OAuth são exclusivas do Administrador e exigem
+reautenticação; consulta da conexão também é exclusiva, sem retornar credenciais.
+
+Receber continua separado de retirar/despachar/entregar. Confirmação presencial de
+devolução exige `devolucao.solicitar`; online só é confirmada por consulta confiável
+do provedor. A fila de notificações e a recuperação financeira usam
+`pagamento.reconciliar`; relatório usa `relatorio.consultar`. Revalidar política,
+sessão e unidade na ação, inclusive no replay. Endereço pessoal exige cliente e
+propriedade; expedição recebe endereço por projeção específica. Cozinha não recebe
+endereço, contato ou campos de pagamento no JSON.
+
 ## Referências relacionadas
 
 - [Validação positiva e negativa de todos os perfis](26_TEST_STRATEGY.md)

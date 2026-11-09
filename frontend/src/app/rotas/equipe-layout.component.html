@@ -31,6 +31,9 @@
             ><app-icone nome="mesas" />Mesas e comandas</a
           >
         }
+        @if (contexto.podeExpedicao()) {<a routerLink="/gestao/expedicao" routerLinkActive="active"><app-icone nome="pedidos" />Expedição</a>}
+        @if (contexto.tem('relatorio.consultar')) {<a routerLink="/gestao/relatorios" routerLinkActive="active"><app-icone nome="atualizacoes" />Vendas e movimentos</a>}
+        @if (contexto.tem('pagamento.reconciliar')) {<a routerLink="/gestao/pendencias" routerLinkActive="active"><app-icone nome="relogio" />Pendências e notificações</a>}
         @if (contexto.tem('catalogo.consultar')) {
           <a routerLink="/gestao/catalogo" routerLinkActive="active"
             ><app-icone nome="cardapio" />Cardápio</a
@@ -43,6 +46,8 @@
         }
         @if (contexto.administrador()) {
           <p class="nav-label">ADMINISTRAÇÃO</p>
+          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"><app-icone nome="unidade" />Regiões e checkout</a>
+          <a routerLink="/gestao/integracoes" routerLinkActive="active"><app-icone nome="conta" />Mercado Pago</a>
           <a
             routerLink="/gestao/equipe"
             routerLinkActive="active"

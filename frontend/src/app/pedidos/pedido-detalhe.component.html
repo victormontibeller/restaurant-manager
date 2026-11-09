@@ -106,7 +106,18 @@
       <dd>{{ moeda(saldo.saldoAReceber) }}</dd>
       <dt>Saldo a devolver</dt>
       <dd>{{ moeda(saldo.saldoADevolver) }}</dd>
+      @if (saldo.pagoConfirmado && saldo.pagoConfirmado !== '0.00') {
+        <dt>Recebimento confirmado</dt>
+        <dd>{{ moeda(saldo.pagoConfirmado) }}</dd>
+        <dt>Devolução confirmada</dt>
+        <dd>{{ moeda(saldo.devolvidoConfirmado) }}</dd>
+      }
     </dl>
+    @if (saldo.pendenciaFinanceira) {
+      <p class="aviso">
+        Há pagamento ou devolução aguardando confirmação. Acompanhe a atualização.
+      </p>
+    }
   }
   @if (pedeMotivo()) {
     <label [for]="'motivo-pedido-' + pedido().id"
@@ -219,5 +230,31 @@
   }
   @if (aviso()) {
     <p role="status">{{ aviso() }}</p>
+  }
+
+  @if (
+    contexto() === 'operacao' && !pedido().comandaId && (tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar'))
+  ) {
+    <details #painelFinanceiro (toggle)="financeiroAberto.set(painelFinanceiro.open)">
+      <summary>Recebimentos, ajustes e devoluções deste pedido</summary>
+      @if (financeiroAberto()) {
+        <app-financeiro
+          [recurso]="pedido().id"
+          [acoes]="acoes()"
+          [atualizacao]="pedido()"
+          (atualizar)="atualizar.emit()"
+        />
+      }
+    </details>
+  }
+
+  @if (contexto() === 'cliente' && pedido().pagoOnline) {
+    @if (pedido().estado === 'AGUARDANDO_PAGAMENTO' && pedido().pagamentoExpiraEm) {
+      <p>Pague até {{ horario(pedido().pagamentoExpiraEm!) }}.</p>
+    }
+    <app-pagamento-pedido
+      [pedidoId]="pedido().id"
+      [aguardando]="pedido().estado === 'AGUARDANDO_PAGAMENTO'"
+    />
   }
 </article>
