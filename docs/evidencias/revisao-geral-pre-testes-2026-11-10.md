@@ -24,10 +24,11 @@ o candidato nem substitui a matriz final. Base `07ae83f`, branch
 - Diagnóstico isolado `test_invite_layout.cjs` consolidado no teste de templates
   com o Angular real. Preservados e reforçados o caso de e-mail longo em 360 px
   e a revogação por teclado, agora com efeito HTTP e estado final verificados.
-- A primeira execução completa encontrou uma expectativa frágil na retenção de
-  e-mails: uma chamada não alcançava o registro de teste atrás de outros lotes
-  antigos. O teste passa a exigir progresso limitado pela contagem inicial,
-  preservando as verificações de exclusão, dados recentes e código expirado.
+- A primeira execução completa encontrou expectativas frágeis na retenção de
+  e-mails e sessões da plataforma: uma chamada não alcançava os registros de
+  teste atrás de outros lotes antigos. Os testes passam a exigir progresso
+  limitado pela contagem inicial, preservando as verificações de exclusão,
+  dados recentes e credenciais expiradas.
 
 Todos os 84 arquivos TypeScript têm caminho no grafo da aplicação; templates,
 estilos, assets e demais dependências revisados possuem consumidores. O fallback
