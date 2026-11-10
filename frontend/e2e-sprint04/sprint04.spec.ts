@@ -691,6 +691,16 @@ test('S04-UI08: checkout externo volta pendente e só consulta confiável inicia
   await page.getByRole('button', { name: 'Enviar pedido para aceite', exact: true }).click();
   const pedido = await ok<Pedido>(await envio);
   expect(pedido.estado).toBe('AGUARDANDO_PAGAMENTO');
+  let novasTentativas = 0;
+  page.on('request', (requisicao) => {
+    if (
+      requisicao.method() === 'POST' &&
+      new URL(requisicao.url()).pathname.startsWith(
+        '/api/v1/me/pedidos/' + pedido.id + '/pagamento/tentativas/',
+      )
+    )
+      novasTentativas++;
+  });
   await navegarUi(page, '/pedidos');
   const card = page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
   await expect(card.getByRole('link', { name: 'Abrir checkout do Mercado Pago' })).toBeVisible({
@@ -723,12 +733,53 @@ test('S04-UI08: checkout externo volta pendente e só consulta confiável inicia
       .getByRole('article', { name: 'Pedido ' + pedido.id, exact: true })
       .getByText('Aguardando aceite', { exact: true }),
   ).toBeVisible({ timeout: 30000 });
+  const pagamento = page
+    .getByRole('article', { name: 'Pedido ' + pedido.id, exact: true })
+    .getByRole('region', { name: 'Pagamento online', exact: true });
+  const tentativaMaisRecente = pagamento.getByRole('region', {
+    name: 'Tentativa mais recente',
+    exact: true,
+  });
+  await expect(tentativaMaisRecente.getByText('Pagamento confirmado', { exact: true })).toBeVisible(
+    {
+      timeout: 30000,
+    },
+  );
   await expect(
-    page
-      .getByRole('article', { name: 'Pedido ' + pedido.id, exact: true })
-      .getByRole('region', { name: 'Pagamento online', exact: true })
-      .getByText('Pagamento confirmado', { exact: true }),
-  ).toBeVisible({ timeout: 30000 });
+    tentativaMaisRecente.getByText('Tentativa recusada ou encerrada', { exact: true }),
+  ).toHaveCount(0);
+  const historico = pagamento.locator('details');
+  await expect(
+    historico.getByText('Tentativa recusada ou encerrada', { exact: true }),
+  ).toBeHidden();
+  await historico.getByText('Histórico de tentativas anteriores', { exact: true }).click();
+  await expect(
+    historico.getByText('Tentativa recusada ou encerrada', { exact: true }),
+  ).toBeVisible();
+  await expect(historico.getByText('Pagamento confirmado', { exact: true })).toHaveCount(0);
+  await expect(historico.getByRole('link')).toHaveCount(0);
+  await expect(pagamento.getByRole('link', { name: 'Abrir checkout do Mercado Pago' })).toHaveCount(
+    0,
+  );
+  await expect(
+    pagamento.getByRole('button', { name: 'Tentar pagamento novamente', exact: true }),
+  ).toHaveCount(0);
+  const consultaPagamento = page.waitForResponse(
+    (resposta) =>
+      resposta.request().method() === 'GET' &&
+      new URL(resposta.url()).pathname === '/api/v1/me/pedidos/' + pedido.id + '/pagamento',
+  );
+  await pagamento.getByRole('button', { name: 'Conferir pagamento', exact: true }).click();
+  const tentativasPagas = await ok<{ id: string; estado: string }[]>(await consultaPagamento);
+  expect(tentativasPagas.map((tentativa) => tentativa.estado)).toEqual(['CONFIRMADO', 'RECUSADO']);
+  expect(new Set(tentativasPagas.map((tentativa) => tentativa.id)).size).toBe(2);
+  expect(
+    novasTentativas,
+    'Somente a repetição explícita após a recusa pode solicitar outro checkout',
+  ).toBe(1);
+  await expect(
+    tentativaMaisRecente.getByText('Pagamento confirmado', { exact: true }),
+  ).toBeVisible();
   await capturar(page, 'checkout-retorno');
   const financeiroGerente = await contexto(browser);
   financeiroGerente.context.setDefaultTimeout(15000);

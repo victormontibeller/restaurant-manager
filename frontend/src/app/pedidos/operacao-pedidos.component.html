@@ -74,7 +74,7 @@
               >
                 <option value="AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO">Em andamento</option>
                 <option value="">Todos os estados</option>
-                <option value="CONCLUIDO,CANCELADO">Histórico: concluídos e cancelados</option>
+                <option value="CONCLUIDO,CANCELADO">Concluídos e cancelados</option>
                 <option value="AGUARDANDO_ACEITE">Aguardando aceite</option>
                 <option value="NA_FILA">Na fila</option>
                 <option value="EM_PREPARO">Em preparo</option>
@@ -126,7 +126,9 @@
             </button>
           </div>
           <div class="resumo-listagem">
-            <span>{{ pedidos().length }} pedidos nesta página</span
+            <span
+              >{{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
+              página</span
             ><span>Página {{ pagina() + 1 }}</span>
           </div>
           <div class="grade-pedidos" [attr.aria-busy]="ocupado()">

@@ -39,7 +39,46 @@ estilos, assets e demais dependências revisados possuem consumidores. O fallbac
 `webkit-local.sh` continua necessário ao runner Linux. Evidências históricas e
 o arquivo manual local foram preservados.
 
+Observação visual sem impacto funcional: alguns contadores mantêm o plural
+com quantidade um (`1 escolhas`, `1 pedidos`, `1 prontas`). A concordância fica
+incluída no próximo candidato, junto à correção de layout abaixo.
+
+A revisão direta de T12 em 360 px reprovou o primeiro candidato: os filtros
+de estado e canal lado a lado cortam os valores selecionados (`Em andamento`
+e `Todos os canais`). A execução automatizada continua para reunir os demais
+diagnósticos, mas não aprova esse candidato. A correção exige novo artefato,
+capturas e matriz completa, sem herdar a aprovação da rodada anterior.
+T13 também foi reprovada no celular: os botões de paginação das mesas no
+pedido assistido quebram a palavra `anteriores` no meio. O ajuste de disposição
+entra no mesmo candidato seguinte, preservando rótulos e comportamento.
+T08 e T19 foram reprovadas nos dois formatos por clareza: a lista de tentativas
+mostra confirmação/reconciliação e uma recusa anterior sem identificar qual
+tentativa cada estado descreve. A apresentação será separada em tentativa mais
+recente e histórico, preservando os estados reais do servidor e os controles.
+Isso não constitui evidência de duplicação ou erro nos valores financeiros.
+
+Rodada 01 encerrada: **384/420 pares executados sem falhas**; os 36 restantes
+não foram executados por indisponibilidade de quota e não são aprovados. As
+56 capturas foram inspecionadas, com seis reprovações: T12/T13 mobile e T08/T19
+desktop/mobile. A consolidação ficou explicitamente reprovada. API 6953 e
+simulador 6605 encerrados por identidade; demonstração 32641/8095 e PostgreSQL
+59175/55432 preservados.
+
+Correções visuais aplicadas: filtros responsivos, paginação assistida empilhada,
+concordância dos contadores e separadores condicionais na expedição. O pagamento
+identifica a tentativa mais recente e mantém as anteriores em histórico;
+somente a mais recente pode oferecer link de checkout. S03-UI06/S03-UI12 medem
+a legibilidade real e S04-UI08 confere histórico, recusa anterior e ausência de
+nova cobrança após quitação. A execução nova fica em `rm-cleanup02-20261110`,
+sem reutilizar resultados ou capturas da rodada reprovada. Validação pendente.
+
 ## Validação e preservação
+
+Build local concluído no commit `66a982511e7bae31dbb43a32c306fe4249c03ea3`,
+JAR `ba612c4b323c2afaf26191e6875c37d8b195d0892cca55a3e9104636b7dd46b7`:
+464 testes backend sem falhas, erros ou skips; frontend completo e auditorias
+npm/Java aprovados. A CI #204 do mesmo commit confirmou 249 testes de scripts
+e 464 backend. Esses resultados não aprovam antecipadamente a matriz abaixo.
 
 Os resultados finais, falhas/reexecuções, SHA do candidato e hash do artefato
 serão preenchidos somente após execução. Matriz ampliada para 84 cenários em

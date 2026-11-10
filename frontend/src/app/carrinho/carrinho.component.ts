@@ -40,8 +40,10 @@ import { ItemCarrinho } from './modelos';
             (change)="alterarQuantidade(item, quantidade)"
           />
           <p>
-            {{ item.linha.escolhas.length }} escolhas e {{ item.linha.adicionais.length }} adicionais
-            configurados.
+            Composição: {{ item.linha.escolhas.length }}
+            {{ item.linha.escolhas.length === 1 ? 'escolha' : 'escolhas' }} e
+            {{ item.linha.adicionais.length }}
+            {{ item.linha.adicionais.length === 1 ? 'adicional' : 'adicionais' }}.
           </p>
           <div class="acoes">
             <button hlmBtn

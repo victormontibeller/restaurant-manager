@@ -70,7 +70,9 @@
           <p role="alert" class="erro">{{ erro() }}</p>
         }
         <div class="resumo-listagem">
-          <span>{{ pedidos().length }} pedidos nesta página</span
+          <span
+            >{{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
+            página</span
           ><span>Página {{ pagina() + 1 }}</span>
         </div>
         <div class="grade-pedidos grade-cozinha">

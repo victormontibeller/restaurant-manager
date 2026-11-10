@@ -1,5 +1,88 @@
 # Checkpoint de execução
 
+## Revisão geral e limpeza — em implementação, 2026-11-10
+
+Execução autorizada pelo proprietário após a revisão e o plano no chat, com
+correções pontuais e validação no Mac. Branch `codex/revisao-geral-pre-testes`,
+base integrada `07ae83f` (PR #10). Preservadas as alterações documentais locais
+de confirmação do merge e o arquivo manual não versionado. A cópia antiga da
+Sprint 4 já havia sido removida pela execução anterior.
+
+Escopo: reconciliação de checkout substituído/inbox, retenção OAuth, scheduler
+dos prazos, revogação da expedição, PWA, período dos relatórios e inventário
+compartilhado do build; remoção da dependência direta `luxon` sem uso. Novas
+migrações public V8 e tenant V28, sem edição das migrations publicadas.
+
+Implementação registrada em `66a9825`, [PR #11 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/11).
+Segunda rodada local: **464 testes backend**, sem falhas, erros ou skips;
+templates completos nos três navegadores e auditorias npm/Java aprovados
+(112 componentes Java sem alertas). A
+[CI #204](https://github.com/victormontibeller/restaurant-manager/actions/runs/42888824370)
+confirmou 464 testes backend e 249 de scripts no mesmo commit. As duas
+expectativas frágeis de retenção em lotes foram corrigidas; a rodada inicial
+reprovada e o timeout de templates durante suspensão do Mac foram preservados.
+
+Artefato local conferido e arquivado: JAR
+`ba612c4b323c2afaf26191e6875c37d8b195d0892cca55a3e9104636b7dd46b7`,
+fontes de `66a9825`. A comparação integral confirmou os 433 arquivos de classes
+e recursos empacotados; o timestamp fixo do build reproduzível foi respeitado.
+Preparação da massa e matriz de 420 pares em andamento; os checks acima não
+aprovam antecipadamente as jornadas. PostgreSQL exclusivo
+`rm_test`/55432 conferido por identidade efetiva; demonstração 8095/PID 32641 e
+bancos de outros projetos preservados. Rótulo da raiz privada desta execução:
+`rm-cleanup-20261110`. Backend, frontend e scripts são integrados
+por um coordenador; acesso ao banco e suítes pesadas serializados.
+
+Massa nova preparada. Recuperação financeira no JAR desta revisão aprovada:
+duas perdas efetivas de resposta e dois reinícios somente do candidato,
+uma cobrança/um recebimento/uma devolução, R$ 20,00 devolvidos e diagnósticos
+normalizados. Provedor fictício local; sem comprovação de provedor real ou
+restore externo. Contraste aprovado em 38/38 casos. Inventário real confirmou
+420 pares; a matriz está em execução no mesmo JAR/PID 6953, iniciado às
+17:20:22 (UTC−03). A revisão visual reprovou T12 em 360 px: os valores dos
+filtros de estado e canal ficam cortados. O candidato não está aprovado;
+a paginação assistida de T13 também quebra palavras no celular. T08/T19
+misturam estados de tentativas de pagamento sem identificar o histórico,
+gerando ambiguidade mesmo com valores financeiros consistentes. A rodada
+corrente reúne diagnósticos e será preservada. Corrigir essas apresentações e
+a concordância dos contadores antes de gerar novo JAR e repetir a matriz
+completa e as capturas, sem herdar aprovações anteriores.
+
+Rodada 01 encerrada e consolidada como reprovada: 384/420 pares sem falhas
+nos executados; 36 não executados por quota. Revisão das 56 capturas completa,
+com seis reprovações nos casos acima. API 6953 e simulador 6605 encerrados por
+identidade, mantendo demonstração 32641/8095 e PostgreSQL 59175/55432. As
+correções de layout, texto e histórico foram aplicadas; os três cenários E2E
+correspondentes ganharam regressões. Próxima execução integral em
+`rm-cleanup02-20261110`, com build, massa, runtime e recibos novos; ainda pendente.
+
+Resultados e limites serão registrados na
+[evidência da revisão](evidencias/revisao-geral-pre-testes-2026-11-10.md).
+Linux, serviços externos e produção continuam fora desta rodada local.
+
+## Sprint 5 — PR #10 integrado, 2026-11-10
+
+Merge informado pelo proprietário e confirmado no GitHub em 2026-11-10:
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10),
+head `afdbacedcefa4dcd20e5c92d6d54d55677092ffb`, merge
+`07ae83f196ae4525ff8cc592c335eed1326a9b15`. A árvore integrada é idêntica
+à do head validado. A `main` local foi atualizada por fast-forward e seu HEAD
+coincide com `origin/main` nesse merge.
+
+A [CI Fundação #196](https://github.com/victormontibeller/restaurant-manager/actions/runs/42742965282)
+foi reconferida como aprovada no head final do PR. Os resultados Mac/CI abaixo
+continuam válidos nos escopos registrados; esta sincronização não executa
+novamente a aplicação nem comprova homologação Linux. O arquivo manual local
+não versionado foi preservado, com o mesmo SHA-256.
+
+Esta confirmação e o status da Sprint 5 ficam como alterações documentais
+locais, sem commit ou push direto em `main`. Não houve deploy, reinício de
+serviço ou migration nesta sincronização. **Próxima etapa:** inventário e
+implantação do release identificado no Linux isolado, seguidos da matriz
+completa e dos ensaios operacionais nesse ambiente. Serviços externos e piloto
+continuam pendentes. As seções seguintes preservam o estado de cada execução
+na ocasião.
+
 ## Sprint 5 — validação Mac/CI concluída, 2026-11-09
 
 Parcela autorizada concluída na branch `codex/sprint-05-registro-entregas`,

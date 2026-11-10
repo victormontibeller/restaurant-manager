@@ -260,9 +260,6 @@
     background-image:
       linear-gradient(90deg, #211910e6, #211910aa), url('/assets/bistro-banner.jpg');
   }
-  .vitrine-painel > .linha {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
   .vitrine-painel > .linha label {
     font-size: 0.8rem;
   }

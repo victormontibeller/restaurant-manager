@@ -40,7 +40,10 @@
     <div class="resumo-producao" aria-label="Resumo das unidades de produção">
       <span>{{ quantidadeEstado('NA_FILA') }} na fila</span>
       <span>{{ quantidadeEstado('EM_PREPARO') }} em preparo</span>
-      <span>{{ quantidadeEstado('PRONTO') }} prontas</span>
+      <span
+        >{{ quantidadeEstado('PRONTO') }}
+        {{ quantidadeEstado('PRONTO') === 1 ? 'pronta' : 'prontas' }}</span
+      >
     </div>
   }
   @for (linha of pedido().linhas; track linha.id) {

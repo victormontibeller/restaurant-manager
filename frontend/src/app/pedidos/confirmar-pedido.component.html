@@ -35,7 +35,10 @@
             <option [value]="mesa.comandaId">{{ mesa.nome }}</option>
           }
         </select>
-        <nav aria-label="Páginas de mesas para pedido assistido" class="paginacao">
+        <nav
+          aria-label="Páginas de mesas para pedido assistido"
+          class="paginacao paginacao-assistido"
+        >
           <button
             (click)="carregarMesas(paginaMesas() - 1)"
             [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || paginaMesas() === 0"
