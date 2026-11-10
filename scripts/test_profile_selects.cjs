@@ -120,6 +120,11 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
               );
           },
         };
+        const bootstrapStartedAt = Date.now();
+        const bootstrapPerformance = performance.now();
+        console.info('RM_TEMPLATE_BOOTSTRAP ' + JSON.stringify({
+          pagina: window.kind || 'acessos', fase: 'inicio', instante: new Date().toISOString(),
+        }));
         bootstrapApplication(
           window.kind === 'plataforma'
             ? PlataformaComponent
@@ -136,6 +141,11 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
           },
         ).then((app) => {
           window.fixture = { appRef: app, app: app.components[0], team, roles, writes };
+          console.info('RM_TEMPLATE_BOOTSTRAP ' + JSON.stringify({
+            pagina: window.kind || 'acessos', fase: 'concluido',
+            duracaoMs: Date.now() - bootstrapStartedAt,
+            duracaoMonotonicaMs: Math.round(performance.now() - bootstrapPerformance),
+          }));
         });
       `,
       resolveDir: repo + '/frontend',
@@ -173,12 +183,23 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         '</section></main>',
     );
   });
+  const errors = [];
+  const consoleErrors = [];
+  const observePage = (target) => {
+    target.on('pageerror', (error) =>
+      errors.push({ url: target.url(), erro: error.stack || error.message }),
+    );
+    target.on('console', (message) => {
+      if (message.type() === 'error')
+        consoleErrors.push({ url: target.url(), erro: message.text() });
+      if (message.text().startsWith('RM_TEMPLATE_BOOTSTRAP ')) console.log(message.text());
+    });
+  };
   try {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const origin = 'http://127.0.0.1:' + server.address().port;
     const page = await browser.newPage({ viewport: { width: 360, height: 800 } });
-    const errors = [];
-    page.on('pageerror', (error) => errors.push(error.message));
+    observePage(page);
     // Valores iguais não provam que o @for atualizou o objeto do listener.
     // Esperar a view sem repetir mutação nem forçar detecção de mudanças.
     const stable = async (target) => {
@@ -394,7 +415,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       viewport: { width: 360, height: 800 },
       hasTouch: true,
     });
-    invitation.on('pageerror', (error) => errors.push(error.message));
+    observePage(invitation);
     await invitation.goto(origin + '/convites');
     await invitation.evaluate(() => (window.kind = 'convites'));
     await invitation.addScriptTag({ content: built.outputFiles[0].text });
@@ -489,7 +510,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       'Destruir a tela mantém o aviso até reconciliar o convite',
     );
     const platform = await browser.newPage({ viewport: { width: 360, height: 800 } });
-    platform.on('pageerror', (error) => errors.push(error.message));
+    observePage(platform);
     await platform.goto(origin + '/plataforma');
     await platform.evaluate(() => (window.kind = 'plataforma'));
     await platform.addScriptTag({ content: built.outputFiles[0].text });
@@ -506,7 +527,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       'Confirmar acesso ao provisionamento',
     );
     const unitsPage = await browser.newPage({ viewport: { width: 360, height: 800 } });
-    unitsPage.on('pageerror', (error) => errors.push(error.message));
+    observePage(unitsPage);
     await unitsPage.goto(origin + '/unidades');
     await unitsPage.evaluate(() => (window.kind = 'unidades'));
     await unitsPage.addScriptTag({ content: built.outputFiles[0].text });
@@ -516,6 +537,11 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     console.log(
       'Perfis, recarga, payloads, convite com e-mail longo no mobile, revogação por teclado, leitura posterior, reautenticação de unidades e intenção após destruir a tela coerentes. API fictícia: não é E2E.',
     );
+  } catch (error) {
+    console.error(
+      JSON.stringify({ browser: name, errosJavaScript: errors, errosConsole: consoleErrors }),
+    );
+    throw error;
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));

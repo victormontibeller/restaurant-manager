@@ -29,6 +29,10 @@ o candidato nem substitui a matriz final. Base `07ae83f`, branch
   teste atrás de outros lotes antigos. Os testes passam a exigir progresso
   limitado pela contagem inicial, preservando as verificações de exclusão,
   dados recentes e credenciais expiradas.
+- Uma rodada local de templates expirou durante suspensão automática do Mac,
+  confirmada no registro de energia. O harness passou a registrar erros e tempos
+  de bootstrap; os três navegadores passaram na execução dirigida. A rodada
+  interrompida foi preservada e não aprova o candidato.
 
 Todos os 84 arquivos TypeScript têm caminho no grafo da aplicação; templates,
 estilos, assets e demais dependências revisados possuem consumidores. O fallback
