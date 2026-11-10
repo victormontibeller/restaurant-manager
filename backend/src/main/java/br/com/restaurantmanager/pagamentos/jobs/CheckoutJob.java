@@ -38,7 +38,14 @@ public class CheckoutJob {
     public void executar() {
         if (!TenantScope.current().equals("__none__"))
             throw new IllegalStateException("Worker financeiro requer contexto neutro.");
-        inbox.encaminhar();
+        try {
+            inbox.encaminhar();
+        } catch (RuntimeException erro) {
+            // Uma falha global da inbox não abandona intenções já persistidas nos tenants.
+            LOG.warn(
+                    "Encaminhamento da inbox de pagamentos pendente: tipo={}",
+                    erro.getClass().getSimpleName());
+        }
         String cursor = "";
         while (true) {
             var schemas = tenants.schemasParaManutencao(cursor);

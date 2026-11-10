@@ -92,7 +92,7 @@ div {
   margin: 1rem 0;
 }
 .campo-filtro {
-  flex: 1 1 10rem;
+  flex: 1 1 15rem;
 }
 .campo-filtro label {
   margin: 0 0 0.4rem;
@@ -352,9 +352,6 @@ dd {
     gap: 0.7rem;
   }
   .campo-filtro {
-    flex-basis: calc(50% - 0.7rem);
-  }
-  .campo-filtro:last-child {
     flex-basis: 100%;
   }
   .barra-conexao {
@@ -368,6 +365,9 @@ dd {
   }
   .paginacao button {
     flex: 1 1 40%;
+  }
+  .paginacao-assistido button {
+    flex-basis: 100%;
   }
   .paginacao span {
     order: -1;

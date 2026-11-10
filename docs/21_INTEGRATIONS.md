@@ -56,6 +56,23 @@ valor e transações. Inbox normaliza o ID alfanumérico para minúsculas antes 
 interno de recurso para empresa; corpo do webhook não informa estado confiável
 nem escolhe schema. Aviso anterior ao mapeamento aguarda; aviso durante lease
 não é descartado. Polling também reconcilia. Recebimentos são únicos por transação.
+
+A tentativa substituída conserva sua identidade e pode reconciliar um pagamento
+tardio, mas nunca cria outra cobrança. A substituição e a nova intenção são
+atômicas sob lock do pedido, com releitura das tentativas anteriores; a unicidade
+dos estados ativos vale para a tentativa corrente. Antes do primeiro envio,
+revalidar lease, estado, prazo e saldo em transação curta. Pedido resolvido não
+origina cobrança nova; envio anterior incerto exige reconciliação, mesmo quando
+a busca ainda não encontrou o recurso. Se duas confirmações externas ocorrerem
+na janela sem locks, registrar cada transação uma vez e reservar a devolução do
+excedente agregado, sem reativar pedido cancelado.
+
+O encaminhamento da inbox usa transação por evento. Falha conserva o evento e
+agenda nova tentativa em trinta segundos multiplicados pelas tentativas, com
+teto de quinze minutos, sem bloquear outros eventos, pagamentos ou devoluções.
+O diagnóstico persistido contém somente o tipo sanitizado da falha; um evento
+só é marcado como encaminhado junto da atualização durável da sua cobrança.
+
 Mudança do estado do checkout publica `CHECKOUT_ATUALIZADO` na mesma transação,
 inclusive ao encerrar reconciliação após devolução. O acompanhamento do cliente
 reconsulta o saldo; consultas sem mudança não repetem o evento.

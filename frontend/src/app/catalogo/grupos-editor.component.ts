@@ -142,7 +142,8 @@ import { Adicional, Grupo, Opcao, Produto } from './modelos';
         }
       </div>
       <p>
-        {{ componentes.length }} produtos simples carregados{{
+        {{ componentes.length }}
+        {{ componentes.length === 1 ? 'produto simples carregado' : 'produtos simples carregados' }}{{
           temMaisComponentes ? '; há mais componentes para consultar.' : '.'
         }}
       </p>

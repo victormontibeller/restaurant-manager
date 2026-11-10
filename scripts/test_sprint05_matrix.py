@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
+from build_sources import BUILD_FILES, build_source_manifest
 import sprint05_matrix as matrix
 
 
@@ -39,11 +40,15 @@ def receipt(pairs=None):
 
 class ReportTests(unittest.TestCase):
     def test_expected_inventory_includes_real_provisioning_worker(self):
-        self.assertEqual(len(matrix.EXPECTED), 415)
+        self.assertEqual(len(matrix.SCENARIO_FAMILY), 84)
+        self.assertEqual(len(matrix.EXPECTED), len(matrix.SCENARIO_FAMILY) * len(matrix.PROJECTS))
         self.assertEqual(set(matrix.coverage_catalog()), set(matrix.SCENARIO_FAMILY))
-        for scenario in ('S01-UI29', 'S01-UI31'):
+        for scenario in ('S01-UI29', 'S01-UI31', 'S04-UI10'):
             for project in matrix.PROJECTS:
                 self.assertIn((scenario, project), matrix.EXPECTED)
+        delivery = matrix.coverage_catalog()['S04-UI10']
+        self.assertEqual(delivery['surfaces'], ['T16'])
+        self.assertEqual(set(delivery['actors']), {'EXPEDICAO', 'ADMINISTRADOR'})
 
     def test_all_pairs_accepted(self):
         self.assertEqual(matrix.report_pairs(report(sorted(matrix.EXPECTED))), matrix.EXPECTED)
@@ -103,6 +108,31 @@ class ReportTests(unittest.TestCase):
 
 
 class BindingTests(unittest.TestCase):
+    def test_manifesto_compartilhado_vincula_pwa_postcss_e_assets_ao_build(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory).resolve()
+            for name in (*BUILD_FILES, 'backend/src/main/App.java', 'frontend/src/main.ts',
+                         'frontend/public/manifest.webmanifest'):
+                path = repo / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('original')
+            with patch.object(matrix, 'REPO', repo):
+                manifest = matrix.application_fingerprints()
+                self.assertEqual(manifest, {str(repo / name): checksum
+                                           for name, checksum in build_source_manifest(repo).items()})
+                for name in ('scripts/pwa-assets.cjs', 'scripts/build-pwa.cjs',
+                             'frontend/.postcssrc.json', 'frontend/public/manifest.webmanifest'):
+                    path = repo / name
+                    with self.subTest(name=name):
+                        path.write_text('alterado')
+                        self.assertNotEqual(matrix.application_fingerprints(), manifest)
+                        path.write_text('original')
+                (repo / 'README.md').write_text('Documentação posterior.')
+                self.assertEqual(matrix.application_fingerprints(), manifest)
+                (repo / 'scripts/pwa-assets.cjs').unlink()
+                with self.assertRaises(matrix.EvidenceError):
+                    matrix.application_fingerprints()
+
     def test_valid_receipt(self):
         self.assertEqual(matrix.check_receipt(receipt(), report(), binding()),
                          {('S04-UI01', 'chromium-desktop')})
@@ -254,7 +284,7 @@ class ConsolidationTests(unittest.TestCase):
         self.add_report(sorted(matrix.EXPECTED), 'other')
         result = matrix.consolidate({}, self.output)
         self.assertFalse(result['automated_approved'])
-        self.assertEqual(result['passed'], 415)
+        self.assertEqual(result['passed'], len(matrix.EXPECTED))
 
     def test_duplicate_passing_reports_block_gate(self):
         self.add_report(sorted(matrix.EXPECTED))

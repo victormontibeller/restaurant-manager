@@ -1,5 +1,102 @@
 # Checkpoint de execução
 
+## Integração da revisão — autorização e rastreabilidade, 2026-11-10
+
+O proprietário solicitou incluir todas as alterações na PR, autorizou o merge
+em `main` e pediu sincronizar o checkout local. A integração usa a
+[PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11), que
+registra o resultado e o SHA do merge. A aplicação continua na árvore validada
+em `469f3a4`; o head `8b2d002` passou também na
+[CI #210](https://github.com/victormontibeller/restaurant-manager/actions/runs/42909066400).
+O complemento desta integração é somente documental, com conferência de links,
+padrões de segredo e diff; não representa nova execução da aplicação.
+
+O registro manual de 07/11 foi conferido sem credenciais literais ou dados
+pessoais e incluído com identificação histórica; uma cópia original permanece
+privada. A matriz de 420 pares, novas capturas e demais pendências abaixo
+continuam abertas. Integrar o código e sincronizar Git não executa deploy,
+migrations ou reinício da demonstração.
+
+## Revisão geral e limpeza — encerramento no escopo solicitado, 2026-11-10
+
+Correções implementadas na branch `codex/revisao-geral-pre-testes`, base
+`07ae83f`, [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11).
+O proprietário orientou **encerrar após backend e auditorias, registrando a
+nova matriz como pendente**. Não iniciar outra rodada de navegador por este
+encerramento. O candidato corrigido não tem aprovação integral de UI,
+homologação Linux ou piloto.
+
+Fonte da aplicação: `469f3a4f14915ffdc907e151146335556d9b79fc`.
+JAR local: `681963ff3a43bde825cd31e66040661a7b8c630ccd690a1afce5b626ab6279e8`.
+As atualizações posteriores de encerramento são documentais e não alteram
+os bytes da aplicação, testes ou scripts validados.
+
+- Backend local: **464 testes / 68 suítes**, zero falhas, erros ou skips.
+- Frontend local: formatação, tipos, 21 grupos de lógica, 12 combinações de
+  templates (quatro probes × três navegadores) e build aprovados.
+- [CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646):
+  249 testes de scripts, 464 backend e checks frontend aprovados no mesmo SHA.
+  Mac: 239 scripts portáveis na rodada anterior; dez casos Linux executados na
+  CI, sem chamá-los de skips aprovados. Não somar camadas/rodadas.
+- Auditorias locais e CI: npm sem vulnerabilidades reportadas; 112 componentes
+  Java sem achados na consulta OSV.
+- **Pendente no candidato corrigido:** matriz de 84 cenários × cinco projetos
+  (420 pares), 56 capturas novas, contraste e recuperação financeira integrada.
+  As regressões S03-UI06/S03-UI12/S04-UI08 foram implementadas, mas ainda não
+  executadas na matriz. Compilação não substitui sua execução.
+
+Escopo corrigido: checkout substituído e inbox durável, retenção OAuth,
+scheduler dos prazos, revogação da expedição, rotas PWA, período do relatório,
+inventário compartilhado de build e apresentação móvel/histórico de pagamento.
+Removidos `luxon` sem uso e diagnóstico de convite duplicado, cujos casos úteis
+foram incorporados ao teste Angular real. Migrations novas public V8 e tenant
+V28; migrations anteriores preservadas.
+
+A rodada 01 (`66a9825`, JAR `ba612c4b323c2afaf26191e6875c37d8b195d0892cca55a3e9104636b7dd46b7`)
+ficou reprovada: 384/420 pares sem falhas nos executados, 36 não executados por
+quota e seis reprovações nas 56 capturas (T12/T13 mobile; T08/T19 desktop/mobile).
+Recuperação financeira e contraste 38/38 passaram naquele JAR, sem atribuição
+ao candidato corrigido. A falha de formatação inicial de `ac4ef66` e as
+reexecuções de retenção/templates também foram preservadas.
+
+Raízes privadas: `rm-cleanup-20261110` (rodada reprovada) e
+`rm-cleanup02-20261110` (build corrigido e encerramento). API 6953 e simulador
+6605 da rodada 01 encerrados por identidade; candidato 02 não foi iniciado
+como serviço nem recebeu massa/matriz nova. Bloqueio temporário de suspensão
+encerrado. Demonstração 32641/8095, PostgreSQL 59175/55432 e bancos de outros
+projetos preservados. O arquivo manual local não versionado mantém o hash
+inicial. As alterações documentais anteriores foram preservadas.
+
+[Achados, remoções, resultados e recibos](evidencias/revisao-geral-pre-testes-2026-11-10.md)
+identificam cada rodada. Próxima etapa, quando retomada: executar a matriz e
+inspeção visual completas sobre o candidato corrigido. Linux, Mercado Pago
+sandbox, e-mail/infraestrutura externos, aparelhos reais, aceite assistivo,
+backup operacional e piloto continuam pendentes. Não houve merge em `main`,
+deploy ou mudança na demonstração nesta revisão.
+
+## Sprint 5 — PR #10 integrado, 2026-11-10
+
+Merge informado pelo proprietário e confirmado no GitHub em 2026-11-10:
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10),
+head `afdbacedcefa4dcd20e5c92d6d54d55677092ffb`, merge
+`07ae83f196ae4525ff8cc592c335eed1326a9b15`. A árvore integrada é idêntica
+à do head validado. A `main` local foi atualizada por fast-forward e seu HEAD
+coincide com `origin/main` nesse merge.
+
+A [CI Fundação #196](https://github.com/victormontibeller/restaurant-manager/actions/runs/42742965282)
+foi reconferida como aprovada no head final do PR. Os resultados Mac/CI abaixo
+continuam válidos nos escopos registrados; esta sincronização não executa
+novamente a aplicação nem comprova homologação Linux. O arquivo manual local
+não versionado foi preservado, com o mesmo SHA-256.
+
+Esta confirmação e o status da Sprint 5 ficam como alterações documentais
+locais, sem commit ou push direto em `main`. Não houve deploy, reinício de
+serviço ou migration nesta sincronização. **Próxima etapa:** inventário e
+implantação do release identificado no Linux isolado, seguidos da matriz
+completa e dos ensaios operacionais nesse ambiente. Serviços externos e piloto
+continuam pendentes. As seções seguintes preservam o estado de cada execução
+na ocasião.
+
 ## Sprint 5 — validação Mac/CI concluída, 2026-11-09
 
 Parcela autorizada concluída na branch `codex/sprint-05-registro-entregas`,

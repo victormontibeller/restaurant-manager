@@ -7,9 +7,12 @@ import br.com.restaurantmanager.tenancy.context.TenantScope;
 import com.mercadopago.exceptions.MPInvalidWebhookSignatureException;
 import com.mercadopago.webhook.WebhookSignatureValidator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -20,6 +23,7 @@ import javax.sql.DataSource;
 
 @Service
 public class InboxPagamentoService {
+    private static final Logger LOG = LoggerFactory.getLogger(InboxPagamentoService.class);
     private final InboxPagamentoRepository repository;
     private final String secret;
     private final TransactionTemplate tx;
@@ -31,6 +35,7 @@ public class InboxPagamentoService {
         this.repository = repository;
         this.secret = secret;
         this.tx = new TransactionTemplate(new JdbcTransactionManager(source));
+        this.tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.tx.setTimeout(15);
     }
 
@@ -58,7 +63,24 @@ public class InboxPagamentoService {
 
     public void encaminhar() {
         exigirContextoNeutro();
-        tx.executeWithoutResult(s -> repository.encaminhar());
+        for (UUID id : repository.pendentes()) {
+            try {
+                tx.executeWithoutResult(s -> repository.encaminhar(id));
+            } catch (RuntimeException erro) {
+                // A falha SQL foi revertida antes de registrar o retry em transação própria.
+                try {
+                    tx.executeWithoutResult(
+                            s -> repository.adiar(id, erro.getClass().getSimpleName()));
+                } catch (RuntimeException falhaDeRegistro) {
+                    LOG.warn(
+                            "Retry da inbox de pagamentos pendente: tipo={}",
+                            falhaDeRegistro.getClass().getSimpleName());
+                }
+                LOG.warn(
+                        "Evento da inbox de pagamentos pendente: tipo={}",
+                        erro.getClass().getSimpleName());
+            }
+        }
     }
 
     private void exigirContextoNeutro() {

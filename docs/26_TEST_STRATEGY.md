@@ -184,9 +184,10 @@ Resumo sanitizado versionável em `docs/evidencias/` quando houver uma execuçã
 
 ## Executor local da matriz integrada
 
-O executor [sprint05_matrix.py](../scripts/sprint05_matrix.py) inventaria **83
-cenários × cinco projetos = 415 pares**, incluindo os workers reais de
-provisionamento S01-UI29/S01-UI31. A cobertura independente associa cada cenário
+O executor [sprint05_matrix.py](../scripts/sprint05_matrix.py) inventaria **84
+cenários × cinco projetos = 420 pares**, incluindo os workers reais de
+provisionamento S01-UI29/S01-UI31 e a revogação de acesso à expedição S04-UI10.
+A cobertura independente associa cada cenário
 a telas T01–T28, perfis, unidades e resultados esperados. No Mac, o worker aceita
 `RM_TEST_PSQL` absoluto para o cliente PostgreSQL instalado; mantém as guardas
 de banco exclusivo, tenant, configuração e artefato.
@@ -204,8 +205,8 @@ entradas invalida a retomada da mesma execução. A consolidação recusa pares
 faltantes/duplicados, skips, retries, resultados instáveis, falha esperada e
 recibos de outro candidato. Aprovação visual exige inspeção registrada das 28
 telas em desktop e mobile, vinculada aos hashes de capturas reais. O HTML/JSON
-permanece privado; o resumo sanitizado e os limites pertencem à
-[evidência da Sprint 5](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
+permanece privado; o resumo sanitizado e os limites pertencem à evidência da
+execução identificada no [checkpoint vigente](25_EXECUTION_STATUS.md).
 Este executor local não aprova implantação Linux, serviços externos ou piloto.
 
 ## Documentos relacionados

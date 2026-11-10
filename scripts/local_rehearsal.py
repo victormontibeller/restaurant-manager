@@ -29,6 +29,7 @@ import uuid
 import zlib
 from datetime import datetime, timezone
 
+from build_sources import build_source_manifest
 from database_recovery import (Session, inventory, identifier,
                                validate_snapshot, validate_source, validate_tenant_coverage, verify_inventory)
 from release_support import atomic_json
@@ -81,16 +82,10 @@ def validate_profile(profile):
 
 
 def validate_source_manifest(manifest, repo=REPO):
-    paths = {p.relative_to(repo).as_posix()
-             for directory in ('backend/src/main', 'frontend/src', 'frontend/public')
-             for p in (repo / directory).rglob('*') if p.is_file()}
-    paths.update(('backend/pom.xml', 'frontend/package.json', 'frontend/package-lock.json',
-                  'frontend/angular.json', 'frontend/.postcssrc.json', 'frontend/tsconfig.json',
-                  'frontend/tsconfig.app.json', 'frontend/tsconfig.e2e.json', 'scripts/build-pwa.cjs'))
-    require(isinstance(manifest, dict) and set(manifest) == paths
-            and all((repo / name).is_file() and manifest[name] == digest(repo / name) for name in paths),
+    current = build_source_manifest(repo)
+    require(isinstance(manifest, dict) and manifest == current,
             'Manifesto não corresponde ao conjunto completo das fontes e configurações do build.')
-    return len(paths)
+    return len(current)
 
 
 def partitioned_inventory(session, schemas, require_complete=True):
@@ -219,7 +214,7 @@ class Rehearsal:
                            profile_sha256=digest(a.profile), source_files_checked=source_files_checked,
                            postgres_version=subprocess.check_output([str(self.pg / 'postgres'), '--version'], text=True).strip())
         self.record['harness_sha256'] = {name:digest(REPO/'scripts'/name)
-            for name in ('local_rehearsal.py','database_recovery.py','release_support.py',
+            for name in ('local_rehearsal.py','database_recovery.py','release_support.py','build_sources.py',
                          'local_maintenance.py','maintenance_database.py','prebackup_recovery.py',
                          'local_diagnostics.py')}
         for port in (55433, 8090, 8091):

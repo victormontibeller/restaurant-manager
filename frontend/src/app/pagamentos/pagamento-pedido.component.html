@@ -1,11 +1,27 @@
 <section aria-label="Pagamento online">
   <h4>Pagamento online</h4>
   <p>O retorno do checkout não confirma pagamento. Acompanhe a confirmação do servidor.</p>
-  @for (c of tentativas(); track c.id) {
-    <p>{{ estado(c.estado) }}</p>
-    @if (c.checkoutUrl && ['AGUARDANDO','SOLICITADO'].includes(c.estado) && aguardando()) {
-      <a class="botao" [href]="c.checkoutUrl">Abrir checkout do Mercado Pago</a>
-    }
+  <!-- A API lista as tentativas por criado_em desc, id. -->
+  @if (tentativas()[0]; as atual) {
+    <section aria-label="Tentativa mais recente">
+      <p><strong>Tentativa mais recente</strong></p>
+      <p>{{ estado(atual.estado) }}</p>
+      @if (
+        atual.checkoutUrl && ['AGUARDANDO','SOLICITADO'].includes(atual.estado) && aguardando()
+      ) {
+        <a class="botao" [href]="atual.checkoutUrl">Abrir checkout do Mercado Pago</a>
+      }
+    </section>
+  }
+  @if (tentativas().length > 1) {
+    <details>
+      <summary>Histórico de tentativas anteriores</summary>
+      <ol>
+        @for (anterior of tentativas().slice(1); track anterior.id) {
+          <li>{{ estado(anterior.estado) }}</li>
+        }
+      </ol>
+    </details>
   }
   <button type="button" (click)="carregar()" [disabled]="consultando()">Conferir pagamento</button>
   @if (aguardando() && tentativas().length && podeTentar()) {

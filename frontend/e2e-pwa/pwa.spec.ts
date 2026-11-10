@@ -72,6 +72,30 @@ test('S02-PWA01: shell integrado abre offline sem armazenar API ou dados de sess
   await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
     'Sistema conectado',
   );
+  await context.setOffline(true);
+  try {
+    for (const rota of [
+      '/gestao/configuracoes/delivery',
+      '/gestao/expedicao',
+      '/gestao/relatorios',
+      '/gestao/integracoes',
+      '/gestao/pendencias',
+    ]) {
+      const resposta = await page.goto(rota + '?retorno=marcador-privado-de-teste');
+      expect(resposta?.status(), 'Shell offline da rota ' + rota).toBe(200);
+      expect(resposta?.fromServiceWorker()).toBe(true);
+      await expect(page.locator('app-pwa')).toContainText('Você está offline');
+      const urls = await page.evaluate(async () => {
+        const urls: string[] = [];
+        for (const nome of await caches.keys())
+          urls.push(...(await (await caches.open(nome)).keys()).map((r) => r.url));
+        return urls;
+      });
+      expect(urls.some((url) => /api\/|marcador|retorno=/.test(url))).toBe(false);
+    }
+  } finally {
+    await context.setOffline(false);
+  }
 });
 
 // Fronteira de atualização: shell real do build em servidor local controlado. APIs devolvem503,

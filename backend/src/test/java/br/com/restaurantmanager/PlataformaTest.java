@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,6 +67,26 @@ class PlataformaTest {
     private Connection conexao() throws Exception {
         var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"));
         Migrations.verifyIdentity(c,"rm_test","rm_test_owner");return c;
+    }
+    private long sessoesDaConta() throws Exception {
+        try (var c = conexao(); var s = c.prepareStatement(
+                "select count(*) from public.sessao_plataforma where usuario_id=?")) {
+            s.setObject(1, usuario);
+            try (var r = s.executeQuery()) {
+                r.next();
+                return r.getLong(1);
+            }
+        }
+    }
+    private long sessoesExpiradasAntesDe(Instant limite) throws Exception {
+        try (var c = conexao(); var s = c.prepareStatement(
+                "select count(*) from public.sessao_plataforma where expira_em < ?")) {
+            s.setTimestamp(1, Timestamp.from(limite));
+            try (var r = s.executeQuery()) {
+                r.next();
+                return r.getLong(1);
+            }
+        }
     }
     private RequestPostProcessor csrf() throws Exception {
         var r=mvc.perform(get(AUTH+"csrf").header("Host","plataforma.localhost")).andExpect(status().isOk()).andReturn().getResponse();
@@ -160,10 +181,22 @@ class PlataformaTest {
         mvc.perform(post(AUTH+"refresh").header("Host","plataforma.localhost").cookie(old).with(csrf())).andExpect(status().isUnauthorized());
         mvc.perform(get(AUTH+"me").header("Host","plataforma.localhost").header("Authorization","Bearer "+access)).andExpect(status().isUnauthorized());
         service.expurgar();
-        try(var c=conexao();var s=c.prepareStatement("select count(*) from public.sessao_plataforma where usuario_id=?")){s.setObject(1,usuario);try(var r=s.executeQuery()){r.next();assertThat(r.getInt(1)).isEqualTo(1);}}
+        assertThat(sessoesDaConta()).isEqualTo(1);
         try(var c=conexao();var s=c.prepareStatement("update public.sessao_plataforma set expira_em=now()-interval '25 hours' where usuario_id=?")){s.setObject(1,usuario);s.executeUpdate();}
-        service.expurgar();
-        try(var c=conexao();var s=c.prepareStatement("select count(*) from public.sessao_plataforma where usuario_id=?")){s.setObject(1,usuario);try(var r=s.executeQuery()){r.next();assertThat(r.getInt(1)).isZero();}}
+        // O registro público conserva dados de outras execuções; cada chamada expurga um lote.
+        // Exigir progresso na mesma população inicial evita confundir backlog com falha de retenção.
+        Instant limite = Instant.now().minusSeconds(86400);
+        long restantes = sessoesExpiradasAntesDe(limite);
+        long maximoLotes = restantes;
+        assertThat(restantes).isPositive();
+        for (long lote = 0; lote < maximoLotes && sessoesDaConta() > 0; lote++) {
+            service.expurgar();
+            long depois = sessoesExpiradasAntesDe(limite);
+            assertThat(depois).as("O lote %s precisa remover sessões antigas", lote + 1)
+                    .isLessThan(restantes);
+            restantes = depois;
+        }
+        assertThat(sessoesDaConta()).isZero();
     }
     @Test void origemBloqueadaNaoConsomeQuotaDaConta() throws Exception {
         String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(("origem:"+origem).getBytes(StandardCharsets.UTF_8)));

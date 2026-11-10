@@ -64,7 +64,8 @@
     </aside>
   }
   <div class="resumo-listagem">
-    <span>{{ mesas().length }} mesas nesta página</span><span>Página {{ paginaMesas() + 1 }}</span>
+    <span>{{ mesas().length }} {{ mesas().length === 1 ? 'mesa' : 'mesas' }} nesta página</span
+    ><span>Página {{ paginaMesas() + 1 }}</span>
   </div>
   <div class="grade-mesas">
     @for (mesa of mesas(); track mesa.id) {

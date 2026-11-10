@@ -65,6 +65,11 @@ Compatibilidade histórica: tokens dos builds anteriores à rotação usam o ide
 
 O candidato expurga sessões somente quando a expiração absoluta já passou há mais de 24 horas; revogação antecipada não encurta esse intervalo. Todos os hashes de refresh da família, inclusive consumidos, permanecem até esse ponto para preservar detecção de reutilização. Limitadores só são removidos quando sua janela começou há mais de 24 horas, sem zerar bloqueios correntes de quinze minutos. Não remover usuários, auditoria ou registros de negócio nesse job.
 
+Registros transitórios de autorização OAuth acompanham a exclusão da sessão
+por FK com `ON DELETE CASCADE`, introduzida na V28. Isso impede que uma tentativa
+concluída ou abandonada bloqueie o lote de retenção. A conexão do restaurante,
+suas credenciais, pagamentos e auditoria permanecem independentes e preservados.
+
 O worker consulta somente schemas registrados `ATIVO`/`SUSPENSO`, em páginas de 50; abre e limpa contexto por empresa. Cada transação, com timeout de dez segundos, bloqueia até 100 sessões elegíveis com `SKIP LOCKED`, apaga seus hashes e sessões atomicamente e expurga até 100 limitadores antigos. Disputa com login/refresh não autoriza remover uma janela renovada nem perder a revogação de uma família válida. Sessão removida entre consulta do hash e aquisição do lock resulta em credencial inválida, não erro interno.
 
 Agendamento interno: primeira execução após um minuto, depois dez minutos após o término. Até dez lotes por empresa/ciclo permitem recuperar acúmulo sem monopolizar indefinidamente o worker; lote final cheio gera aviso de backlog. Isso não promete prazo máximo de exclusão nem capacidade operacional sem medição. Falhas isoladas preservam a transação e são retomadas pelo predicado persistido no ciclo seguinte, com diagnóstico por tenant técnico e tipo, sem conteúdo da exceção. Não há chamada externa ou fila em memória necessária à recuperação.

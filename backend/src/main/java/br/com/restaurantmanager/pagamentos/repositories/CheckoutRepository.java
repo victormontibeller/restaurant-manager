@@ -73,10 +73,28 @@ public class CheckoutRepository {
                 .toList();
     }
 
+    public List<CheckoutRegistro> bloquearTentativas(UUID pedido) {
+        var ids =
+                query(
+                                "select id from pagamento_checkout where pedido_id=:p order by id for update",
+                                UUID.class)
+                        .setParameter("p", pedido)
+                        .getResultList();
+        return ids.stream().map(id -> obter(id, false)).toList();
+    }
+
+    public void substituirRecusadas(UUID pedido) {
+        em.createNativeQuery(
+                        "update pagamento_checkout set substituida=true where pedido_id=:p"
+                                + " and estado='RECUSADO' and not substituida")
+                .setParameter("p", pedido)
+                .executeUpdate();
+    }
+
     public CheckoutRegistro obter(UUID id, boolean lock) {
         return query(
                         "select"
-                            + " id,pedido_id,conexao_id,valor,externo_id,checkout_url,estado,criado_em,lease_id,enviado,retorno_url,prazo_segundos"
+                            + " id,pedido_id,conexao_id,valor,externo_id,checkout_url,estado,criado_em,lease_id,enviado,retorno_url,prazo_segundos,substituida"
                             + " from pagamento_checkout where id=:id"
                                 + (lock ? " for update" : ""),
                         Object[].class)
@@ -154,7 +172,7 @@ public class CheckoutRepository {
         int n =
                 em.createNativeQuery(
                                 "update pagamento_checkout set enviado=true where id=:id and"
-                                    + " lease_id=:l and lease_ate>now()")
+                                    + " lease_id=:l and lease_ate>now() and not substituida and not enviado")
                         .setParameter("id", c.id())
                         .setParameter("l", c.leaseId())
                         .executeUpdate();
@@ -201,7 +219,8 @@ public class CheckoutRepository {
                 (UUID) r[8],
                 (Boolean) r[9],
                 (String) r[10],
-                r[11] == null ? null : ((Number) r[11]).intValue());
+                r[11] == null ? null : ((Number) r[11]).intValue(),
+                (Boolean) r[12]);
     }
 
     private Instant instante(Object v) {

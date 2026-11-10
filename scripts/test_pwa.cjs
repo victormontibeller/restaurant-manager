@@ -154,6 +154,11 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
     '/gestao/pedidos/novo',
     '/gestao/entrar?retorno=privado',
     '/gestao/equipe/convites',
+    '/gestao/configuracoes/delivery',
+    '/gestao/expedicao',
+    '/gestao/relatorios',
+    '/gestao/integracoes?conexao=marcador-privado',
+    '/gestao/pendencias',
     '/cozinha',
     '/plataforma',
   ]) {

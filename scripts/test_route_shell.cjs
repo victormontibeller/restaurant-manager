@@ -39,6 +39,7 @@ function fixture(cozinha = false) {
     administrador: () => identity()?.perfil === 'ADMINISTRADOR',
     tem: (acao) => permissions().includes(acao),
     podeCozinha: () => permissions().includes('cozinha.iniciar'),
+    podeExpedicao: () => permissions().includes('pedido.despachar'),
     ativar: () => ativacoes++,
     desativar: () => ativacoes--,
   };
@@ -137,6 +138,18 @@ for (const cozinha of [false, true]) {
   f.terminar();
   assert.equal(f.ativacoes(), 0);
 }
+const expedicao = fixture();
+expedicao.identity.set({ usuarioId: 'ficticio', perfil: 'EXPEDICAO' });
+expedicao.permissions.set(['pedido.consultar', 'pedido.despachar']);
+expedicao.route.snapshot.firstChild = {
+  data: { titulo: 'Expedição', expedicao: true, unidade: true },
+  firstChild: null,
+};
+expedicao.navegou();
+assert.equal(expedicao.layout.autorizado(), true);
+expedicao.permissions.set(['pedido.consultar']);
+assert.equal(expedicao.layout.autorizado(), false, 'Revogação remove a página já aberta.');
+expedicao.terminar();
 console.log(
   'Layout: ativação antes do snapshot do filho, navegação, permissão, logout e limpeza aprovados; injeções fictícias.',
 );

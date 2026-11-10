@@ -1,15 +1,16 @@
 # Sprint 05 — Homologação e piloto
 
 > **Escopo:** preparação e validação local/CI, resultados e critérios pendentes; não altera as fontes normativas dos assuntos.
-> **Situação:** preparação inicial integrada pelo PR #9; validação complementar no Mac/CI concluída no PR #10. Homologação técnica no Linux e piloto real pendentes. Decisões e limites seguem o [registro central](00_PROJECT_VISION.md).
+> **Situação:** preparação inicial integrada pelo PR #9; validação complementar no Mac/CI concluída e integrada pelo PR #10. Homologação técnica no Linux e piloto real pendentes. Decisões e limites seguem o [registro central](00_PROJECT_VISION.md).
 
 [Índice da documentação](README.md)
 
-**Status atual:** o proprietário autorizou concluir os testes possíveis no
-Mac/CI, corrigir falhas e remover a cópia antiga da Sprint 4. O incremento segue
-na branch `codex/sprint-05-registro-entregas`,
-[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10),
-sobre a `main` integrada em `5ea8324`. A
+**Status atual:** os testes possíveis no Mac/CI, as correções e a remoção da
+cópia antiga da Sprint 4 foram concluídos. O
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10)
+foi integrado em `07ae83f` em 2026-11-10, com a CI #196 aprovada no head final
+e a `main` local sincronizada. A confirmação fica no
+[checkpoint](25_EXECUTION_STATUS.md). A
 [evidência complementar](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md)
 separa resultados aprovados, falhas preservadas e dependências externas.
 Implantação e matriz completa no Linux ficam para etapa própria.

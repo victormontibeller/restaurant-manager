@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 interface Relatorio {
+  inicio: string;
+  fim: string;
   fuso: string;
   consultadoEm: string;
   pedidosCriados: number;
@@ -31,9 +33,12 @@ export class VendasComponent {
   inicio = new Date().toLocaleDateString('en-CA');
   fim = this.inicio;
   private geracao = 0;
+  private contexto = '';
   constructor() {
     effect(() => {
-      this.unidadeId();
+      const contexto = this.unidadeId() + ':' + (this.sessao.identidade()?.usuarioId ?? '');
+      if (contexto === this.contexto) return;
+      this.contexto = contexto;
       this.geracao++;
       this.dados.set(null);
       this.ocupado.set(false);
@@ -41,15 +46,21 @@ export class VendasComponent {
     });
     inject(DestroyRef).onDestroy(() => this.geracao++);
   }
+  data(valor: string): string {
+    return valor.split('-').reverse().join('/');
+  }
   async carregar(): Promise<void> {
     if (this.ocupado()) return;
     const geracao = this.geracao;
+    const inicio = this.inicio;
+    const fim = this.fim;
     this.ocupado.set(true);
     this.erro.set('');
+    this.dados.set(null);
     try {
       const r = await this.sessao.api<Relatorio>(
         '/api/v1/relatorios/vendas?' +
-          new URLSearchParams({ unidadeId: this.unidadeId(), inicio: this.inicio, fim: this.fim }),
+          new URLSearchParams({ unidadeId: this.unidadeId(), inicio, fim }),
       );
       if (geracao === this.geracao) this.dados.set(r);
     } catch (erro) {

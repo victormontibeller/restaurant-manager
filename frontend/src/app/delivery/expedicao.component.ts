@@ -1,7 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { mensagemErro } from '../catalogo/modelos';
-import { SessaoService } from '../identidade/sessao.service';
+import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
 import { PedidoComandoService } from '../pedidos/pedido-comando.service';
 import { EnderecoPedido, Pedido } from '../pedidos/modelos';
@@ -43,7 +43,7 @@ export class ExpedicaoComponent {
       this.unidadeId();
       this.sessao.identidade();
       this.geracao++;
-      this.lista.set([]);
+      this.limparDados();
       this.carregando.set(false);
       untracked(() => void this.carregar(0));
     });
@@ -61,6 +61,13 @@ export class ExpedicaoComponent {
   pendente(): boolean {
     return this.lista().some((e) => !!this.comandos.pendente(e.pedido.id, false));
   }
+  private limparDados(): void {
+    this.lista.set([]);
+    this.pagina.set(0);
+    this.mais.set(false);
+    this.motivos = {};
+    this.devolverTaxa = {};
+  }
   async carregar(pagina: number): Promise<void> {
     if (pagina < 0 || this.carregando() || this.comandos.ocupado() || this.pendente()) return;
     const geracao = this.geracao;
@@ -75,7 +82,10 @@ export class ExpedicaoComponent {
         this.pagina.set(pagina);
       }
     } catch (erro) {
-      if (geracao === this.geracao) this.erro.set(mensagemErro(erro));
+      if (geracao === this.geracao) {
+        if (erro instanceof ApiFailure && [401, 403, 404].includes(erro.status)) this.limparDados();
+        this.erro.set(mensagemErro(erro));
+      }
     } finally {
       if (geracao === this.geracao) this.carregando.set(false);
     }

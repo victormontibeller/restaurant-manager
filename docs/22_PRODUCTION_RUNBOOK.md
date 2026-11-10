@@ -512,10 +512,11 @@ correspondente às fontes atuais da aplicação. As etapas descritas abaixo fora
 executadas no ensaio 09, aprovado no Mac com massa fictícia e cleanup sem erros,
 conforme a [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
 Cada nova execução exige seus próprios recibos e as mesmas verificações.
-O manifesto deve conter exatamente os arquivos de `backend/src/main`,
-`frontend/src` e `frontend/public`, mais `backend/pom.xml`, `frontend/package.json`,
-`frontend/package-lock.json`, `frontend/angular.json`, `frontend/.postcssrc.json`,
-os três `frontend/tsconfig*.json` versionados e `scripts/build-pwa.cjs`.
+Gerar o manifesto por `build_sources.build_source_manifest(repo)`, definido em
+[`scripts/build_sources.py`](../scripts/build_sources.py). Release, ensaio e
+matriz compartilham esse inventário: fontes e assets da aplicação, manifests e
+configurações Angular/PostCSS, wrapper Maven e scripts de build/PWA.
+Não manter uma segunda lista manual de caminhos no operador do ensaio.
 Inclusão, remoção ou mudança de conteúdo exige manifesto/artefato correspondente.
 Não instala serviços nem publica um release. O diretório de saída deve ser novo,
 privado, externo ao checkout e curto o suficiente para o socket PostgreSQL.

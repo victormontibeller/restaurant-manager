@@ -48,6 +48,8 @@ import time
 import zipfile
 from urllib.parse import urlsplit
 
+from build_sources import build_source_manifest
+
 REPO = Path(__file__).resolve().parents[1]
 FRONTEND = REPO / 'frontend'
 PROJECTS = ('chromium-desktop', 'chromium-mobile', 'chromium-tablet',
@@ -70,7 +72,7 @@ FAMILIES = {
     'convites': ['S01-UI17', 'S01-UI18', 'S01-UI19', 'S01-UI41'],
     'provisionamento': ['S01-UI29', 'S01-UI30', 'S01-UI31'],
     'pedidos': [f'S03-UI{i:02}' for i in range(1, 14)],
-    'sprint04': [f'S04-UI{i:02}' for i in range(1, 10)],
+    'sprint04': [f'S04-UI{i:02}' for i in range(1, 11)],
 }
 SCENARIO_FAMILY = {scenario: family for family, scenarios in FAMILIES.items() for scenario in scenarios}
 EXPECTED = {(scenario, project) for scenario in SCENARIO_FAMILY for project in PROJECTS}
@@ -207,6 +209,7 @@ def coverage_catalog():
         ('T26', 'ADMINISTRADOR', 'OAuth simulado retorna à conta correta sem expor segredos.'),
         ('T08 T09 T19', 'Cliente GERENTE', 'Checkout simulado pendente/recusado/repetido; confirmação confiável, devolução parcial e cancelamento.'),
         ('T26 T27', 'GERENTE', 'Pendências/notificações consultáveis; integração administrativa negada.'),
+        ('T16', 'EXPEDICAO ADMINISTRADOR', 'Revogação de expedição nega UI/API e remove dados da tela aberta.'),
     ]
     for number, (surfaces, actors, expectation) in enumerate(financial, 1):
         put([f'S04-UI{number:02}'], surfaces, actors, 'unidade_A', expectation)
@@ -308,12 +311,10 @@ def pair_environment(plan, family, pairs):
 
 
 def input_fingerprints(plan):
-    paths = set()
-    for pattern in ('backend/src/main/**/*', 'backend/pom.xml', 'frontend/src/**/*',
-                    'frontend/public/**/*', 'frontend/dist/restaurant-manager/browser/**/*',
+    paths = {Path(name) for name in application_fingerprints()}
+    for pattern in ('frontend/dist/restaurant-manager/browser/**/*',
                     'frontend/e2e*/**/*.ts', 'frontend/playwright*.ts',
-                    'frontend/package*.json', 'frontend/angular.json', 'frontend/tsconfig*.json',
-                    'frontend/.postcssrc*', 'scripts/*.py', 'scripts/*.sh', 'scripts/*.cjs'):
+                    'scripts/*.py', 'scripts/*.sh', 'scripts/*.cjs'):
         paths.update(path for path in REPO.glob(pattern) if path.is_file())
     paths.add(Path(plan['build_receipt']))
     paths.update(Path(value) for value in plan.get('input_files', []))
@@ -334,13 +335,11 @@ def input_fingerprints(plan):
 
 
 def application_fingerprints():
-    paths = set()
-    for pattern in ('backend/src/main/**/*', 'backend/pom.xml', 'frontend/src/**/*',
-                    'frontend/public/**/*', 'frontend/package*.json', 'frontend/angular.json',
-                    'frontend/tsconfig*.json', 'frontend/.postcssrc*', 'scripts/build-pwa.cjs'):
-        paths.update(path for path in REPO.glob(pattern) if path.is_file())
-    require(paths and all(not path.is_symlink() for path in paths), 'Fontes do build ausentes ou vinculadas.')
-    return {str(path.resolve()): digest(path) for path in sorted(paths)}
+    try:
+        manifest = build_source_manifest(REPO)
+    except (OSError, ValueError) as error:
+        raise EvidenceError('Fontes do build ausentes ou vinculadas.') from error
+    return {str((REPO / name).resolve()): checksum for name, checksum in manifest.items()}
 
 
 def verify_pwa_artifact(jar):

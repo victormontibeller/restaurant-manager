@@ -250,6 +250,7 @@
 
 
 
+
                   }}{{ moeda(produto.preco) }}
                 </p>
                 @if (!produto.disponivel) {
@@ -274,6 +275,7 @@
                       [disabled]="favoritos.ocupado() || favoritos.incerto() || !carrinho.online()"
                     >
                       {{ favoritos.ids().includes(produto.id) ? 'Remover dos favoritos: ' : 'Favoritar: '
+
 
 
 
@@ -325,6 +327,8 @@
 @if (modo === 'cardapio' && quantidadeItens() > 0) {
   <a hlmBtn routerLink="/carrinho" class="carrinho-movel"
     ><span>Ver meu carrinho</span
-    ><span class="carrinho-contagem">{{ quantidadeItens() }} itens</span></a
+    ><span class="carrinho-contagem"
+      >{{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }}</span
+    ></a
   >
 }

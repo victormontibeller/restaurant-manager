@@ -14,6 +14,8 @@ import time
 import urllib.request
 import zipfile
 
+from build_sources import build_source_manifest
+
 UNIT = 'restaurant-manager-hml.service'
 RUNTIME_KEYS = ('RM_DB_URL', 'RM_DB_USER', 'RM_DB_PASSWORD', 'RM_STAGE')
 IDENTITY_KEYS = ('RM_JWT_SECRET', 'RM_JWT_KEY_ID', 'RM_EMAIL_SECRET',
@@ -156,18 +158,7 @@ def durable_artifact(job, root, repo):
             or artifact_hash(jar) != gate.get('artifact_sha256')):
         raise ValueError('Job sem resultado/gate/hash correspondentes.')
     clean_sha(job / 'checkout', gate['git_sha'])
-    def source(base):
-        files = []
-        for name in ('backend/src/main', 'frontend/src'):
-            directory = base / name
-            if not directory.is_dir():
-                raise ValueError('Fonte compilável ausente.')
-            files.extend(p for p in directory.rglob('*') if p.is_file())
-        files.extend(base / name for name in ('backend/pom.xml', 'frontend/package.json',
-                     'frontend/package-lock.json', 'frontend/angular.json',
-                     'frontend/tsconfig.json', 'frontend/tsconfig.app.json'))
-        return {str(p.relative_to(base)): artifact_hash(p) for p in files}
-    if source(repo) != source(job / 'checkout'):
+    if build_source_manifest(repo) != build_source_manifest(job / 'checkout'):
         raise ValueError('Fonte compilável difere do artefato; novo build necessário.')
     return jar, gate
 

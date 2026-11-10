@@ -7,7 +7,11 @@
     <label>Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required /> </label>
     <button type="submit" [disabled]="ocupado()">Consultar relatório</button>
   </form>
+  @if (ocupado()) {
+    <p role="status">Consultando o período informado…</p>
+  }
   @if (dados(); as r) {
+    <p>Período consultado: {{ data(r.inicio) }} a {{ data(r.fim) }}.</p>
     <p>Fuso da unidade: {{ r.fuso }}. Consulta em {{ r.consultadoEm }}.</p>
     <dl>
       <dt>Pedidos criados no período</dt>

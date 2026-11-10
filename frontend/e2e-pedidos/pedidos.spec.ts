@@ -583,11 +583,46 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
     await expect(
       page.getByText('Pedido confirmado: ' + pedido.id + '.', { exact: false }),
     ).toBeVisible();
-    await capturar(
-      page,
-      page.getByRole('navigation', { name: 'Páginas de mesas para pedido assistido', exact: true }),
-      's03-paginacao-assistido',
-    );
+    const paginasAssistido = page.getByRole('navigation', {
+      name: 'Páginas de mesas para pedido assistido',
+      exact: true,
+    });
+    if (page.viewportSize()!.width <= 600) {
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      const botoes = await paginasAssistido.getByRole('button').evaluateAll((elementos) =>
+        elementos.map((elemento) => {
+          const botao = elemento as HTMLButtonElement;
+          const estilo = getComputedStyle(botao);
+          const medidor = document.createElement('canvas').getContext('2d');
+          if (!medidor) throw new Error('Medição de texto indisponível no navegador.');
+          medidor.font = `${estilo.fontStyle} ${estilo.fontWeight} ${estilo.fontSize} ${estilo.fontFamily}`;
+          const espaco = estilo.letterSpacing === 'normal' ? 0 : parseFloat(estilo.letterSpacing);
+          const palavras = (botao.textContent?.trim() ?? '').split(/\s+/);
+          const caixa = botao.getBoundingClientRect();
+          return {
+            topo: caixa.top,
+            base: caixa.bottom,
+            larguraDisponivel:
+              botao.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight),
+            maiorPalavra: Math.max(
+              ...palavras.map(
+                (palavra) =>
+                  medidor.measureText(palavra).width + Math.max(0, palavra.length - 1) * espaco,
+              ),
+            ),
+          };
+        }),
+      );
+      expect(botoes).toHaveLength(2);
+      expect(botoes[1].topo).toBeGreaterThanOrEqual(botoes[0].base);
+      for (const botao of botoes) {
+        expect(
+          botao.maiorPalavra,
+          'Paginação assistida deve preservar cada palavra inteira',
+        ).toBeLessThanOrEqual(botao.larguraDisponivel);
+      }
+    }
+    await capturar(page, paginasAssistido, 's03-paginacao-assistido');
   } finally {
     await participante.dispose();
   }
@@ -1018,6 +1053,36 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
       expect(JSON.stringify(campos)).not.toMatch(
         /"(?:saldo|endereco|pagoConfirmado|precoUnitario)"/,
       );
+      if (perfil === 'atendimento') {
+        await atual.page.evaluate(() => document.fonts.ready.then(() => undefined));
+        for (const rotulo of ['Estado dos pedidos', 'Canal do pedido', 'Ordenar pedidos']) {
+          const medidas = await painel.getByLabel(rotulo, { exact: true }).evaluate((elemento) => {
+            const campo = elemento as HTMLSelectElement;
+            const estilo = getComputedStyle(campo);
+            const medidor = document.createElement('canvas').getContext('2d');
+            if (!medidor) throw new Error('Medição de texto indisponível no navegador.');
+            medidor.font = `${estilo.fontStyle} ${estilo.fontWeight} ${estilo.fontSize} ${estilo.fontFamily}`;
+            const espaco = estilo.letterSpacing === 'normal' ? 0 : parseFloat(estilo.letterSpacing);
+            const larguraDisponivel =
+              campo.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight);
+            return Array.from(campo.options, (opcao) => {
+              const texto = opcao.textContent?.trim() ?? '';
+              return {
+                texto,
+                larguraTexto:
+                  medidor.measureText(texto).width + Math.max(0, texto.length - 1) * espaco,
+                larguraDisponivel,
+              };
+            });
+          });
+          for (const medida of medidas) {
+            expect(
+              medida.larguraTexto,
+              `${rotulo}: a opção "${medida.texto}" deve caber integralmente no campo`,
+            ).toBeLessThanOrEqual(medida.larguraDisponivel);
+          }
+        }
+      }
       await capturar(atual.page, painel, 's03-perfil-' + perfil);
     } finally {
       await atual.context.close();

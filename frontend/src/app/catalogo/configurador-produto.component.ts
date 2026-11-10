@@ -91,7 +91,11 @@ interface EscolhaRascunho extends Escolha {
               <fieldset class="campos">
                 <legend>{{ grupo.nome }}</legend>
                 <p>
-                  Selecione entre {{ grupo.minimo }} e {{ grupo.maximo }} escolhas por combo.
+                  @if (grupo.minimo === grupo.maximo) {
+                    Selecione {{ grupo.minimo }} {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
+                  } @else {
+                    Selecione entre {{ grupo.minimo }} e {{ grupo.maximo }} {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
+                  }
                   Selecionadas: {{ totalGrupo(grupo.id) }}.
                 </p>
                 <ul aria-label="Opções disponíveis">
@@ -205,7 +209,7 @@ interface EscolhaRascunho extends Escolha {
           @if (previa.linha(); as calculada) {
             <div role="status">
               <p><strong>Prévia por unidade: {{ moeda(calculada.precoUnitario) }}</strong></p>
-              <p>Prévia de {{ calculada.quantidade }} unidade(s): {{ moeda(calculada.subtotal) }}</p>
+              <p>Prévia de {{ calculada.quantidade }} {{ calculada.quantidade === 1 ? 'unidade' : 'unidades' }}: {{ moeda(calculada.subtotal) }}</p>
               <p>Esta prévia não reserva produtos. O resumo do carrinho consulta novamente a composição, os preços e a disponibilidade.</p>
             </div>
           }

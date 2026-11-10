@@ -31,6 +31,11 @@ Auditoria e eventos de saída são gravados na mesma transação da mudança loc
 
 Jobs usam claim com lease/expiração, retry com intervalo e limite, última falha sanitizada e encaminhamento para intervenção. Devem ser seguros mesmo com execução duplicada ou dois processos durante deploy. O efeito pretendido é único por idempotência, não por promessa de entrega de mensagem exatamente uma vez.
 
+O agendamento dos prazos dos pedidos tem uma thread dedicada, separada da
+thread de pagamentos/comunicações/manutenção. HTTP externo lento não pode ocupar
+o scheduler de alerta e expiração. Essa separação preserva os leases e o
+contexto empresarial; não autoriza aumentar automaticamente o pool PostgreSQL.
+
 No frontend, duplo clique é evitado por UX, mas o backend é quem deduplica. Mesma chave de idempotência + mesmo ator/contexto/payload retorna o mesmo resultado; payload diferente conflita. Após timeout, o cliente consulta/reenvia a mesma intenção. A janela de retenção das chaves deve cobrir retries e reconciliação e será fixada no contrato, não descartada a cada reinício.
 
 ## Evolução da documentação

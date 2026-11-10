@@ -97,30 +97,38 @@ class LocalRehearsalTest(unittest.TestCase):
         repo = self.root / 'repo'
         names = ('backend/src/main/App.java', 'frontend/src/main.ts', 'frontend/public/manifest.webmanifest',
                  'backend/pom.xml', 'frontend/package.json', 'frontend/package-lock.json',
+                 'backend/mvnw', 'backend/.mvn/wrapper/maven-wrapper.properties',
                  'frontend/angular.json', 'frontend/.postcssrc.json', 'frontend/tsconfig.json',
-                 'frontend/tsconfig.app.json', 'frontend/tsconfig.e2e.json', 'scripts/build-pwa.cjs')
+                 'frontend/tsconfig.app.json', 'frontend/tsconfig.e2e.json',
+                 'scripts/build-pwa.cjs', 'scripts/pwa-assets.cjs', 'scripts/build-release.sh')
         for name in names:
             path = repo / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('original')
         manifest = {name: digest(repo / name) for name in names}
         self.assertEqual(validate_source_manifest(manifest, repo), len(names))
-        removed = repo / 'backend/src/main/App.java'
-        removed.unlink()
-        with self.assertRaises(ValueError):
-            validate_source_manifest(manifest, repo)
-        removed.write_text('original')
-        added = repo / 'frontend/src/new.ts'
-        added.write_text('novo')
-        with self.assertRaises(ValueError):
-            validate_source_manifest(manifest, repo)
-        added.unlink()
+        for directory in ('backend/src/main', 'frontend/src', 'frontend/public'):
+            added = repo / directory / 'novo'
+            with self.subTest(added=added):
+                added.write_text('novo')
+                with self.assertRaises(ValueError):
+                    validate_source_manifest(manifest, repo)
+                added.unlink()
         for name in names:
             with self.subTest(name=name):
+                (repo / name).unlink()
+                with self.assertRaises(ValueError):
+                    validate_source_manifest(manifest, repo)
                 (repo / name).write_text('alterado')
                 with self.assertRaises(ValueError):
                     validate_source_manifest(manifest, repo)
                 (repo / name).write_text('original')
+        for invalid in (None, {}, {k: v for k, v in manifest.items() if k != 'scripts/pwa-assets.cjs'},
+                        dict(manifest, desconhecido='a' * 64)):
+            with self.subTest(manifest=invalid), self.assertRaises(ValueError):
+                validate_source_manifest(invalid, repo)
+        (repo / 'README.md').write_text('Documento novo não altera o build.')
+        self.assertEqual(validate_source_manifest(manifest, repo), len(names))
 
     def test_filtro_schema_recusa_injecao_antes_de_consultar(self):
         session = MagicMock()
