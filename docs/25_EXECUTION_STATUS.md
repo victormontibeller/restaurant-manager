@@ -1,9 +1,26 @@
 # Checkpoint de execução
 
+## Integração da revisão — autorização e rastreabilidade, 2026-11-10
+
+O proprietário solicitou incluir todas as alterações na PR, autorizou o merge
+em `main` e pediu sincronizar o checkout local. A integração usa a
+[PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11), que
+registra o resultado e o SHA do merge. A aplicação continua na árvore validada
+em `469f3a4`; o head `8b2d002` passou também na
+[CI #210](https://github.com/victormontibeller/restaurant-manager/actions/runs/42909066400).
+O complemento desta integração é somente documental, com conferência de links,
+padrões de segredo e diff; não representa nova execução da aplicação.
+
+O registro manual de 07/11 foi conferido sem credenciais literais ou dados
+pessoais e incluído com identificação histórica; uma cópia original permanece
+privada. A matriz de 420 pares, novas capturas e demais pendências abaixo
+continuam abertas. Integrar o código e sincronizar Git não executa deploy,
+migrations ou reinício da demonstração.
+
 ## Revisão geral e limpeza — encerramento no escopo solicitado, 2026-11-10
 
 Correções implementadas na branch `codex/revisao-geral-pre-testes`, base
-`07ae83f`, [PR #11 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/11).
+`07ae83f`, [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11).
 O proprietário orientou **encerrar após backend e auditorias, registrando a
 nova matriz como pendente**. Não iniciar outra rodada de navegador por este
 encerramento. O candidato corrigido não tem aprovação integral de UI,

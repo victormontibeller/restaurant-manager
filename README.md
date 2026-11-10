@@ -2,7 +2,7 @@
 
 Plataforma SaaS para restaurantes, pizzarias e hamburguerias, com cardápio visual e pedidos para delivery, retirada e consumo na mesa. Cada empresa terá seus dados em um schema PostgreSQL próprio, com filiais internas e controle de acesso por ação e unidade.
 
-**Estado atual:** fundação e Sprints 1–4 integradas em `main`. A limpeza e as correções da [revisão geral](docs/evidencias/revisao-geral-pre-testes-2026-11-10.md) estão implementadas em `469f3a4`; frontend completo e [CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646) aprovados. O [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11) permanece em rascunho.
+**Estado atual:** fundação e Sprints 1–4 integradas em `main`. A limpeza e as correções da [revisão geral](docs/evidencias/revisao-geral-pre-testes-2026-11-10.md) estão implementadas em `469f3a4`; frontend completo e [CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646) aprovados. O [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11) reúne as alterações desta revisão, com merge autorizado pelo proprietário.
 
 Por decisão do proprietário, esta rodada termina após backend local e auditorias. A nova matriz de **420 pares** e as **56 novas capturas** não foram executadas e permanecem pendentes; o candidato não tem aprovação integral. A rodada 01 continua reprovada, sem transferir aprovações ao candidato 02. Resultados detalhados e limites ficam no [checkpoint](docs/25_EXECUTION_STATUS.md). Homologação Linux, Mercado Pago sandbox, serviços reais e produção não são aprovados por esta validação local. O nome comercial será definido posteriormente.
 

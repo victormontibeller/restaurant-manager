@@ -1,8 +1,10 @@
 # Revisão geral e limpeza pré-testes — 2026-11-10
 
 **Situação:** correções implementadas na branch `codex/revisao-geral-pre-testes`,
-base `07ae83f`; [PR #11 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/11).
-O proprietário orientou encerrar após backend e auditorias, deixando a nova
+base `07ae83f`; [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11).
+Após o encerramento, o proprietário autorizou incluir os documentos locais,
+integrar a PR e sincronizar a `main` local. Essa autorização mantém a decisão
+de encerrar a validação após backend e auditorias, deixando a nova
 matriz integrada pendente. O candidato corrigido **não tem aprovação integral
 de UI, homologação ou piloto**. Dados de teste fictícios; ambiente Mac.
 
@@ -125,8 +127,9 @@ reiniciados, sem reaproveitar aprovação dessa tentativa.
 
 ## Preservação e limites
 
-Alterações documentais anteriores e o arquivo manual local não versionado foram
-preservados; este último mantém o SHA-256 registrado no início. Credenciais,
+Alterações documentais anteriores foram preservadas. O documento manual, antes
+não versionado, foi incluído com nota histórica; sua cópia original privada
+mantém o SHA-256 registrado no início. Credenciais,
 logs e massa fictícia permanecem nas raízes privadas, fora do Git. Nenhum
 serviço da demonstração, banco de outro projeto ou ambiente de produção foi
 alvo de limpeza. O candidato corrigido não foi iniciado como serviço; não

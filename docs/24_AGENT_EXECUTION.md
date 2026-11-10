@@ -13,7 +13,7 @@ expressa do proprietário. A limpeza e as correções estão implementadas em
 `469f3a4`, sobre a base `07ae83f`, na branch `codex/revisao-geral-pre-testes`;
 frontend completo e CI #208 aprovados. A nova matriz de 420 pares e as 56 novas
 capturas não foram executadas. A rodada 01 permanece reprovada; nenhuma
-aprovação anterior é transferida ao candidato 02. O PR #11 continua em rascunho.
+aprovação anterior é transferida ao candidato 02. Em seguida, o proprietário autorizou integrar o PR #11 e sincronizar a `main` local, mantendo essas pendências.
 
 Preservar alterações locais anteriores, evidências e a demonstração existente.
 Esta delimitação não aprova integralmente o candidato nem encerra o critério

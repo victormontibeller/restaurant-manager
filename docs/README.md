@@ -75,7 +75,7 @@ checkpoint. A nova matriz de **420 pares** e as **56 novas capturas** não foram
 executadas e permanecem pendentes. A rodada 01 continua reprovada, sem
 transferir aprovações ao candidato 02; o
 [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11)
-permanece em rascunho. Não há aprovação integral do candidato, homologação
+tem merge autorizado pelo proprietário. Isso não aprova integralmente o candidato, a homologação
 Linux ou prontidão para produção.
 
 O estado de execução fica no [checkpoint vigente](25_EXECUTION_STATUS.md). A [revisão pré-Sprint 2](evidencias/revisao-pre-sprint-02-2026-11-06.md) registra achados, correções e limites de validação no Mac. A documentação descreve requisitos e critérios; somente evidências registradas da implementação permitem marcar entregas como concluídas. Revisão de links, coerência de escopo, permissões e estados não constitui teste da aplicação nem homologação externa.

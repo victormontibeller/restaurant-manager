@@ -18,7 +18,7 @@ Por decisão do proprietário, esta rodada termina após backend local e
 auditorias. A **nova matriz de 420 pares e as 56 novas capturas não foram
 executadas** e permanecem pendentes. A rodada 01 continua reprovada com 384/420
 pares executados; seus resultados e capturas não aprovam o candidato 02.
-O PR #11 permanece em rascunho, sem aprovação integral do candidato ou
+O PR #11 tem merge autorizado pelo proprietário, sem aprovação integral do candidato ou
 homologação Linux. A [evidência da revisão](revisao-geral-pre-testes-2026-11-10.md)
 e o [checkpoint](../25_EXECUTION_STATUS.md) registram os resultados finais dos
 checks e os limites. As aprovações históricas abaixo conservam seus artefatos.
