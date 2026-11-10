@@ -1,15 +1,27 @@
 # Inventário rastreável de cobertura
 
-## Revisão geral pré-testes — em validação, 2026-11-10
+## Revisão geral pré-testes — nova matriz pendente, 2026-11-10
 
 O inventário vigente passa a **84 cenários × cinco projetos, 420 pares**.
 O cenário S04-UI10 acrescenta revogação da expedição com dados já carregados,
 remoção de informações pessoais da UI e negação pela API (T16; Administrador
 e Expedição). S04-UI06 amplia a prova do período do relatório, falha e
 recuperação; S02-PWA01 inclui as cinco rotas da Sprint 4 no shell offline.
-A [evidência da revisão](revisao-geral-pre-testes-2026-11-10.md) registra o
-candidato e os resultados desta rodada; a presença no inventário ainda não
-comprova execução. As aprovações históricas abaixo conservam seus artefatos.
+As correções estão implementadas em `469f3a4`, com frontend completo e
+[CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646)
+aprovados. Os templates cobrem **quatro probes × três navegadores = 12
+combinações**, separados da matriz integrada. S03-UI06/S03-UI12 acrescentam
+regressões de legibilidade dos filtros e da paginação; S04-UI08 distingue a
+tentativa de pagamento mais recente do histórico anterior.
+
+Por decisão do proprietário, esta rodada termina após backend local e
+auditorias. A **nova matriz de 420 pares e as 56 novas capturas não foram
+executadas** e permanecem pendentes. A rodada 01 continua reprovada com 384/420
+pares executados; seus resultados e capturas não aprovam o candidato 02.
+O PR #11 permanece em rascunho, sem aprovação integral do candidato ou
+homologação Linux. A [evidência da revisão](revisao-geral-pre-testes-2026-11-10.md)
+e o [checkpoint](../25_EXECUTION_STATUS.md) registram os resultados finais dos
+checks e os limites. As aprovações históricas abaixo conservam seus artefatos.
 
 ## Sprint 5 — validação complementar no Mac/CI
 

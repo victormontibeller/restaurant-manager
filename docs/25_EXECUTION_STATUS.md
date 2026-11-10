@@ -1,64 +1,61 @@
 # Checkpoint de execução
 
-## Revisão geral e limpeza — em implementação, 2026-11-10
+## Revisão geral e limpeza — encerramento no escopo solicitado, 2026-11-10
 
-Execução autorizada pelo proprietário após a revisão e o plano no chat, com
-correções pontuais e validação no Mac. Branch `codex/revisao-geral-pre-testes`,
-base integrada `07ae83f` (PR #10). Preservadas as alterações documentais locais
-de confirmação do merge e o arquivo manual não versionado. A cópia antiga da
-Sprint 4 já havia sido removida pela execução anterior.
+Correções implementadas na branch `codex/revisao-geral-pre-testes`, base
+`07ae83f`, [PR #11 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/11).
+O proprietário orientou **encerrar após backend e auditorias, registrando a
+nova matriz como pendente**. Não iniciar outra rodada de navegador por este
+encerramento. O candidato corrigido não tem aprovação integral de UI,
+homologação Linux ou piloto.
 
-Escopo: reconciliação de checkout substituído/inbox, retenção OAuth, scheduler
-dos prazos, revogação da expedição, PWA, período dos relatórios e inventário
-compartilhado do build; remoção da dependência direta `luxon` sem uso. Novas
-migrações public V8 e tenant V28, sem edição das migrations publicadas.
+Fonte da aplicação: `469f3a4f14915ffdc907e151146335556d9b79fc`.
+JAR local: `681963ff3a43bde825cd31e66040661a7b8c630ccd690a1afce5b626ab6279e8`.
+As atualizações posteriores de encerramento são documentais e não alteram
+os bytes da aplicação, testes ou scripts validados.
 
-Implementação registrada em `66a9825`, [PR #11 em rascunho](https://github.com/victormontibeller/restaurant-manager/pull/11).
-Segunda rodada local: **464 testes backend**, sem falhas, erros ou skips;
-templates completos nos três navegadores e auditorias npm/Java aprovados
-(112 componentes Java sem alertas). A
-[CI #204](https://github.com/victormontibeller/restaurant-manager/actions/runs/42888824370)
-confirmou 464 testes backend e 249 de scripts no mesmo commit. As duas
-expectativas frágeis de retenção em lotes foram corrigidas; a rodada inicial
-reprovada e o timeout de templates durante suspensão do Mac foram preservados.
+- Backend local: **464 testes / 68 suítes**, zero falhas, erros ou skips.
+- Frontend local: formatação, tipos, 21 grupos de lógica, 12 combinações de
+  templates (quatro probes × três navegadores) e build aprovados.
+- [CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646):
+  249 testes de scripts, 464 backend e checks frontend aprovados no mesmo SHA.
+  Mac: 239 scripts portáveis na rodada anterior; dez casos Linux executados na
+  CI, sem chamá-los de skips aprovados. Não somar camadas/rodadas.
+- Auditorias locais e CI: npm sem vulnerabilidades reportadas; 112 componentes
+  Java sem achados na consulta OSV.
+- **Pendente no candidato corrigido:** matriz de 84 cenários × cinco projetos
+  (420 pares), 56 capturas novas, contraste e recuperação financeira integrada.
+  As regressões S03-UI06/S03-UI12/S04-UI08 foram implementadas, mas ainda não
+  executadas na matriz. Compilação não substitui sua execução.
 
-Artefato local conferido e arquivado: JAR
-`ba612c4b323c2afaf26191e6875c37d8b195d0892cca55a3e9104636b7dd46b7`,
-fontes de `66a9825`. A comparação integral confirmou os 433 arquivos de classes
-e recursos empacotados; o timestamp fixo do build reproduzível foi respeitado.
-Preparação da massa e matriz de 420 pares em andamento; os checks acima não
-aprovam antecipadamente as jornadas. PostgreSQL exclusivo
-`rm_test`/55432 conferido por identidade efetiva; demonstração 8095/PID 32641 e
-bancos de outros projetos preservados. Rótulo da raiz privada desta execução:
-`rm-cleanup-20261110`. Backend, frontend e scripts são integrados
-por um coordenador; acesso ao banco e suítes pesadas serializados.
+Escopo corrigido: checkout substituído e inbox durável, retenção OAuth,
+scheduler dos prazos, revogação da expedição, rotas PWA, período do relatório,
+inventário compartilhado de build e apresentação móvel/histórico de pagamento.
+Removidos `luxon` sem uso e diagnóstico de convite duplicado, cujos casos úteis
+foram incorporados ao teste Angular real. Migrations novas public V8 e tenant
+V28; migrations anteriores preservadas.
 
-Massa nova preparada. Recuperação financeira no JAR desta revisão aprovada:
-duas perdas efetivas de resposta e dois reinícios somente do candidato,
-uma cobrança/um recebimento/uma devolução, R$ 20,00 devolvidos e diagnósticos
-normalizados. Provedor fictício local; sem comprovação de provedor real ou
-restore externo. Contraste aprovado em 38/38 casos. Inventário real confirmou
-420 pares; a matriz está em execução no mesmo JAR/PID 6953, iniciado às
-17:20:22 (UTC−03). A revisão visual reprovou T12 em 360 px: os valores dos
-filtros de estado e canal ficam cortados. O candidato não está aprovado;
-a paginação assistida de T13 também quebra palavras no celular. T08/T19
-misturam estados de tentativas de pagamento sem identificar o histórico,
-gerando ambiguidade mesmo com valores financeiros consistentes. A rodada
-corrente reúne diagnósticos e será preservada. Corrigir essas apresentações e
-a concordância dos contadores antes de gerar novo JAR e repetir a matriz
-completa e as capturas, sem herdar aprovações anteriores.
+A rodada 01 (`66a9825`, JAR `ba612c4b323c2afaf26191e6875c37d8b195d0892cca55a3e9104636b7dd46b7`)
+ficou reprovada: 384/420 pares sem falhas nos executados, 36 não executados por
+quota e seis reprovações nas 56 capturas (T12/T13 mobile; T08/T19 desktop/mobile).
+Recuperação financeira e contraste 38/38 passaram naquele JAR, sem atribuição
+ao candidato corrigido. A falha de formatação inicial de `ac4ef66` e as
+reexecuções de retenção/templates também foram preservadas.
 
-Rodada 01 encerrada e consolidada como reprovada: 384/420 pares sem falhas
-nos executados; 36 não executados por quota. Revisão das 56 capturas completa,
-com seis reprovações nos casos acima. API 6953 e simulador 6605 encerrados por
-identidade, mantendo demonstração 32641/8095 e PostgreSQL 59175/55432. As
-correções de layout, texto e histórico foram aplicadas; os três cenários E2E
-correspondentes ganharam regressões. Próxima execução integral em
-`rm-cleanup02-20261110`, com build, massa, runtime e recibos novos; ainda pendente.
+Raízes privadas: `rm-cleanup-20261110` (rodada reprovada) e
+`rm-cleanup02-20261110` (build corrigido e encerramento). API 6953 e simulador
+6605 da rodada 01 encerrados por identidade; candidato 02 não foi iniciado
+como serviço nem recebeu massa/matriz nova. Bloqueio temporário de suspensão
+encerrado. Demonstração 32641/8095, PostgreSQL 59175/55432 e bancos de outros
+projetos preservados. O arquivo manual local não versionado mantém o hash
+inicial. As alterações documentais anteriores foram preservadas.
 
-Resultados e limites serão registrados na
-[evidência da revisão](evidencias/revisao-geral-pre-testes-2026-11-10.md).
-Linux, serviços externos e produção continuam fora desta rodada local.
+[Achados, remoções, resultados e recibos](evidencias/revisao-geral-pre-testes-2026-11-10.md)
+identificam cada rodada. Próxima etapa, quando retomada: executar a matriz e
+inspeção visual completas sobre o candidato corrigido. Linux, Mercado Pago
+sandbox, e-mail/infraestrutura externos, aparelhos reais, aceite assistivo,
+backup operacional e piloto continuam pendentes. Não houve merge em `main`,
+deploy ou mudança na demonstração nesta revisão.
 
 ## Sprint 5 — PR #10 integrado, 2026-11-10
 
