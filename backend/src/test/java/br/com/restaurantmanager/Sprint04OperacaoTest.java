@@ -11,6 +11,7 @@ import br.com.restaurantmanager.financeiro.dtos.AlocacaoAjuste;
 import br.com.restaurantmanager.financeiro.dtos.EntradaAjuste;
 import br.com.restaurantmanager.financeiro.dtos.EntradaRecebimento;
 import br.com.restaurantmanager.pedidos.dtos.EnderecoEntrega;
+import br.com.restaurantmanager.relatorios.dtos.RelatorioVendas;
 import br.com.restaurantmanager.unidades.models.CanalAtendimento;
 
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +27,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.time.Instant;
 
 @SpringBootTest(properties = {"rm.stage=test", "rm.pedidos.delivery-controlado=true"})
 @AutoConfigureMockMvc
@@ -260,6 +263,84 @@ class Sprint04OperacaoTest {
                                 .getStatus())
                 .isEqualTo(200);
         assertThat(p.detalhe(pedido).get("saldo").get("totalDevido").asText()).isEqualTo("0.00");
+    }
+
+    @Test
+    void expedicaoRevalidaFilialDoRecursoAntesDeDespachoEntregaOcorrenciaEDecisao() throws Exception {
+        var pedido = pronto(CanalAtendimento.DELIVERY);
+        var expedicaoRestrita = p.c.usuario("EXPEDICAO");
+        var gerenteRestrito = p.c.usuario("GERENTE");
+        p.c.vincular(expedicaoRestrita, CatalogoCenario.OUTRA_UNIDADE);
+        p.c.vincular(gerenteRestrito, CatalogoCenario.OUTRA_UNIDADE);
+        String expOutra = p.c.login(expedicaoRestrita);
+        String gerenteOutra = p.c.login(gerenteRestrito);
+        String exp = p.funcionario("EXPEDICAO");
+        assertThat(p.acao(pedido, "despachar", expOutra, List.of()).getStatus()).isEqualTo(404);
+        assertThat(p.detalhe(pedido).get("estado").asText()).isEqualTo("PRONTO");
+        assertThat(p.acao(pedido, "despachar", exp, List.of()).getStatus()).isEqualTo(200);
+        pedido = p.detalhe(pedido);
+        String financeiro = "/api/v1/financeiro/pedidos/" + pedido.get("id").asText();
+        assertThat(p.c.enviar("POST", financeiro + "/recebimentos", p.c.token,
+                new EntradaRecebimento(UUID.randomUUID(), "PIX", "20.00", null)).getStatus()).isEqualTo(200);
+        pedido = p.detalhe(pedido);
+        assertThat(p.acao(pedido, "entregar", expOutra, List.of()).getStatus()).isEqualTo(404);
+        String base = "/api/v1/expedicao/pedidos/" + pedido.get("id").asText();
+        var ocorrencia = new ComandoOcorrencia(UUID.randomUUID(), pedido.get("versao").asLong(),
+                "Ocorrência própria", null, null);
+        assertThat(p.c.enviar("POST", base + "/ocorrencia", expOutra, ocorrencia).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", base + "/ocorrencia", outro.token, ocorrencia).getStatus()).isEqualTo(404);
+        }
+        assertThat(p.detalhe(pedido).get("estado").asText()).isEqualTo("EM_ENTREGA");
+        assertThat(p.c.enviar("POST", base + "/ocorrencia", exp, ocorrencia).getStatus()).isEqualTo(200);
+        pedido = p.detalhe(pedido);
+        var decisao = new ComandoOcorrencia(UUID.randomUUID(), pedido.get("versao").asLong(),
+                "Retomada própria", "NOVA_TENTATIVA", null);
+        assertThat(p.c.enviar("POST", base + "/decidir", gerenteOutra, decisao).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", base + "/decidir", outro.token, decisao).getStatus()).isEqualTo(404);
+        }
+        assertThat(p.c.enviar("POST", base + "/decidir", p.funcionario("GERENTE"), decisao).getStatus()).isEqualTo(200);
+        pedido = p.detalhe(pedido);
+        assertThat(p.acao(pedido, "entregar", exp, List.of()).getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void relatorioInicialDoCaixaEDelegacaoRevalidamMesmoJwtFilialETenant() throws Exception {
+        p.enviar(p.entrada(1));
+        p.c.executar("update " + p.c.schema + ".pedido set criado_em='2026-11-09T12:00:00Z'");
+        String url = "/api/v1/relatorios/vendas?unidadeId=" + UNIDADE
+                + "&inicio=2026-11-09&fim=2026-11-09";
+        var esperado = p.c.json(p.c.enviar("GET", url, p.c.token, null));
+        assertThat(esperado.get("pedidosCriados").asLong()).isEqualTo(1);
+        var padrao = Map.of("GERENTE", 200, "CAIXA", 200, "ATENDIMENTO", 403, "COZINHA", 403, "EXPEDICAO", 403);
+        for (var perfil : padrao.entrySet()) {
+            var resposta = p.c.enviar("GET", url, p.funcionario(perfil.getKey()), null);
+            assertThat(resposta.getStatus()).as(perfil.getKey()).isEqualTo(perfil.getValue());
+            if (perfil.getValue() == 200) compararRelatorio(p.c.json(resposta), esperado);
+        }
+        String atendimento = p.funcionario("ATENDIMENTO");
+        p.c.reautenticar();
+        p.c.configurarAcoes("ATENDIMENTO", List.of("relatorio.consultar"));
+        compararRelatorio(p.c.json(p.c.enviar("GET", url, atendimento, null)), esperado);
+        assertThat(p.c.enviar("GET", url.replace(UNIDADE.toString(), CatalogoCenario.OUTRA_UNIDADE.toString()),
+                atendimento, null).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("GET", url, atendimento, null).getStatus()).isEqualTo(401);
+            assertThat(outro.json(outro.enviar("GET", url, outro.token, null))
+                    .get("pedidosCriados").asLong()).isZero();
+        }
+        p.c.configurarAcoes("ATENDIMENTO", List.of());
+        assertThat(p.c.enviar("GET", url, atendimento, null).getStatus()).isEqualTo(403);
+    }
+
+    private void compararRelatorio(JsonNode atual, JsonNode esperado) {
+        assertThat(Instant.parse(atual.get("consultadoEm").asText()))
+                .isAfterOrEqualTo(Instant.parse(esperado.get("consultadoEm").asText()));
+        assertThat(mapper.treeToValue(atual, RelatorioVendas.class))
+                .usingRecursiveComparison()
+                .ignoringFields("consultadoEm")
+                .isEqualTo(mapper.treeToValue(esperado, RelatorioVendas.class));
     }
 
     @Test

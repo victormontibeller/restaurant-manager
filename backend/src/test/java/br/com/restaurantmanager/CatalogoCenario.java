@@ -81,6 +81,19 @@ final class CatalogoCenario implements AutoCloseable {
         return enviarJson(metodo, caminho, access, body == null ? null : mapper.writeValueAsString(body));
     }
 
+    void reautenticar() throws Exception {
+        assertThat(enviar("POST", "/api/v1/auth/reautenticar", token, Map.of("senha", SENHA)).getStatus())
+                .isEqualTo(204);
+    }
+
+    void configurarAcoes(String perfil, List<String> acoes) throws Exception {
+        String rota = "/api/v1/configuracoes/acessos";
+        var atual = json(enviar("GET", rota, token, null));
+        var resposta = enviar("PUT", rota, token,
+                Map.of("versao", atual.get("versao").asLong(), "perfil", perfil, "acoes", acoes));
+        assertThat(resposta.getStatus()).isEqualTo(200);
+    }
+
     MockHttpServletResponse enviarJson(String metodo, String caminho, String access, String body) throws Exception {
         var requisicao = request(HttpMethod.valueOf(metodo), caminho).header("Host", host);
         if (access != null) requisicao.header("Authorization", "Bearer " + access);

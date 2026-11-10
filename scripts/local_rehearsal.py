@@ -32,6 +32,8 @@ from datetime import datetime, timezone
 from database_recovery import (Session, inventory, identifier,
                                validate_snapshot, validate_source, validate_tenant_coverage, verify_inventory)
 from release_support import atomic_json
+from local_maintenance import run_local_maintenance
+from prebackup_recovery import PoolProbe, run_prebackup_recovery, lose_committed_response
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -113,11 +115,12 @@ def partitioned_inventory(session, schemas, require_complete=True):
     return result
 
 
-def verify_local_listener(pid):
-    result = subprocess.run(['lsof','-nP','-a','-p',str(pid),'-iTCP:8090','-sTCP:LISTEN','-Fpn'],
+def verify_local_listener(pid, port=8090):
+    require(port in (8090, 8091), 'Porta do listener recusada.')
+    result = subprocess.run(['lsof','-nP','-a','-p',str(pid),'-iTCP:'+str(port),'-sTCP:LISTEN','-Fpn'],
                             capture_output=True, text=True, timeout=5)
     fields = {line for line in result.stdout.splitlines() if line.startswith(('p','n'))}
-    require(result.returncode == 0 and fields == {f'p{pid}', 'n127.0.0.1:8090'},
+    require(result.returncode == 0 and fields == {f'p{pid}', f'n127.0.0.1:{port}'},
             'Listener HTTPS não pertence ao processo próprio em loopback.')
 
 
@@ -135,13 +138,15 @@ class Client:
             urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=str(certificate))))
         self.csrf = None
 
-    def request(self, path, body=None, token=None, method=None):
+    def request(self, path, body=None, token=None, method=None, expected=(200, 201, 204), port=8090):
+        require(port in (8090, 8091) and path.startswith('/') and not path.startswith('//'),
+                'Destino HTTP local recusado.')
         headers = {'Host': self.host, 'Content-Type': 'application/json'}
         if token:
             headers['Authorization'] = 'Bearer ' + token
         if self.csrf:
             headers[self.csrf['headerName']] = self.csrf['token']
-        request = urllib.request.Request('https://127.0.0.1:8090' + path,
+        request = urllib.request.Request('https://127.0.0.1:' + str(port) + path,
             data=json.dumps(body).encode() if body is not None else None, headers=headers, method=method)
         try:
             response = self.opener.open(request, timeout=15)
@@ -149,7 +154,7 @@ class Client:
             response = error
         with response:
             raw = response.read()
-            require(response.status in (200, 201, 204), 'HTTP inesperado: ' + str(response.status))
+            require(response.status in expected, 'HTTP inesperado: ' + str(response.status))
             return json.loads(raw) if raw else None
 
     def login(self, account):
@@ -214,8 +219,10 @@ class Rehearsal:
                            profile_sha256=digest(a.profile), source_files_checked=source_files_checked,
                            postgres_version=subprocess.check_output([str(self.pg / 'postgres'), '--version'], text=True).strip())
         self.record['harness_sha256'] = {name:digest(REPO/'scripts'/name)
-            for name in ('local_rehearsal.py','database_recovery.py','release_support.py')}
-        for port in (55433, 8090):
+            for name in ('local_rehearsal.py','database_recovery.py','release_support.py',
+                         'local_maintenance.py','maintenance_database.py','prebackup_recovery.py',
+                         'local_diagnostics.py')}
+        for port in (55433, 8090, 8091):
             with socket.socket() as probe:
                 probe.bind(('127.0.0.1', port))
         command = [str(self.pg / 'psql'), '-XqAt', '-v', 'ON_ERROR_STOP=1', '-h', '127.0.0.1',
@@ -388,7 +395,7 @@ class Rehearsal:
             archive_sha256=digest(archive), other_schemas_unchanged=True)
         return after
 
-    def start_app(self, jobs=False):
+    def start_app(self, jobs=False, email=False, jwt_override=None, email_override=None):
         require(self.process is None and digest(self.root / 'app.jar') == self.args.jar_sha256, 'Artefato divergente.')
         with socket.socket() as probe:
             probe.bind(('127.0.0.1',8090))
@@ -396,13 +403,15 @@ class Rehearsal:
         p = json.loads((self.bundle / 'runtime.json').read_text())
         env = dict(PATH=self.env['PATH'], HOME=self.env['HOME'], RM_STAGE='test', RM_PORT='8090',
             RM_DB_URL='jdbc:postgresql://127.0.0.1:55433/rm_test', RM_DB_USER='rm_test_app', RM_DB_PASSWORD=p['password'],
-            RM_JWT_SECRET=p['jwt'], RM_JWT_KEY_ID='local', RM_EMAIL_SECRET=p['email'],
+            RM_JWT_SECRET=jwt_override or p['jwt'], RM_JWT_KEY_ID='local', RM_EMAIL_SECRET=email_override or p['email'],
             RM_EMAIL_CAPTURE_DIRECTORY=str(self.root / 'capture'), RM_RELEASE_SHA=self.record['git_head'],
             SERVER_SSL_KEY_STORE=str(self.bundle / 'localhost.p12'), SERVER_SSL_KEY_STORE_TYPE='PKCS12',
             SERVER_SSL_KEY_STORE_PASSWORD=p['tls_password'])
         self.process = subprocess.Popen([str(self.java / 'java'), '-Xmx384m', '-XX:ActiveProcessorCount=2',
+            '-Dcom.sun.management.jmxremote.local.only=true', '-Djava.rmi.server.hostname=127.0.0.1',
             '-jar', str(self.root / 'app.jar'), '--rm.recovery-test=true', '--rm.auth.retencao-agendada=false',
-            '--rm.email.agendado=false', '--rm.pagamentos.agendado=false', '--rm.comunicacoes.agendado=false',
+            '--rm.email.agendado='+str(email).lower(), '--rm.pagamentos.agendado=false', '--rm.comunicacoes.agendado=false',
+            '--spring.datasource.hikari.register-mbeans=true', '--spring.datasource.hikari.pool-name=LocalRehearsal',
             '--rm.pedidos.agendado=' + str(jobs).lower()], cwd=self.root/'runtime', env=env, stdout=self.log, stderr=self.log)
         atomic_json(self.root / 'runtime.json', dict(pid=self.process.pid, artifact_sha256=self.args.jar_sha256))
         client = Client(self.fixture['host'], self.bundle / 'certificate.pem')
@@ -485,7 +494,9 @@ class Rehearsal:
                 time.sleep(profile['pause_seconds'])
 
         before_stats = self.sql('select xact_commit,xact_rollback,blks_read,blks_hit from pg_stat_database where datname=current_database()')
-        with ThreadPoolExecutor(max_workers=profile['concurrency']) as pool:
+        with PoolProbe(self) as pool_probe, ThreadPoolExecutor(max_workers=profile['concurrency']) as pool:
+            started = time.monotonic()
+            end = started + profile['duration_seconds']
             futures = [pool.submit(worker, i) for i in range(profile['concurrency'])]
             while time.monotonic() < end:
                 raw = subprocess.check_output(['ps', '-axo', 'pid=,ppid=,%cpu=,rss='], text=True)
@@ -512,12 +523,13 @@ class Rehearsal:
             pg_stats_after=self.sql('select xact_commit,xact_rollback,blks_read,blks_hit from pg_stat_database where datname=current_database()'),
             database_bytes=int(self.sql('select pg_database_size(current_database())')[0]),
             free_disk_bytes=shutil.disk_usage(self.root).free, samples=samples, profile=profile,
-            pool_measurement='conexões runtime observadas no PostgreSQL; não é telemetria interna Hikari')
+            pool_measurement=pool_probe.summary())
         atomic_json(self.root / 'load.json', result)
         self.record['load'] = {k:v for k,v in result.items() if k not in ('samples', 'pg_stats_before', 'pg_stats_after')}
         require(not errors, 'Carga teve erros; não aprovar.')
 
     def recovery(self, client):
+        from local_diagnostics import capture_diagnostics
         f, schema = self.fixture, self.schema
         token = client.login(f['contas']['clienteA'])
         # Configuração de prazo só no clone; constraints continuam ativas.
@@ -526,11 +538,13 @@ class Rehearsal:
         body = dict(intencaoId=str(uuid.uuid4()), unidadeId=f['unidadeA'], canal='RETIRADA', comandaId=None,
             revisao=cart['revisao'], linhas=self.lines, observacao='Falha fictícia Sprint 5', endereco=None,
             revisaoDelivery=None, pagamento='PRESENCIAL')
-        order = client.request('/api/v1/pedidos', body, token)
+        order, transport = lose_committed_response(self, client, body, token)
         uuid.UUID(order['id'])
         require(order['estado'] == 'AGUARDANDO_ACEITE', 'Pedido do ensaio não aguarda aceite.')
         old_pid = self.process.pid
-        self.process.kill()  # Somente Popen próprio; simula perda da resposta após commit.
+        require(self.sql(f"select estado from {schema}.pedido where id='{order['id']}'")
+                == ['AGUARDANDO_ACEITE'], 'Commit não observado antes da interrupção.')
+        self.process.kill()  # Somente Popen próprio, após falha real de transporte e commit confirmado.
         self.process.wait(timeout=10)
         self.process = None
         failed = False
@@ -549,6 +563,12 @@ class Rehearsal:
         finally:
             interrupted.close()
         require(self.sql('select count(*) from public.ensaio_falha_local') == ['0'], 'Transação interrompida não foi revertida.')
+        deadline = time.monotonic()+10
+        while self.sql(f"select expirar_em<=now() from {schema}.pedido where id='{order['id']}'") != ['t']:
+            require(time.monotonic()<deadline, 'Prazo da intenção própria não venceu.')
+            time.sleep(0.1)
+        overdue = capture_diagnostics(self, 'overdue-order', schema=schema, order_id=order['id'])
+        require('JOB_ATRASADO' in overdue['alerts'], 'Diagnóstico não detectou job próprio vencido.')
         started = time.monotonic()
         client = self.start_app(jobs=True)
         token = client.login(f['contas']['clienteA'])
@@ -568,10 +588,13 @@ class Rehearsal:
         require(all(line.rsplit('|',1)[1]=='1' for line in history), 'Histórico de retomada duplicado.')
         lag = self.sql(f"select greatest(0,extract(epoch from (h.ocorrido_em-p.expirar_em))) from {schema}.pedido p join {schema}.pedido_historico h on h.pedido_id=p.id where p.id='{order['id']}' and h.tipo='PEDIDO_EXPIRADO'")
         require(len(lag) == 1, 'Atraso do job não foi medido.')
+        recovered = capture_diagnostics(self, 'recovered-order', schema=schema, order_id=order['id'])
+        require('JOB_ATRASADO' not in recovered['alerts'], 'Diagnóstico continuou alertando após retomada.')
         self.record['recovery'] = dict(api_failure_observed=True, before_pid=old_pid, after_pid=self.process.pid,
             restart_and_job_seconds=round(time.monotonic()-started,3), order_count=1, state='CANCELADO',
             receipts=0, transactional_disconnect_rollback=True, history=history, job_delay_seconds=lag,
-            lost_response='resposta recebida pelo harness e descartada antes do reenvio; sem falha de transporte injetada')
+            lost_response=transport, diagnostic_alerts_before=overdue['alerts'],
+            diagnostic_alerts_after=recovered['alerts'])
 
     def close(self):
         errors = []
@@ -609,6 +632,7 @@ class Rehearsal:
 
 
 def main():
+    from local_diagnostics import prove_failed_backup
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('source-env', 'fixture', 'jar', 'source-manifest', 'pg-bin', 'java-home', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)
@@ -623,11 +647,14 @@ def main():
     signal.signal(signal.SIGINT, interrupted)
     try:
         exercise.prepare()
+        run_local_maintenance(exercise)
+        prove_failed_backup(exercise)
         client = exercise.start_app()
         exercise.record['snapshot_to_app_ready_seconds'] = round(time.time() -
             datetime.fromisoformat(exercise.record['snapshot_at']).timestamp(), 3)
         exercise.verify_media_http()
         exercise.load(client)
+        client = run_prebackup_recovery(exercise)
         exercise.recovery(client)
         exercise.record['approved'] = True
     except Exception as error:

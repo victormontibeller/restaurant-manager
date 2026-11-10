@@ -242,6 +242,82 @@ class RecebimentosTest {
     }
 
     @Test
+    void ajusteDelegadoRevalidaMesmoJwtAntesDeReplayEIsolaFilialETenant() throws Exception {
+        String caixa = p.funcionario("CAIXA");
+        var estado = p.c.json(p.c.enviar("GET", url, p.c.token, null));
+        UUID parcela = UUID.fromString(estado.get("parcelas").get(0).get("id").asText());
+        var ajuste = new EntradaAjuste(UUID.randomUUID(), "Desconto delegado",
+                List.of(new AlocacaoAjuste(parcela, "10.00")));
+        String rota = url + "/ajustes";
+        assertThat(p.c.enviar("POST", rota, caixa, ajuste).getStatus()).isEqualTo(403);
+        assertThat(p.contar("ajuste_cobranca")).isZero();
+
+        p.c.reautenticar();
+        p.c.configurarAcoes("CAIXA", List.of("financeiro.ajustar"));
+        var restrito = p.c.usuario("CAIXA");
+        p.c.vincular(restrito, CatalogoCenario.OUTRA_UNIDADE);
+        assertThat(p.c.enviar("POST", rota, p.c.login(restrito), ajuste).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", rota, outro.token, ajuste).getStatus()).isEqualTo(404);
+        }
+        assertThat(p.contar("ajuste_cobranca")).isZero();
+        assertThat(p.c.enviar("POST", rota, caixa, ajuste).getStatus()).isEqualTo(200);
+        assertThat(p.contar("ajuste_cobranca")).isEqualTo(1);
+
+        p.c.configurarAcoes("CAIXA", List.of("pedido.consultar"));
+        assertThat(p.c.enviar("POST", rota, caixa, ajuste).getStatus()).isEqualTo(403);
+        assertThat(p.contar("ajuste_cobranca")).isEqualTo(1);
+        assertThat(p.c.json(p.c.enviar("GET", url, p.c.token, null))
+                .get("saldo").get("totalDevido").asText()).isEqualTo("30.00");
+    }
+
+    @Test
+    void devolucaoDelegadaRevalidaSolicitacaoConfirmacaoEReplayComMesmoJwt() throws Exception {
+        var recebido = p.c.json(p.c.enviar("POST", url + "/recebimentos", p.c.token,
+                new EntradaRecebimento(UUID.randomUUID(), "PIX", "40.00", null)));
+        UUID recebimento = UUID.fromString(recebido.get("recebimentos").get(0).get("id").asText());
+        UUID parcela = UUID.fromString(recebido.get("parcelas").get(0).get("id").asText());
+        assertThat(p.c.enviar("POST", url + "/ajustes", p.c.token,
+                new EntradaAjuste(UUID.randomUUID(), "Abatimento para devolução",
+                        List.of(new AlocacaoAjuste(parcela, "10.00")))).getStatus()).isEqualTo(200);
+        String caixa = p.funcionario("CAIXA");
+        var devolucao = new EntradaDevolucao(UUID.randomUUID(), recebimento, "10.00", "Excedente delegado");
+        String rota = url + "/devolucoes";
+        assertThat(p.c.enviar("POST", rota, caixa, devolucao).getStatus()).isEqualTo(403);
+        assertThat(p.contar("devolucao")).isZero();
+
+        p.c.reautenticar();
+        p.c.configurarAcoes("CAIXA", List.of("devolucao.solicitar"));
+        var restrito = p.c.usuario("CAIXA");
+        p.c.vincular(restrito, CatalogoCenario.OUTRA_UNIDADE);
+        String outraUnidade = p.c.login(restrito);
+        assertThat(p.c.enviar("POST", rota, outraUnidade, devolucao).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", rota, outro.token, devolucao).getStatus()).isEqualTo(404);
+        }
+        assertThat(p.c.enviar("POST", rota, caixa, devolucao).getStatus()).isEqualTo(200);
+        var confirmar = new ConfirmarDevolucao(UUID.randomUUID());
+        String confirmacao = rota + "/" + devolucao.intencaoId() + "/confirmar";
+        assertThat(p.c.enviar("POST", confirmacao, outraUnidade, confirmar).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", confirmacao, outro.token, confirmar).getStatus()).isEqualTo(404);
+        }
+        p.c.configurarAcoes("CAIXA", List.of("pedido.consultar"));
+        assertThat(p.c.enviar("POST", rota, caixa, devolucao).getStatus()).isEqualTo(403);
+        assertThat(p.c.enviar("POST", confirmacao, caixa, confirmar).getStatus()).isEqualTo(403);
+        assertThat(p.c.json(p.c.enviar("GET", url, p.c.token, null))
+                .get("saldo").get("devolvidoConfirmado").asText()).isEqualTo("0.00");
+
+        p.c.configurarAcoes("CAIXA", List.of("devolucao.solicitar"));
+        assertThat(p.c.enviar("POST", confirmacao, caixa, confirmar).getStatus()).isEqualTo(200);
+        p.c.configurarAcoes("CAIXA", List.of("pedido.consultar"));
+        assertThat(p.c.enviar("POST", confirmacao, caixa, confirmar).getStatus()).isEqualTo(403);
+        assertThat(p.contar("devolucao")).isEqualTo(1);
+        assertThat(p.c.json(p.c.enviar("GET", url, p.c.token, null))
+                .get("saldo").get("devolvidoConfirmado").asText()).isEqualTo("10.00");
+    }
+
+    @Test
     void duasDevolucoesConcorrentesNaoComprometemMaisQueOExcedente() throws Exception {
         var recebido =
                 p.c.json(

@@ -101,7 +101,7 @@
 .sidebar-bottom small {
   display: block;
   font-size: 0.67rem;
-  color: #839084;
+  color: var(--muted-foreground);
   line-height: 1.6;
 }
 .workspace-body {
@@ -118,7 +118,7 @@
 }
 .breadcrumb {
   font-size: 0.77rem;
-  color: #7c897f;
+  color: var(--muted-foreground);
   display: flex;
   gap: 0.8rem;
   align-items: center;
@@ -177,7 +177,7 @@
 }
 .eyebrow {
   font-size: 0.64rem;
-  color: #718473;
+  color: var(--muted-foreground);
   letter-spacing: 0.14em;
   font-weight: 700;
   margin: 0 0 0.55rem;

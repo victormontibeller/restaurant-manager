@@ -2,6 +2,7 @@ package br.com.restaurantmanager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import br.com.restaurantmanager.financeiro.services.DevolucaoOnlineService;
 import br.com.restaurantmanager.pagamentos.dtos.CredencialPagamento;
@@ -34,6 +35,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -246,6 +248,77 @@ class PagamentosOnlineTest {
                                 .count())
                 .isEqualTo(1);
         assertThat(p.contar("recebimento")).isZero();
+    }
+
+    @Test
+    void timeoutRealDaCobrancaPreservaIntencaoEReconciliaEfeitoRemotoUnico() throws Exception {
+        var pedido = enviar();
+        try (var atraso = new MercadoPagoSimulado.AtrasoResposta();
+                var scope = TenantScope.open(p.c.schema)) {
+            PROVEDOR.atrasarCriacao.set(atraso);
+            var trabalho = checkout.reivindicar();
+            assertThat(trabalho).isNotNull();
+            long inicio = System.nanoTime();
+            RuntimeException erro = catchThrowableOfType(() -> checkout.processar(trabalho), RuntimeException.class);
+            assertThat(erro).isNotNull();
+            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis()).isGreaterThanOrEqualTo(9500);
+            assertThat(atraso.efeitoPersistido.getCount()).isZero();
+            assertThat(atraso.liberar.getCount()).isEqualTo(1);
+            checkout.falhar(trabalho, erro);
+        } finally {
+            PROVEDOR.atrasarCriacao.set(null);
+        }
+        assertThat(p.contar("pagamento_checkout where estado='EM_RECONCILIACAO'")).isEqualTo(1);
+        assertThat(p.contar("recebimento")).isZero();
+        antecipar();
+        processar();
+        assertThat(p.contar("pagamento_checkout where estado='AGUARDANDO'")).isEqualTo(1);
+        assertThat(PROVEDOR.orders.values().stream()
+                .filter(o -> pedido.get("id").asText().equals(o.get("external_reference"))).count()).isEqualTo(1);
+        assertThat(p.contar("recebimento")).isZero();
+    }
+
+    @Test
+    void timeoutRealDaDevolucaoMantemReservaEReconciliaSemRepetirEstorno() throws Exception {
+        var pedido = enviar();
+        processar();
+        PROVEDOR.aprovar(externo(pedido));
+        antecipar();
+        processar();
+        pedido = p.detalhe(pedido);
+        assertThat(p.c.enviar("POST", "/api/v1/me/pedidos/" + pedido.get("id").asText() + "/cancelar",
+                p.tokenCliente, p.comando(pedido, List.of())).getStatus()).isEqualTo(200);
+        try (var atraso = new MercadoPagoSimulado.AtrasoResposta();
+                var scope = TenantScope.open(p.c.schema)) {
+            PROVEDOR.atrasarDevolucao.set(atraso);
+            var trabalho = devolucoes.reivindicar();
+            assertThat(trabalho).isNotNull();
+            long inicio = System.nanoTime();
+            RuntimeException erro = catchThrowableOfType(() -> devolucoes.processar(trabalho), RuntimeException.class);
+            assertThat(erro).isNotNull();
+            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis()).isGreaterThanOrEqualTo(9500);
+            assertThat(atraso.efeitoPersistido.getCount()).isZero();
+            assertThat(atraso.liberar.getCount()).isEqualTo(1);
+            devolucoes.falhar(trabalho, erro);
+        } finally {
+            PROVEDOR.atrasarDevolucao.set(null);
+        }
+        assertThat(p.contar("devolucao where estado='EM_RECONCILIACAO'")).isEqualTo(1);
+        assertThat(p.detalhe(pedido).get("saldo").get("pendenciaFinanceira").asBoolean()).isTrue();
+        p.c.executar("update " + p.c.schema + ".devolucao set proximo_em=now()");
+        try (var scope = TenantScope.open(p.c.schema)) {
+            devolucoes.processar(devolucoes.reivindicar());
+        }
+        assertThat(p.contar("devolucao where estado='CONFIRMADA'")).isEqualTo(1);
+        assertThat(p.detalhe(pedido).get("saldo").get("devolvidoConfirmado").asText()).isEqualTo("20.00");
+        // A devolução confirma primeiro; o checkout ainda exige a consulta confiável agendada.
+        assertThat(p.detalhe(pedido).get("saldo").get("pendenciaFinanceira").asBoolean()).isTrue();
+        antecipar();
+        processar();
+        assertThat(p.detalhe(pedido).get("saldo").get("pendenciaFinanceira").asBoolean()).isFalse();
+        assertThat(p.contar("devolucao where estado='CONFIRMADA'")).isEqualTo(1);
+        assertThat(mapper.valueToTree(PROVEDOR.orders.get(externo(pedido)).get("transactions"))
+                .get("refunds").size()).isEqualTo(1);
     }
 
     @Test
@@ -556,5 +629,38 @@ class PagamentosOnlineTest {
                                 .getStatus())
                 .isEqualTo(204);
         assertThat(p.contar("pagamento_checkout")).isEqualTo(1);
+    }
+
+    @Test
+    void reconciliacaoDelegadaRevalidaMesmoJwtUnidadeETenantAntesDeAlterarFila() throws Exception {
+        var pedido = enviar();
+        String fila = "/api/v1/operacao/pagamentos?unidadeId=" + CatalogoCenario.UNIDADE;
+        String rota = "/api/v1/operacao/pagamentos/checkout/" + pedido.get("id").asText() + "/reconciliar";
+        String caixa = p.funcionario("CAIXA");
+        assertThat(p.c.enviar("GET", fila, caixa, null).getStatus()).isEqualTo(403);
+        assertThat(p.c.enviar("POST", rota, caixa, null).getStatus()).isEqualTo(403);
+        assertThat(p.contar("pagamento_checkout where estado='SOLICITADO'")).isEqualTo(1);
+        p.c.reautenticar();
+        p.c.configurarAcoes("CAIXA", List.of("pagamento.reconciliar"));
+        var restrito = p.c.usuario("CAIXA");
+        p.c.vincular(restrito, CatalogoCenario.OUTRA_UNIDADE);
+        String outraUnidade = p.c.login(restrito);
+        assertThat(p.c.enviar("GET", fila, outraUnidade, null).getStatus()).isEqualTo(404);
+        assertThat(p.c.enviar("POST", rota, outraUnidade, null).getStatus()).isEqualTo(404);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            assertThat(outro.enviar("POST", rota, outro.token, null).getStatus()).isEqualTo(404);
+            assertThat(outro.enviar("GET", fila, caixa, null).getStatus()).isEqualTo(401);
+            assertThat(outro.json(outro.enviar("GET", fila, outro.token, null)).size()).isZero();
+        }
+        assertThat(p.c.enviar("GET", fila, caixa, null).getStatus()).isEqualTo(200);
+        assertThat(p.c.enviar("POST", rota, caixa, null).getStatus()).isEqualTo(204);
+        assertThat(p.contar("pagamento_checkout where estado='EM_RECONCILIACAO'")).isEqualTo(1);
+        long auditoria = p.contar("auditoria_acesso where evento='PAGAMENTO_RECONCILIACAO_SOLICITADA'");
+        assertThat(auditoria).isEqualTo(1);
+        p.c.configurarAcoes("CAIXA", List.of("pedido.consultar"));
+        assertThat(p.c.enviar("GET", fila, caixa, null).getStatus()).isEqualTo(403);
+        assertThat(p.c.enviar("POST", rota, caixa, null).getStatus()).isEqualTo(403);
+        assertThat(p.contar("pagamento_checkout")).isEqualTo(1);
+        assertThat(p.contar("auditoria_acesso where evento='PAGAMENTO_RECONCILIACAO_SOLICITADA'")).isEqualTo(auditoria);
     }
 }

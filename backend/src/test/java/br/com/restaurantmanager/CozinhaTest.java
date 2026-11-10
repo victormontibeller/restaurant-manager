@@ -59,6 +59,35 @@ class CozinhaTest {
     }
 
     @Test
+    void iniciarEConcluirRevalidamAcaoEspecificaFilialETenantComMesmoJwt() throws Exception {
+        var pedido = p.acao(p.enviar(p.entrada(1)), "aceitar", List.of());
+        String cozinha = p.funcionario("COZINHA");
+        String caixa = p.funcionario("CAIXA");
+        var restrito = p.c.usuario("COZINHA");
+        p.c.vincular(restrito, CatalogoCenario.OUTRA_UNIDADE);
+        String outraUnidade = p.c.login(restrito);
+        p.c.reautenticar();
+        for (String acao : List.of("iniciar", "concluir")) {
+            var antes = p.detalhe(pedido);
+            assertThat(p.acao(pedido, acao, caixa, p.unidades(pedido)).getStatus()).isEqualTo(403);
+            assertThat(p.acao(pedido, acao, outraUnidade, p.unidades(pedido)).getStatus()).isEqualTo(404);
+            try (var outro = new CatalogoCenario(mvc, mapper)) {
+                String rota = "/api/v1/cozinha/pedidos/" + pedido.get("id").asText() + "/" + acao;
+                assertThat(outro.enviar("POST", rota, outro.token,
+                        p.comando(pedido, p.unidades(pedido))).getStatus()).isEqualTo(404);
+            }
+            p.c.configurarAcoes("COZINHA", List.of("pedido.consultar"));
+            assertThat(p.acao(pedido, acao, cozinha, p.unidades(pedido)).getStatus()).isEqualTo(403);
+            assertThat(p.detalhe(pedido)).isEqualTo(antes);
+            p.c.configurarAcoes("COZINHA", List.of("cozinha.iniciar", "cozinha.concluir"));
+            var resposta = p.acao(pedido, acao, cozinha, p.unidades(pedido));
+            assertThat(resposta.getStatus()).isEqualTo(200);
+            pedido = p.detalhe(pedido);
+        }
+        assertThat(pedido.get("estado").asText()).isEqualTo("PRONTO");
+    }
+
+    @Test
     void cancelarUnicaIniciadaNaoApagaPrimeiroPreparoNemRestauraAutocancelamento() throws Exception {
         var pedido = p.acao(p.enviar(p.entrada(2)), "aceitar", List.of());
         List<UUID> ids = p.unidades(pedido);

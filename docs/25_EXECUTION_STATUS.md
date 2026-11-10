@@ -1,5 +1,52 @@
 # Checkpoint de execução
 
+## Sprint 5 — conclusão das validações Mac/CI em andamento, 2026-11-09
+
+O proprietário autorizou concluir os testes possíveis no Mac/CI, corrigir falhas
+e remover a cópia antiga da Sprint 4. Continuação na branch
+`codex/sprint-05-registro-entregas`, base documental `17e9573`,
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10).
+O escopo passa a incluir executor/gate da matriz integrada, recuperação de
+segredos e dados cifrados anteriores ao backup, falha de transporte controlada,
+manutenção/retorno em PostgreSQL isolado e reexecuções locais/CI correspondentes.
+Resultados ainda em execução não contam como aprovados.
+
+Incremento verificado: 435 testes backend em PostgreSQL real, sem falhas,
+erros ou skips; checks Angular e auditorias aprovados. Corrigidos três textos
+de baixo contraste no shell da equipe e melhorada a legibilidade do placeholder
+de produto. Frontend recompilado e JAR local
+`55df989f8b83bec803188daa80d2d28a41aa97269f278755abf9d24db9263e7a`
+gerado; os 506 componentes backend permanecem idênticos aos testados.
+Os 234 testes portáveis de scripts passaram no Mac, sem skips. Dez métodos
+que usam `/proc` aguardam reexecução integral na CI deste incremento; a rodada
+exploratória completa no Mac não é marcada como aprovada. Massa nova preparada
+sem reset de quotas. Matriz de navegador, ensaios adicionais e novos testes de
+fronteiras de autorização ainda estavam em andamento nessa etapa.
+
+Incremento seguinte: 17 casos backend acrescentados e **51/51 testes dirigidos
+aprovados** na rodada 02, incluindo regressões. A rodada 01 preservada teve duas
+falhas de expectativa dos novos testes, corrigidas sem alterar o produto:
+reconciliação final de checkout e instante variável de consulta do relatório.
+Oráculo 28 ações × seis perfis, concessão/revogação em cinco perfis, negativos de
+unidade/tenant e timeouts HTTP reais agora têm prova local. A suíte integral
+esperada de 452 testes ainda aguarda a CI do novo head. O ensaio integrado no
+clone foi iniciado; seu resultado não é aprovado antecipadamente.
+
+Ensaio financeiro 02 aprovado no mesmo JAR: perda real de resposta HTTP de
+cobrança e devolução no simulador local, dois reinícios próprios, exatamente
+uma cobrança/um recebimento/uma devolução e R$ 20,00 devolvidos. Diagnósticos
+somente leitura detectaram os dois estados incertos e sua normalização.
+A tentativa 01 foi preservada como reprovada: o assert de diagnóstico rodava
+antes da convergência assíncrona dos dois estados. O harness passou a aguardar
+essa convergência com prazo limitado; o cenário inteiro foi repetido, sem reset
+de contadores nem reutilização de aprovação da tentativa anterior.
+
+Removida a cópia não versionada `18_SPRINT_04-LAPTOP-HO4BA7QG.md` após comparar
+seu hash e conteúdo: a única diferença era o status antigo. Documento oficial
+da Sprint 4 e arquivo manual local preservados. Nenhum banco/serviço original
+foi alterado por essa remoção. Linux real, serviços externos e piloto continuam
+fora desta execução; as pendências serão atualizadas conforme a evidência final.
+
 ## Sprint 5 — consolidação documental, 2026-11-09
 
 Publicação autorizada pelo proprietário em nova branch
