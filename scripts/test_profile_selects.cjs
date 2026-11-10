@@ -67,6 +67,12 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
               return structuredClone(matrix);
             }
             if (path.includes('/equipe/convites')) {
+              if (method === 'POST' && path.endsWith('/revogar')) {
+                const c = invitations.find((c) => path === '/api/v1/equipe/convites/' + c.id + '/revogar');
+                if (!c) throw new Error('Convite fictício não encontrado.');
+                c.estado = 'REVOGADO';
+                return structuredClone(c);
+              }
               if (method === 'POST') {
                 const c = { ...body, estado: 'PENDENTE', expiraEm: 'ficticia' };
                 invitations.push(c);
@@ -384,7 +390,10 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await stable(page);
     await expect(page.getByLabel('Perfil operacional')).toHaveValue('COZINHA');
     await expect(page.getByLabel('Consultar unidade', { exact: true })).toBeChecked();
-    const invitation = await browser.newPage();
+    const invitation = await browser.newPage({
+      viewport: { width: 360, height: 800 },
+      hasTouch: true,
+    });
     invitation.on('pageerror', (error) => errors.push(error.message));
     await invitation.goto(origin + '/convites');
     await invitation.evaluate(() => (window.kind = 'convites'));
@@ -417,18 +426,45 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       invitation.getByLabel('Perfil do convite'),
       'Formulário recriado deve preservar perfil visível',
     ).toHaveValue('GERENTE');
-    await invitation.getByLabel('E-mail do funcionário convidado').fill('convite@example.invalid');
+    const longEmail = 'a'.repeat(64) + '@' + 'b'.repeat(63) + '.example.invalid';
+    await invitation.getByLabel('E-mail do funcionário convidado').fill(longEmail);
     await invitation.getByRole('button', { name: 'Criar convite', exact: true }).click();
-    await invitation.waitForFunction(() => window.fixture.writes.some((w) => w.method === 'POST'));
+    await invitation.waitForFunction(() =>
+      window.fixture.writes.some(
+        (w) => w.method === 'POST' && w.path === '/api/v1/equipe/convites',
+      ),
+    );
+    await stable(invitation);
     const created = await invitation.evaluate(() => window.fixture.writes.at(-1));
     assert.equal(created.method, 'POST');
     assert.equal(created.path, '/api/v1/equipe/convites');
     assert.equal(created.body.perfil, 'GERENTE');
-    assert.equal(created.body.email, 'convite@example.invalid');
+    assert.equal(created.body.email, longEmail);
     assert.deepEqual(created.body.unidades, []);
     await invitation.getByRole('button', { name: 'Recarregar convites' }).click();
     await stable(invitation);
     await expect(invitation.locator('article')).toContainText('GERENTE');
+    await expect(invitation.getByRole('heading', { name: longEmail, exact: true })).toBeVisible();
+    const revokeInvitation = invitation.getByRole('button', {
+      name: 'Revogar convite de ' + longEmail,
+      exact: true,
+    });
+    await expect(revokeInvitation).toBeVisible();
+    assert(
+      (await invitation.evaluate(() => document.documentElement.scrollWidth)) <= 360,
+      'Convite com e-mail longo excede viewport mobile',
+    );
+    await revokeInvitation.focus();
+    await expect(revokeInvitation).toBeFocused();
+    await invitation.keyboard.press('Enter');
+    await stable(invitation);
+    assert.deepEqual(await invitation.evaluate(() => window.fixture.writes.at(-1)), {
+      path: '/api/v1/equipe/convites/' + created.body.id + '/revogar',
+      method: 'POST',
+      body: {},
+    });
+    await expect(invitation.locator('article')).toContainText('REVOGADO');
+    await expect(revokeInvitation).toHaveCount(0);
     // Logout/401 remove a tela, mas não pode remover o aviso da intenção em memória.
     const exitGuard = await invitation.evaluate(() => {
       const pending = window.fixture.app.instance.pendente;
@@ -478,7 +514,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await checkConfirmation(unitsPage, 'Confirme sua senha', 'Confirmar identidade');
     assert.deepEqual(errors, []);
     console.log(
-      'Perfis, recarga, payloads, leitura posterior, reautenticação de unidades e intenção após destruir a tela coerentes. API fictícia: não é E2E.',
+      'Perfis, recarga, payloads, convite com e-mail longo no mobile, revogação por teclado, leitura posterior, reautenticação de unidades e intenção após destruir a tela coerentes. API fictícia: não é E2E.',
     );
   } finally {
     await browser.close();

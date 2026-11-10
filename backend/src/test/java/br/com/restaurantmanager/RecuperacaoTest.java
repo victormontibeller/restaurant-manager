@@ -15,6 +15,7 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.SecureRandom;
 import java.sql.DriverManager;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -91,6 +92,20 @@ class RecuperacaoTest {
     private List<UUID> ids() throws Exception {
         try(var c=DriverManager.getConnection(System.getenv("RM_DB_URL"),System.getenv("RM_MIGRATION_USER"),System.getenv("RM_MIGRATION_PASSWORD"));var s=c.createStatement();var r=s.executeQuery("select id from "+FundacaoTest.A+".email_identidade")) {
             var ids=new ArrayList<UUID>(); while(r.next()) ids.add(r.getObject(1,UUID.class)); return ids;
+        }
+    }
+    private long emailsExpiradosAntesDe(Instant limite) throws Exception {
+        try (var c = DriverManager.getConnection(System.getenv("RM_DB_URL"),
+                System.getenv("RM_MIGRATION_USER"), System.getenv("RM_MIGRATION_PASSWORD"))) {
+            Migrations.verifyIdentity(c, "rm_test", "rm_test_owner");
+            try (var s = c.prepareStatement("select count(*) from " + FundacaoTest.A
+                    + ".email_identidade where expira_em < ?")) {
+                s.setTimestamp(1, Timestamp.from(limite));
+                try (var r = s.executeQuery()) {
+                    r.next();
+                    return r.getLong(1);
+                }
+            }
         }
     }
     private RequestPostProcessor csrf() throws Exception {
@@ -252,7 +267,23 @@ class RecuperacaoTest {
         sql(FundacaoTest.A,"update %s.email_identidade set expira_em=now()-interval '25 hours' where id=?",antigo);
         Path arquivo=CAPTURA.resolve(FundacaoTest.A).resolve(antigo+".txt");
         Files.setLastModifiedTime(arquivo,FileTime.from(Instant.now().minusSeconds(90000)));
-        try(var scope=TenantScope.open(FundacaoTest.A)) {emails.expurgar();captura.expurgar();}
+        // O tenant compartilhado pode ter mais de um lote de mensagens de execuções anteriores.
+        // O corte fixo e a queda da contagem comprovam progresso, sem retries ilimitados.
+        Instant limite = Instant.now().minusSeconds(86400);
+        long restantes = emailsExpiradosAntesDe(limite);
+        long maximoLotes = restantes;
+        assertThat(restantes).isPositive();
+        assertThat(ids()).contains(antigo, recente);
+        try (var scope = TenantScope.open(FundacaoTest.A)) {
+            for (long lote = 0; lote < maximoLotes && ids().contains(antigo); lote++) {
+                emails.expurgar();
+                long depois = emailsExpiradosAntesDe(limite);
+                assertThat(depois).as("O lote %s precisa remover mensagens antigas", lote + 1)
+                        .isLessThan(restantes);
+                restantes = depois;
+            }
+            captura.expurgar();
+        }
         assertThat(ids()).contains(recente).doesNotContain(antigo);assertThat(Files.exists(arquivo)).isFalse();
         assertThat(confirmar(code,UUID.randomUUID().toString(),"a.localhost").getResponse().getStatus()).isEqualTo(422);
     }
