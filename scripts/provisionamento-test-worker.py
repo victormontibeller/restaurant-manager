@@ -8,9 +8,31 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import subprocess
 import signal
 import uuid
+
+
+def postgres_client(root, environment, system=None):
+    """Seleciona o cliente local; as guardas de destino continuam obrigatórias."""
+    system = system or platform.system()
+    prefix = root / 'toolchains/postgres'
+    explicit = environment.get('RM_TEST_PSQL')
+    if explicit:
+        executable = Path(explicit)
+    elif system == 'Linux':
+        executable = prefix / 'usr/lib/postgresql/16/bin/psql'
+    else:
+        raise ValueError('Informe RM_TEST_PSQL com o caminho absoluto do cliente local.')
+    if (not executable.is_absolute() or executable.name != 'psql'
+            or not executable.is_file() or not os.access(executable, os.X_OK)):
+        raise ValueError('Cliente PostgreSQL local inválido.')
+    env = {key: value for key, value in environment.items() if not key.startswith('PG')}
+    env['PGPASSWORD'] = environment['RM_MIGRATION_PASSWORD']
+    if system == 'Linux' and not explicit:
+        env['LD_LIBRARY_PATH'] = str(prefix / 'usr/lib/x86_64-linux-gnu')
+    return str(executable), env
 
 
 def main():
@@ -35,10 +57,8 @@ def main():
             or result['git_sha'] != gate['git_sha']
             or hashlib.sha256(jar.read_bytes()).hexdigest() != gate['artifact_sha256']):
         raise ValueError('Artefato sem aprovação de build.')
-    prefix = root / 'toolchains/postgres'
-    env = dict(os.environ, PGPASSWORD=os.environ['RM_MIGRATION_PASSWORD'],
-               LD_LIBRARY_PATH=str(prefix / 'usr/lib/x86_64-linux-gnu'))
-    command = [str(prefix / 'usr/lib/postgresql/16/bin/psql'), '-X', '-h', '127.0.0.1',
+    executable, env = postgres_client(root, os.environ)
+    command = [executable, '-X', '-h', '127.0.0.1',
                '-p', '55432', '-U', 'rm_test_owner', '-d', 'rm_test', '-At', '-v', 'ON_ERROR_STOP=1']
 
     def sql(query):

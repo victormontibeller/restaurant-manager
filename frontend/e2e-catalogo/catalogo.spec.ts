@@ -169,6 +169,7 @@ async function ofertar(
   gestao: Locator,
   produto: ProdutoCriado,
   preco: string,
+  capturaOferta?: string,
 ): Promise<void> {
   await (await produtoNaLista(gestao, produto.nome)).click();
   const oferta = gestao.getByRole('region', {
@@ -190,6 +191,7 @@ async function ofertar(
   await expect(
     oferta.getByText('Oferta da unidade salva no servidor.', { exact: true }),
   ).toBeVisible();
+  if (capturaOferta) await capturar(page, oferta, capturaOferta);
   await gestao.getByRole('button', { name: 'Fechar oferta', exact: true }).click();
 }
 
@@ -353,7 +355,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     }),
   ).toBeVisible();
   const simples = await salvarProduto(page, simplesEditor);
-  await ofertar(page, gestao, simples, '10.00');
+  await ofertar(page, gestao, simples, '10.00', 't21-oferta-unidade');
 
   const comboEditor = await abrirProduto(gestao, 'S02 combo ' + sufixo, categoriaId);
   await comboEditor.getByLabel('Tipo de produto', { exact: true }).selectOption('COMBO');

@@ -18,7 +18,7 @@ interface Unidade {
     <section aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="unidades-titulo">Configurações de unidades</h2>
       <p>Somente o Administrador configura unidades. Inativar bloqueia novas vendas e remove a unidade da lista pública, preservando o cadastro, os vínculos e a resolução de operações existentes por usuários autorizados.</p>
-      <p>Configure horários e canais em cada unidade. Ajuste os prazos de aceite em Operar pedidos e mesas. Regiões de entrega ainda não estão disponíveis.</p>
+      <p>Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões de entrega em Regiões e checkout.</p>
       <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar unidades</button>
       <form (submit)="confirmar($event, senha)">
         <label for="unidade-senha">Confirme sua senha</label>

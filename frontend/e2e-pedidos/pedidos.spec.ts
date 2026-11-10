@@ -215,6 +215,14 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     );
     expect(await link.getAttribute('href')).not.toContain(abertura.codigoTemporario!);
     await page.goto('/mesa/' + mesa.id);
+    await expect(
+      page.getByRole('button', { name: 'Autorizar participação na mesa', exact: true }),
+    ).toBeEnabled();
+    await capturar(
+      page,
+      page.getByLabel('Código temporário do atendimento', { exact: true }),
+      't10-mesa-entrada',
+    );
     await page
       .getByLabel('Código temporário do atendimento', { exact: true })
       .fill(abertura.codigoTemporario!);
@@ -223,10 +231,13 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     );
     await page.getByRole('button', { name: 'Autorizar participação na mesa', exact: true }).click();
     const tokenMesa = (await ok<{ accessToken: string }>(await autorizacaoResposta)).accessToken;
-    await montarCarrinho(page, catalogo.simples, 'MESA', 1);
+    await montarCarrinho(page, catalogo.simples, 'MESA', 1, 't03-produto-configurador');
     const rodada = await enviarUi(page, true);
     expect(rodada.estado).toBe('NA_FILA');
     expect(rodada.expirarEm).toBeNull();
+    const minhaComanda = page.getByRole('region', { name: 'Minha comanda', exact: true });
+    await expect(minhaComanda).toContainText(mesa.nome);
+    await capturar(page, minhaComanda, 't11-mesa-rodadas');
     const participanteB = await playwright.request.newContext({
       baseURL: process.env['RM_BASE_URL'],
       ignoreHTTPSErrors: true,

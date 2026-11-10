@@ -365,6 +365,7 @@ export async function montarCarrinho(
   produto: ProdutoTeste,
   canal: 'RETIRADA' | 'MESA' | 'DELIVERY',
   quantidade: number,
+  capturaConfigurador?: string,
 ): Promise<void> {
   const equipe = equipes.get(page) === true;
   await navegarUi(page, equipe ? '/gestao/pedidos/novo' : '/cardapio');
@@ -404,6 +405,7 @@ export async function montarCarrinho(
       .getByLabel('Opção da escolha', { exact: true })
       .selectOption(produto.opcaoId);
   }
+  if (capturaConfigurador) await capturar(page, configurador, capturaConfigurador);
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Configurar produto', exact: true })).toBeHidden();
   const revisar = page.getByRole('button', {

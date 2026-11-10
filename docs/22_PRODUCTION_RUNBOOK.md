@@ -1,7 +1,7 @@
 # Ambientes e runbook de operação
 
 > **Escopo:** desenvolvimento local, publicação Linux nativa, releases, backup e continuidade.
-> **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
+> **Situação:** procedimentos e scripts versionados, com resultados locais/CI identificados nas evidências. Implantação e validação do release atual no Linux permanecem pendentes. Decisões e propostas seguem o [registro central](00_PROJECT_VISION.md).
 
 [Índice da documentação](README.md)
 
@@ -29,7 +29,7 @@ Registrar tip integrado, release candidato, SHA observado no serviço e último 
 
 ## Publicação Linux com serviços nativos
 
-O ambiente de homologação desta execução usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. Inventário e versões efetivamente observados ficam no checkpoint e registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
+O ambiente de homologação previsto usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. O estado atual do host não foi observado na etapa Mac/CI da Sprint 5; inventário, versões e serviços precisam ser reconferidos antes da implantação. Registrar a observação no checkpoint e nos registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
 
 Topologia proposta: Caddy entrega build Angular e encaminha API HTTPS para Spring em loopback; PostgreSQL acessível somente por canais autorizados; serviços systemd com usuário dedicado, restart controlado e limites; mídia inicialmente prevista em diretório persistente fora dos releases. Na implementação da Sprint 2, as imagens públicas limitadas ficam no próprio PostgreSQL, conforme o [ADR 0002](adr/0002-midia-publica-transacional.md); diretórios de mídia privada/externa permanecem futuros. Hermes executa procedimentos documentados, mas a aplicação não depende de conversa/sessão do agente para funcionar.
 
@@ -43,7 +43,7 @@ Procedimento futuro de release:
 4. Instalar release, reiniciar serviço e verificar saúde técnica e jornadas críticas.
 5. Em falha, executar retorno compatível: trocar binário não desfaz migração de banco. Mudança incompatível exige estratégia própria de recuperação, sem perder transações reais. O runbook deve cobrir eventos externos durante manutenção, comportamento de retry do provedor e reconciliação ao retomar.
 
-Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. O candidato de identidade está servido em homologação desde o ciclo13, sem aceitação definitiva do baseline; conferir SHA e limites no checkpoint. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
+Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). O deploy recusa migrations diferentes sem manutenção/backup comprovados. O histórico da fundação registra publicação/retorno ensaiados e o ciclo13 registra um candidato de identidade servido, sem aceitação definitiva daquele baseline; esses registros não comprovam o estado atual do host nem homologam o release da Sprint 5. Revalidar SHA, serviços e limites conforme o checkpoint. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
 ## Provisionamento assistido pela fila SaaS
 
@@ -506,8 +506,12 @@ Plano de contingência do piloto deve dizer como registrar pedidos e recebimento
 <a id="ensaio-local-sprint-5"></a>
 ## Preparação local da Sprint 5
 
-`scripts/local_rehearsal.py` usa PostgreSQL, Java e `lsof` já instalados e um JAR de
-hash conhecido com manifesto correspondente às fontes atuais da aplicação.
+[`local_rehearsal.py`](../scripts/local_rehearsal.py) usa PostgreSQL, JDK 21 com
+Attach API, OpenSSL e `lsof` já instalados e um JAR de hash conhecido com manifesto
+correspondente às fontes atuais da aplicação. As etapas descritas abaixo foram
+executadas no ensaio 09, aprovado no Mac com massa fictícia e cleanup sem erros,
+conforme a [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
+Cada nova execução exige seus próprios recibos e as mesmas verificações.
 O manifesto deve conter exatamente os arquivos de `backend/src/main`,
 `frontend/src` e `frontend/public`, mais `backend/pom.xml`, `frontend/package.json`,
 `frontend/package-lock.json`, `frontend/angular.json`, `frontend/.postcssrc.json`,
@@ -518,8 +522,9 @@ privado, externo ao checkout e curto o suficiente para o socket PostgreSQL.
 Seu caminho absoluto aceita somente letras ASCII, números, `/`, `_`, ponto e
 hífen; espaços e metacaracteres são recusados antes de criar arquivos, pois
 `pg_ctl` interpreta as opções de startup por shell.
-As portas 55433/8090 precisam estar livres; nenhum ocupante é encerrado.
-O listener HTTPS precisa pertencer ao PID próprio e ao loopback.
+As portas 55433, 8090 e 8091 precisam estar livres; nenhum ocupante é encerrado.
+Os listeners HTTPS da aplicação e do proxy de falha precisam pertencer ao PID
+próprio de cada etapa e ao loopback.
 
 ```bash
 python3 scripts/local_rehearsal.py \
@@ -535,7 +540,7 @@ python3 scripts/local_rehearsal.py \
 
 A fixture de pedidos é o JSON privado das suítes locais, com `host`, `empresa`,
 `schema`, `email`/`senha` do Administrador, `unidadeA` e
-`contas.clienteA.email`/`senha`, todos fictícios (`@example.invalid`). O banco
+`contas.clienteA.id`/`email`/`senha`, todos fictícios (`@example.invalid`). O banco
 precisa conter ao menos duas empresas ativas com identidade e catálogo fictícios.
 As credenciais são testadas por login; fixtures históricas não são presumidas válidas.
 
@@ -565,26 +570,85 @@ iguais. Esse segundo roundtrip demonstra recuperação da massa acrescentada,
 sem afirmar que a origem já continha imagens em duas empresas. Não usar esse
 procedimento destrutivo de fixture em dev/hml/produção.
 
+[`local_maintenance.py`](../scripts/local_maintenance.py) acrescenta manutenção
+somente no clone. Com escritores parados, usa a troca de banco por OID, compara
+inventários e mantém o original bloqueado enquanto testa o candidato. Confirma
+uma tabela e uma entrada Flyway **sintética V9999**, provoca uma falha SQL e exige
+que o JAR real recuse o histórico incompatível no startup. O retorno recupera o
+banco original pelo OID, confere inventário, ACLs e health, e preserva o candidato
+falho bloqueado para diagnóstico, sem DROP de banco nem downmigration. A etapa
+não executa `--migrate-only`, cujo alvo continua restrito à porta 55432, nem
+instala serviços ou executa deploy Linux. A falha sintética não representa uma
+migration nova do produto ou validação do migrador oficial em homologação.
+
 Chaves JWT/comunicação, senha do clone e PKCS12 são novos e exclusivos do ensaio.
-O script faz backup e recuperação desse pacote com conferência de hashes e usa
-somente a cópia recuperada. Isso demonstra o mecanismo local de configuração;
-**não recupera as chaves originais**, sessões, tokens OAuth ou mensagens cifradas
-antes do backup. Workers de pagamentos, e-mail, comunicação e retenção ficam
-desligados; o de prazos só liga na recuperação controlada. Não há envio externo.
+[`prebackup_recovery.py`](../scripts/prebackup_recovery.py) usa essas mesmas chaves
+para criar dados recuperáveis **antes de um snapshot adicional**, com a aplicação
+real e massa fictícia:
+
+1. Cria um tenant exclusivo a partir do template migrado do clone e isola o
+   worker dos dados históricos: somente no clone, retira temporariamente
+   os demais tenants de `ATIVO`/`SUSPENSO`, usando `FALHOU`; restaura exatamente os
+   estados anteriores no encerramento. Não redefine quotas ou contadores da
+   massa histórica. Os workers de pagamentos, comunicação operacional e retenção
+   permanecem desligados; e-mail e prazos ligam apenas nas etapas controladas.
+2. Cria a sessão e a solicitação de recuperação pela API; o worker da aplicação
+   gera o token e o corpo cifrado. Uma falha deliberada de captura local deixa a
+   mensagem `RECUPERACAO/PENDENTE`, com uma tentativa, antes do backup.
+3. Para o runtime e recusa qualquer outra conexão ao banco antes do snapshot.
+   Registra sessão, token persistido, conteúdo cifrado, inventário e hashes do
+   pacote de configuração; remove/restaura apenas o schema exclusivo e recupera
+   a configuração. O snapshot adicional de uma fixture não reduz a exigência de
+   pelo menos duas empresas no backup integral inicial.
+4. Exige JWT recusado com chave errada (`401`) e falha de decriptação da outbox
+   ainda válida (`FALHOU`, duas tentativas), sem captura. Restaura novamente o
+   mesmo snapshot, sem fabricar outro token ou zerar tentativas, e religa as
+   chaves corretas. Exige a sessão original válida, uma captura cujo código
+   corresponda ao hash pré-backup e ao tenant/usuário da fixture, reset da senha,
+   revogação da sessão antiga (`401`) e recusa do reuso do código (`422`).
+
+`prebackup-inventory.json` e `prebackup-recovery.json` vinculam o ponto recuperado
+à sessão, mensagem, hashes e configuração, sem registrar chaves ou códigos em
+claro no recibo. A captura e os arquivos com segredos ficam privados. Esse modo
+exercita dados cifrados anteriores ao snapshot adicional; não recupera chaves
+históricas da origem, credenciais reais de OAuth ou segredos de produção. Não há
+envio de e-mail externo.
 
 O [perfil de carga](../scripts/profiles/sprint05-local.json) fixa duração,
 concorrência, pausa e distribuição catálogo/carrinho. `load.json` registra
-latências, erros, CPU/RSS dos processos próprios, disco, estatísticas PostgreSQL
-e conexões runtime observadas. Essa última medida não é telemetria interna do
-Hikari; o atraso do job é medido separadamente após a falha. Não inferir
-capacidade do Linux de 8 GB nem quantidade suportada de restaurantes.
+latências, erros, CPU/RSS da aplicação e PostgreSQL próprios, disco e estatísticas
+PostgreSQL. O runtime do clone registra os MBeans do Hikari; um processo JDK
+próprio usa Attach API no PID da aplicação para amostrar, com intervalo nominal
+de 100 ms, máximo configurado, conexões ativas, ociosas e totais e threads
+aguardando conexão.
+`pool-samples.csv` preserva as amostras e `load.json` resume os picos e a presença
+de espera. Essa contagem não mede latência de aquisição nem garante observar
+picos menores que o intervalo. Não acrescenta endpoint HTTP público. O atraso
+do job é medido separadamente após a falha; não inferir capacidade do Linux de
+8 GB nem quantidade suportada de restaurantes.
 
-Na recuperação, cria pedido presencial de R$ 20 no clone, mata somente o processo
-Java próprio, comprova indisponibilidade, interrompe uma conexão com transação
-aberta e verifica rollback. Reinicia o mesmo JAR, reenvia a intenção e observa
-um único pedido, expiração durável, histórico sem duplicação e zero recebimentos.
-A resposta inicial é recebida pelo harness e descartada: não é injeção de perda
-de pacote. Cobrança/devolução e falhas do provedor continuam cenários próprios.
+Na recuperação, o cliente cria um pedido presencial de R$ 20 através de um proxy
+TLS próprio em `127.0.0.1:8091`, limitado à intenção fictícia exata. O proxy recebe
+a confirmação da aplicação em 8090 e encerra a conexão antes de devolver qualquer
+byte de resposta HTTP ao cliente. O ensaio exige falha de transporte no cliente e
+confere o commit no PostgreSQL. Em seguida, mata somente o Java próprio, comprova
+indisponibilidade, interrompe uma conexão com transação aberta e verifica
+rollback. Reinicia o mesmo JAR, reenvia a intenção e exige um único pedido,
+expiração durável, histórico sem duplicação e zero recebimentos. Timeouts,
+encerramento dos sockets/thread e remoção da chave temporária pertencem ao cleanup
+do proxy. Não há intermediário ou serviço externo; cobrança/devolução e falhas do
+provedor continuam cenários próprios.
+
+[`local_diagnostics.py`](../scripts/local_diagnostics.py) coleta contagens e idades
+em transação somente leitura no clone identificado, com filtro por tenant e,
+quando pertinente, pedido próprio. O harness exige `EMAIL_FALHOU` após a chave
+errada e sua ausência após a captura recuperada; exige `JOB_ATRASADO` antes da
+retomada e sua ausência após processar o pedido. Também executa um `pg_dump` para
+um destino privado deliberadamente inexistente e só aceita a falha específica de
+abertura desse arquivo como prova de `BACKUP_FALHOU`, preservando os dumps válidos.
+Os recibos `diagnostics-*.json` não enviam alertas nem aprovam monitoramento ou
+resposta operacional. Métricas, limites e dependências ficam em
+[Observabilidade](07_OBSERVABILITY.md#diagnostico-local-sprint-5).
 
 `result.json`, dumps, inventários, configuração e logs são privados. Aprovação
 local exige todos os passos e cleanup confirmado; falha fica registrada e exige
@@ -602,14 +666,22 @@ exigiriam reconciliação; não são recuperados automaticamente pelo ensaio.
 | --- | --- |
 | Instalação | `bootstrap-database.py` depende do layout privado PostgreSQL 16/Linux e systemd; agora recusa Mac antes de escrever. Não instala ferramentas globais. Revalidar distribuição, binários, privilégios e serviços antes da retomada Linux. |
 | Configuração | `.env.example` documenta identidade/TLS/captura e grupo opcional de pagamentos. `runtime_config` exporta apenas o contrato explícito, recusa grupo financeiro parcial/chave inválida/porta inválida e não exporta override de provedor fictício nem credencial owner. Sandbox requer credenciais de teste e validação própria. |
-| Build | `build-release.sh` exige checkout limpo e `flock`; os dois arquivos locais preexistentes impedem usá-lo neste checkout. Preparar checkout Linux limpo do commit revisado; build identificado e gates completos são obrigatórios. JAR local reutilizado não constitui novo release homologado. |
+| Build | `build-release.sh` exige checkout limpo e `flock`. Preservar alterações locais e preparar checkout Linux limpo do commit revisado; build identificado e gates completos são obrigatórios. JAR local identificado não constitui release homologado. |
 | Deploy/retorno | `deploy-hml.py` mantém lock, hash/SHA e recusa migrations divergentes sem manutenção. A manutenção histórica é específica da transição fundação→identidade; não é promotor genérico das Sprints 2–4. Inventariar banco/serviço atuais e preparar caminho compatível antes de migrar. |
 | Verificação | `/proc`, `systemctl` e verificação de listeners são Linux. `e2e-hml.py`/`validate-hml.py` continuam restritos à fundação; smoke de identidade não substitui matriz mutante integrada. Integrar o gate da matriz final antes de promover o release. |
 | Proxy/HTTPS | Não há configuração Caddy de produção pronta neste incremento. Domínio, ingresso, certificado/renovação e callbacks precisam de implantação/verificação próprias (E01–E03). |
 | Backup e operação | Ensaio local é no mesmo disco. Agendamento, criptografia/destino externo, retenção, alertas, responsáveis, RPO/RTO e reconciliação permanecem E07/E11. Captura local não comprova entrega de e-mail (E05). |
 
-Resultados observados e falhas/reexecuções ficam na
+O incremento anterior permanece na
 [evidência da preparação local](evidencias/sprint-05-preparacao-local-2026-11-09.md).
+O ensaio 09 aprovou 33 dumps, 18.859 tabelas e 146.606 linhas, com cobertura de
+293 empresas ativas/suspensas e 104 imagens verificadas, além da manutenção
+sintética, recuperação das chaves
+da fixture, perda real da resposta e diagnósticos locais. O recibo final registra
+`approved=true` e nenhum erro de cleanup. Resultados detalhados, falhas preservadas
+e reexecuções ficam na
+[validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md). Essa aprovação
+é local; homologação Linux, serviços externos e piloto permanecem pendentes.
 
 ## Documentos relacionados
 

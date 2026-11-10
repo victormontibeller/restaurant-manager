@@ -1,5 +1,171 @@
 # Checkpoint de execução
 
+## Sprint 5 — validação Mac/CI concluída, 2026-11-09
+
+Parcela autorizada concluída na branch `codex/sprint-05-registro-entregas`,
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10),
+base `main` integrada em `5ea8324`. Aplicação testada em
+`730949c55ce13cd4a64743d45d7d6868094d296f`, JAR
+`123f48ee1a2d58ee890067ea76121c10762ab52cb9baedae73de2bd6f97d0efd`.
+As atualizações posteriores de encerramento são documentais; não alteram as
+fontes, fixtures, harness ou bytes usados na validação.
+
+- Matriz final: **415/415 pares**, 83 cenários nos cinco projetos, mesmo JAR/PID
+  41317 e início observado 22:20:13 (UTC−03); zero falhas, ausentes, skips,
+  retries ou instabilidade. **56 capturas** das 28 telas revisadas em desktop/mobile.
+- Contraste: **38/38 casos** em uma rodada nova, sem falhas ou revisão pendente.
+  Três textos com contraste insuficiente e três avisos funcionais obsoletos
+  corrigidos; a matriz anterior interrompida em 313 pares permanece reprovada.
+- CI #194 em `730949c`: **244 testes de scripts e 452 backend**, zero falhas,
+  erros ou skips, checks Angular/build e auditorias. Mac: 234 scripts portáveis,
+  435 backend no build inicial e 51 dirigidos na rodada complementar aprovada.
+  Não somar essas camadas como uma única suíte.
+- Recuperação financeira repetida no JAR corrigido: perda efetiva de resposta,
+  dois reinícios próprios, uma cobrança/um recebimento/uma devolução e R$ 20,00
+  devolvidos, diagnósticos normalizados; provedor fictício, sem restore externo.
+- Ensaio09 aprovado: banco/mídia/chaves pré-backup, manutenção e retorno por OID,
+  carga de 641 requisições sem erros, pool, transporte e diagnósticos. Executou
+  JAR `55df989f8b83`; 506 entradas backend e scripts conferidos como idênticos
+  no candidato corrigido, sem atribuir ao novo JAR uma execução que não fez.
+- Cleanup aprovado: API/provedor próprios encerrados por identidade; clone09
+  parado; demonstração 8095 e PostgreSQL 55432 preservados. Cópia antiga da
+  Sprint 4 removida, documento oficial e arquivo manual local preservados.
+
+[Resultados, falhas/reexecuções e recibos](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md)
+e [cobertura por cenário](evidencias/cobertura.md) identificam a execução.
+Os relatórios privados ficam fora do Git. Não houve merge do PR #10 nem mudança
+na `main`, deploy Linux ou produção nesta etapa.
+
+**Próxima etapa:** inventariar e implantar release identificado no ambiente Linux
+isolado; executar ali instalação/systemd/proxy, manutenção/restore e matriz
+completa no SHA servido. Continuam pendentes Mercado Pago sandbox,
+domínio/HTTPS e e-mail externos, backup operacional/metas e responsáveis,
+treinamento, aparelhos reais, aceite assistivo e acompanhamento do piloto.
+Nenhuma pendência restante é apresentada como teste local aprovado.
+
+As seções abaixo preservam o histórico das tentativas e seus estados na ocasião.
+
+## Sprint 5 — correção após revisão visual, 2026-11-09
+
+O primeiro candidato `55df989f8b83` foi rejeitado visualmente: T11 negava
+pagamentos existentes; a auditoria textual encontrou também regiões negadas e
+prazo de checkout fixado indevidamente em 15 minutos. Os três avisos e a
+expectativa existente do E2E foram corrigidos; formatação/tipos passaram.
+Matriz 01 interrompida entre lotes com 313 pares aprovados/102 não executados,
+sem aprovação integral. API 30923 e provedor 20173 encerrados por identidade;
+demo 32641/8095 e PostgreSQL 59175/55432 preservados. Evidências antigas intactas.
+
+Preparação do candidato 02 em `/private/tmp/rm-s05-final02`, com build, fixtures,
+contraste e matriz415 novos. A CI #192/452 backend/244 scripts e o ensaio09
+continuam provas dos respectivos escopos anteriores; não aprovam os textos
+corrigidos. Não encerrar a etapa Mac/CI sem a nova execução e revisão visual.
+Linux real, serviços externos e piloto seguem pendentes.
+
+## Sprint 5 — conclusão das validações Mac/CI em andamento, 2026-11-09
+
+O proprietário autorizou concluir os testes possíveis no Mac/CI, corrigir falhas
+e remover a cópia antiga da Sprint 4. Continuação na branch
+`codex/sprint-05-registro-entregas`, base documental `17e9573`,
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10).
+O escopo passa a incluir executor/gate da matriz integrada, recuperação de
+segredos e dados cifrados anteriores ao backup, falha de transporte controlada,
+manutenção/retorno em PostgreSQL isolado e reexecuções locais/CI correspondentes.
+Resultados ainda em execução não contam como aprovados.
+
+Incremento verificado: 435 testes backend em PostgreSQL real, sem falhas,
+erros ou skips; checks Angular e auditorias aprovados. Corrigidos três textos
+de baixo contraste no shell da equipe e melhorada a legibilidade do placeholder
+de produto. Frontend recompilado e JAR local
+`55df989f8b83bec803188daa80d2d28a41aa97269f278755abf9d24db9263e7a`
+gerado; os 506 componentes backend permanecem idênticos aos testados.
+Os 234 testes portáveis de scripts passaram no Mac, sem skips. Dez métodos
+que usam `/proc` aguardam reexecução integral na CI deste incremento; a rodada
+exploratória completa no Mac não é marcada como aprovada. Massa nova preparada
+sem reset de quotas. Matriz de navegador, ensaios adicionais e novos testes de
+fronteiras de autorização ainda estavam em andamento nessa etapa.
+
+Incremento seguinte: 17 casos backend acrescentados e **51/51 testes dirigidos
+aprovados** na rodada 02, incluindo regressões. A rodada 01 preservada teve duas
+falhas de expectativa dos novos testes, corrigidas sem alterar o produto:
+reconciliação final de checkout e instante variável de consulta do relatório.
+Oráculo 28 ações × seis perfis, concessão/revogação em cinco perfis, negativos de
+unidade/tenant e timeouts HTTP reais agora têm prova local. A suíte integral
+esperada de 452 testes ainda aguarda a CI do novo head. O ensaio integrado no
+clone foi iniciado; seu resultado não é aprovado antecipadamente.
+
+Ensaio financeiro 02 aprovado no mesmo JAR: perda real de resposta HTTP de
+cobrança e devolução no simulador local, dois reinícios próprios, exatamente
+uma cobrança/um recebimento/uma devolução e R$ 20,00 devolvidos. Diagnósticos
+somente leitura detectaram os dois estados incertos e sua normalização.
+A tentativa 01 foi preservada como reprovada: o assert de diagnóstico rodava
+antes da convergência assíncrona dos dois estados. O harness passou a aguardar
+essa convergência com prazo limitado; o cenário inteiro foi repetido, sem reset
+de contadores nem reutilização de aprovação da tentativa anterior.
+
+Ensaio integrado 09 aprovado em 2026-11-09, JAR `55df989f8b83`: 33 dumps,
+18.859 tabelas/146.606 linhas e 293 empresas, inventários iguais; 104 imagens,
+segregação HTTP e configuração recuperadas. Manutenção sintética recusada pelo
+JAR e retorno ao banco original aprovado sem downmigration. Sessão e token
+anteriores ao snapshot passaram com as chaves restauradas e falharam com chaves
+erradas; uma captura, sem reuso. Carga: 641 requisições/zero erros; Hikari real:
+187 amostras, pico quatro conexões e zero threads esperando. Proxy TLS perdeu a
+resposta efetivamente; pedido/job retomados sem duplicação. Diagnósticos locais
+normalizados e cleanup sem erros. Matriz final/contraste/CI ainda em execução.
+
+CI #192 aprovada em `cbb1e19`: 244 testes de scripts, incluindo os métodos
+Linux `/proc`, 452 backend/zero falhas, erros ou skips, checks Angular e
+auditorias. O reforço posterior de timeout/reserva passou nessa suíte integral.
+Contraste concluído nas 38 configurações distintas do plano, sem falhas ou
+revisões pendentes; recibos distinguem lotes e PIDs. A matriz de 415 pares está
+em execução no PID 30923/JAR `55df989f8b83`, com revisão visual das capturas.
+
+Removida a cópia não versionada `18_SPRINT_04-LAPTOP-HO4BA7QG.md` após comparar
+seu hash e conteúdo: a única diferença era o status antigo. Documento oficial
+da Sprint 4 e arquivo manual local preservados. Nenhum banco/serviço original
+foi alterado por essa remoção. Linux real, serviços externos e piloto continuam
+fora desta execução; as pendências serão atualizadas conforme a evidência final.
+
+## Sprint 5 — consolidação documental, 2026-11-09
+
+Publicação autorizada pelo proprietário em nova branch
+`codex/sprint-05-registro-entregas`, baseada na `main` integrada em `5ea8324`.
+Alteração restrita ao arquivo da Sprint 5 e a este checkpoint: entregas locais,
+resultados já executados, confirmação do merge do PR #9 e pendências explícitas.
+Homologação Linux e piloto permanecem pendentes; nenhum critério externo é
+aprovado por esta atualização. Os dois arquivos locais preexistentes continuam
+fora do commit. Validação desta mudança é documental, sem reexecução da aplicação.
+Conferidos 831 arquivos, links/padrões de segredo, seis âncoras locais e
+`git diff --check`; sete entregas locais marcadas, sem fechamento de Linux/piloto.
+
+## Sprint 5 — merge confirmado, 2026-11-09
+
+Por autorização explícita do proprietário no chat, o
+[PR #9](https://github.com/victormontibeller/restaurant-manager/pull/9) foi
+mesclado em `main`: head `c768c808eba4e7e8ab072591f44a6f89b643f3e1`,
+merge `5ea8324ab9dfeeba53d09f5ea9caa7f0c1e7a6c7`.
+A árvore do merge é idêntica à do head revisado, sem alteração adicional.
+
+A [CI Fundação #186](https://github.com/victormontibeller/restaurant-manager/actions/runs/42692093114)
+foi reconferida como aprovada no head do PR: 180 testes de scripts,
+435 backend, checks Angular e auditorias. A `main` local foi atualizada por
+fast-forward e seu HEAD coincide com `origin/main` em `5ea8324`.
+Os dois arquivos não versionados preexistentes mantiveram seus hashes.
+
+Esta confirmação foi inicialmente mantida como atualização local do checkpoint
+e acompanha agora a consolidação documental em branch própria, sem commit/push
+direto em `main`. As seções abaixo preservam o
+histórico anterior ao merge. **Homologação Linux e piloto continuam pendentes**,
+assim como matriz completa, sandbox Mercado Pago, domínio/HTTPS externo,
+e-mail real e demais dependências operacionais. Nenhum deploy, reinício de
+serviço ou migration foi executado durante esta integração.
+
+Complemento documental solicitado pelo proprietário: o
+[arquivo da Sprint 5](19_SPRINT_05.md) passou a marcar as entregas locais
+concluídas e registrar os resultados finais da tentativa 08, da CI #186 e do
+merge. Os critérios de fechamento técnico/Linux e piloto permanecem abertos.
+Os critérios de carga, restore e recuperação identificam a evidência local
+parcial e a validação ainda necessária para seu fechamento no Linux.
+
 ## Sprint 5 — revisão final do PR #9, 2026-11-09
 
 Revisão solicitada pelo proprietário na mesma branch, base `main` em `8888234`.

@@ -132,6 +132,33 @@ class MesasTest {
     }
 
     @Test
+    void atenderSolicitacaoRevalidaAcaoFilialETenantSemAlterarPendenciaNegada() throws Exception {
+        try (var c = new MesasCenario(mvc, mapper)) {
+            var aberto = c.abrir();
+            String participante = c.token(c.autorizar(aberto));
+            var criada = c.base.json(c.base.enviar("POST", "/api/v1/mesa/solicitacoes", participante,
+                    Map.of("intencaoId", UUID.randomUUID(), "tipo", "AJUDA")));
+            String rota = "/api/v1/operacao/mesas/solicitacoes/" + criada.get("id").asText() + "/atender";
+            var comando = Map.of("versao", 0);
+            String cozinha = c.funcionario("COZINHA", CatalogoCenario.UNIDADE);
+            String equipe = c.funcionario("ATENDIMENTO", CatalogoCenario.UNIDADE);
+            String outraUnidade = c.funcionario("ATENDIMENTO", CatalogoCenario.OUTRA_UNIDADE);
+            assertThat(c.base.enviar("POST", rota, cozinha, comando).getStatus()).isEqualTo(403);
+            assertThat(c.base.enviar("POST", rota, outraUnidade, comando).getStatus()).isEqualTo(404);
+            try (var outro = new CatalogoCenario(mvc, mapper)) {
+                assertThat(outro.enviar("POST", rota, outro.token, comando).getStatus()).isEqualTo(404);
+            }
+            c.base.reautenticar();
+            c.base.configurarAcoes("ATENDIMENTO", List.of("pedido.consultar"));
+            assertThat(c.base.enviar("POST", rota, equipe, comando).getStatus()).isEqualTo(403);
+            assertThat(c.base.contar("solicitacao_mesa where estado='PENDENTE'")).isEqualTo(1);
+            c.base.configurarAcoes("ATENDIMENTO", List.of("mesa.atender"));
+            assertThat(c.base.enviar("POST", rota, equipe, comando).getStatus()).isEqualTo(200);
+            assertThat(c.base.contar("solicitacao_mesa where estado='PENDENTE'")).isZero();
+        }
+    }
+
+    @Test
     void fechamentoPreservaAcompanhamentoEEncerramentoRevogaGrupoAnterior() throws Exception {
         try (var c = new MesasCenario(mvc, mapper)) {
             var atendimento = c.abrir();

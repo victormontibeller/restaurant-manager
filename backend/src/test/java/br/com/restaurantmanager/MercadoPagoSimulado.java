@@ -19,10 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Provedor HTTP controlado: exerce serialização e transporte reais do SDK, sem sandbox. */
 final class MercadoPagoSimulado implements AutoCloseable {
@@ -35,6 +38,8 @@ final class MercadoPagoSimulado implements AutoCloseable {
     final AtomicInteger refreshes = new AtomicInteger();
     final AtomicBoolean perderCriacao = new AtomicBoolean();
     final AtomicBoolean perderDevolucao = new AtomicBoolean();
+    final AtomicReference<AtrasoResposta> atrasarCriacao = new AtomicReference<>();
+    final AtomicReference<AtrasoResposta> atrasarDevolucao = new AtomicReference<>();
     final ObjectMapper mapper = new ObjectMapper();
     private final HttpServer server;
     private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -165,6 +170,7 @@ final class MercadoPagoSimulado implements AutoCloseable {
                     order.put("transactions", Map.of("payments", List.of(), "refunds", List.of()));
                     orders.put(id, order);
                 }
+                aguardarResposta(atrasarCriacao);
                 if (perderCriacao.compareAndSet(true, false)) {
                     x.close();
                     return;
@@ -207,6 +213,7 @@ final class MercadoPagoSimulado implements AutoCloseable {
                                         "refunds",
                                         refunds));
                     }
+                    aguardarResposta(atrasarDevolucao);
                     if (perderDevolucao.compareAndSet(true, false)) {
                         x.close();
                         return;
@@ -232,6 +239,37 @@ final class MercadoPagoSimulado implements AutoCloseable {
                                 partes.length == 2 ? partes[1] : "", StandardCharsets.UTF_8));
             }
         return valores;
+    }
+
+    /** Efeito remoto persiste antes da barreira; nenhum header chega ao cliente. */
+    private void aguardarResposta(AtomicReference<AtrasoResposta> configurado) throws IOException {
+        var atraso = configurado.getAndSet(null);
+        if (atraso == null) return;
+        atraso.aguardandoResposta.set(true);
+        atraso.efeitoPersistido.countDown();
+        try {
+            if (!atraso.liberar.await(40, TimeUnit.SECONDS)) {
+                atraso.watchdogExpirou.set(true);
+                throw new IOException("Teste não liberou a resposta controlada.");
+            }
+        } catch (InterruptedException erro) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Espera do provedor fictício interrompida.", erro);
+        } finally {
+            atraso.aguardandoResposta.set(false);
+        }
+    }
+
+    static final class AtrasoResposta implements AutoCloseable {
+        final CountDownLatch efeitoPersistido = new CountDownLatch(1);
+        final CountDownLatch liberar = new CountDownLatch(1);
+        final AtomicBoolean watchdogExpirou = new AtomicBoolean();
+        final AtomicBoolean aguardandoResposta = new AtomicBoolean();
+
+        @Override
+        public void close() {
+            liberar.countDown();
+        }
     }
 
     private void responder(HttpExchange x, int status, Object body) throws IOException {

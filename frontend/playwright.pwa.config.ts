@@ -1,14 +1,8 @@
 import { defineConfig } from '@playwright/test';
 import foundation from './playwright.config';
+import { destinoCatalogo } from './e2e/destino-catalogo';
 
-const target = process.env['RM_BASE_URL'];
-if (
-  !target ||
-  new URL(target).hostname !== 'sprint02.localhost' ||
-  new URL(target).protocol !== 'https:'
-) {
-  throw new Error('PWA integrada exige HTTPS sprint02.localhost e massa própria rm_test.');
-}
+const target = destinoCatalogo();
 // Chromium valida o certificado do worker fora do contexto ignoreHTTPSErrors.
 // Para certificado local privado, aceitar somente a chave pública explicitamente fixada.
 const spki = process.env['RM_TEST_TLS_SPKI'];
