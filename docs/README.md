@@ -66,6 +66,11 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 
 ## Situação atual
 
+A [demonstração local](evidencias/demo-local-atualizada-2026-11-10.md) recebeu
+o código integrado da PR #11 para testes manuais, com backup, migrações e
+preservação dos acessos. O checkpoint registra o escopo das verificações locais
+e as pendências de aprovação integral.
+
 A [revisão geral pré-testes](evidencias/revisao-geral-pre-testes-2026-11-10.md)
 tem limpeza e correções implementadas em `469f3a4`, com frontend completo e
 [CI #208](https://github.com/victormontibeller/restaurant-manager/actions/runs/42905565646)
@@ -75,7 +80,7 @@ checkpoint. A nova matriz de **420 pares** e as **56 novas capturas** não foram
 executadas e permanecem pendentes. A rodada 01 continua reprovada, sem
 transferir aprovações ao candidato 02; o
 [PR #11](https://github.com/victormontibeller/restaurant-manager/pull/11)
-tem merge autorizado pelo proprietário. Isso não aprova integralmente o candidato, a homologação
+foi integrado com autorização do proprietário. Isso não aprova integralmente o candidato, a homologação
 Linux ou prontidão para produção.
 
 O estado de execução fica no [checkpoint vigente](25_EXECUTION_STATUS.md). A [revisão pré-Sprint 2](evidencias/revisao-pre-sprint-02-2026-11-06.md) registra achados, correções e limites de validação no Mac. A documentação descreve requisitos e critérios; somente evidências registradas da implementação permitem marcar entregas como concluídas. Revisão de links, coerência de escopo, permissões e estados não constitui teste da aplicação nem homologação externa.

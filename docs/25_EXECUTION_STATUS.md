@@ -1,5 +1,28 @@
 # Checkpoint de execução
 
+## Demonstração local após o merge — 2026-11-10
+
+O proprietário solicitou atualizar a demonstração para iniciar testes manuais.
+Publicado em `https://demo.localhost:8095` o JAR validado `681963ff…79e8`,
+construído em `469f3a4` e equivalente ao código do merge `0040e01` da PR #11.
+Não houve rebuild. Backup privado concluído antes das migrações, com API/jobs
+parados e PostgreSQL compartilhado preservado. Public está em V8; template e
+empresa da demonstração em V28. Dados e acessos anteriores foram preservados.
+
+Nova API PID 37152 saudável com TLS validado. O smoke de API/arquivos aprovou
+39 verificações, incluindo sete perfis, duas unidades e nove produtos por
+catálogo. Os sete perfis autenticaram também pela UI; o complemento dirigido
+de catálogo desktop/mobile e gestão do Administrador passou, com cinco capturas
+inspecionadas. A passagem inicial do roteiro ficou reprovada e preservada;
+checks restantes dos outros perfis, PWA e matriz completa continuam pendentes.
+As 13 verificações finais do runtime passaram. API e PostgreSQL foram deixados
+em execução. Pagamentos online e serviços externos continuam sem ativação.
+
+[Versão, backup, verificações e uso da demonstração](evidencias/demo-local-atualizada-2026-11-10.md).
+Este incremento operacional é posterior ao merge da PR #11 e é registrado em
+uma PR exclusivamente documental. Os relatos anteriores descrevem as respectivas
+etapas e não substituem o estado atual acima.
+
 ## Integração da revisão — autorização e rastreabilidade, 2026-11-10
 
 O proprietário solicitou incluir todas as alterações na PR, autorizou o merge
