@@ -45,7 +45,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   await navegarGestao(page, '/gestao/unidades');
   await expect(page.getByRole('heading', { name: 'Configurações de unidades' })).toBeVisible();
   const orientacao = page.getByText(
-    'Configure horários e canais em cada unidade. Ajuste os prazos de aceite em Operar pedidos e mesas. Regiões de entrega ainda não estão disponíveis.',
+    'Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões de entrega em Regiões e checkout.',
     { exact: true },
   );
   const inativacao = page.getByText(

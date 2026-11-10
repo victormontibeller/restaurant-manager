@@ -1,5 +1,21 @@
 # Checkpoint de execução
 
+## Sprint 5 — correção após revisão visual, 2026-11-09
+
+O primeiro candidato `55df989f8b83` foi rejeitado visualmente: T11 negava
+pagamentos existentes; a auditoria textual encontrou também regiões negadas e
+prazo de checkout fixado indevidamente em 15 minutos. Os três avisos e a
+expectativa existente do E2E foram corrigidos; formatação/tipos passaram.
+Matriz 01 interrompida entre lotes com 313 pares aprovados/102 não executados,
+sem aprovação integral. API 30923 e provedor 20173 encerrados por identidade;
+demo 32641/8095 e PostgreSQL 59175/55432 preservados. Evidências antigas intactas.
+
+Preparação do candidato 02 em `/private/tmp/rm-s05-final02`, com build, fixtures,
+contraste e matriz415 novos. A CI #192/452 backend/244 scripts e o ensaio09
+continuam provas dos respectivos escopos anteriores; não aprovam os textos
+corrigidos. Não encerrar a etapa Mac/CI sem a nova execução e revisão visual.
+Linux real, serviços externos e piloto seguem pendentes.
+
 ## Sprint 5 — conclusão das validações Mac/CI em andamento, 2026-11-09
 
 O proprietário autorizou concluir os testes possíveis no Mac/CI, corrigir falhas
@@ -40,6 +56,23 @@ A tentativa 01 foi preservada como reprovada: o assert de diagnóstico rodava
 antes da convergência assíncrona dos dois estados. O harness passou a aguardar
 essa convergência com prazo limitado; o cenário inteiro foi repetido, sem reset
 de contadores nem reutilização de aprovação da tentativa anterior.
+
+Ensaio integrado 09 aprovado em 2026-11-09, JAR `55df989f8b83`: 33 dumps,
+18.859 tabelas/146.606 linhas e 293 empresas, inventários iguais; 104 imagens,
+segregação HTTP e configuração recuperadas. Manutenção sintética recusada pelo
+JAR e retorno ao banco original aprovado sem downmigration. Sessão e token
+anteriores ao snapshot passaram com as chaves restauradas e falharam com chaves
+erradas; uma captura, sem reuso. Carga: 641 requisições/zero erros; Hikari real:
+187 amostras, pico quatro conexões e zero threads esperando. Proxy TLS perdeu a
+resposta efetivamente; pedido/job retomados sem duplicação. Diagnósticos locais
+normalizados e cleanup sem erros. Matriz final/contraste/CI ainda em execução.
+
+CI #192 aprovada em `cbb1e19`: 244 testes de scripts, incluindo os métodos
+Linux `/proc`, 452 backend/zero falhas, erros ou skips, checks Angular e
+auditorias. O reforço posterior de timeout/reserva passou nessa suíte integral.
+Contraste concluído nas 38 configurações distintas do plano, sem falhas ou
+revisões pendentes; recibos distinguem lotes e PIDs. A matriz de 415 pares está
+em execução no PID 30923/JAR `55df989f8b83`, com revisão visual das capturas.
 
 Removida a cópia não versionada `18_SPRINT_04-LAPTOP-HO4BA7QG.md` após comparar
 seu hash e conteúdo: a única diferença era o status antigo. Documento oficial
