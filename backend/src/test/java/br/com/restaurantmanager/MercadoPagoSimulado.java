@@ -245,20 +245,26 @@ final class MercadoPagoSimulado implements AutoCloseable {
     private void aguardarResposta(AtomicReference<AtrasoResposta> configurado) throws IOException {
         var atraso = configurado.getAndSet(null);
         if (atraso == null) return;
+        atraso.aguardandoResposta.set(true);
         atraso.efeitoPersistido.countDown();
         try {
             if (!atraso.liberar.await(40, TimeUnit.SECONDS)) {
+                atraso.watchdogExpirou.set(true);
                 throw new IOException("Teste não liberou a resposta controlada.");
             }
         } catch (InterruptedException erro) {
             Thread.currentThread().interrupt();
             throw new IOException("Espera do provedor fictício interrompida.", erro);
+        } finally {
+            atraso.aguardandoResposta.set(false);
         }
     }
 
     static final class AtrasoResposta implements AutoCloseable {
         final CountDownLatch efeitoPersistido = new CountDownLatch(1);
         final CountDownLatch liberar = new CountDownLatch(1);
+        final AtomicBoolean watchdogExpirou = new AtomicBoolean();
+        final AtomicBoolean aguardandoResposta = new AtomicBoolean();
 
         @Override
         public void close() {

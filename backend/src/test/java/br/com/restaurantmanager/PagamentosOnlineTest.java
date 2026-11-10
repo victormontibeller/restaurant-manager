@@ -261,9 +261,12 @@ class PagamentosOnlineTest {
             long inicio = System.nanoTime();
             RuntimeException erro = catchThrowableOfType(() -> checkout.processar(trabalho), RuntimeException.class);
             assertThat(erro).isNotNull();
-            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis()).isGreaterThanOrEqualTo(9500);
+            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis())
+                    .isGreaterThanOrEqualTo(9500).isLessThan(30000);
             assertThat(atraso.efeitoPersistido.getCount()).isZero();
             assertThat(atraso.liberar.getCount()).isEqualTo(1);
+            assertThat(atraso.watchdogExpirou.get()).isFalse();
+            assertThat(atraso.aguardandoResposta.get()).isTrue();
             checkout.falhar(trabalho, erro);
         } finally {
             PROVEDOR.atrasarCriacao.set(null);
@@ -296,15 +299,24 @@ class PagamentosOnlineTest {
             long inicio = System.nanoTime();
             RuntimeException erro = catchThrowableOfType(() -> devolucoes.processar(trabalho), RuntimeException.class);
             assertThat(erro).isNotNull();
-            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis()).isGreaterThanOrEqualTo(9500);
+            assertThat(Duration.ofNanos(System.nanoTime() - inicio).toMillis())
+                    .isGreaterThanOrEqualTo(9500).isLessThan(30000);
             assertThat(atraso.efeitoPersistido.getCount()).isZero();
             assertThat(atraso.liberar.getCount()).isEqualTo(1);
+            assertThat(atraso.watchdogExpirou.get()).isFalse();
+            assertThat(atraso.aguardandoResposta.get()).isTrue();
             devolucoes.falhar(trabalho, erro);
         } finally {
             PROVEDOR.atrasarDevolucao.set(null);
         }
         assertThat(p.contar("devolucao where estado='EM_RECONCILIACAO'")).isEqualTo(1);
         assertThat(p.detalhe(pedido).get("saldo").get("pendenciaFinanceira").asBoolean()).isTrue();
+        String financeiro = "/api/v1/financeiro/pedidos/" + pedido.get("id").asText();
+        var respostaFinanceira = p.c.enviar("GET", financeiro, p.c.token, null);
+        assertThat(respostaFinanceira.getStatus()).isEqualTo(200);
+        var reserva = p.c.json(respostaFinanceira);
+        assertThat(reserva.get("reservado").asText()).isEqualTo("20.00");
+        assertThat(reserva.get("saldo").get("devolvidoConfirmado").asText()).isEqualTo("0.00");
         p.c.executar("update " + p.c.schema + ".devolucao set proximo_em=now()");
         try (var scope = TenantScope.open(p.c.schema)) {
             devolucoes.processar(devolucoes.reivindicar());
@@ -316,6 +328,9 @@ class PagamentosOnlineTest {
         antecipar();
         processar();
         assertThat(p.detalhe(pedido).get("saldo").get("pendenciaFinanceira").asBoolean()).isFalse();
+        var confirmada = p.c.enviar("GET", financeiro, p.c.token, null);
+        assertThat(confirmada.getStatus()).isEqualTo(200);
+        assertThat(p.c.json(confirmada).get("reservado").asText()).isEqualTo("0.00");
         assertThat(p.contar("devolucao where estado='CONFIRMADA'")).isEqualTo(1);
         assertThat(mapper.valueToTree(PROVEDOR.orders.get(externo(pedido)).get("transactions"))
                 .get("refunds").size()).isEqualTo(1);
