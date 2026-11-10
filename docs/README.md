@@ -66,4 +66,9 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 
 ## Situação atual
 
+A [revisão geral pré-testes](evidencias/revisao-geral-pre-testes-2026-11-10.md)
+está em implementação e validação local, com correções pontuais e preservação
+da demonstração. A matriz atual contém 420 pares; somente os resultados
+vinculados ao candidato desta revisão podem aprová-lo.
+
 O estado de execução fica no [checkpoint vigente](25_EXECUTION_STATUS.md). A [revisão pré-Sprint 2](evidencias/revisao-pre-sprint-02-2026-11-06.md) registra achados, correções e limites de validação no Mac. A documentação descreve requisitos e critérios; somente evidências registradas da implementação permitem marcar entregas como concluídas. Revisão de links, coerência de escopo, permissões e estados não constitui teste da aplicação nem homologação externa.

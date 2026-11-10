@@ -20,7 +20,7 @@ test.beforeEach(async ({ request }, info) => {
   if (!cenario) throw new Error('Cenário Sprint 4 sem identificador.');
   if (['S04-UI01', 'S04-UI02', 'S04-UI07'].includes(cenario)) return;
   catalogo = await prepararCatalogo(request);
-  if (!['S04-UI05', 'S04-UI08', 'S04-UI09'].includes(cenario)) return;
+  if (!['S04-UI05', 'S04-UI08', 'S04-UI09', 'S04-UI10'].includes(cenario)) return;
   const token = await loginApi(request);
   await ok(
     await api(request, token, '/api/v1/auth/reautenticar', 'POST', { senha: fixture().senha }),
@@ -44,7 +44,7 @@ test.beforeEach(async ({ request }, info) => {
       ],
     }),
   );
-  if (cenario === 'S04-UI05') return;
+  if (['S04-UI05', 'S04-UI10'].includes(cenario)) return;
   const autorizacao = await ok<{ url: string }>(
     await api(request, token, '/api/v1/integracoes/mercadopago/autorizar', 'POST'),
   );
@@ -547,6 +547,72 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
   }
 });
 
+test('S04-UI10: revogação da expedição remove endereços da tela já aberta', async ({
+  page,
+  request,
+}) => {
+  const pedido = await pronto(request, await pedidoApi(request, 'DELIVERY'));
+  const token = await loginUi(page, fixture().contas.expedicao);
+  await area(page, '/gestao/expedicao');
+  const artigo = page
+    .locator('app-expedicao > section > article')
+    .filter({ has: page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }) });
+  await expect(artigo.locator('address')).toContainText('Rua fictícia Sprint 4');
+  const admin = await loginApi(request);
+  await ok(
+    await api(request, admin, '/api/v1/auth/reautenticar', 'POST', { senha: fixture().senha }),
+  );
+  const matriz = await ok<{ versao: number; perfis: Record<string, string[]> }>(
+    await api(request, admin, '/api/v1/configuracoes/acessos'),
+  );
+  const originais = matriz.perfis['EXPEDICAO'];
+  const retirar = [
+    'pedido.retirar',
+    'pedido.despachar',
+    'pedido.entregar',
+    'entrega.registrar_ocorrencia',
+    'entrega.decidir_ocorrencia',
+  ];
+  expect(originais).toContain('pedido.consultar');
+  try {
+    await ok(
+      await api(request, admin, '/api/v1/configuracoes/acessos', 'PUT', {
+        versao: matriz.versao,
+        perfil: 'EXPEDICAO',
+        acoes: originais.filter((acao) => !retirar.includes(acao)),
+      }),
+    );
+    await expect(
+      page.getByRole('heading', { name: 'Seu acesso foi atualizado', exact: true }),
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('app-expedicao')).toHaveCount(0);
+    await expect(page.locator('address')).toHaveCount(0);
+    expect(
+      (await api(request, token, '/api/v1/expedicao?unidadeId=' + fixture().unidadeA)).status(),
+    ).toBe(403);
+    const unidades = await ok<{ id: string }[]>(
+      await api(request, token, '/api/v1/operacao/unidades-existentes'),
+    );
+    expect(unidades.some((u) => u.id === fixture().unidadeA)).toBe(true);
+    const validade = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8')) as {
+      exp: number;
+    };
+    expect(validade.exp).toBeGreaterThan(Date.now() / 1000);
+    await capturar(page, 'expedicao-acesso-revogado');
+  } finally {
+    const atual = await ok<{ versao: number }>(
+      await api(request, admin, '/api/v1/configuracoes/acessos'),
+    );
+    await ok(
+      await api(request, admin, '/api/v1/configuracoes/acessos', 'PUT', {
+        versao: atual.versao,
+        perfil: 'EXPEDICAO',
+        acoes: originais,
+      }),
+    );
+  }
+});
+
 test('S04-UI06: relatório mostra datas, fuso e indicadores separados', async ({
   page,
   request,
@@ -554,13 +620,35 @@ test('S04-UI06: relatório mostra datas, fuso e indicadores separados', async ({
   await pedidoApi(request);
   await loginUi(page, fixture().contas.gerente);
   await area(page, '/gestao/relatorios');
+  await expect(
+    page.getByRole('button', { name: 'Consultar relatório', exact: true }),
+  ).toBeEnabled();
+  await page.getByLabel('Data inicial', { exact: true }).fill('2026-11-01');
+  await page.getByLabel('Data final', { exact: true }).fill('2026-11-09');
   await page.getByRole('button', { name: 'Consultar relatório', exact: true }).click();
+  await expect(page.getByText('Período consultado: 01/11/2026 a 09/11/2026.')).toBeVisible();
   await expect(page.getByText(/Fuso da unidade:/)).toBeVisible();
   await expect(
     page.getByText('Recebimentos confirmados no período', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Reservas atuais de devolução', { exact: true })).toBeVisible();
   await capturar(page, 'relatorio');
+  await page.getByLabel('Data inicial', { exact: true }).fill('2026-11-09');
+  await page.getByLabel('Data final', { exact: true }).fill('2026-11-01');
+  await expect(page.getByText('Período consultado: 01/11/2026 a 09/11/2026.')).toBeVisible();
+  const invalida = page.waitForResponse(
+    (r) => new URL(r.url()).pathname === '/api/v1/relatorios/vendas',
+  );
+  await page.getByRole('button', { name: 'Consultar relatório', exact: true }).click();
+  expect((await invalida).status()).toBe(422);
+  await expect(page.locator('app-vendas').getByRole('alert')).toContainText('período válido');
+  await expect(page.getByText(/Período consultado:/)).toHaveCount(0);
+  await expect(page.getByText('Pedidos criados no período', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Data inicial', { exact: true }).fill('2026-11-01');
+  await page.getByLabel('Data final', { exact: true }).fill('2026-11-09');
+  await page.getByRole('button', { name: 'Consultar relatório', exact: true }).click();
+  await expect(page.getByText('Período consultado: 01/11/2026 a 09/11/2026.')).toBeVisible();
+  await expect(page.locator('app-vendas').getByRole('alert')).toHaveCount(0);
   const token = await loginApi(request, fixture().contas.cozinha);
   expect(
     (

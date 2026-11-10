@@ -1,5 +1,16 @@
 # Inventário rastreável de cobertura
 
+## Revisão geral pré-testes — em validação, 2026-11-10
+
+O inventário vigente passa a **84 cenários × cinco projetos, 420 pares**.
+O cenário S04-UI10 acrescenta revogação da expedição com dados já carregados,
+remoção de informações pessoais da UI e negação pela API (T16; Administrador
+e Expedição). S04-UI06 amplia a prova do período do relatório, falha e
+recuperação; S02-PWA01 inclui as cinco rotas da Sprint 4 no shell offline.
+A [evidência da revisão](revisao-geral-pre-testes-2026-11-10.md) registra o
+candidato e os resultados desta rodada; a presença no inventário ainda não
+comprova execução. As aprovações históricas abaixo conservam seus artefatos.
+
 ## Sprint 5 — validação complementar no Mac/CI
 
 A [evidência complementar](sprint-05-validacao-mac-ci-2026-11-09.md) identifica

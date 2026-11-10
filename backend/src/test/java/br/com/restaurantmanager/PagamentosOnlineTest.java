@@ -3,8 +3,16 @@ package br.com.restaurantmanager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import br.com.restaurantmanager.financeiro.services.DevolucaoOnlineService;
+import br.com.restaurantmanager.pagamentos.dtos.CheckoutRegistro;
 import br.com.restaurantmanager.pagamentos.dtos.CredencialPagamento;
 import br.com.restaurantmanager.pagamentos.dtos.SituacaoProvedor;
 import br.com.restaurantmanager.pagamentos.infrastructure.GatewayPagamento;
@@ -25,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import tools.jackson.databind.JsonNode;
@@ -37,6 +46,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
@@ -44,6 +54,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -82,8 +94,9 @@ class PagamentosOnlineTest {
     @Autowired ProtecaoPagamento protecao;
     @Autowired InboxPagamentoService inbox;
     @Autowired ConexaoPagamentoService conexoes;
-    @Autowired GatewayPagamento gateway;
+    @MockitoSpyBean GatewayPagamento gateway;
     private PedidosCenario p;
+    private final List<UUID> eventosCriados = new ArrayList<>();
 
     @BeforeAll
     static void preparar() throws Exception {
@@ -130,6 +143,8 @@ class PagamentosOnlineTest {
 
     @AfterEach
     void limpar() throws Exception {
+        for (UUID id : eventosCriados)
+            p.c.executar("delete from public.mp_inbox where id='" + id + "'");
         p.c.executar(
                 "delete from public.mp_inbox where recurso in (select recurso from"
                         + " public.mp_recurso where empresa_id='"
@@ -677,5 +692,301 @@ class PagamentosOnlineTest {
         assertThat(p.c.enviar("POST", rota, caixa, null).getStatus()).isEqualTo(403);
         assertThat(p.contar("pagamento_checkout")).isEqualTo(1);
         assertThat(p.contar("auditoria_acesso where evento='PAGAMENTO_RECONCILIACAO_SOLICITADA'")).isEqualTo(auditoria);
+    }
+
+    @Test
+    void webhookDaRecusadaSubstituidaReconciliaSemColidirENaoCriaTentativaJaLiquidada() throws Exception {
+        var pedido = enviar();
+        String antigo = recusar(pedido);
+        UUID nova = novaTentativa(pedido);
+        assertThat(p.contar("pagamento_checkout where substituida")).isEqualTo(1);
+        assertThat(p.contar("pagamento_checkout where not substituida and estado='SOLICITADO'")).isEqualTo(1);
+
+        PROVEDOR.aprovar(antigo);
+        UUID evento = registrarInbox(antigo);
+        inbox.encaminhar();
+        assertThat(inboxProcessada(evento)).isTrue();
+        processarIntencao(UUID.fromString(pedido.get("id").asText()));
+        processarIntencao(nova);
+
+        assertThat(p.detalhe(pedido).get("estado").asText()).isEqualTo("AGUARDANDO_ACEITE");
+        assertThat(p.detalhe(pedido).get("saldo").get("pagoConfirmado").asText()).isEqualTo("20.00");
+        assertThat(p.contar("recebimento")).isEqualTo(1);
+        assertThat(p.contar("pagamento_checkout where id='" + nova + "' and estado='RECUSADO' and not enviado")).isEqualTo(1);
+        verify(gateway, never()).criar(any(), eq(nova), anyString(), anyInt(), anyString());
+        // Repetição tardia mantém o mesmo recebimento e não libera uma terceira intenção.
+        registrarInbox(antigo);
+        inbox.encaminhar();
+        processarIntencao(UUID.fromString(pedido.get("id").asText()));
+        assertThat(p.contar("recebimento")).isEqualTo(1);
+        assertThat(p.c.enviar("POST", rotaTentativa(pedido, UUID.randomUUID()), p.tokenCliente, null).getStatus()).isEqualTo(409);
+    }
+
+    @Test
+    void pagamentoAntigoDuranteHttpDaNovaTentativaReservaSomenteExcedenteSemLockExterno() throws Exception {
+        var pedido = enviar();
+        String antigo = recusar(pedido);
+        UUID nova = novaTentativa(pedido);
+        var novaPaga = new CountDownLatch(1);
+        var liberarResposta = new CountDownLatch(1);
+        doAnswer(invocacao -> {
+            var resultado = (SituacaoProvedor) invocacao.callRealMethod();
+            PROVEDOR.aprovar(resultado.id());
+            novaPaga.countDown();
+            if (!liberarResposta.await(10, TimeUnit.SECONDS))
+                throw new AssertionError("O teste não liberou o resultado do pagamento concorrente.");
+            return gateway.consultar(invocacao.getArgument(0), resultado.id());
+        }).when(gateway).criar(any(), eq(nova), anyString(), anyInt(), anyString());
+
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var processamento = executor.submit(() -> {
+                processarIntencao(nova);
+                return null;
+            });
+            try {
+                assertThat(novaPaga.await(10, TimeUnit.SECONDS)).isTrue();
+                PROVEDOR.aprovar(antigo);
+                registrarInbox(antigo);
+                inbox.encaminhar();
+                // Precisa concluir enquanto o outro worker aguarda HTTP: pedido/cobrança estão livres.
+                processarIntencao(UUID.fromString(pedido.get("id").asText()));
+                assertThat(p.detalhe(pedido).get("saldo").get("pagoConfirmado").asText()).isEqualTo("20.00");
+            } finally {
+                liberarResposta.countDown();
+            }
+            processamento.get(20, TimeUnit.SECONDS);
+        }
+        var saldo = p.detalhe(pedido).get("saldo");
+        assertThat(saldo.get("pagoConfirmado").asText()).isEqualTo("40.00");
+        assertThat(saldo.get("saldoADevolver").asText()).isEqualTo("20.00");
+        assertThat(p.contar("recebimento")).isEqualTo(2);
+        assertThat(p.contar("devolucao where valor=20 and estado='SOLICITADA'")).isEqualTo(1);
+        try (var scope = TenantScope.open(p.c.schema)) {
+            devolucoes.processar(devolucoes.reivindicar());
+        }
+        // A reserva escolhe o primeiro recebimento, que foi o da intenção antiga.
+        processarIntencao(UUID.fromString(pedido.get("id").asText()));
+        registrarInbox(antigo);
+        inbox.encaminhar();
+        processarIntencao(UUID.fromString(pedido.get("id").asText()));
+        assertThat(p.contar("recebimento")).isEqualTo(2);
+        assertThat(p.contar("devolucao where valor=20 and estado='CONFIRMADA'")).isEqualTo(1);
+        assertThat(p.detalhe(pedido).get("saldo").get("saldoADevolver").asText()).isEqualTo("0.00");
+    }
+
+    @Test
+    void tentativaEnviadaSemResultadoNaBuscaNaoRepeteCriacao() throws Exception {
+        var pedido = enviar();
+        UUID id = UUID.fromString(pedido.get("id").asText());
+        p.c.executar("update " + p.c.schema + ".pagamento_checkout set enviado=true");
+        try (var scope = TenantScope.open(p.c.schema)) {
+            var trabalho = checkout.reivindicar();
+            RuntimeException erro = catchThrowableOfType(() -> checkout.processar(trabalho), RuntimeException.class);
+            assertThat(erro).hasMessageContaining("sem nova criação");
+            checkout.falhar(trabalho, erro);
+        }
+        assertThat(p.contar("pagamento_checkout where enviado and estado='EM_RECONCILIACAO'")).isEqualTo(1);
+        verify(gateway, never()).criar(any(), eq(id), anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void perdaDeLeaseDuranteBuscaImpedePostDeCriacaoDoWorkerAntigo() throws Exception {
+        var pedido = enviar();
+        UUID id = UUID.fromString(pedido.get("id").asText());
+        UUID novaLease = UUID.randomUUID();
+        var buscaConcluida = new CountDownLatch(1);
+        var liberarBusca = new CountDownLatch(1);
+        doAnswer(invocacao -> {
+            Object resultado = invocacao.callRealMethod();
+            buscaConcluida.countDown();
+            if (!liberarBusca.await(10, TimeUnit.SECONDS))
+                throw new AssertionError("O teste não liberou a busca após trocar a lease.");
+            return resultado;
+        }).when(gateway).buscar(any(), eq(id), any());
+
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var processamento = executor.submit(() -> {
+                processarIntencao(id);
+                return null;
+            });
+            try {
+                assertThat(buscaConcluida.await(10, TimeUnit.SECONDS)).isTrue();
+                p.c.executar("update " + p.c.schema + ".pagamento_checkout set lease_id='" + novaLease
+                        + "',lease_ate=now()+interval '2 minutes' where id='" + id + "'");
+            } finally {
+                liberarBusca.countDown();
+            }
+            processamento.get(20, TimeUnit.SECONDS);
+        }
+        verify(gateway, never()).criar(any(), eq(id), anyString(), anyInt(), anyString());
+        assertThat(p.contar("pagamento_checkout where not enviado and lease_id='" + novaLease + "'")).isEqualTo(1);
+    }
+
+    @Test
+    void reconciliarTentativaSubstituidaSemEnvioNaoCriaCobranca() throws Exception {
+        var pedido = enviar();
+        UUID antiga = UUID.fromString(pedido.get("id").asText());
+        // Intenção comprovadamente não enviada, recusada por uma execução anterior.
+        p.c.executar("update " + p.c.schema + ".pagamento_checkout set estado='RECUSADO'");
+        novaTentativa(pedido);
+        String rota = "/api/v1/operacao/pagamentos/checkout/" + antiga + "/reconciliar";
+        assertThat(p.c.enviar("POST", rota, p.c.token, null).getStatus()).isEqualTo(204);
+        processarIntencao(antiga);
+        assertThat(p.contar("pagamento_checkout where substituida and estado='RECUSADO' and not enviado")).isEqualTo(1);
+        verify(gateway, never()).criar(any(), eq(antiga), anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void duasNovasTentativasConcorrentesPreservamUnicaVigenteEIdempotencia() throws Exception {
+        var pedido = enviar();
+        recusar(pedido);
+        UUID primeira = UUID.randomUUID(), segunda = UUID.randomUUID();
+        var iniciar = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var a = executor.submit(() -> {
+                assertThat(iniciar.await(10, TimeUnit.SECONDS)).isTrue();
+                return p.c.enviar("POST", rotaTentativa(pedido, primeira), p.tokenCliente, null).getStatus();
+            });
+            var b = executor.submit(() -> {
+                assertThat(iniciar.await(10, TimeUnit.SECONDS)).isTrue();
+                return p.c.enviar("POST", rotaTentativa(pedido, segunda), p.tokenCliente, null).getStatus();
+            });
+            iniciar.countDown();
+            int resultadoA = a.get(20, TimeUnit.SECONDS), resultadoB = b.get(20, TimeUnit.SECONDS);
+            assertThat(List.of(resultadoA, resultadoB)).containsExactlyInAnyOrder(200, 409);
+            UUID aceita = resultadoA == 200 ? primeira : segunda;
+            assertThat(p.c.enviar("POST", rotaTentativa(pedido, aceita), p.tokenCliente, null).getStatus()).isEqualTo(200);
+        }
+        assertThat(p.contar("pagamento_checkout")).isEqualTo(2);
+        assertThat(p.contar("pagamento_checkout where not substituida")).isEqualTo(1);
+        assertThat(p.contar("pagamento_checkout where substituida and estado='RECUSADO'")).isEqualTo(1);
+    }
+
+    @Test
+    void falhaSqlDeUmEventoNaoReverteOutroTenantERetryTemBackoffLimitado() throws Exception {
+        var pedido = enviar();
+        processar();
+        String valido = externo(pedido);
+        PROVEDOR.aprovar(valido);
+        try (var outro = new CatalogoCenario(mvc, mapper)) {
+            String quebrado = "RECURSO" + UUID.randomUUID().toString().replace("-", "");
+            outro.executar("insert into public.mp_recurso(recurso,empresa_id) values ('" + quebrado.toLowerCase(Locale.ROOT) + "','" + outro.empresa + "')");
+            UUID eventoRuim = registrarInbox(quebrado);
+            UUID eventoBom = registrarInbox(valido);
+            outro.executar("alter table " + outro.schema + ".pagamento_checkout rename to checkout_indisponivel");
+            try {
+                inbox.encaminhar();
+                assertThat(inboxProcessada(eventoBom)).isTrue();
+                assertThat(inboxProcessada(eventoRuim)).isFalse();
+                processarIntencao(UUID.fromString(pedido.get("id").asText()));
+                assertThat(p.contar("recebimento")).isEqualTo(1);
+                assertBackoff(eventoRuim, 1, 30);
+                inbox.encaminhar(); // Evento adiado não consome tentativa a cada ciclo.
+                assertBackoff(eventoRuim, 1, 30);
+                p.c.executar("update public.mp_inbox set tentativas=40,proximo_em=now() where id='" + eventoRuim + "'");
+                inbox.encaminhar();
+                assertBackoff(eventoRuim, 41, 900);
+                assertThat(outro.contar("recebimento")).isZero();
+            } finally {
+                outro.executar("alter table " + outro.schema + ".checkout_indisponivel rename to pagamento_checkout");
+                outro.executar("delete from public.mp_inbox where id='" + eventoRuim + "'");
+                outro.executar("delete from public.mp_recurso where empresa_id='" + outro.empresa + "'");
+            }
+        }
+    }
+
+    @Test
+    void inboxPreservaEventoAntesDoMapeamentoEDuranteLease() throws Exception {
+        var pedido = enviar();
+        UUID id = UUID.fromString(pedido.get("id").asText());
+        processar();
+        String recurso = externo(pedido);
+        p.c.executar("delete from public.mp_recurso where empresa_id='" + p.c.empresa + "'");
+        UUID evento = registrarInbox(recurso);
+        inbox.encaminhar();
+        assertThat(inboxProcessada(evento)).isFalse();
+        assertBackoff(evento, 1, 30);
+        p.c.executar("insert into public.mp_recurso(recurso,empresa_id) values ('" + recurso.toLowerCase(Locale.ROOT) + "','" + p.c.empresa + "')");
+        antecipar();
+        CheckoutRegistro trabalho;
+        try (var scope = TenantScope.open(p.c.schema)) {
+            trabalho = checkout.reivindicar();
+        }
+        p.c.executar("update public.mp_inbox set proximo_em=now() where id='" + evento + "'");
+        inbox.encaminhar();
+        assertThat(inboxProcessada(evento)).isFalse();
+        assertBackoff(evento, 2, 60);
+        try (var scope = TenantScope.open(p.c.schema)) {
+            checkout.processar(trabalho);
+        }
+        p.c.executar("update public.mp_inbox set proximo_em=now() where id='" + evento + "'");
+        inbox.encaminhar();
+        assertThat(inboxProcessada(evento)).isTrue();
+        processarIntencao(id);
+        assertThat(p.contar("recebimento")).isZero();
+    }
+
+    private String recusar(JsonNode pedido) throws Exception {
+        processar();
+        String externo = externo(pedido);
+        PROVEDOR.orders.get(externo).put("status", "failed");
+        processarIntencao(UUID.fromString(pedido.get("id").asText()));
+        assertThat(p.contar("pagamento_checkout where estado='RECUSADO'")).isEqualTo(1);
+        return externo;
+    }
+
+    private UUID novaTentativa(JsonNode pedido) throws Exception {
+        UUID id = UUID.randomUUID();
+        var resposta = p.c.enviar("POST", rotaTentativa(pedido, id), p.tokenCliente, null);
+        assertThat(resposta.getStatus()).as(resposta.getContentAsString()).isEqualTo(200);
+        return id;
+    }
+
+    private String rotaTentativa(JsonNode pedido, UUID id) {
+        return "/api/v1/me/pedidos/" + pedido.get("id").asText() + "/pagamento/tentativas/" + id;
+    }
+
+    private void processarIntencao(UUID id) throws Exception {
+        p.c.executar("update " + p.c.schema + ".pagamento_checkout set proximo_em=now()+interval '1 hour'");
+        p.c.executar("update " + p.c.schema + ".pagamento_checkout set proximo_em=now() where id='" + id + "'");
+        try (var scope = TenantScope.open(p.c.schema)) {
+            var trabalho = checkout.reivindicar();
+            assertThat(trabalho).isNotNull();
+            assertThat(trabalho.id()).isEqualTo(id);
+            checkout.processar(trabalho);
+        }
+    }
+
+    private UUID registrarInbox(String recurso) throws Exception {
+        UUID id = UUID.randomUUID();
+        try (var c = p.banco(); var s = c.prepareStatement("insert into public.mp_inbox(id,recurso) values (?,?)")) {
+            s.setObject(1, id);
+            s.setString(2, recurso.toLowerCase(Locale.ROOT));
+            s.executeUpdate();
+        }
+        eventosCriados.add(id);
+        return id;
+    }
+
+    private boolean inboxProcessada(UUID id) throws Exception {
+        try (var c = p.banco(); var s = c.prepareStatement("select processado_em is not null from public.mp_inbox where id=?")) {
+            s.setObject(1, id);
+            try (var r = s.executeQuery()) {
+                assertThat(r.next()).isTrue();
+                return r.getBoolean(1);
+            }
+        }
+    }
+
+    private void assertBackoff(UUID id, int tentativas, int segundos) throws Exception {
+        try (var c = p.banco(); var s = c.prepareStatement("select tentativas,extract(epoch from proximo_em-now()),ultima_falha from public.mp_inbox where id=?")) {
+            s.setObject(1, id);
+            try (var r = s.executeQuery()) {
+                assertThat(r.next()).isTrue();
+                assertThat(r.getInt(1)).isEqualTo(tentativas);
+                assertThat(r.getDouble(2)).isBetween(segundos - 15.0, (double) segundos);
+                assertThat(r.getString(3)).isNotBlank().doesNotContain(p.c.schema, "select", "update");
+            }
+        }
     }
 }

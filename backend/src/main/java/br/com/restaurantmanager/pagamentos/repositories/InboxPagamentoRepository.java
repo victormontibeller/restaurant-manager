@@ -3,6 +3,7 @@ package br.com.restaurantmanager.pagamentos.repositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -21,35 +22,57 @@ public class InboxPagamentoRepository {
                 recurso.toLowerCase(Locale.ROOT));
     }
 
-    public void encaminhar() {
-        var eventos =
-                jdbc.query(
-                        """
-select i.id,i.recurso,e.schema_name from public.mp_inbox i join public.mp_recurso r on r.recurso=i.recurso
-join public.empresa e on e.id=r.empresa_id where i.processado_em is null
-order by i.criado_em,i.id limit 50 for update of i skip locked
-""",
-                        (r, n) ->
-                                new Evento(
-                                        r.getObject(1, UUID.class),
-                                        r.getString(2),
-                                        r.getString(3)));
-        for (var evento : eventos) {
-            if (!evento.schema().matches("t_[a-f0-9]{32}"))
-                throw new IllegalStateException("Mapeamento interno inválido.");
-            int alterados =
-                    jdbc.update(
-                            "update "
-                                    + evento.schema()
-                                    + ".pagamento_checkout set"
-                                    + " estado='EM_RECONCILIACAO',tentativas=0,proximo_em=now()"
-                                    + " where lower(externo_id)=? and lease_id is null",
-                            evento.recurso());
-            if (alterados > 0)
-                jdbc.update(
-                        "update public.mp_inbox set processado_em=now() where id=?", evento.id());
-        }
+    public List<UUID> pendentes() {
+        return jdbc.query(
+                "select id from public.mp_inbox where processado_em is null and proximo_em<=now()"
+                        + " order by proximo_em,criado_em,id limit 50",
+                (r, n) -> r.getObject(1, UUID.class));
     }
 
-    private record Evento(UUID id, String recurso, String schema) {}
+    public void encaminhar(UUID id) {
+        var recursos =
+                jdbc.query(
+                        "select recurso from public.mp_inbox where id=? and processado_em is null"
+                                + " and proximo_em<=now() for update skip locked",
+                        (r, n) -> r.getString(1),
+                        id);
+        if (recursos.isEmpty()) return;
+        String recurso = recursos.getFirst();
+        var schemas =
+                jdbc.query(
+                        "select e.schema_name from public.mp_recurso r join public.empresa e"
+                                + " on e.id=r.empresa_id where r.recurso=?",
+                        (r, n) -> r.getString(1),
+                        recurso);
+        if (schemas.isEmpty()) {
+            adiar(id, "RecursoNaoMapeado");
+            return;
+        }
+        String schema = schemas.getFirst();
+        if (!schema.matches("t_[a-f0-9]{32}"))
+            throw new IllegalStateException("Mapeamento interno inválido.");
+        int alterados =
+                jdbc.update(
+                        "update "
+                                + schema
+                                + ".pagamento_checkout set"
+                                + " estado='EM_RECONCILIACAO',tentativas=0,proximo_em=now()"
+                                + " where lower(externo_id)=? and lease_id is null",
+                        recurso);
+        if (alterados == 0) {
+            adiar(id, "CheckoutIndisponivel");
+            return;
+        }
+        jdbc.update(
+                "update public.mp_inbox set processado_em=now(),ultima_falha=null where id=?", id);
+    }
+
+    public void adiar(UUID id, String tipo) {
+        jdbc.update(
+                "update public.mp_inbox set tentativas=least(tentativas,2147483646)+1,"
+                        + " proximo_em=now()+(least(tentativas,29)+1)*interval '30 seconds',ultima_falha=?"
+                        + " where id=? and processado_em is null and proximo_em<=now()",
+                tipo,
+                id);
+    }
 }

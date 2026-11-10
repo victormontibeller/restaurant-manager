@@ -53,6 +53,7 @@ export class EquipeLayoutComponent {
       pessoa.perfil !== 'CLIENTE' &&
       (!dados['administrador'] || this.contexto.administrador()) &&
       (!this.cozinha || this.contexto.podeCozinha()) &&
+      (!dados['expedicao'] || this.contexto.podeExpedicao()) &&
       (!dados['acao'] || this.contexto.tem(String(dados['acao'])))
     );
   });

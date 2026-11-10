@@ -23,7 +23,7 @@ public class PedidoDeadlineJob {
         this.service = service;
     }
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 1000)
+    @Scheduled(initialDelay = 5000, fixedDelay = 1000, scheduler = "pedidoDeadlineScheduler")
     public void executar() {
         if (!TenantScope.current().equals("__none__")) throw new IllegalStateException("Worker requer contexto neutro.");
         String cursor = "";

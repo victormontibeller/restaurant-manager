@@ -16,6 +16,7 @@ const tests = [
   'test_unit_schedule.cjs',
   'test_pwa.cjs',
   'test_route_shell.cjs',
+  'test_delivery_reports.cjs',
   'test_catalog_cart.cjs',
   'test_catalog_media.cjs',
   'test_catalog_recovery.cjs',

@@ -15,4 +15,5 @@ public record CheckoutRegistro(
         UUID leaseId,
         boolean enviado,
         String retornoUrl,
-        Integer prazoSegundos) {}
+        Integer prazoSegundos,
+        boolean substituida) {}

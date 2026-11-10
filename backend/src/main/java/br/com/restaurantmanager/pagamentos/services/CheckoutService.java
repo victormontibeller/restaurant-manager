@@ -81,21 +81,27 @@ public class CheckoutService {
     @Transactional
     public List<CheckoutResumo> novaTentativa(IdentidadeAtual ator, UUID pedido, UUID intencao) {
         var p = pedidos.cliente(ator, pedido, true);
-        var anteriores = repository.listar(pedido);
-        if (anteriores.stream().anyMatch(c -> c.id().equals(intencao))) return anteriores;
+        var saldo = cobrancas.bloquearSaldoPedido(pedido);
+        var anteriores = repository.bloquearTentativas(pedido);
+        if (anteriores.stream().anyMatch(c -> c.id().equals(intencao)))
+            return repository.listar(pedido);
+        Instant agora = Instant.now();
         if (p.estado() != EstadoPedido.AGUARDANDO_PAGAMENTO
-                || !Instant.now().isBefore(p.pagamentoExpiraEm())
-                || anteriores.stream().anyMatch(c -> !c.estado().equals("RECUSADO")))
+                || !agora.isBefore(p.pagamentoExpiraEm())
+                || new BigDecimal(saldo.saldoAReceber()).signum() <= 0
+                || anteriores.stream()
+                        .anyMatch(c -> !c.estado().equals("RECUSADO") || c.leaseId() != null))
             throw ErrosPedido.conflito(
                     "A tentativa anterior precisa ser resolvida antes de outro checkout.");
+        repository.substituirRecusadas(pedido);
         intencoes.nova(
                 intencao,
                 pedido,
-                cobrancas.saldoPedido(pedido, null).saldoAReceber(),
+                saldo.saldoAReceber(),
                 (int)
                         Math.max(
                                 1,
-                                Duration.between(Instant.now(), p.pagamentoExpiraEm())
+                                Duration.between(agora, p.pagamentoExpiraEm())
                                         .getSeconds()));
         return repository.listar(pedido);
     }
@@ -112,33 +118,21 @@ public class CheckoutService {
             if (anteriores.size() > 1)
                 throw ErrosPedido.conflito(
                         "Mais de uma cobrança encontrada para a mesma intenção.");
-            var pedido = tx.execute(s -> pedidos.sistema(trabalho.pedidoId()));
-            if (anteriores.isEmpty() && pedido.estado() == EstadoPedido.CANCELADO) {
-                if (trabalho.enviado())
-                    throw ErrosPedido.conflito(
-                            "Cobrança incerta de pedido cancelado exige reconciliação.");
-                tx.executeWithoutResult(s -> repository.concluir(trabalho, null, null, "RECUSADO"));
-                return;
-            }
-            if (trabalho.prazoSegundos() == null || trabalho.retornoUrl() == null)
-                throw ErrosPedido.conflito(
-                        "A intenção financeira precisa de revisão do snapshot antes de criar"
-                                + " cobrança.");
-            if (anteriores.isEmpty())
-                tx.executeWithoutResult(s -> repository.marcarEnviado(trabalho));
-            situacao =
-                    anteriores.isEmpty()
-                            ? gateway.criar(
-                                    credencial,
-                                    trabalho.id(),
-                                    trabalho.valor(),
-                                    trabalho.prazoSegundos(),
-                                    trabalho.retornoUrl())
-                            : anteriores.getFirst();
+            if (anteriores.isEmpty()) {
+                var preparada = tx.execute(s -> prepararCriacao(trabalho));
+                if (preparada == null) return;
+                situacao =
+                        gateway.criar(
+                                credencial,
+                                preparada.id(),
+                                preparada.valor(),
+                                preparada.prazoSegundos(),
+                                preparada.retornoUrl());
+            } else situacao = anteriores.getFirst();
         } else situacao = gateway.consultar(credencial, trabalho.externoId());
         validar(trabalho, credencial, situacao);
-        var atual = tx.execute(s -> pedidos.sistema(trabalho.pedidoId()));
-        if (atual.estado() == EstadoPedido.CANCELADO && "created".equals(situacao.estado())) {
+        if ("created".equals(situacao.estado())
+                && Boolean.TRUE.equals(tx.execute(s -> deveCancelar(trabalho)))) {
             gateway.cancelar(
                     credencial,
                     situacao.id(),
@@ -151,6 +145,7 @@ public class CheckoutService {
         tx.executeWithoutResult(
                 s -> {
                     var pedido = pedidos.sistema(trabalho.pedidoId());
+                    cobrancas.bloquearSaldoPedido(pedido.id());
                     var anterior = repository.obter(trabalho.id(), true);
                     if (!repository.possuiLease(trabalho)) return;
                     repository.mapear(confirmado.id(), SegredosPagamento.empresa());
@@ -210,6 +205,52 @@ public class CheckoutService {
                                             .signum()
                                     == 0) pedidos.confirmar(pedido);
                 });
+    }
+
+    /** Revalida o agregado e confirma a intenção antes do HTTP, sem manter seus locks. */
+    private CheckoutRegistro prepararCriacao(CheckoutRegistro trabalho) {
+        var pedido = pedidos.sistema(trabalho.pedidoId());
+        var saldo = cobrancas.bloquearSaldoPedido(pedido.id());
+        var atual = repository.obter(trabalho.id(), true);
+        if (!repository.possuiLease(trabalho)) return null;
+        if (atual.enviado())
+            throw ErrosPedido.conflito(
+                    "Cobrança enviada sem resultado confiável exige reconciliação, sem nova criação.");
+        BigDecimal aReceber = new BigDecimal(saldo.saldoAReceber());
+        if (atual.substituida()
+                || pedido.estado() != EstadoPedido.AGUARDANDO_PAGAMENTO
+                || !Instant.now().isBefore(pedido.pagamentoExpiraEm())
+                || aReceber.signum() <= 0) {
+            repository.concluir(trabalho, null, null, "RECUSADO");
+            if (!atual.estado().equals("RECUSADO"))
+                eventos.registrar(
+                        pedido.unidadeId(),
+                        "CHECKOUT_ATUALIZADO",
+                        pedido.id(),
+                        null,
+                        pedido.usuarioId(),
+                        null);
+            return null;
+        }
+        if (aReceber.compareTo(new BigDecimal(atual.valor())) != 0)
+            throw ErrosPedido.conflito("O saldo mudou. Reconcilie a intenção antes de criar cobrança.");
+        if (atual.prazoSegundos() == null || atual.retornoUrl() == null)
+            throw ErrosPedido.conflito(
+                    "A intenção financeira precisa de revisão do snapshot antes de criar cobrança.");
+        repository.marcarEnviado(atual);
+        return atual;
+    }
+
+    private boolean deveCancelar(CheckoutRegistro trabalho) {
+        var pedido = pedidos.sistema(trabalho.pedidoId());
+        var saldo = cobrancas.bloquearSaldoPedido(pedido.id());
+        var atual = repository.obter(trabalho.id(), true);
+        return repository.possuiLease(trabalho)
+                && (atual.substituida()
+                        || pedido.estado() != EstadoPedido.AGUARDANDO_PAGAMENTO
+                        || new BigDecimal(saldo.saldoAReceber())
+                                        .compareTo(new BigDecimal(atual.valor()))
+                                < 0);
     }
 
     public void falhar(CheckoutRegistro trabalho, RuntimeException erro) {

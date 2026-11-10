@@ -46,6 +46,11 @@ public class CobrancaService {
                 .orElseGet(this::zero);
     }
 
+    public SaldoCobranca bloquearSaldoPedido(UUID pedido) {
+        UUID id = repository.localizar(pedido, null).orElseThrow();
+        return saldo(repository.saldo(id, true));
+    }
+
     public SaldoCobranca saldoComanda(UUID comanda) {
         return repository
                 .localizar(null, comanda)

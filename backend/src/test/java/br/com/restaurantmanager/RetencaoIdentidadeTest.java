@@ -158,6 +158,67 @@ class RetencaoIdentidadeTest {
         assertThatThrownBy(() -> retencao.executarLote()).isInstanceOf(RuntimeException.class);
         assertThat(TenantScope.current()).isEqualTo("__none__");
     }
+    @Test void oauthNaoBloqueiaExpurgoNemRemoveConexaoAuditoriaOuSessaoValida() throws Exception {
+        UUID antigaConcluida = sessao(A, -172800, false);
+        UUID antigaAbandonada = sessao(A, -172800, false);
+        UUID valida = sessao(A, 3600, false);
+        UUID outroTenant = sessao(B, -172800, false);
+        for (UUID id : List.of(antigaConcluida, antigaAbandonada, valida)) refresh(A, id, false);
+        UUID oauthConcluido = oauth(A, antigaConcluida, "CONCLUIDO", -172800);
+        UUID oauthAbandonado = oauth(A, antigaAbandonada, "CRIADO", -172800);
+        UUID oauthValido = oauth(A, valida, "CRIADO", 300);
+        UUID oauthOutro = oauth(B, outroTenant, "CONCLUIDO", -172800);
+        String limiteAntigo = limite(-172800);
+        String limiteVigente = limite(-60);
+        UUID conexao = UUID.randomUUID();
+        UUID auditoria = UUID.randomUUID();
+        try (var c = owner()) {
+            try (var s = c.prepareStatement("insert into " + A + ".mp_conexao(id,vendedor,credencial,expira_em) values (?,?,?,now()+interval '1 hour')")) {
+                s.setObject(1, conexao); s.setString(2, conexao.toString());
+                s.setString(3, "cifra-ficticia-preservada"); s.executeUpdate();
+            }
+            try (var s = c.prepareStatement("insert into " + A + ".auditoria_acesso(id,ator_id,recurso_id,evento,antes,depois,ocorrido_em) values (?,?,?,'MERCADOPAGO_CONECTADO','','',now())")) {
+                s.setObject(1, auditoria); s.setObject(2, usuario); s.setObject(3, conexao); s.executeUpdate();
+            }
+        }
+        try {
+            assertThat(executar(A).sessoes()).isEqualTo(2);
+            for (UUID id : List.of(antigaConcluida, antigaAbandonada)) {
+                assertThat(existe(A, "sessao", "id", id)).isFalse();
+                assertThat(existe(A, "refresh_token", "sessao_id", id)).isFalse();
+            }
+            assertThat(existe(A, "mp_oauth", "id", oauthConcluido)).isFalse();
+            assertThat(existe(A, "mp_oauth", "id", oauthAbandonado)).isFalse();
+            assertThat(existe(A, "mp_oauth", "id", oauthValido)).isTrue();
+            assertThat(existe(A, "sessao", "id", valida)).isTrue();
+            assertThat(existe(A, "refresh_token", "sessao_id", valida)).isTrue();
+            assertThat(existe(B, "mp_oauth", "id", oauthOutro)).isTrue();
+            assertThat(existe(A, "mp_conexao", "id", conexao)).isTrue();
+            assertThat(existe(A, "auditoria_acesso", "id", auditoria)).isTrue();
+            assertThat(existe(A, "limite_login", "chave", limiteAntigo)).isFalse();
+            assertThat(existe(A, "limite_login", "chave", limiteVigente)).isTrue();
+            assertThat(executar(A).sessoes()).isZero();
+        } finally {
+            try (var c = owner()) {
+                for (String tabela : List.of("mp_conexao", "auditoria_acesso")) {
+                    try (var s = c.prepareStatement("delete from " + A + "." + tabela + " where id=?")) {
+                        s.setObject(1, tabela.equals("mp_conexao") ? conexao : auditoria); s.executeUpdate();
+                    }
+                }
+            }
+        }
+    }
+
+    private UUID oauth(String schema, UUID sessao, String estado, long expiraEmSegundos) throws Exception {
+        UUID id = UUID.randomUUID();
+        try (var c = owner(); var s = c.prepareStatement("insert into " + schema + ".mp_oauth(id,state_hash,verificador,redirect_uri,ator_id,sessao_id,expira_em,estado) values (?,?,?,'https://a.localhost/retorno',?,?,?::timestamptz,?)")) {
+            s.setObject(1, id); s.setString(2, id.toString().replace("-", ""));
+            s.setString(3, "verificador-ficticio"); s.setObject(4, usuario); s.setObject(5, sessao);
+            s.setString(6, Instant.now().plusSeconds(expiraEmSegundos).toString()); s.setString(7, estado);
+            s.executeUpdate();
+        }
+        return id;
+    }
     @Test void renovacaoConcorrenteDoLimitadorNaoPerdeBloqueio() throws Exception {
         String chave = limite(-172800);
         try (var c = owner()) {

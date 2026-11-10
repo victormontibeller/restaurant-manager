@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin || request.headers.has('Authorization')) return;
   // Nem consultas públicas, imagens da empresa, saúde, cookies ou ações entram no cache.
-  const appRoute = /^(?:\/|\/index\.html|\/(?:cardapio|carrinho|pedidos(?:\/[^/]+)?|mesa(?:\/[^/]+)?|conta|entrar|cadastro|recuperar-senha|aceitar-convite|verificar-email|sem-acesso|cozinha|plataforma|design-system)|\/gestao(?:\/(?:entrar|pedidos(?:\/novo)?|mesas|catalogo|equipe(?:\/convites)?|convites|unidades|configuracoes\/prazos|atualizacoes))?)$/;
+  const appRoute = /^(?:\/|\/index\.html|\/(?:cardapio|carrinho|pedidos(?:\/[^/]+)?|mesa(?:\/[^/]+)?|conta|entrar|cadastro|recuperar-senha|aceitar-convite|verificar-email|sem-acesso|cozinha|plataforma|design-system)|\/gestao(?:\/(?:entrar|pedidos(?:\/novo)?|mesas|catalogo|equipe(?:\/convites)?|convites|unidades|configuracoes\/(?:prazos|delivery)|atualizacoes|expedicao|relatorios|integracoes|pendencias))?)$/;
   const navigation = request.mode === 'navigate' && appRoute.test(url.pathname);
   const hashedAsset = hashedAssetPattern.test(url.pathname);
   if (!navigation && ((!paths.has(url.pathname) && !hashedAsset) || url.search)) return;
