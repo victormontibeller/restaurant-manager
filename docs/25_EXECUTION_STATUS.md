@@ -1,5 +1,50 @@
 # Checkpoint de execução
 
+## Sprint 5 — validação Mac/CI concluída, 2026-11-09
+
+Parcela autorizada concluída na branch `codex/sprint-05-registro-entregas`,
+[PR #10](https://github.com/victormontibeller/restaurant-manager/pull/10),
+base `main` integrada em `5ea8324`. Aplicação testada em
+`730949c55ce13cd4a64743d45d7d6868094d296f`, JAR
+`123f48ee1a2d58ee890067ea76121c10762ab52cb9baedae73de2bd6f97d0efd`.
+As atualizações posteriores de encerramento são documentais; não alteram as
+fontes, fixtures, harness ou bytes usados na validação.
+
+- Matriz final: **415/415 pares**, 83 cenários nos cinco projetos, mesmo JAR/PID
+  41317 e início observado 22:20:13 (UTC−03); zero falhas, ausentes, skips,
+  retries ou instabilidade. **56 capturas** das 28 telas revisadas em desktop/mobile.
+- Contraste: **38/38 casos** em uma rodada nova, sem falhas ou revisão pendente.
+  Três textos com contraste insuficiente e três avisos funcionais obsoletos
+  corrigidos; a matriz anterior interrompida em 313 pares permanece reprovada.
+- CI #194 em `730949c`: **244 testes de scripts e 452 backend**, zero falhas,
+  erros ou skips, checks Angular/build e auditorias. Mac: 234 scripts portáveis,
+  435 backend no build inicial e 51 dirigidos na rodada complementar aprovada.
+  Não somar essas camadas como uma única suíte.
+- Recuperação financeira repetida no JAR corrigido: perda efetiva de resposta,
+  dois reinícios próprios, uma cobrança/um recebimento/uma devolução e R$ 20,00
+  devolvidos, diagnósticos normalizados; provedor fictício, sem restore externo.
+- Ensaio09 aprovado: banco/mídia/chaves pré-backup, manutenção e retorno por OID,
+  carga de 641 requisições sem erros, pool, transporte e diagnósticos. Executou
+  JAR `55df989f8b83`; 506 entradas backend e scripts conferidos como idênticos
+  no candidato corrigido, sem atribuir ao novo JAR uma execução que não fez.
+- Cleanup aprovado: API/provedor próprios encerrados por identidade; clone09
+  parado; demonstração 8095 e PostgreSQL 55432 preservados. Cópia antiga da
+  Sprint 4 removida, documento oficial e arquivo manual local preservados.
+
+[Resultados, falhas/reexecuções e recibos](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md)
+e [cobertura por cenário](evidencias/cobertura.md) identificam a execução.
+Os relatórios privados ficam fora do Git. Não houve merge do PR #10 nem mudança
+na `main`, deploy Linux ou produção nesta etapa.
+
+**Próxima etapa:** inventariar e implantar release identificado no ambiente Linux
+isolado; executar ali instalação/systemd/proxy, manutenção/restore e matriz
+completa no SHA servido. Continuam pendentes Mercado Pago sandbox,
+domínio/HTTPS e e-mail externos, backup operacional/metas e responsáveis,
+treinamento, aparelhos reais, aceite assistivo e acompanhamento do piloto.
+Nenhuma pendência restante é apresentada como teste local aprovado.
+
+As seções abaixo preservam o histórico das tentativas e seus estados na ocasião.
+
 ## Sprint 5 — correção após revisão visual, 2026-11-09
 
 O primeiro candidato `55df989f8b83` foi rejeitado visualmente: T11 negava

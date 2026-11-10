@@ -1,7 +1,7 @@
 # Observabilidade e auditoria
 
 > **Escopo:** métricas, alertas, diagnóstico e rastreabilidade operacional.
-> **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
+> **Situação:** diagnóstico local implementado e exercitado com dados fictícios; alertas externos e supervisão operacional permanecem pendentes. Decisões e propostas seguem o [registro central](00_PROJECT_VISION.md).
 
 [Índice da documentação](README.md)
 
@@ -79,15 +79,22 @@ Mercado Pago sandbox ou operação financeira externa.
 Na carga sintética, `local_rehearsal.py` também mede latência, erros, CPU/RSS da
 aplicação e PostgreSQL, disco e conexões. O probe Hikari usa Attach API no PID Java
 próprio e consulta MBeans de máximo configurado, conexões ativas/ociosas/totais e
-threads esperando conexão, com amostras de 100 ms. Guarda `pool-samples.csv` e o
-resumo em `load.json`, sem expor endpoint HTTP público. Threads em espera são uma
+threads esperando conexão, com intervalo nominal de 100 ms. Guarda
+`pool-samples.csv` e o resumo em `load.json`, sem expor endpoint HTTP público.
+Threads em espera são uma
 medida amostrada de contenção; não são latência de aquisição. Essas medições não
 definem capacidade do servidor Linux ou metas de operação do restaurante.
 
-As ferramentas estão implementadas. Aprovação e limitações de cada execução,
-incluindo falhas preservadas e reexecuções, pertencem à
-[evidência Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md). Documentar
-esses coletores não conclui ensaio integrado, homologação Linux nem piloto real.
+No ensaio 09, aprovado no Mac e encerrado sem erros de cleanup, a carga fez
+641 requisições sem erros, com p95 de 29,24 ms. As 187 amostras Hikari observaram
+máximo e pico de quatro conexões e nenhuma thread aguardando conexão. As provas
+detectaram `EMAIL_FALHOU`, `JOB_ATRASADO` e `BACKUP_FALHOU`; as novas consultas
+confirmaram a normalização do e-mail e do pedido após a recuperação.
+
+Esses resultados e suas limitações, incluindo falhas preservadas e reexecuções,
+pertencem à [evidência Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
+Não houve envio externo de alertas; homologação Linux, supervisão operacional e
+piloto real permanecem pendentes.
 
 ## Documentos relacionados
 

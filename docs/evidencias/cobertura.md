@@ -1,8 +1,47 @@
 # Inventário rastreável de cobertura
 
+## Sprint 5 — validação complementar no Mac/CI
+
+A [evidência complementar](sprint-05-validacao-mac-ci-2026-11-09.md) identifica
+o JAR, falhas/reexecuções e recibos deste incremento. Foram aprovados 17 casos
+backend novos e a regressão dirigida de 51 testes em sete classes, sem falhas,
+erros ou skips. A suíte integral anterior aprovou 435 testes; a CI #194 aprovou os 452 no commit corrigido `730949c`, incluindo o reforço das asserções de timeout. A matriz final aprovou 83 cenários × cinco projetos: 415 pares únicos, com os dois workers antes ausentes no Mac. Todos passaram no mesmo JAR `123f48ee1a2d`/PID 41317, sem skips/retries/instabilidade; 56 capturas das 28 telas foram inspecionadas em desktop/mobile.
+
+| Cobertura acrescentada | Prova e limite |
+| --- | --- |
+| Sprint05AcessosMatrizTest / MatrizAcoesTest | Oráculo literal independente de 28 ações × seis perfis; API de catálogo/ações efetivas e política central; concessão/revogação nos cinco perfis configuráveis com o mesmo JWT; negativos de unidade, tenant, Cliente e plataforma |
+| RecebimentosTest / PagamentosOnlineTest | Novos negativos de autorização nos comandos financeiros; dois timeouts HTTP reais de dez segundos, com efeito remoto fictício preservado e reconciliação sem duplicar dinheiro |
+| CozinhaTest / MesasTest / Sprint04OperacaoTest | Negativos de ação/unidade em cozinha, mesa e expedição; isolamento de relatório e efeitos estáveis preservados |
+| Recuperação financeira do candidato 02 | Perda efetiva de resposta no provedor loopback, dois reinícios do JAR, estados incertos detectados e normalizados; uma cobrança/um recebimento/uma devolução, sem serviço externo |
+| check_contrast.cjs | 14 verificações do medidor; cores do shell corrigidas; medições reais e revisão visual têm recibos próprios, sem equivalência a certificação ou uso assistivo |
+| sprint05_matrix.py | 26 testes do gate: fontes/JAR/PID, inventário de pares, falhas/retries/skips e capturas; unitários do gate não substituem executar a matriz |
+| local_rehearsal / local_maintenance / prebackup_recovery / local_diagnostics | Banco/mídia, manutenção sintética, chaves anteriores ao snapshot, perda de resposta, pool e diagnósticos no clone; ensaio 09 aprovado integralmente, inclusive cleanup; backend e scripts idênticos no candidato corrigido |
+
+Os cenários de risco X01–X15 da [estratégia](../26_TEST_STRATEGY.md) são
+comprovados em camadas complementares. As classes abaixo permitem encontrar
+as invariantes; a evidência da rodada informa o que foi efetivamente executado.
+
+| Risco | Provas locais pertinentes |
+| --- | --- |
+| X01 | PedidosConcorrencia/PedidosTest/Recebimentos/Midia; S03-UI03 e S04-UI04 |
+| X02 | PedidosDeadline (sete casos de lease, vencimento, aceite e ordenação); PedidosMesa; retomada do job no ensaio |
+| X03 | Corrida primeiro preparo/autocancelamento e cancelamento da única unidade iniciada; S03-UI04 |
+| X04 | Rodada concorrente com fechamento e bloqueio de rodada; S03-UI02 |
+| X05 | CalculadoraCarrinho/Carrinho/Cozinha: quantidade e configuração; S02-UI03, S03-UI01/04 |
+| X06 | Recebimentos: excesso concorrente, troco e sobrepagamento; S04-UI03/04 |
+| X07 | FinanceiroComanda: R$ 120 recebidos, R$ 50 cancelados, R$ 80 devidos e R$ 10 a devolver |
+| X08 | Combo com ajuste anterior e devoluções concorrentes; S04-UI03/08 |
+| X09 | PagamentosOnline: assinatura, replay, ordem, atraso e credenciais; S04-UI08 |
+| X10 | PagamentosOnline: EOF e timeouts reais; recuperação financeira nova com dois reinícios |
+| X11 | NotificacaoOperacional/Recuperacao/EventosOperacionais; S03-UI11; snapshot anterior ao backup no clone |
+| X12 | Carrinho/PedidosConcorrencia/Delivery: versões e snapshots; S02-UI03 e S03-UI07 |
+| X13 | PoolIsolation/TenantConnectionFailure/RetencaoIdentidadeJob/Midia; transporte SSE/JSON/segurança; JMX e diagnóstico local |
+| X14 | S02-PWA01/02, S03-UI08/10/11; probes de PWA/intenção/eventos; identidade/plataforma/retenção concorrente |
+| X15 | Guardas de release/restore/matriz, bytes PWA/JAR, clone e manutenção sintética; implantação e retorno no Linux real continuam pendentes |
+
 ## Sprint 4 — implementação validada localmente
 
-A [evidência local](sprint-04-local-2026-11-09.md) identifica o candidato atual,
+A [evidência local](sprint-04-local-2026-11-09.md) identifica o candidato histórico da Sprint 4,
 com **435 testes backend/63 XML**, zero falhas, erros ou skips. Dois reinícios
 reais após resposta perdida do provedor HTTP fictício comprovaram recuperação
 sem duplicar cobrança ou devolução. A matriz integrada de **405 pares aprovados**
@@ -319,6 +358,10 @@ consolidado. [Evidência do ciclo 6](sprint-01-retomada-ciclo-6.md).
 
 ## Atualização — retomada ciclo 7
 
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
+
 Eventos S01-UI32–34 passaram quinze combinações no JAR dee85d3. Reexecução
 S01-UI04 teve duas aprovações/três falhas; correções posteriores aguardam E2E.
 S01-UI35 acrescenta revogação/remoção de vínculo inativo pela UI (Administração,
@@ -328,6 +371,10 @@ X15 permanece parcial: ensaio novo de banco recuperou conteúdo/metadados em
 cluster isolado; mídia/chaves/manutenção e aplicação restaurada não cobertas.
 
 ## Fundação entregue
+
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
 
 Retomada ciclo9: S01-UI35 passa a alterar/salvar/recarregar perfil pela UI com
 payload/resposta/GET real; S01-UI41 cobre perfil de convite escolhido, consulta,
@@ -349,7 +396,7 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 ## Famílias de telas
 
 Retrato histórico da Sprint 1 no candidato95. Os estados abaixo não descrevem
-o checkout atual: as seções de Sprint 2 e Sprint 3 no início deste inventário
+o checkout atual: as seções das Sprints 2–5 no início deste inventário
 registram a cobertura posterior, distinguindo validação local de homologação.
 
 | ID | Estado histórico registrado | Dependência/evidência parcial |
@@ -386,7 +433,7 @@ registram a cobertura posterior, distinguindo validação local de homologação
 ## Cenários transversais
 
 Retrato histórico da Sprint 1 no candidato95; consultar as seções vigentes
-no início deste inventário para a cobertura acrescentada nas Sprints 2 e 3.
+no início deste inventário para a cobertura acrescentada nas Sprints 2–5.
 
 | ID | Estado histórico registrado | Dependência/evidência parcial |
 | --- | --- | --- |
@@ -408,6 +455,10 @@ no início deste inventário para a cobertura acrescentada nas Sprints 2 e 3.
 
 ## Incremento de provisionamento — retomada ciclo 4
 
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
+
 S01-UI17–19, S01-UI23–25 e S01-UI26–28: quinze combinações por suíte
 aprovadas no artefato e039dc2, com PostgreSQL real e cinco projetos, sem
 skip/retry/flaky; resultado do worker herdado recolhido nesta rodada. Isso não
@@ -424,6 +475,10 @@ permanece reprovada até reexecução com CSS e comparação de viewport corrigi
 
 ## Acompanhamento cadastral — retomada ciclo 5
 
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
+
 | Cenário | Superfície/ação | Ator | Estado |
 | --- | --- | --- | --- |
 | S01-UI32 | Selecionar unidade, receber alteração persistida e recuperar após offline, teclado/mobile | Administrador | Escrito; execução pendente |
@@ -436,6 +491,10 @@ pedidos, mesa, pagamento nem estado de leitura. Não encerrar X11 com esta parce
 
 ## Atores ainda pendentes
 
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
+
 Retomada ciclo8 acrescenta S01-UI36–40, uma jornada para cada perfil Gerente,
 Atendimento, Caixa, Cozinha e Expedição: acompanhamento da filial, revogação e
 restauração da ação com JWT existente, recarga/refresh, logout, menus ausentes e
@@ -446,6 +505,10 @@ ainda pendente. Isso cobre funções cadastrais atuais, não jornadas das Sprint
 Administrador tem jornadas de login, matriz e equipe; unidades em validação. Gerente, Atendimento, Caixa, Cozinha, Expedição e Cliente possuem identidades fictícias nos testes API, com negativos de configuração e vínculos. Isso não implementa suas jornadas de catálogo/operação/finanças. Participante de mesa ainda sem identidade/jornada; identidade SaaS e consulta de empresas estão em validação no ciclo 2 da retomada. Ausência de credenciais externas bloqueia somente sandbox/real; não justifica aprovar implementação ausente.
 
 ## Identidade e acessos — cobertura incremental
+
+> **Registro histórico da fundação/Sprint 1.** As pendências abaixo descrevem
+> aquela etapa. A cobertura vigente está na seção da Sprint 5 no início deste
+> inventário; resultados antigos não aprovam o candidato atual.
 
 | Cenário | Superfície/ação | Ator | Evidência |
 | --- | --- | --- | --- |

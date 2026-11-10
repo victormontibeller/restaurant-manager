@@ -1,7 +1,7 @@
 # Ambientes e runbook de operação
 
 > **Escopo:** desenvolvimento local, publicação Linux nativa, releases, backup e continuidade.
-> **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
+> **Situação:** procedimentos e scripts versionados, com resultados locais/CI identificados nas evidências. Implantação e validação do release atual no Linux permanecem pendentes. Decisões e propostas seguem o [registro central](00_PROJECT_VISION.md).
 
 [Índice da documentação](README.md)
 
@@ -29,7 +29,7 @@ Registrar tip integrado, release candidato, SHA observado no serviço e último 
 
 ## Publicação Linux com serviços nativos
 
-O ambiente de homologação desta execução usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. Inventário e versões efetivamente observados ficam no checkpoint e registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
+O ambiente de homologação previsto usa Linux e serviços nativos exclusivos, com listeners de banco/aplicação em loopback. O estado atual do host não foi observado na etapa Mac/CI da Sprint 5; inventário, versões e serviços precisam ser reconferidos antes da implantação. Registrar a observação no checkpoint e nos registros privados; disponibilidade de Docker não muda a decisão de implantação nativa. Domínio/ingresso públicos permanecem pendentes. A memória instalada não comprova capacidade para uma quantidade de restaurantes; dimensionar com medições.
 
 Topologia proposta: Caddy entrega build Angular e encaminha API HTTPS para Spring em loopback; PostgreSQL acessível somente por canais autorizados; serviços systemd com usuário dedicado, restart controlado e limites; mídia inicialmente prevista em diretório persistente fora dos releases. Na implementação da Sprint 2, as imagens públicas limitadas ficam no próprio PostgreSQL, conforme o [ADR 0002](adr/0002-midia-publica-transacional.md); diretórios de mídia privada/externa permanecem futuros. Hermes executa procedimentos documentados, mas a aplicação não depende de conversa/sessão do agente para funcionar.
 
@@ -43,7 +43,7 @@ Procedimento futuro de release:
 4. Instalar release, reiniciar serviço e verificar saúde técnica e jornadas críticas.
 5. Em falha, executar retorno compatível: trocar binário não desfaz migração de banco. Mudança incompatível exige estratégia própria de recuperação, sem perder transações reais. O runbook deve cobrir eventos externos durante manutenção, comportamento de retry do provedor e reconciliação ao retomar.
 
-Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). A fundação foi publicada e seu retorno ensaiado; isso não equivale a restore de banco/mídia. O deploy recusa migrations diferentes sem manutenção/backup comprovados. O candidato de identidade está servido em homologação desde o ciclo13, sem aceitação definitiva do baseline; conferir SHA e limites no checkpoint. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
+Os scripts de build, deploy, verificação de SHA/hash/processo e retorno compatível já estão versionados, com comandos no [README](../README.md). O deploy recusa migrations diferentes sem manutenção/backup comprovados. O histórico da fundação registra publicação/retorno ensaiados e o ciclo13 registra um candidato de identidade servido, sem aceitação definitiva daquele baseline; esses registros não comprovam o estado atual do host nem homologam o release da Sprint 5. Revalidar SHA, serviços e limites conforme o checkpoint. Homologação fictícia está autorizada dentro do fluxo; produção requer pedido específico.
 
 ## Provisionamento assistido pela fila SaaS
 
@@ -508,9 +508,10 @@ Plano de contingência do piloto deve dizer como registrar pedidos e recebimento
 
 [`local_rehearsal.py`](../scripts/local_rehearsal.py) usa PostgreSQL, JDK 21 com
 Attach API, OpenSSL e `lsof` já instalados e um JAR de hash conhecido com manifesto
-correspondente às fontes atuais da aplicação. As etapas descritas abaixo estão
-implementadas; sua aprovação exige a execução integrada e os recibos da
-[validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
+correspondente às fontes atuais da aplicação. As etapas descritas abaixo foram
+executadas no ensaio 09, aprovado no Mac com massa fictícia e cleanup sem erros,
+conforme a [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md).
+Cada nova execução exige seus próprios recibos e as mesmas verificações.
 O manifesto deve conter exatamente os arquivos de `backend/src/main`,
 `frontend/src` e `frontend/public`, mais `backend/pom.xml`, `frontend/package.json`,
 `frontend/package-lock.json`, `frontend/angular.json`, `frontend/.postcssrc.json`,
@@ -617,8 +618,9 @@ O [perfil de carga](../scripts/profiles/sprint05-local.json) fixa duração,
 concorrência, pausa e distribuição catálogo/carrinho. `load.json` registra
 latências, erros, CPU/RSS da aplicação e PostgreSQL próprios, disco e estatísticas
 PostgreSQL. O runtime do clone registra os MBeans do Hikari; um processo JDK
-próprio usa Attach API no PID da aplicação para amostrar, a cada 100 ms, máximo
-configurado, conexões ativas, ociosas e totais e threads aguardando conexão.
+próprio usa Attach API no PID da aplicação para amostrar, com intervalo nominal
+de 100 ms, máximo configurado, conexões ativas, ociosas e totais e threads
+aguardando conexão.
 `pool-samples.csv` preserva as amostras e `load.json` resume os picos e a presença
 de espera. Essa contagem não mede latência de aquisição nem garante observar
 picos menores que o intervalo. Não acrescenta endpoint HTTP público. O atraso
@@ -672,10 +674,14 @@ exigiriam reconciliação; não são recuperados automaticamente pelo ensaio.
 
 O incremento anterior permanece na
 [evidência da preparação local](evidencias/sprint-05-preparacao-local-2026-11-09.md).
-Resultados novos, falhas e reexecuções devem ser conferidos na
-[validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md); a descrição
-das ferramentas neste runbook não aprova por si só os ensaios, a homologação
-Linux ou o piloto.
+O ensaio 09 aprovou 33 dumps, 18.859 tabelas e 146.606 linhas, com cobertura de
+293 empresas ativas/suspensas e 104 imagens verificadas, além da manutenção
+sintética, recuperação das chaves
+da fixture, perda real da resposta e diagnósticos locais. O recibo final registra
+`approved=true` e nenhum erro de cleanup. Resultados detalhados, falhas preservadas
+e reexecuções ficam na
+[validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md). Essa aprovação
+é local; homologação Linux, serviços externos e piloto permanecem pendentes.
 
 ## Documentos relacionados
 
