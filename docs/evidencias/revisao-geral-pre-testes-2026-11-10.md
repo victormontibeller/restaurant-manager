@@ -71,6 +71,11 @@ somente a mais recente pode oferecer link de checkout. S03-UI06/S03-UI12 medem
 a legibilidade real e S04-UI08 confere histórico, recusa anterior e ausência de
 nova cobrança após quitação. A execução nova fica em `rm-cleanup02-20261110`,
 sem reutilizar resultados ou capturas da rodada reprovada. Validação pendente.
+O primeiro check de formatação do candidato `ac4ef66` detectou formatação não
+idempotente na interpolação de endereço junto ao `<br>`; nenhum build chegou
+a iniciar. A expressão foi simplificada para bloco condicional, e o check
+dirigido passou. Log e recibo reprovados preservados em `format-attempt01`;
+os checks completos serão iniciados novamente no commit corrigido.
 
 ## Validação e preservação
 

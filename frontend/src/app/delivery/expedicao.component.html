@@ -14,10 +14,11 @@
       @if (e.endereco; as endereco) {
         <address>
           {{ endereco.destinatario }} · {{ endereco.contato }}<br />{{ endereco.logradouro }},
-          {{ endereco.numero
-          }}{{ endereco.complemento ? ' · ' + endereco.complemento : ''
-
-          }}<br />{{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP
+          {{ endereco.numero }}
+          @if (endereco.complemento) {
+            · {{ endereco.complemento }}
+          }
+          <br />{{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP
           {{ endereco.cep }}
         </address>
       }
@@ -43,11 +44,7 @@
       @if (e.ocorrencia) {
         <p>
           Ocorrência: {{ e.ocorrencia.motivo }} ·
-          {{ e.ocorrencia.estado
-
-          }}{{
-            e.ocorrencia.decisao ? ' · ' + e.ocorrencia.decisao : ''
-          }}
+          {{ e.ocorrencia.estado + (e.ocorrencia.decisao ? ' · ' + e.ocorrencia.decisao : '') }}
         </p>
       }
       @if (
