@@ -38,6 +38,7 @@ export class AcompanhamentoEventos {
     parametros: Record<string, string>,
     atualizar: () => Promise<void>,
     revogado: () => void,
+    receber?: (pagina: PaginaEventos) => Promise<void>,
   ): void {
     this.encerrar();
     const geracao = this.geracao;
@@ -53,6 +54,7 @@ export class AcompanhamentoEventos {
       this.removerRede = () => window.removeEventListener('offline', offline);
     }
     this.cursor = '-1';
+    let recuperando = true;
     this.estado.set('Recuperando o estado confirmado…');
     const consultar = async () => {
       if (geracao !== this.geracao) return;
@@ -62,6 +64,9 @@ export class AcompanhamentoEventos {
         if (geracao !== this.geracao) return;
         await atualizar();
         if (geracao !== this.geracao) return;
+        if (!recuperando) await receber?.(pagina);
+        if (geracao !== this.geracao) return;
+        if (!pagina.temMais) recuperando = false;
         this.confirmar(pagina);
         if (pagina.temMais) {
           this.timer = setTimeout(() => void consultar(), 0);
@@ -122,6 +127,9 @@ export class AcompanhamentoEventos {
             if (geracao !== this.geracao) return;
             await atualizar();
             if (geracao !== this.geracao) return;
+            if (!recuperando) await receber?.(pagina);
+            if (geracao !== this.geracao) return;
+            if (!pagina.temMais) recuperando = false;
             this.confirmar(pagina);
             this.estado.set('Acompanhamento em tempo real conectado.');
           }

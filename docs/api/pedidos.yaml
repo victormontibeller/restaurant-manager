@@ -691,6 +691,60 @@ paths:
       - "$ref": "#/components/parameters/EstadosPedidos"
       - "$ref": "#/components/parameters/CanalPedidos"
       - "$ref": "#/components/parameters/OrdenacaoPedidos"
+  "/api/v1/cozinha/painel":
+    get:
+      operationId: consultarPainelCozinha
+      description: Snapshot consistente com totais globais e páginas independentes por
+        etapa. Somente produção autorizada da unidade. Prontos são separados pelo
+        horário efetivo de conclusão no fuso da unidade; os anteriores não são encerrados.
+        Conclusão ausente permanece no grupo anteriores, com prontoEm nulo.
+      security:
+      - empresarial: []
+      parameters:
+      - name: unidadeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - "$ref": "#/components/parameters/CanalPedidos"
+      - name: paginaFila
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+      - name: paginaPreparo
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+      - name: paginaProntos
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+      - name: paginaAnteriores
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+      responses:
+        '200':
+          description: Quatro grupos calculados na mesma transação, sem dados financeiros ou pessoais.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PainelCozinha"
+        default:
+          "$ref": "#/components/responses/Erro"
   "/api/v1/cozinha/pedidos/{id}/iniciar":
     post:
       operationId: iniciarProducao
@@ -1373,6 +1427,51 @@ components:
       - quantidade
       - adicionais
       - escolhas
+    CartaoCozinha:
+      type: object
+      additionalProperties: false
+      properties:
+        pedido:
+          "$ref": "#/components/schemas/PedidoOperacional"
+        mesaNome:
+          type: [string, 'null']
+        prontoEm:
+          type: [string, 'null']
+          format: date-time
+      required: [pedido, mesaNome, prontoEm]
+    GrupoCozinha:
+      type: object
+      additionalProperties: false
+      properties:
+        itens:
+          type: array
+          maxItems: 50
+          items:
+            "$ref": "#/components/schemas/CartaoCozinha"
+        total:
+          type: integer
+          minimum: 0
+        mais:
+          type: boolean
+      required: [itens, total, mais]
+    PainelCozinha:
+      type: object
+      additionalProperties: false
+      properties:
+        consultadoEm:
+          type: string
+          format: date-time
+        fuso:
+          type: string
+        fila:
+          "$ref": "#/components/schemas/GrupoCozinha"
+        emPreparo:
+          "$ref": "#/components/schemas/GrupoCozinha"
+        prontos:
+          "$ref": "#/components/schemas/GrupoCozinha"
+        anteriores:
+          "$ref": "#/components/schemas/GrupoCozinha"
+      required: [consultadoEm, fuso, fila, emPreparo, prontos, anteriores]
     PedidoOperacional:
       type: object
       additionalProperties: false

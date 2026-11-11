@@ -1,113 +1,119 @@
 <section
-  class="painel-interno"
+  class="painel"
   aria-labelledby="cozinha-titulo"
   [attr.aria-busy]="ocupado()"
-  [brnTabs]="filtroEstado() || 'TODAS'"
+  [brnTabs]="aba()"
   activationMode="manual"
-  (brnTabsChange)="filtrar('estado', $event === 'TODAS' ? '' : ($event ?? ''))"
+  (brnTabsChange)="aba.set($event || 'fila')"
 >
-  <header class="cabecalho-painel">
-    <div>
-      <span class="sobretitulo">Produção em tempo real</span>
-      <h2 id="cozinha-titulo">Painel da cozinha</h2>
-      <p class="texto-secundario">
-        Cada seleção representa uma unidade completa. Os componentes do combo são preparados juntos.
-      </p>
-    </div>
-  </header>
-  <div brnTabsList class="rm-tabs-list" aria-label="Etapas da cozinha">
-    @for (etapa of etapas; track etapa.valor) {
-      <button type="button" [brnTabsTrigger]="etapa.valor">{{ etapa.nome }}</button>
-    }
-  </div>
-  <div class="filtros" aria-label="Filtros da cozinha">
-    <div class="campo-filtro">
-      <label for="cozinha-canal">Canal do pedido</label>
-      <select
-        id="cozinha-canal"
-        #canal
-        [value]="filtroCanal()"
-        (change)="filtrar('canal', canal.value)"
-      >
+  <header class="ferramentas">
+    <h1 id="cozinha-titulo">Produção</h1>
+    <div class="controles">
+      <label for="cozinha-canal">Canal</label
+      ><select id="cozinha-canal" #filtro [value]="canal()" (change)="filtrar(filtro.value)">
         <option value="">Todos os canais</option>
         <option value="MESA">Mesa</option>
         <option value="RETIRADA">Retirada</option>
-        <option value="DELIVERY">Delivery</option>
-      </select>
+        <option value="DELIVERY">Delivery</option></select
+      ><button (click)="alternarSom()" [attr.aria-pressed]="som()" [disabled]="somOcupado()">
+        {{ som() ? 'Desativar som' : 'Ativar som' }}</button
+      ><button (click)="telaCheia()">Tela cheia</button
+      ><button (click)="carregar()" [disabled]="ocupado()">Atualizar</button>
     </div>
-    <div class="campo-filtro">
-      <label for="cozinha-ordem">Ordenar pedidos</label>
-      <select
-        id="cozinha-ordem"
-        #ordem
-        [value]="ordenacao()"
-        (change)="filtrar('ordem', ordem.value)"
-      >
-        <option value="ANTIGOS">Mais antigos primeiro</option>
-        <option value="RECENTES">Mais recentes primeiro</option>
-      </select>
-    </div>
+  </header>
+  <div class="conexao" role="status">
+    <span [class.offline]="!acompanhamento.conectado()">{{ acompanhamento.estado() }}</span
+    ><span>Última atualização: {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}</span>
   </div>
-  @for (etapa of etapas; track etapa.valor) {
-    <div [brnTabsContent]="etapa.valor">
-      @if ((filtroEstado() || 'TODAS') === etapa.valor) {
-        <div class="barra-conexao">
-          <p role="status" class="status-consulta">
-            <span class="status-reserva" aria-hidden="true"
-              >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada.
-              Última atualização: ainda não confirmada.</span
-            >
-            <span
-              >{{ acompanhamento.estado() }} Última atualização:
-              {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
-            >
-          </p>
-          <button class="secundario" (click)="carregar()" [disabled]="ocupado()">
-            Atualizar cozinha
-          </button>
-        </div>
-        @if (erro()) {
-          <p role="alert" class="erro">{{ erro() }}</p>
-        }
-        <div class="resumo-listagem">
-          <span
-            >{{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
-            página</span
-          ><span>Página {{ pagina() + 1 }}</span>
-        </div>
-        <div class="grade-pedidos grade-cozinha">
-          @for (pedido of pedidos(); track pedido.id) {
-            <app-pedido-detalhe
-              [pedido]="pedido"
-              contexto="cozinha"
-              [acoes]="acoes()"
-              (atualizar)="carregar()"
-            />
-          } @empty {
-            <div class="vazio">
-              <h3>{{ ocupado() ? 'Atualizando a cozinha…' : 'A fila está em dia' }}</h3>
-              <p>Nenhum pedido autorizado corresponde aos filtros desta unidade.</p>
-            </div>
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p class="aviso" role="status">{{ aviso() }}</p>
+  }
+  @for (id of pendencias(); track id) {
+    <div class="aviso" role="status">
+      Pedido #{{ id.slice(0,8).toUpperCase() }}: resultado ainda não confirmado.<button
+        (click)="recuperar(id)"
+        [disabled]="!online() || comandos.ocupado()"
+      >
+        Recuperar resultado da mesma ação
+      </button>
+    </div>
+  }
+  <div class="abas rm-tabs-list" brnTabsList aria-label="Etapas da cozinha">
+    @for (etapa of etapas; track etapa.id) {
+      <button [brnTabsTrigger]="etapa.id">{{ etapa.nome }} ({{ totalEtapa(etapa.id) }})</button>
+    }
+  </div>
+  @if (painel(); as dados) {
+    <div class="colunas">
+      @for (etapa of etapas; track etapa.id) {
+        <section
+          class="coluna"
+          [class.mobile-oculta]="aba() !== etapa.id"
+          [id]="'brn-tabs-content-' + etapa.id"
+          [attr.role]="compacta() ? 'tabpanel' : 'region'"
+          [attr.aria-labelledby]="compacta() ? 'brn-tabs-label-' + etapa.id : 'etapa-' + etapa.id"
+          [attr.tabindex]="compacta() ? 0 : null"
+        >
+          <h2 [id]="'etapa-' + etapa.id">
+            {{ etapa.nome }} <span>{{ totalEtapa(etapa.id) }}</span>
+          </h2>
+          @if (etapa.id === 'prontos') {
+            <p class="legenda">Concluídos hoje: {{ dados.prontos.total }}</p>
           }
-        </div>
-        <nav class="paginacao" aria-label="Páginas da cozinha">
+          <ng-container *ngTemplateOutlet="lista; context: { $implicit: etapa.id }" />
+          @if (etapa.id === 'prontos') {
+            <details class="anteriores">
+              <summary>Prontos de dias anteriores ({{ dados.anteriores.total }})</summary>
+              <p>
+                Continuam aguardando retirada ou serviço. Sem conclusão informada também aparecem
+                aqui.
+              </p>
+              <ng-container *ngTemplateOutlet="lista; context: { $implicit: 'anteriores' }" />
+            </details>
+          }
+        </section>
+      }
+    </div>
+    <ng-template #lista let-chave>
+      @for (cartao of grupo(chave).itens; track cartao.pedido.id) {
+        <app-cartao-cozinha
+          [cartao]="cartao"
+          [fuso]="dados.fuso"
+          [agora]="agora()"
+          [online]="online()"
+          [acoes]="acoes()"
+          [novo]="novos().includes(cartao.pedido.id)"
+          (pendencia)="registrarPendente($event)"
+          (atualizar)="atualizar()"
+        />
+      } @empty {
+        <p class="vazio">
+          {{ grupo(chave).total ? 'Nenhum pedido nesta página. Volte à página anterior.' : 'Nenhum pedido nesta etapa.' }}
+        </p>
+      }
+      @if (grupo(chave).mais || paginaDo(chave) > 0) {
+        <nav class="paginacao" [attr.aria-label]="'Páginas de ' + chave">
           <button
-            class="secundario"
-            (click)="navegar(pagina() - 1)"
-            [disabled]="ocupado() || pagina() === 0"
+            (click)="navegar(chave, paginaDo(chave)-1)"
+            [disabled]="ocupado() || paginaDo(chave) === 0"
           >
-            Página anterior da cozinha
-          </button>
-          <span>Página {{ pagina() + 1 }}</span>
-          <button
-            class="secundario"
-            (click)="navegar(pagina() + 1)"
-            [disabled]="ocupado() || !mais()"
+            Anterior</button
+          ><span>Página {{ paginaDo(chave) + 1 }}</span
+          ><button
+            (click)="navegar(chave, paginaDo(chave)+1)"
+            [disabled]="ocupado() || !grupo(chave).mais"
           >
-            Próxima página da cozinha
+            Próxima
           </button>
         </nav>
       }
-    </div>
+    </ng-template>
+  } @else {
+    <p class="vazio" role="status">
+      {{ ocupado() ? 'Carregando produção…' : 'Selecione a unidade ou atualize o painel.' }}
+    </p>
   }
 </section>

@@ -350,3 +350,22 @@ h1 {
 .kitchen-workplace .workspace-tools > button[data-variant='ghost'] {
   color: #ffffff;
 }
+
+.kitchen-workplace .page-heading {
+  display: none;
+}
+.kitchen-workplace .workspace-main {
+  max-width: none;
+  width: 100%;
+  padding: 16px 24px;
+}
+.kitchen-workplace .workspace-header {
+  min-height: 76px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+@media (max-width: 767px) {
+  .kitchen-workplace .workspace-main {
+    padding: 12px;
+  }
+}

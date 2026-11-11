@@ -1,6 +1,7 @@
 package br.com.restaurantmanager.cozinha.controllers;
 
 import br.com.restaurantmanager.pedidos.dtos.PedidoOperacional;
+import br.com.restaurantmanager.cozinha.dtos.PainelCozinha;
 import br.com.restaurantmanager.cozinha.services.CozinhaService;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.pedidos.dtos.ComandoPedido;
@@ -33,6 +34,16 @@ public class CozinhaController {
             @RequestParam(required = false) CanalAtendimento canal,
             @RequestParam(defaultValue = "RECENTES") OrdenacaoPedidos ordenacao) {
         return service.listar(ator, unidadeId, pagina, estados, canal, ordenacao);
+    }
+
+    @GetMapping("/api/v1/cozinha/painel")
+    public PainelCozinha painel(@AuthenticationPrincipal IdentidadeAtual ator, @RequestParam UUID unidadeId,
+            @RequestParam(required = false) CanalAtendimento canal,
+            @RequestParam(defaultValue = "0") int paginaFila,
+            @RequestParam(defaultValue = "0") int paginaPreparo,
+            @RequestParam(defaultValue = "0") int paginaProntos,
+            @RequestParam(defaultValue = "0") int paginaAnteriores) {
+        return service.painel(ator, unidadeId, canal, paginaFila, paginaPreparo, paginaProntos, paginaAnteriores);
     }
 
     @PostMapping("/api/v1/cozinha/pedidos/{id}/{acao:iniciar|concluir}")

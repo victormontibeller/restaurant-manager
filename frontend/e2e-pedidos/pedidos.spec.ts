@@ -12,6 +12,7 @@ import {
   loginApi,
   loginUi,
   localizarMesa,
+  localizarPedidoCozinha,
   montarCarrinho,
   navegarUi,
   ok,
@@ -54,48 +55,30 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     await expect(card.getByText('Na fila', { exact: true }).first()).toBeVisible();
     const tokenCozinha = await loginUi(cozinha.page, fixture().contas.cozinha);
     const kds = await operacao(cozinha.page, 'Painel da cozinha');
-    const preparo = kds.getByRole('article', { name: 'Pedido ' + enviado.id, exact: true });
-    const etapas = kds.getByRole('tablist', { name: 'Etapas da cozinha', exact: true });
-    const filaTab = etapas.getByRole('tab', { name: 'Na fila', exact: true });
-    const preparoTab = etapas.getByRole('tab', { name: 'Em preparo', exact: true });
-    const prontoTab = etapas.getByRole('tab', { name: 'Prontos', exact: true });
-    const todasTab = etapas.getByRole('tab', { name: 'Todas', exact: true });
-    const filtrarEtapa = async (estado: string, acionar: () => Promise<void>) => {
-      const consulta = cozinha.page.waitForResponse((response) => {
-        const url = new URL(response.url());
-        return (
-          url.pathname === '/api/v1/cozinha' && (url.searchParams.get('estados') ?? '') === estado
-        );
-      });
-      await acionar();
-      const pagina = await ok<{ itens: Pedido[] }>(await consulta);
-      if (estado) expect(pagina.itens.every((pedido) => pedido.estado === estado)).toBe(true);
-      await expect(kds.locator('app-cozinha > section')).toHaveAttribute('aria-busy', 'false');
-    };
-    await filtrarEtapa('NA_FILA', () => filaTab.click());
-    await expect(filaTab).toHaveAttribute('aria-selected', 'true');
-    await expect(preparo).toBeVisible();
-    expect((await filaTab.boundingBox())!.height).toBeGreaterThanOrEqual(48);
-    await filaTab.press('ArrowRight');
-    await expect(preparoTab).toBeFocused();
-    await filtrarEtapa('EM_PREPARO', () => preparoTab.press('Enter'));
-    await expect(preparoTab).toHaveAttribute('aria-selected', 'true');
-    await expect(preparo).toHaveCount(0);
-    await preparoTab.press('ArrowRight');
-    await expect(prontoTab).toBeFocused();
-    await filtrarEtapa('PRONTO', () => prontoTab.press('Enter'));
-    await expect(prontoTab).toHaveAttribute('aria-selected', 'true');
-    await expect(preparo).toHaveCount(0);
-    await prontoTab.press('Home');
-    await expect(todasTab).toBeFocused();
-    await filtrarEtapa('', () => todasTab.press('Enter'));
-    await expect(todasTab).toHaveAttribute('aria-selected', 'true');
-    await expect(preparo).toBeVisible();
+    let preparo = await localizarPedidoCozinha(kds, enviado.id);
+    const etapas = kds.getByRole('tablist', { name: 'Etapas da cozinha' });
+    if (await etapas.isVisible()) {
+      const filaTab = etapas.getByRole('tab', { name: /^Na fila \(/ });
+      await expect(filaTab).toHaveAttribute('aria-selected', 'true');
+      expect((await filaTab.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      await filaTab.press('ArrowRight');
+      const preparoTab = etapas.getByRole('tab', { name: /^Em preparo \(/ });
+      await expect(preparoTab).toBeFocused();
+      await preparoTab.press('Enter');
+      await expect(preparoTab).toHaveAttribute('aria-selected', 'true');
+      await expect(preparo).not.toBeVisible();
+      await preparoTab.press('Home');
+      await filaTab.press('Enter');
+    } else {
+      await expect(kds.getByRole('region', { name: /^Na fila/ })).toBeVisible();
+      await expect(kds.getByRole('region', { name: /^Em preparo/ })).toBeVisible();
+      await expect(kds.getByRole('region', { name: /^Prontos/ })).toBeVisible();
+    }
+    await preparo.getByRole('button', { name: 'Selecionar quantidades', exact: true }).click();
     await preparo.getByRole('checkbox').nth(0).check();
-    await preparo
-      .getByRole('button', { name: 'Iniciar unidades selecionadas', exact: true })
-      .click();
-    await expect(preparo.getByText('Em preparo', { exact: true }).first()).toBeVisible();
+    await preparo.getByRole('button', { name: 'Iniciar selecionadas (1)', exact: true }).click();
+    preparo = await localizarPedidoCozinha(kds, enviado.id, 'emPreparo');
+    await expect(preparo).toHaveAttribute('data-estado', 'EM_PREPARO');
     const iniciado = await ok<Pedido>(
       await api(request, cliente, '/api/v1/me/pedidos/' + enviado.id),
     );
@@ -114,11 +97,10 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
       },
     );
     expect(cancelamento.status()).toBe(409);
+    await preparo.getByRole('button', { name: 'Selecionar quantidades', exact: true }).click();
     await preparo.getByRole('checkbox').nth(0).check();
-    await preparo
-      .getByRole('button', { name: 'Concluir unidades selecionadas', exact: true })
-      .click();
-    await expect(preparo.getByText(/^Unidade \d+ · Pronto$/)).toBeVisible();
+    await preparo.getByRole('button', { name: 'Concluir selecionadas (1)', exact: true }).click();
+    await expect(preparo.getByText(/1 pronta/)).toBeVisible();
     const misto = await ok<Pedido>(await api(request, cliente, '/api/v1/me/pedidos/' + enviado.id));
     expect(misto.unidades.filter((item) => item.estado === 'PRONTO')).toHaveLength(1);
     expect(misto.unidades.filter((item) => item.estado === 'NA_FILA')).toHaveLength(2);
@@ -1277,9 +1259,7 @@ test('S03-UI10 revogação encerra acompanhamento e remove ações com JWT ainda
   });
   const token = await loginUi(page, fixture().contas.cozinha);
   const painel = await operacao(page, 'Painel da cozinha');
-  await expect(
-    painel.getByRole('article', { name: 'Pedido ' + criado.pedido.id, exact: true }),
-  ).toBeVisible();
+  await localizarPedidoCozinha(painel, criado.pedido.id);
   const conexao = painel.getByText('Acompanhamento em tempo real conectado.', { exact: false });
   // O replay pagina o histórico preservado antes de abrir SSE. Essa é uma
   // precondição da revogação, limitada pelo orçamento global de 180 s do teste.

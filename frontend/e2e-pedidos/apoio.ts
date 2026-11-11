@@ -186,10 +186,6 @@ export async function operacao(
   if ((await unidade.inputValue()) !== fixture().unidadeA)
     await unidade.selectOption(fixture().unidadeA);
   await expect(unidade).toHaveValue(fixture().unidadeA);
-  if (area === 'Painel da cozinha') {
-    // A cozinha abre pelos mais antigos; esta massa compartilhada busca o pedido recém-criado.
-    await painel.getByLabel('Ordenar pedidos', { exact: true }).selectOption('RECENTES');
-  }
   return painel;
 }
 
@@ -526,4 +522,29 @@ export async function capturar(page: Page, alvo: Locator, nome: string): Promise
     page.viewportSize()!.width,
   );
   await page.screenshot({ path: test.info().outputPath(nome + '.png'), fullPage: false });
+}
+
+export async function localizarPedidoCozinha(
+  painel: Locator,
+  id: string,
+  grupo: 'fila' | 'emPreparo' | 'prontos' = 'fila',
+): Promise<Locator> {
+  const etapas = { fila: 'Na fila', emPreparo: 'Em preparo', prontos: 'Prontos' };
+  const abas = painel.getByRole('tablist', { name: 'Etapas da cozinha' });
+  if (await abas.isVisible())
+    await abas.getByRole('tab', { name: new RegExp('^' + etapas[grupo] + ' \\(') }).click();
+  const card = painel.locator('app-cartao-cozinha article[data-pedido-id="' + id + '"]');
+  const paginacao = painel.getByRole('navigation', { name: 'Páginas de ' + grupo, exact: true });
+  const anterior = paginacao.getByRole('button', { name: 'Anterior', exact: true });
+  while ((await anterior.isVisible()) && (await anterior.isEnabled())) {
+    await anterior.click();
+    await expect(painel.locator('app-cozinha > section')).toHaveAttribute('aria-busy', 'false');
+  }
+  const proxima = paginacao.getByRole('button', { name: 'Próxima', exact: true });
+  while (!(await card.isVisible()) && (await proxima.isVisible()) && (await proxima.isEnabled())) {
+    await proxima.click();
+    await expect(painel.locator('app-cozinha > section')).toHaveAttribute('aria-busy', 'false');
+  }
+  await expect(card).toBeVisible();
+  return card;
 }

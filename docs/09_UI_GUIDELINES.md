@@ -137,4 +137,29 @@ A navegação mantém sessão, carrinho e pendências em memória. Rascunhos de 
 
 Páginas usam carregamento sob demanda. O service worker enumera chunks completos do build e um banner público ilustrativo, além do shell já permitido; imagens de catálogo, APIs e operações privadas não entram no cache. O catálogo interno de componentes está em `/design-system`. Evidências de validação são registradas no checkpoint; esta descrição não aprova homologação Linux, aparelhos físicos ou piloto.
 
-A cozinha oferece abas Todas, Na fila, Em preparo e Prontos com comportamento Spartan Brain. Setas e Home/End movimentam o foco; Enter ou espaço ativa a aba. O filtro usa o estado do pedido no servidor, preservando a exibição e seleção de unidades em estados distintos dentro do mesmo pedido. Os controles têm alvo mínimo de 48 pixels e não apresentam contagens globais inferidas da página atual.
+O painel da cozinha apresenta Na fila, Em preparo e Prontos simultaneamente em
+monitor; abaixo de 1024 pixels usa abas Spartan Brain, com setas/Home/End para
+foco e Enter/espaço para ativação. Cabeçalho e conexão são compactos. Cada pedido
+ocupa somente a coluna de seu estado confirmado, mesmo no preparo parcial.
+Totais globais e paginação independente vêm da API; nunca inferir total pela
+página carregada. Prontos anteriores ao dia local da unidade ficam recolhidos,
+sem concluir ou apagar pedidos. Conclusão ausente permanece visível nesse grupo.
+
+O cartão próprio da cozinha mostra mesa/canal, referência curta, itens,
+componentes/adicionais, observação e quantidades por estado. Histórico e
+orientações secundárias ficam recolhidos. Iniciar pedido atua somente nas
+unidades na fila; Concluir em preparo atua somente nas iniciadas. A seleção
+parcial continua disponível, sem dividir o combo em produtos independentes.
+Comandos usam versão, IDs e intenção durável existentes; resultado incerto tem
+recuperação também fora do cartão. Conflito limpa a seleção e exige revisão.
+
+Atualizações preservam seleção válida e posição de leitura. Avisos de novas
+entradas usam eventos confirmados, inclusive fora da página atual, sem tocar
+no replay inicial. Som começa desligado e depende de clique; preferência dura
+somente na aba. Falha de áudio mantém o aviso visual. Tempos distinguem idade
+do pedido, início do preparo e conclusão, sem metas arbitrárias de atraso.
+Tela cheia depende de ação do operador. Os controles têm alvo mínimo de 48 pixels.
+
+A implementação e a validação desse incremento ficam no
+[registro do painel](evidencias/painel-cozinha-2026-11-10.md); pendências globais
+continuam no checkpoint.

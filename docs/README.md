@@ -66,6 +66,11 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 
 ## Situação atual
 
+O [painel de produção da cozinha](evidencias/painel-cozinha-2026-11-10.md)
+foi implementado na [PR #13](https://github.com/victormontibeller/restaurant-manager/pull/13)
+e publicado na demonstração local, com três colunas, ações rápidas e preparo
+parcial. A integração da PR e a matriz global seguem acompanhadas no checkpoint.
+
 A [demonstração local](evidencias/demo-local-atualizada-2026-11-10.md) recebeu
 o código integrado da PR #11 para testes manuais, com backup, migrações e
 preservação dos acessos. O checkpoint registra o escopo das verificações locais
