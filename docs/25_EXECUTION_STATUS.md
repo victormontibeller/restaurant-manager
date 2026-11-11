@@ -1,20 +1,34 @@
 # Checkpoint de execução
 
-## Painel da cozinha — implementação e validação, 2026-11-10
+## Painel da cozinha — publicado na demonstração, 2026-11-10
 
-Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`. Plano aprovado:
-monitor com mouse, fila compartilhada, três colunas, preparo parcial opcional
-com ações rápidas e som ativável. Backend/contrato e frontend implementados,
-sem migration. A suíte backend completa passou:
-468 testes/69 suítes, zero falhas/erros/skips. Frontend com tipos, formatação,
-22 grupos de lógica e 15 probes de templates aprovados no Mac. A falha de áudio
-na CI inicial foi corrigida com espera limitada e teste de hardware controlado;
-o probe da cozinha passou novamente nos três navegadores. Artefato final e
-publicação ainda em andamento.
-A demonstração ainda não foi substituída neste incremento.
+Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`,
+[PR #13](https://github.com/victormontibeller/restaurant-manager/pull/13).
+Aplicação final `4c0f19375a2f7f0f437f8579da4a7b0fc460893f`,
+JAR `1501b7d71ae2c87859087bd1e367b00e064a779c05c8094870838292eeeb4a84`.
+Monitor com três colunas, abas responsivas, cartão próprio, preparo parcial,
+ações rápidas, totais/páginas no servidor e som ativável. Sem migration nova.
 
-[Implementação, tentativas e resultados](evidencias/painel-cozinha-2026-11-10.md).
-A matriz global e os gates externos continuam pendentes.
+Backend: 468 testes/69 suítes, zero falhas/erros/skips, com classes Java
+conferidas como idênticas no artefato final. Frontend: tipos, formatação,
+22 grupos de lógica e 15 probes de templates; a cozinha foi reexecutada nos
+três navegadores após os ajustes de áudio e acabamento. Auditorias: npm zero;
+112 componentes Java sem achados, com bibliotecas iguais no JAR final.
+CI #218 aprovada após a correção do áudio; #220 do acabamento em execução
+no momento do registro. Consulte a PR para o estado atual.
+
+Publicado em `https://demo.localhost:8095/cozinha`, API PID 58766 saudável.
+Na versão final: 15 verificações API, 26 UI integradas e 13 de runtime
+aprovadas, incluindo perda de resposta real após commit e recuperação idempotente.
+Capturas de 360/768/1280 inspecionadas. Backup privado concluído antes da troca;
+dados, acessos, TLS e PostgreSQL 59175/55432 preservados. Dez pedidos fictícios
+novos foram mantidos para revisão, sem recebimentos. Uma sessão temporária de
+teste exposta por erro da ferramenta foi revogada, sem trocar senhas.
+
+[Implementação, tentativas, artefatos e resultados](evidencias/painel-cozinha-2026-11-10.md).
+A matriz global, PWA instalada, som físico e gates externos permanecem pendentes.
+Os registros finais são documentais, posteriores à publicação, e não alteram
+os bytes da aplicação ou o ambiente da demonstração.
 
 ## Demonstração local após o merge — 2026-11-10
 

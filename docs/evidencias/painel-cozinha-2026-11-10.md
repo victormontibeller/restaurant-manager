@@ -66,11 +66,83 @@ Essa simulação não comprova saída de som física. Os três navegadores passa
 na reexecução; o restante do frontend e a API seguem reais nessa camada, com
 transporte em memória explicitamente delimitado.
 
-O empacotamento final e a publicação na demonstração serão registrados após
-conclusão. A demonstração anterior ainda é a referência até
-essa publicação. A matriz global de 420 pares e suas capturas não é aprovada
-por estes checks dirigidos. Linux, provedores externos, aparelhos físicos,
-aceite assistivo e piloto permanecem pendentes.
+## Artefato publicado e conferência integrada
+
+Fonte da aplicação final: `4c0f19375a2f7f0f437f8579da4a7b0fc460893f`.
+JAR: SHA-256 `1501b7d71ae2c87859087bd1e367b00e064a779c05c8094870838292eeeb4a84`.
+O acabamento final corrigiu o singular de pronta e a largura do seletor em
+360 pixels; seu probe foi reexecutado nos três navegadores antes da publicação.
+Os 534 arquivos do inventário foram vinculados ao commit e os recursos
+empacotados conferidos contra o dist/classes. Classes Java e bibliotecas são
+byte a byte iguais às do JAR anterior `23c373a6…beac5c`, que recebeu a suíte
+backend completa e auditoria de 112 componentes sem achados. Não houve alteração
+Java após esses testes. npm sem vulnerabilidades reportadas na consulta.
+
+A [CI #218](https://github.com/victormontibeller/restaurant-manager/actions/runs/42931925768)
+passou em `0aef67e`, após a correção do áudio. A
+[CI #220](https://github.com/victormontibeller/restaurant-manager/actions/runs/42933927816)
+do acabamento `4c0f193` estava em execução no registro deste incremento.
+O SHA e o estado atuais da revisão ficam na
+[PR #13](https://github.com/victormontibeller/restaurant-manager/pull/13).
+
+A demonstração `https://demo.localhost:8095/cozinha` recebeu o JAR final;
+API PID 58766 saudável e PostgreSQL compartilhado PID 59175 preservado.
+Usuários, senhas, TLS e configurações anteriores foram conservados; somente o
+SHA do release mudou no ambiente do runtime. Nenhuma migration nova foi criada
+ou aplicada. O inventário SQL do JAR foi comparado ao da versão instalada antes
+de cada troca. API e jobs foram parados antes dos backups, sem outros clientes
+de `rm_dev` conectados, e retomados com o mesmo banco.
+
+Backup final e recibos privados:
+`~/.local/share/restaurant-manager-manual/backups/cozinha-20261111T004818Z/`.
+Contêm dump completo custom, índice conferido e arquivo com artefato/configuração
+anteriores. Não foi ensaiado restore nem backup externo. A primeira publicação
+ficou em `cozinha-20261111T003247Z/`; ambas foram preservadas.
+
+No JAR final foram aprovadas, separadamente:
+
+- **15 verificações de API**, incluindo login/perfis, duas unidades, grupos,
+  preparo parcial, combo, negativos de acesso e ausência de campos privados.
+- **26 verificações integradas no Chromium**, com API Spring/PostgreSQL reais:
+  ações rápidas, seleção/conclusão parcial, versão antiga de outro operador
+  recusada, aviso de nova entrada, ativação do áudio, tela cheia, teclado,
+  360/768/1280 e prontos anteriores. Na falha de transporte controlada, o backend
+  confirmou antes da resposta ser abortada; recuperar reutilizou intenção,
+  versão e unidades, sem novo incremento da versão. Outro painel confirmou
+  o estado atualizado. Sem erros JS não tratados ou HTTP 5xx reais.
+- **13 verificações do runtime**, com saúde TLS, identidade/loopback dos
+  processos, artefato e preservação de credenciais/certificados.
+
+A rodada integrada anterior aprovou 16 verificações de API e depois 25 de UI no
+JAR anterior, sem somá-las à rodada final. As tentativas intermediárias do
+roteiro foram preservadas: espera de tela cheia consultada antes da transição,
+seletor de summary ambíguo com os históricos e cliente route.fetch sem a CA
+local. A perda real de resposta foi então exercitada com HTTPS/CA validados,
+mesmo corpo e identidade da requisição, sem desabilitar a validação TLS.
+O contexto usado para injetar a perda bloqueou service worker; a navegação
+normal usou worker permitido, sem homologar seu ciclo de instalação/atualização.
+
+O erro de route.fetch imprimiu na saída da ferramenta um JWT temporário da
+própria sessão de teste. Somente essa sessão foi revogada por ID; senhas e demais
+sessões foram preservadas. O handler passou a capturar erros, sem imprimir
+cabeçalhos de autenticação. Nenhum token ou configuração privada foi versionado.
+
+A conferência de 12 pares explícitos de texto/fundo do CSS passou com razão
+mínima 6,25:1; isso não representa avaliação integral de acessibilidade.
+As capturas finais de 360, 768 e 1280 pixels foram inspecionadas, incluindo o
+campo de canal legível e o singular correto. Não houve falhas observadas nesse
+escopo. Dez pedidos fictícios identificados foram acrescentados ao longo dos
+casos e mantidos para revisão, sem recebimentos, pagamentos ou exclusão dos
+registros anteriores. Não são pedidos comerciais.
+
+## Limites
+
+Os resultados por camada não são somados como matriz completa. S03-UI01 e seus
+helpers foram adaptados e passaram no typecheck; o caso completo da matriz não
+foi reexecutado como tal. O smoke dirigido real está identificado separadamente.
+A matriz global de 420 pares e suas capturas, PWA instalada, som em equipamento
+físico, Linux, provedores externos, aparelhos reais, aceite assistivo e piloto
+continuam pendentes. Esta publicação é demonstração local, não produção.
 
 Consulte o [checkpoint](../25_EXECUTION_STATUS.md), as
 [diretrizes de interface](../09_UI_GUIDELINES.md) e o
