@@ -274,7 +274,8 @@ class ProvisionamentoTest {
         config.setMaximumPoolSize(2);
         config.setSchema("pg_catalog");
         try (var pool = new HikariDataSource(config)) {
-            new SchemaCompatibility(pool, "rm_test_app", "test", false).afterPropertiesSet();
+            new SchemaCompatibility(pool, "rm_test_app", "test", false, System.getenv("RM_DB_URL"))
+                    .afterPropertiesSet();
         }
     }
 

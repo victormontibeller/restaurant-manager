@@ -109,7 +109,8 @@ class MigrationBoundaryTest {
             try (var rows = statement.executeQuery("select checksum from public.flyway_schema_history where version='1'")) {
                 rows.next(); checksum = rows.getInt(1);
             }
-            var validator = new SchemaCompatibility(runtime, "rm_test_app", "test", false);
+            var validator = new SchemaCompatibility(runtime, "rm_test_app", "test", false,
+                    System.getenv("RM_DB_URL"));
             try {
                 statement.executeUpdate("update public.flyway_schema_history set checksum=0 where version='1'");
                 assertThatThrownBy(validator::afterPropertiesSet)

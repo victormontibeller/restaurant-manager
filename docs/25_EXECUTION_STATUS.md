@@ -1,5 +1,26 @@
 # Checkpoint de execução
 
+## Recuperação da demonstração e acesso pelo Postico — 2026-11-11
+
+O login falhou porque o PostgreSQL da demonstração perdeu arquivos essenciais
+em `/private/tmp`. A execução do limpador de temporários do macOS coincidiu
+com o intervalo de alteração do diretório. Os registros não identificam a
+origem de cada exclusão.
+
+O dump de 10/11 às 21h48 BRT foi conferido e restaurado primeiro em uma
+instância isolada. A pedido do proprietário, `rm_dev` foi restaurado também
+em `127.0.0.1:5432`, no PostgreSQL local usado pelo Schools e pela Loja 3D.
+Os OIDs dos bancos existentes foram conferidos antes e depois. A cópia da
+demonstração usa os dados do momento do backup. A [configuração local](22_PRODUCTION_RUNBOOK.md#demonstração-no-postgresql-local-do-mac)
+documenta o acesso pelo Postico e os limites do runtime compartilhado.
+
+O JAR local `8315b9c80ece…e5191`, baseado em `925bda4` com alterações de
+runtime na cópia de trabalho, está servido em `https://demo.localhost:8095`.
+Três testes da guarda passaram. Frontend, dependências e migrações coincidem
+com os do JAR anterior. O smoke HTTPS no Mac confirmou duas unidades e login,
+identidade, logout e revogação da sessão nos sete perfis. O túnel temporário
+do Windows foi encerrado a pedido do proprietário.
+
 ## Painel da cozinha — publicado na demonstração, 2026-11-10
 
 Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`,
