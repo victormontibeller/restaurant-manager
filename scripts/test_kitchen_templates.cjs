@@ -223,6 +223,11 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      if (width === 360)
+        assert(
+          (await page.getByRole('combobox', { name: 'Canal', exact: true }).boundingBox()).width >=
+            300,
+        );
       if (width < 1024) {
         const tab = page.getByRole('tab', { name: 'Na fila (1)', exact: true });
         await expect(tab).toBeVisible();

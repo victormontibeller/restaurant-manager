@@ -100,7 +100,7 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     await preparo.getByRole('button', { name: 'Selecionar quantidades', exact: true }).click();
     await preparo.getByRole('checkbox').nth(0).check();
     await preparo.getByRole('button', { name: 'Concluir selecionadas (1)', exact: true }).click();
-    await expect(preparo.getByText(/1 prontas/)).toBeVisible();
+    await expect(preparo.getByText(/1 pronta/)).toBeVisible();
     const misto = await ok<Pedido>(await api(request, cliente, '/api/v1/me/pedidos/' + enviado.id));
     expect(misto.unidades.filter((item) => item.estado === 'PRONTO')).toHaveLength(1);
     expect(misto.unidades.filter((item) => item.estado === 'NA_FILA')).toHaveLength(2);

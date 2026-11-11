@@ -160,3 +160,20 @@ summary:focus-visible {
     padding: 8px;
   }
 }
+
+@media (max-width: 767px) {
+  .controles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .controles label,
+  .controles select {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .controles button {
+    min-width: 0;
+    padding: 8px;
+  }
+}

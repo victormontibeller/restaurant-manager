@@ -37,7 +37,7 @@
   }
   <p class="resumo">
     {{ quantidade('NA_FILA') }} na fila · {{ quantidade('EM_PREPARO') }} em preparo ·
-    {{ quantidade('PRONTO') }} prontas
+    {{ quantidade('PRONTO') }} {{ quantidade('PRONTO') === 1 ? 'pronta' : 'prontas' }}
     @if (quantidade('CANCELADO')) {
       · {{ quantidade('CANCELADO') }} canceladas
     }
