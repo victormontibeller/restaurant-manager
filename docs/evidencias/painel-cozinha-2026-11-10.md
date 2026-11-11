@@ -32,7 +32,7 @@ seleção parcial opcional e aviso visual com som ativável.
 - Modos anteriores de uso foram preservados nas outras áreas. O cenário E2E
   S03-UI01 e seu helper foram adaptados para cartões, abas e paginação novos.
 
-## Verificação em andamento
+## Verificação local
 
 Raiz privada: `/private/tmp/rm-cozinha-20261110`. Nenhuma senha, token, fixture
 privada ou banco foi incluído no checkout.
@@ -52,8 +52,22 @@ privada ou banco foi incluído no checkout.
   teclado, 360/768/1280 e aviso de entrada. Transporte fictício nessa camada;
   isso não comprova jornada integrada com banco.
 
-A suíte completa, o empacotamento final e a publicação na demonstração serão
-registrados após conclusão. A demonstração anterior ainda é a referência até
+A suíte completa concluiu **468 testes em 69 suítes**, zero falhas, erros ou
+skips. Tipos, formatação e 22 grupos de lógica passaram. Os 15 probes de
+componentes/templates (cinco × três navegadores) passaram no Mac; o probe da
+cozinha foi reexecutado após a correção de áudio abaixo. Não somar reexecuções.
+
+A CI #216 do commit inicial `ec34635` reprovou no teste de áudio: o runner Linux
+não dispunha de áudio e `AudioContext.resume()` podia aguardar indefinidamente.
+A ativação ganhou limite de 1,5 s, bloqueio de cliques concorrentes e retorno
+visual de indisponibilidade. O probe passou a controlar essa fronteira de
+hardware, verificando sinal único/deduplicação e ausência de resposta do áudio.
+Essa simulação não comprova saída de som física. Os três navegadores passaram
+na reexecução; o restante do frontend e a API seguem reais nessa camada, com
+transporte em memória explicitamente delimitado.
+
+O empacotamento final e a publicação na demonstração serão registrados após
+conclusão. A demonstração anterior ainda é a referência até
 essa publicação. A matriz global de 420 pares e suas capturas não é aprovada
 por estes checks dirigidos. Linux, provedores externos, aparelhos físicos,
 aceite assistivo e piloto permanecem pendentes.

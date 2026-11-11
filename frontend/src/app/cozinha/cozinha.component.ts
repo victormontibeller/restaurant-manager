@@ -42,6 +42,7 @@ export class CozinhaComponent {
   readonly agora = signal(Date.now());
   readonly online = signal(navigator.onLine);
   readonly som = signal(false);
+  readonly somOcupado = signal(false);
   readonly compacta = signal(matchMedia('(max-width: 1023px)').matches);
   readonly novos = signal<string[]>([]);
   readonly pendencias = signal<string[]>([]);
@@ -198,13 +199,22 @@ export class CozinhaComponent {
     }
   }
   async alternarSom(): Promise<void> {
+    if (this.somOcupado()) return;
     if (this.som()) {
       this.som.set(false);
       return;
     }
+    this.somOcupado.set(true);
+    let limite: ReturnType<typeof setTimeout> | undefined;
     try {
       this.audio ??= new AudioContext();
-      await this.audio.resume();
+      await Promise.race([
+        this.audio.resume(),
+        new Promise<never>((_resolve, reject) => {
+          limite = setTimeout(() => reject(new Error('Áudio indisponível')), 1500);
+        }),
+      ]);
+      if (this.encerrado) return;
       this.som.set(this.audio.state === 'running');
       this.aviso.set(
         this.som()
@@ -214,6 +224,9 @@ export class CozinhaComponent {
     } catch {
       this.som.set(false);
       this.aviso.set('Áudio indisponível; os avisos visuais continuam ativos.');
+    } finally {
+      clearTimeout(limite);
+      this.somOcupado.set(false);
     }
   }
   private async receber(pagina: PaginaEventos): Promise<void> {

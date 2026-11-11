@@ -137,6 +137,41 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
   try {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    // Áudio é uma fronteira do navegador: simula hardware disponível/indisponível.
+    await page.addInitScript(() => {
+      window.audioMode = 'running';
+      window.audioSignals = 0;
+      window.AudioContext = class {
+        state = 'suspended';
+        currentTime = 0;
+        destination = {};
+        resume() {
+          if (window.audioMode === 'hang') return new Promise(() => {});
+          this.state = 'running';
+          return Promise.resolve();
+        }
+        createGain() {
+          return { gain: { value: 0 }, connect() {}, disconnect() {} };
+        }
+        createOscillator() {
+          return {
+            frequency: { value: 0 },
+            connect() {},
+            disconnect() {},
+            start() {
+              window.audioSignals++;
+            },
+            stop() {
+              queueMicrotask(() => this.onended?.());
+            },
+          };
+        }
+        close() {
+          this.state = 'closed';
+          return Promise.resolve();
+        }
+      };
+    });
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:' + server.address().port);
     const card = page.getByRole('article');
@@ -211,6 +246,23 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     );
     await page.evaluate(() => window.fixture.emitir());
     await expect(card.getByText('Novo', { exact: true })).toBeVisible();
+    assert.equal(await page.evaluate(() => window.audioSignals), 1);
+    await page.evaluate(() => window.fixture.emitir());
+    await page.getByRole('button', { name: 'Atualizar', exact: true }).click();
+    assert.equal(
+      await page.evaluate(() => window.audioSignals),
+      1,
+      'Não repetir o som para o mesmo pedido.',
+    );
+    await page.getByRole('button', { name: 'Desativar som', exact: true }).click();
+    await page.evaluate(() => {
+      window.audioMode = 'hang';
+    });
+    await page.getByRole('button', { name: 'Ativar som', exact: true }).click();
+    await expect(
+      page.getByText('Áudio indisponível; os avisos visuais continuam ativos.', { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ativar som', exact: true })).toBeEnabled();
     await page.context().setOffline(true);
     await expect(
       card.getByRole('button', { name: 'Iniciar selecionadas (0)', exact: true }),

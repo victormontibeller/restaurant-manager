@@ -15,7 +15,7 @@
         <option value="MESA">Mesa</option>
         <option value="RETIRADA">Retirada</option>
         <option value="DELIVERY">Delivery</option></select
-      ><button (click)="alternarSom()" [attr.aria-pressed]="som()">
+      ><button (click)="alternarSom()" [attr.aria-pressed]="som()" [disabled]="somOcupado()">
         {{ som() ? 'Desativar som' : 'Ativar som' }}</button
       ><button (click)="telaCheia()">Tela cheia</button
       ><button (click)="carregar()" [disabled]="ocupado()">Atualizar</button>

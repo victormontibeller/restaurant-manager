@@ -5,8 +5,12 @@
 Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`. Plano aprovado:
 monitor com mouse, fila compartilhada, três colunas, preparo parcial opcional
 com ações rápidas e som ativável. Backend/contrato e frontend implementados,
-sem migration. Quatro testes novos do backend e probe do template real nos
-três navegadores passaram; suíte completa e artefato final em andamento.
+sem migration. A suíte backend completa passou:
+468 testes/69 suítes, zero falhas/erros/skips. Frontend com tipos, formatação,
+22 grupos de lógica e 15 probes de templates aprovados no Mac. A falha de áudio
+na CI inicial foi corrigida com espera limitada e teste de hardware controlado;
+o probe da cozinha passou novamente nos três navegadores. Artefato final e
+publicação ainda em andamento.
 A demonstração ainda não foi substituída neste incremento.
 
 [Implementação, tentativas e resultados](evidencias/painel-cozinha-2026-11-10.md).
