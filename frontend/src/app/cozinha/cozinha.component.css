@@ -1,0 +1,162 @@
+:host {
+  display: block;
+}
+.painel {
+  color: #263b30;
+}
+.ferramentas {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.controles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+button,
+select {
+  font: inherit;
+  min-height: 48px;
+  border: 1px solid #c9d0c8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #263b30;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #2558ad;
+  outline-offset: 3px;
+}
+.conexao {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  padding: 8px 0 12px;
+  color: #455449;
+}
+.offline,
+.erro {
+  color: #9f2420;
+  font-weight: 600;
+}
+.aviso {
+  background: #e8eef9;
+  color: #25456e;
+  padding: 10px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+.aviso button {
+  margin-left: 8px;
+}
+.colunas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.coluna {
+  min-width: 0;
+  padding: 10px;
+  background: #e7ebe5;
+  border: 1px solid #d5ded7;
+  border-radius: 12px;
+}
+.coluna h2 {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+}
+.coluna h2 span {
+  background: #fff;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+.coluna app-cartao-cozinha {
+  margin-bottom: 12px;
+}
+.anteriores {
+  border-top: 1px solid #c9d0c8;
+  margin-top: 12px;
+}
+.anteriores summary {
+  min-height: 48px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+.anteriores p,
+.vazio {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.paginacao {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+.abas {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .abas {
+    display: flex;
+    margin-bottom: 12px;
+    gap: 4px;
+  }
+  .abas button {
+    flex: 1;
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+  .abas button[aria-selected='true'] {
+    background: #294b38;
+    color: #fff;
+  }
+  .colunas {
+    display: block;
+  }
+  .coluna.mobile-oculta {
+    display: none;
+  }
+  .controles {
+    width: 100%;
+  }
+  .controles select {
+    min-width: 0;
+    flex: 1;
+  }
+  .conexao {
+    font-size: 0.8rem;
+  }
+  .aviso button {
+    margin: 8px 0 0;
+  }
+  .coluna {
+    padding: 8px;
+  }
+}

@@ -11,6 +11,9 @@ const signal = (initial) => {
     set: (next) => {
       value = next;
     },
+    update: (fn) => {
+      value = fn(value);
+    },
   });
 };
 class DestroyRef {}
@@ -45,6 +48,11 @@ async function verificar(arquivo, nome, metodo) {
   });
   const context = {
     exports: {},
+    navigator: { onLine: true },
+    matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+    window: { addEventListener() {}, removeEventListener() {} },
+    setInterval: () => 1,
+    clearInterval() {},
     URLSearchParams,
     setTimeout: (fn, ms) => {
       const timer = { fn, ms, cancelado: false };
@@ -69,6 +77,12 @@ async function verificar(arquivo, nome, metodo) {
       if (name.includes('sessao-mesa')) return { SessaoMesaService };
       if (name.includes('sessao.service'))
         return { SessaoService, ApiFailure: class extends Error {} };
+      if (name.includes('novos-pedidos'))
+        return {
+          NovosPedidosCozinha: class {
+            limpar() {}
+          },
+        };
       if (name.includes('acompanhamento')) return { AcompanhamentoEventos };
       if (name.includes('catalogo/modelos')) return { mensagemErro: (error) => error.message };
       return {};
@@ -97,7 +111,11 @@ async function verificar(arquivo, nome, metodo) {
   });
   assert.equal(chamadas, 1, 'Carga anterior deve terminar antes da nova consulta.');
   assert.equal(eventoConfirmado, false);
-  concluirManual({ itens: [{ id: 'anterior', versao: 1 }], mais: false });
+  concluirManual(
+    nome === 'CozinhaComponent'
+      ? { fila: { itens: [{ pedido: { id: 'anterior', versao: 1 } }], total: 1, mais: false } }
+      : { itens: [{ id: 'anterior', versao: 1 }], mais: false },
+  );
   await manual;
   await new Promise(setImmediate);
   assert.equal(chamadas, 2, 'Evento exige snapshot posterior à carga manual.');
@@ -110,12 +128,21 @@ async function verificar(arquivo, nome, metodo) {
     { id: 'atual', unidadeId: 'unidade-a', versao: 2 },
     { id: 'outro', unidadeId: 'unidade-b', versao: 1 },
   ];
-  concluirEvento({
-    itens: nome === 'MeusPedidosComponent' ? duasUnidades : [{ id: 'atual', versao: 2 }],
-    mais: false,
-  });
+  concluirEvento(
+    nome === 'CozinhaComponent'
+      ? { fila: { itens: [{ pedido: { id: 'atual', versao: 2 } }], total: 1, mais: false } }
+      : {
+          itens: nome === 'MeusPedidosComponent' ? duasUnidades : [{ id: 'atual', versao: 2 }],
+          mais: false,
+        },
+  );
   await evento;
-  assert.equal(componente.pedidos()[0].versao, 2);
+  assert.equal(
+    (nome === 'CozinhaComponent'
+      ? componente.painel().fila.itens.map((c) => c.pedido)
+      : componente.pedidos())[0].versao,
+    2,
+  );
   assert.equal(eventoConfirmado, true);
   console.log(nome + ': snapshot posterior ao evento aprovado');
   if (nome === 'MeusPedidosComponent') {

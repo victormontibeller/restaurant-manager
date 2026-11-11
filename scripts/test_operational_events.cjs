@@ -53,6 +53,7 @@ const flush = async () => {
   const acompanhamento = new context.exports.AcompanhamentoEventos();
   const chamadas = [];
   let snapshots = 0;
+  const recebidos = [];
   let revogado = false;
   let bloqueado = false;
   const encoder = new TextEncoder();
@@ -96,9 +97,17 @@ const flush = async () => {
     () => {
       revogado = true;
     },
+    async (pagina) => {
+      recebidos.push(...pagina.eventos.map((e) => e.id));
+    },
   );
   await flush();
   assert.equal(snapshots, 2);
+  assert.deepEqual(
+    recebidos,
+    ['evento-2'],
+    'Carga inicial não gera alerta; evento SSE novo é entregue uma vez.',
+  );
   assert.match(chamadas[1], /depois=opaco%3A1.0/);
   const fallback = timers.findLast((timer) => !timer.cancelled && timer.ms === 5000);
   assert.ok(fallback, 'Encerramento de SSE precisa recuperar por polling.');

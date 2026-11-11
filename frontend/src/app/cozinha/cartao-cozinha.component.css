@@ -1,0 +1,165 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.cartao {
+  background: #fff;
+  border: 1px solid #d5ded7;
+  border-top: 4px solid #7b8995;
+  border-radius: 12px;
+  padding: 16px;
+  color: #263b30;
+  box-shadow: 0 2px 8px #14271b08;
+  overflow-wrap: anywhere;
+}
+.cartao[data-estado='EM_PREPARO'] {
+  border-top-color: #936012;
+}
+.cartao[data-estado='PRONTO'] {
+  border-top-color: #35704a;
+}
+.cartao.novo {
+  outline: 3px solid #426cba;
+  outline-offset: 1px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 8px;
+}
+h3 {
+  font-size: 1.1rem;
+  margin: 4px 0 8px;
+}
+h4 {
+  font-size: 1.05rem;
+  margin: 4px 0;
+}
+h4 small {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.canal {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.selo {
+  background: #e5edfd;
+  color: #204d93;
+  border-radius: 6px;
+  padding: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.tempos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 0.85rem;
+  color: #505b54;
+}
+.observacao,
+.atencao {
+  background: #fff3d7;
+  border-left: 4px solid #8b5915;
+  padding: 10px;
+  line-height: 1.5;
+}
+.observacao strong {
+  display: block;
+}
+.resumo {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.linha {
+  padding: 10px 0;
+  border-top: 1px solid #e5e8e4;
+}
+.linha p {
+  font-size: 0.9rem;
+  margin: 5px 0;
+  line-height: 1.45;
+}
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+button,
+summary,
+.selecao label {
+  min-height: 48px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px;
+  background: #294b38;
+  color: white;
+  font-weight: 600;
+  width: 100%;
+}
+button.concluir {
+  background: #316c44;
+}
+button.secundario {
+  background: #f3f3ed;
+  color: #263b30;
+  border-color: #c9d0c8;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible {
+  outline: 3px solid #2558ad;
+  outline-offset: 3px;
+}
+summary {
+  cursor: pointer;
+  align-content: center;
+  font-size: 0.85rem;
+  color: #4d5c52;
+}
+details {
+  margin-top: 8px;
+  border-top: 1px solid #e5e8e4;
+}
+details p {
+  font-size: 0.85rem;
+}
+.referencia {
+  font-family: monospace;
+}
+.erro {
+  color: #9f2420;
+  font-weight: 600;
+}
+.selecao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.selecao label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: #f3f5f0;
+  border-radius: 6px;
+  padding: 0 8px;
+}
+.selecao input {
+  width: 22px;
+  height: 22px;
+}

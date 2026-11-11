@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class FuncionamentoUnidadeService {
@@ -86,6 +87,12 @@ public class FuncionamentoUnidadeService {
                                 .anyMatch(h -> h.canal() == canal && h.contem(agora, fuso))))
                 .toList();
         return new FuncionamentoPublicoUnidade(unidade, consulta.nome(), consulta.fuso(), agora, canais, horarios(funcionamento));
+    }
+
+    /** Consulta interna após autorização operacional da unidade na transação chamadora. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public ZoneId fusoOperacional(UUID unidade) {
+        return ZoneId.of(obter(unidade).fuso());
     }
 
     private ConsultaFuncionamentoUnidade obter(UUID unidade) {

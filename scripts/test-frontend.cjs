@@ -25,6 +25,7 @@ const tests = [
   'test_mesa_context.cjs',
   'test_mesa_pagination.cjs',
   'test_snapshot_queue.cjs',
+  'test_kitchen_board.cjs',
 ];
 
 for (const test of tests) {

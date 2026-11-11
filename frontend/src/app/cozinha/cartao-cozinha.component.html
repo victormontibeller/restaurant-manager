@@ -1,0 +1,149 @@
+<article
+  class="cartao"
+  [class.novo]="novo()"
+  [attr.data-estado]="pedido().estado"
+  [attr.data-pedido-id]="pedido().id"
+  [attr.aria-label]="'Pedido #' + referencia()"
+>
+  <header>
+    <div>
+      <span
+        class="canal"
+        >{{ cartao().mesaNome || (pedido().canal === 'MESA' ? 'Mesa' : pedido().canal === 'RETIRADA' ? 'Retirada' : 'Delivery') }}</span
+      >
+      <h3>Pedido #{{ referencia() }}</h3>
+    </div>
+    @if (novo()) {
+      <span class="selo">Novo</span>
+    }
+  </header>
+  <div class="tempos">
+    <span [title]="horario(pedido().criadoEm)"
+      >Pedido há {{ decorrido(pedido().criadoEm, agora()) }}</span
+    >
+    @if (pedido().estado === 'PRONTO') {
+      <strong>Pronto há {{ decorrido(cartao().prontoEm, agora()) }}</strong>
+    } @else if (pedido().primeiroPreparoEm) {
+      <strong>Preparo iniciado há {{ decorrido(pedido().primeiroPreparoEm, agora()) }}</strong>
+    }
+  </div>
+  @if (pedido().observacao) {
+    <p class="observacao"><strong>Observação</strong> {{ pedido().observacao }}</p>
+  }
+  @if (cancelamento()) {
+    <p class="atencao" role="status">
+      <strong>Cancelamento em avaliação.</strong> A produção continua até decisão da equipe.
+    </p>
+  }
+  <p class="resumo">
+    {{ quantidade('NA_FILA') }} na fila · {{ quantidade('EM_PREPARO') }} em preparo ·
+    {{ quantidade('PRONTO') }} prontas
+    @if (quantidade('CANCELADO')) {
+      · {{ quantidade('CANCELADO') }} canceladas
+    }
+  </p>
+  @for (linha of pedido().linhas; track linha.id) {
+    <section class="linha">
+      <h4>
+        {{ linha.quantidade }} × {{ linha.nome }}
+        @if (linha.tipo === 'COMBO') {
+          <small>Combo completo</small>
+        }
+      </h4>
+      @for (extra of linha.adicionais; track $index) {
+        <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+      }
+      @for (escolha of linha.escolhas; track $index) {
+        <p>
+          <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
+        </p>
+        @for (extra of escolha.adicionais ?? []; track $index) {
+          <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+        }
+      }
+      @if (parcial()) {
+        <div class="selecao" [attr.aria-label]="'Quantidades de ' + linha.nome">
+          @for (unidade of pedido().unidades; track unidade.id) {
+            @if (unidade.linhaId === linha.id) {
+              @if (
+                (unidade.estado === 'NA_FILA' && tem('iniciar')) || (unidade.estado === 'EM_PREPARO' && tem('concluir'))
+              ) {
+                <label
+                  ><input
+                    type="checkbox"
+                    #marcado
+                    [checked]="selecionadas().includes(unidade.id)"
+                    (change)="selecionar(unidade.id, marcado.checked)"
+                    [disabled]="bloqueado()"
+                  /><span
+                    >Unidade {{ $index + 1 }} ·
+                    {{ unidade.estado === 'NA_FILA' ? 'Na fila' : 'Em preparo' }}</span
+                  ></label
+                >
+              } @else {
+                <span
+                  >Unidade {{ $index + 1 }} ·
+                  {{ unidade.estado === 'PRONTO' ? 'Pronta' : unidade.estado === 'CANCELADO' ? 'Cancelada' : unidade.estado === 'NA_FILA' ? 'Na fila' : 'Em preparo' }}</span
+                >
+              }
+            }
+          }
+        </div>
+      }
+    </section>
+  }
+  @if ((tem('iniciar') && iniciar().length) || (tem('concluir') && concluir().length)) {
+    <div class="acoes">
+      @if (tem('iniciar') && iniciar().length) {
+        <button
+          (click)="comandar('iniciar', parcial())"
+          [disabled]="bloqueado() || (parcial() && !selecionadasPara('iniciar').length)"
+        >
+          {{ parcial() ? 'Iniciar selecionadas' : 'Iniciar pedido' }}
+          ({{ parcial() ? selecionadasPara('iniciar').length : iniciar().length }})
+        </button>
+      }
+      @if (tem('concluir') && concluir().length) {
+        <button
+          class="concluir"
+          (click)="comandar('concluir', parcial())"
+          [disabled]="bloqueado() || (parcial() && !selecionadasPara('concluir').length)"
+        >
+          {{ parcial() ? 'Concluir selecionadas' : 'Concluir em preparo' }}
+          ({{ parcial() ? selecionadasPara('concluir').length : concluir().length }})
+        </button>
+      }
+      <button
+        class="secundario"
+        (click)="parcial.set(!parcial())"
+        [attr.aria-expanded]="parcial()"
+        [disabled]="bloqueado()"
+      >
+        {{ parcial() ? 'Fechar seleção' : 'Selecionar quantidades' }}
+      </button>
+    </div>
+  }
+  @if (pendente()) {
+    <p class="atencao" role="status">Resultado ainda não confirmado. Não repita a produção.</p>
+    <button (click)="repetir()" [disabled]="!online() || comandos.ocupado()">
+      Recuperar resultado da mesma ação
+    </button>
+  }
+  @if (erro()) {
+    <p class="erro" role="alert">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+  <details>
+    <summary>Histórico e referência</summary>
+    <p class="referencia">{{ pedido().id }}</p>
+    @for (evento of pedido().historico ?? []; track $index) {
+      <p>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</p>
+    }
+    @if (pedido().primeiroPreparoEm) {
+      <p>O preparo já iniciou; cancelamento depende de avaliação da equipe.</p>
+    }
+    <p>Cada unidade selecionada representa o produto ou combo completo.</p>
+  </details>
+</article>

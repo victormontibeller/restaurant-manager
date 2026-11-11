@@ -179,6 +179,7 @@ public class SecurityConfiguration {
                                                 "/api/v1/operacao/pedidos/*",
                                                 "/api/v1/operacao/pedidos/intencoes/*",
                                                 "/api/v1/cozinha",
+                                                "/api/v1/cozinha/painel",
                                                 "/api/v1/operacao/mesas",
                                                 "/api/v1/operacao/mesas/solicitacoes",
                                                 "/api/v1/comandas/*",

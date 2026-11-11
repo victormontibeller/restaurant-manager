@@ -1,5 +1,17 @@
 # Checkpoint de execução
 
+## Painel da cozinha — implementação e validação, 2026-11-10
+
+Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`. Plano aprovado:
+monitor com mouse, fila compartilhada, três colunas, preparo parcial opcional
+com ações rápidas e som ativável. Backend/contrato e frontend implementados,
+sem migration. Quatro testes novos do backend e probe do template real nos
+três navegadores passaram; suíte completa e artefato final em andamento.
+A demonstração ainda não foi substituída neste incremento.
+
+[Implementação, tentativas e resultados](evidencias/painel-cozinha-2026-11-10.md).
+A matriz global e os gates externos continuam pendentes.
+
 ## Demonstração local após o merge — 2026-11-10
 
 O proprietário solicitou atualizar a demonstração para iniciar testes manuais.
