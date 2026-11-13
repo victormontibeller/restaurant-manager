@@ -16,21 +16,24 @@ public class SchemaCompatibility implements InitializingBean {
     private final String runtimeRole;
     private final String stage;
     private final boolean recoveryTest;
+    private final String databaseUrl;
 
     public SchemaCompatibility(DataSource dataSource, @Value("${spring.datasource.username}") String runtimeRole,
                                @Value("${rm.stage}") String stage,
-                               @Value("${rm.recovery-test:false}") boolean recoveryTest) {
+                               @Value("${rm.recovery-test:false}") boolean recoveryTest,
+                               @Value("${spring.datasource.url}") String databaseUrl) {
         this.dataSource = dataSource;
         this.runtimeRole = runtimeRole;
         this.stage = stage;
         this.recoveryTest = recoveryTest;
+        this.databaseUrl = databaseUrl;
     }
 
     @Override public void afterPropertiesSet() throws SQLException {
         var schemas = new ArrayList<String>();
         schemas.add("public");
         try (var connection = dataSource.getConnection()) {
-            RuntimeDatabaseIdentity.verify(connection, stage, runtimeRole, recoveryTest);
+            RuntimeDatabaseIdentity.verify(connection, stage, runtimeRole, recoveryTest, databaseUrl);
             // Empresas incompletas já falham fechado na resolução; não derrubam as ativas.
             schemas.addAll(Migrations.tenantSchemas(connection, false));
         }

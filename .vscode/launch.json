@@ -1,0 +1,63 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Restaurant Manager (Java + Angular)",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "br.com.restaurantmanager.RestaurantManagerApplication",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "internalConsole",
+      "osx": {
+        "javaExec": "/usr/bin/java",
+        "env": {
+          "JAVA_HOME": "",
+          "JAVA_VERSION": "21"
+        }
+      },
+      "serverReadyAction": {
+        "pattern": "Started RestaurantManagerApplication in ",
+        "action": "startDebugging",
+        "name": "Servidor Angular",
+        "killOnServerStop": true
+      }
+    },
+    {
+      "name": "Servidor Angular",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "program": "${workspaceFolder}/frontend/node_modules/@angular/cli/bin/ng.js",
+      "args": [
+        "serve",
+        "--host", "127.0.0.1",
+        "--port", "4200",
+        "--build-target", "restaurant-manager:build:development",
+        "--allowed-hosts=demo.localhost",
+        "--proxy-config", "../.vscode/angular-proxy.cjs",
+        "--ssl",
+        "--ssl-cert", "${env:HOME}/.local/share/restaurant-manager-manual/tls/server.crt",
+        "--ssl-key", "${env:HOME}/.local/share/restaurant-manager-manual/tls/server.key"
+      ],
+      "envFile": "",
+      "preLaunchTask": "Preparar dependências do Angular",
+      "outputCapture": "std",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+https://127\\.0\\.0\\.1:4200/",
+        "action": "startDebugging",
+        "name": "Chrome (Angular)",
+        "killOnServerStop": true
+      },
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Chrome (Angular)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://demo.localhost:4200/",
+      "webRoot": "${workspaceFolder}/frontend",
+      "presentation": { "hidden": true }
+    }
+  ]
+}

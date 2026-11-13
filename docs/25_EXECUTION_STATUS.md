@@ -1,5 +1,40 @@
 # Checkpoint de execução
 
+## Depuração no VS Code no Mac — 2026-11-12
+
+O F5 iniciou o Spring Boot em Java 21 com o `.env` local e, em sequência,
+o Angular e a sessão de depuração no Chrome. O cardápio HTTPS na porta 4200
+exibiu nove produtos fictícios via proxy para a API na porta 8095, conectada
+ao `rm_dev` local. Typecheck do frontend, links locais e padrões de segredo
+passaram. A verificação foi dirigida à partida e à leitura do cardápio.
+O [runbook](22_PRODUCTION_RUNBOOK.md#depuração-no-vs-code-no-mac) descreve a configuração.
+
+## Recuperação da demonstração e acesso pelo Postico — 2026-11-11
+
+O login falhou porque o PostgreSQL da demonstração perdeu arquivos essenciais
+em `/private/tmp`. A execução do limpador de temporários do macOS coincidiu
+com o intervalo de alteração do diretório. Os registros não identificam a
+origem de cada exclusão.
+
+O dump de 10/11 às 21h48 BRT foi conferido e restaurado primeiro em uma
+instância isolada. A pedido do proprietário, `rm_dev` foi restaurado também
+em `127.0.0.1:5432`, no PostgreSQL local usado pelo Schools e pela Loja 3D.
+Os OIDs dos bancos existentes foram conferidos antes e depois. A cópia da
+demonstração usa os dados do momento do backup. A [configuração local](22_PRODUCTION_RUNBOOK.md#demonstração-no-postgresql-local-do-mac)
+documenta o acesso pelo Postico e os limites do runtime compartilhado.
+
+O JAR local `8315b9c80ece…e5191`, baseado em `925bda4` com alterações de
+runtime na cópia de trabalho, está servido em `https://demo.localhost:8095`.
+Três testes da guarda passaram. Frontend, dependências e migrações coincidem
+com os do JAR anterior. O smoke HTTPS no Mac confirmou duas unidades e login,
+identidade, logout e revogação da sessão nos sete perfis. O túnel temporário
+do Windows foi encerrado a pedido do proprietário.
+
+A configuração privada da demonstração passou para `.env`. A raiz oferece
+links locais para `.env`, `ACESSOS.txt` e `ACESSOS.html`, ignorados pelo Git.
+O novo leitor reproduziu os valores do JSON anterior, arquivado na área
+privada. A troca de formato vale na próxima partida da aplicação.
+
 ## Painel da cozinha — publicado na demonstração, 2026-11-10
 
 Branch `codex/painel-cozinha-tres-colunas`, base `a4efb90`,

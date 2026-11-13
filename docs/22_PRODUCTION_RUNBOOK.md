@@ -19,6 +19,36 @@ Chaves, dumps, mídia privada e artefatos temporários não pertencem ao Git.
 Não substituir ferramentas globais da máquina para atender ao projeto;
 selecionar versões por configuração local.
 
+### Demonstração no PostgreSQL local do Mac
+
+No Postico, use a conexão `127.0.0.1:5432` e selecione `rm_dev`. A instância
+local pode hospedar os bancos do Schools, da Loja 3D e do Restaurant Manager,
+cada um com banco e papéis próprios. Guarde os dados do PostgreSQL em pasta
+permanente fora do checkout e de `/private/tmp`.
+
+Neste Mac, `.env`, `ACESSOS.txt` e `ACESSOS.html` na raiz do projeto são
+links locais para os arquivos privados. O controle da demonstração carrega
+o `.env` na partida. Abra `ACESSOS.html` no navegador para acessar os links
+de cada perfil. O Git ignora os três arquivos locais. O `.env.example` é o
+modelo versionado.
+
+O runtime aceita a URL exata `jdbc:postgresql://127.0.0.1:5432/rm_dev` somente
+em `dev`, com a identidade efetiva `rm_dev_app`. A partida continua validando
+o histórico de migrações. O migrador e o provisionador mantêm o destino
+dedicado em `55432`. Para restaurar a demonstração na instância compartilhada,
+use um dump compatível e um banco `rm_dev` novo, preservando os demais bancos.
+
+### Depuração no VS Code no Mac
+
+Abra a raiz do repositório, selecione **Restaurant Manager (Java + Angular)**
+em **Executar e Depurar** e pressione **F5**. O Debugger for Java inicia o Spring
+Boot com o JDK 21 e o `.env` da raiz. Após a inicialização, o VS Code sobe o
+Angular com Node 26, recarregamento ao salvar e depuração no Chrome em
+`https://demo.localhost:4200`. O Angular usa o certificado privado da
+demonstração e encaminha a API ao `RM_PORT` do `.env`, mantendo o domínio da
+empresa. Encerre a sessão Java para parar a execução pelo VS Code. Se a
+demonstração empacotada estiver usando a porta do `.env`, encerre-a antes do F5.
+
 ## Homologação isolada e publicação automática
 
 Criar configuração própria de homologação: banco/usuário, serviço nativo, origem/porta, diretórios de release/mídia e credenciais de sandbox/captura separados dos demais ambientes. Identificar o ambiente no banner e nos diagnósticos. Dados fictícios não devem ser confundidos com pedidos reais. Credenciais de homologação ficam restritas às operações que precisam delas; testes destrutivos usam seu banco de teste, sem limpar a homologação compartilhada por acidente.
