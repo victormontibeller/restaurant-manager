@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Preparar dependências do Angular",
+      "type": "process",
+      "command": "bash",
+      "args": ["-c", "test -f node_modules/@angular/cli/bin/ng.js || exec npm ci --ignore-scripts"],
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent" }
+    }
+  ]
+}

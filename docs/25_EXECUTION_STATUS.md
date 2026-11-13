@@ -1,5 +1,14 @@
 # Checkpoint de execução
 
+## Depuração no VS Code no Mac — 2026-11-12
+
+O F5 iniciou o Spring Boot em Java 21 com o `.env` local e, em sequência,
+o Angular e a sessão de depuração no Chrome. O cardápio HTTPS na porta 4200
+exibiu nove produtos fictícios via proxy para a API na porta 8095, conectada
+ao `rm_dev` local. Typecheck do frontend, links locais e padrões de segredo
+passaram. A verificação foi dirigida à partida e à leitura do cardápio.
+O [runbook](22_PRODUCTION_RUNBOOK.md#depuração-no-vs-code-no-mac) descreve a configuração.
+
 ## Recuperação da demonstração e acesso pelo Postico — 2026-11-11
 
 O login falhou porque o PostgreSQL da demonstração perdeu arquivos essenciais
@@ -20,6 +29,11 @@ Três testes da guarda passaram. Frontend, dependências e migrações coincidem
 com os do JAR anterior. O smoke HTTPS no Mac confirmou duas unidades e login,
 identidade, logout e revogação da sessão nos sete perfis. O túnel temporário
 do Windows foi encerrado a pedido do proprietário.
+
+A configuração privada da demonstração passou para `.env`. A raiz oferece
+links locais para `.env`, `ACESSOS.txt` e `ACESSOS.html`, ignorados pelo Git.
+O novo leitor reproduziu os valores do JSON anterior, arquivado na área
+privada. A troca de formato vale na próxima partida da aplicação.
 
 ## Painel da cozinha — publicado na demonstração, 2026-11-10
 
