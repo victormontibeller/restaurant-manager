@@ -1,28 +1,74 @@
 <section class="painel-interno" [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'">
   <header class="cabecalho-painel">
     <div>
-      <span class="sobretitulo">Acompanhamento</span>
+      <span class="sobretitulo">
+        @if (!mesa() && nomeEstabelecimento()) {
+          {{ nomeEstabelecimento() }} · Acompanhamento
+        } @else {
+          Acompanhamento
+        }
+      </span>
       <h2>{{ mesa() ? 'Minhas rodadas' : 'Meus pedidos' }}</h2>
       <p class="texto-secundario">Veja o andamento e os detalhes de cada pedido.</p>
     </div>
   </header>
   <div class="barra-conexao">
     <p role="status">
-      {{ acompanhamento.estado() }} Última atualização:
-      {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+      {{ acompanhamento.estado() }}
+      @if (acompanhamento.atualizadoEm(); as horario) {
+        Última atualização: {{ horario }}.
+      }
     </p>
-    <button class="secundario" (click)="carregar(pagina())" [disabled]="ocupado()">
+    <button
+      hlmBtn
+      variant="outline"
+      size="sm"
+      type="button"
+      (click)="carregar(pagina())"
+      [disabled]="ocupado()"
+    >
       Atualizar pedidos
     </button>
   </div>
   @if (outrasUnidades()) {
-    <p>Pedidos desta página são conferidos também a cada cinco segundos.</p>
+    <p class="texto-secundario">Atualização automática ativa em segundo plano.</p>
   }
   @if (erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>
   }
+  @if (pedidos().length > 0) {
+    <div class="filtros-pedidos" role="group" aria-label="Filtrar pedidos desta página">
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'todos'"
+        (click)="filtro.set('todos')"
+      >
+        Todos
+        <span class="filtro-contagem">{{ pedidos().length }}</span>
+      </button>
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'andamento'"
+        (click)="filtro.set('andamento')"
+      >
+        Em andamento
+        <span class="filtro-contagem">{{ contagem('andamento') }}</span>
+      </button>
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'concluidos'"
+        (click)="filtro.set('concluidos')"
+      >
+        Concluídos
+        <span class="filtro-contagem">{{ contagem('concluidos') }}</span>
+      </button>
+    </div>
+  }
   <div class="grade-pedidos" [attr.aria-busy]="ocupado()">
-    @for (pedido of pedidos(); track pedido.id) {
+    @for (pedido of pedidosVisiveis(); track pedido.id) {
       <app-pedido-detalhe
         [pedido]="pedido"
         [contexto]="mesa() ? 'mesa' : 'cliente'"
@@ -30,21 +76,49 @@
       />
     } @empty {
       <div class="vazio">
-        <h3>{{ ocupado() ? 'Atualizando seus pedidos…' : 'Nenhum pedido nesta página' }}</h3>
-        <p>Quando seu pedido for confirmado, você poderá acompanhá-lo aqui.</p>
+        <span class="vazio-icone" aria-hidden="true">
+          <app-icone [nome]="mesa() ? 'mesas' : 'pedidos'" />
+        </span>
+        @if (pedidos().length > 0 && !ocupado()) {
+          <h3>Nenhum pedido neste filtro</h3>
+          <p>Altere o filtro acima para visualizar os outros pedidos desta página.</p>
+          <div class="vazio-acao">
+            <button hlmBtn variant="outline" size="sm" type="button" (click)="filtro.set('todos')">
+              Mostrar todos os pedidos
+            </button>
+          </div>
+        } @else {
+          <h3>{{ ocupado() ? 'Atualizando seus pedidos…' : 'Nenhum pedido nesta página' }}</h3>
+          <p>Quando seu pedido for confirmado, você poderá acompanhá-lo aqui.</p>
+          @if (!mesa() && !ocupado()) {
+            <div class="vazio-acao">
+              <a hlmBtn routerLink="/cardapio">Explorar cardápio</a>
+            </div>
+          }
+        }
       </div>
     }
   </div>
   <nav class="paginacao" aria-label="Páginas dos meus pedidos">
     <button
-      class="secundario"
+      hlmBtn
+      variant="outline"
+      size="sm"
+      type="button"
       (click)="carregar(pagina() - 1)"
       [disabled]="ocupado() || pagina() === 0"
     >
       Página anterior de pedidos
     </button>
     <span>Página {{ pagina() + 1 }}</span>
-    <button class="secundario" (click)="carregar(pagina() + 1)" [disabled]="ocupado() || !mais()">
+    <button
+      hlmBtn
+      variant="outline"
+      size="sm"
+      type="button"
+      (click)="carregar(pagina() + 1)"
+      [disabled]="ocupado() || !mais()"
+    >
       Próxima página de pedidos
     </button>
   </nav>

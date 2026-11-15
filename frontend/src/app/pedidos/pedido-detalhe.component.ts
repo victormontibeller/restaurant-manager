@@ -2,11 +2,12 @@ import { PagamentoPedidoComponent } from '../pagamentos/pagamento-pedido.compone
 import { FinanceiroComponent } from '../financeiro/financeiro.component';
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { mensagemErro, moeda } from '../catalogo/modelos';
+import { HlmButton } from '../ui/button';
 import { Pedido, UnidadeProducao, horario, nomeEstado } from './modelos';
 import { PedidoComandoService } from './pedido-comando.service';
 
 @Component({
-  imports: [FinanceiroComponent, PagamentoPedidoComponent],
+  imports: [FinanceiroComponent, PagamentoPedidoComponent, HlmButton],
   selector: 'app-pedido-detalhe',
   templateUrl: './pedido-detalhe.component.html',
   styleUrls: ['../operacao.css', './pedido-detalhe.component.css'],
@@ -82,6 +83,77 @@ export class PedidoDetalheComponent {
   }
   quantidadeEstado(estado: string): number {
     return this.pedido().unidades.filter((unidade) => unidade.estado === estado).length;
+  }
+  valorPositivo(valor?: string): boolean {
+    return !!valor && Number(valor) > 0;
+  }
+  cancelado(): boolean {
+    return this.pedido().estado === 'CANCELADO';
+  }
+  aguardandoPagamento(): boolean {
+    return this.pedido().estado === 'AGUARDANDO_PAGAMENTO';
+  }
+  etapasTimeline(): { numero: string; titulo: string; estado: 'done' | 'current' | 'pending' }[] {
+    const e = this.pedido().estado;
+    const delivery = this.pedido().canal === 'DELIVERY';
+    if (e === 'AGUARDANDO_PAGAMENTO') {
+      return [
+        { numero: '01', titulo: 'Aguardando pagamento', estado: 'current' },
+        { numero: '02', titulo: 'Recebido', estado: 'pending' },
+        { numero: '03', titulo: 'Em preparo', estado: 'pending' },
+        { numero: '04', titulo: delivery ? 'Pronto / Entrega' : 'Pronto', estado: 'pending' },
+      ];
+    }
+    const idx =
+      e === 'AGUARDANDO_ACEITE'
+        ? 0
+        : e === 'NA_FILA' || e === 'EM_PREPARO'
+          ? 1
+          : e === 'PRONTO' || e === 'EM_ENTREGA'
+            ? 2
+            : 3;
+    const labels = [
+      e === 'AGUARDANDO_ACEITE' ? 'Aguardando confirmação' : 'Confirmado',
+      e === 'NA_FILA' ? 'Na fila da cozinha' : 'Em preparo',
+      e === 'EM_ENTREGA' ? 'Saiu para entrega' : delivery ? 'Pronto / Entrega' : 'Pronto',
+      'Concluído',
+    ];
+    return labels.map((titulo, i) => ({
+      numero: '0' + (i + 1),
+      titulo,
+      estado: e === 'CONCLUIDO' || i < idx ? 'done' : i === idx ? 'current' : 'pending',
+    }));
+  }
+  resumoUnidadesCliente(): string {
+    const ativas = this.pedido().unidades.filter((u) => u.estado !== 'CANCELADO');
+    if (ativas.length <= 1 || this.terminal()) return '';
+    const prontas = ativas.filter((u) => u.estado === 'PRONTO').length;
+    const emPreparo = ativas.filter((u) => u.estado === 'EM_PREPARO').length;
+    if (prontas > 0 && prontas < ativas.length) {
+      return prontas + ' de ' + ativas.length + ' itens já prontos.';
+    }
+    if (emPreparo > 0 && emPreparo < ativas.length) {
+      return emPreparo + ' de ' + ativas.length + ' itens em preparo na cozinha.';
+    }
+    return '';
+  }
+  nomeEvento(tipo: string): string {
+    return (
+      (
+        {
+          PEDIDO_CRIADO: 'Pedido registrado',
+          CRIADO: 'Pedido registrado',
+          ACEITO: 'Confirmado pelo restaurante',
+          EM_PREPARO: 'Preparo iniciado',
+          PRONTO: 'Pedido pronto',
+          EM_ENTREGA: 'Saiu para entrega',
+          CONCLUIDO: 'Concluído',
+          CANCELADO: 'Cancelado',
+          RECUSADO: 'Recusado pelo restaurante',
+          SOLICITACAO_CANCELAMENTO: 'Solicitação de cancelamento',
+        } as Record<string, string>
+      )[tipo] ?? tipo
+    );
   }
   podeCancelarOperacional(): boolean {
     return (

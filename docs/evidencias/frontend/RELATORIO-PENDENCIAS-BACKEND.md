@@ -6,7 +6,7 @@ Este relatório consolida **todos os requisitos, lacunas de contrato e evoluçõ
 
 ---
 
-## 1. Matriz Resumo de Itens (`BE-01` a `BE-20`)
+## 1. Matriz Resumo de Itens (`BE-01` a `BE-22`)
 
 | ID | Prioridade | Categoria | Resumo do requisito | Origem / Sprint |
 | --- | --- | --- | --- | --- |
@@ -30,6 +30,8 @@ Este relatório consolida **todos os requisitos, lacunas de contrato e evoluçõ
 | `BE-18` | **P1** | Suporte público da casa | Extensão opcional de `GET /api/v1/restaurante` (`BE-01`) com `telefoneContato`, `whatsappContato` e `emailContato` para ajuda em `/sem-acesso`, `/404` e `/cadastro` | Sprint 1 (`/sem-acesso`, `/404`, `/cadastro`) |
 | `BE-19` | **P2** | Hospitalidade no salão | `GET /api/v1/mesas/publico/{mesaId}` retornando apenas rótulo amigável e setor da mesa (sem código ou dados de comanda) | Sprint 1 e 2 (`/mesa/:mesaId`) |
 | `BE-20` | **P2** | Observabilidade pública leve | Campos opcionais não sensíveis (`versaoAplicacao` / `avisoOperacional`) em `GET /api/v1/status`, preservando `/actuator/health` exato | Sprint 1 (Rodapé técnico e PWA) |
+| `BE-21` | **P1/P2** | Clareza de acompanhamento | Incluir `unidadeNome` e `mesaNome` em `PedidoDetalhe` (`GET /api/v1/me/pedidos` e `/pedidos/{id}`) | Sprint 2 (`/pedidos`, `/pedidos/:id`, `/mesa`) |
+| `BE-22` | **P2** | Transparência no Checkout Pro | Incluir `criadoEm` e `valor` em `CheckoutResumo` (`GET /api/v1/me/pedidos/{id}/pagamento`) | Sprint 2 (`<app-pagamento-pedido>`) |
 
 ---
 
@@ -186,12 +188,20 @@ Os itens abaixo foram identificados ao mapear todas as telas das Sprints 2 a 7 e
 - **Constatação verificada:** [`StatusController.java`](../../../backend/src/main/java/br/com/restaurantmanager/shared/controllers/StatusController.java) retorna `{ ambiente, etapa }`, enquanto `/actuator/health` devolve exatamente `{ status: "UP" }` (validado literalmente pelos testes E2E em [`fundacao.spec.ts`](../../../frontend/e2e/fundacao.spec.ts)).
 - **Proposta Backend:** Caso o produto deseje exibir versão da entrega ou aviso operacional leve no rodapé técnico e no painel PWA, incluir campos opcionais em `GET /api/v1/status` (como `versaoAplicacao` e `avisoOperacional`), **nunca** alterando o payload de `/actuator/health`.
 
+### `BE-21` *(P1/P2 · Sprint 2)* — Rótulo Amigável de Unidade e Mesa em `PedidoDetalhe`
+- **Constatação verificada:** [`PedidoDetalhe.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/dtos/PedidoDetalhe.java) expõe `unidadeId`, `comandaId`, `endereco` e `entrega`, mas ainda não inclui o nome da unidade nem da mesa; [`PedidoClienteController.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/controllers/PedidoClienteController.java) devolve esse mesmo DTO em `GET /api/v1/me/pedidos` e `GET /api/v1/me/pedidos/{id}`. Sem esses rótulos, o cartão do pedido exibe apenas canal e prefixo curto do identificador (`Pedido #...`) em estabelecimentos multi-unidade ou atendimentos de salão.
+- **Proposta Backend:** Incluir campos opcionais `String unidadeNome` e `String mesaNome` (null para delivery/retirada) em `PedidoDetalhe`, preservando autorização estrita por tenant/usuário. (Como melhoria complementar futura no frontend, [`pedidos/modelos.ts`](../../../frontend/src/app/pedidos/modelos.ts) e [`pedido-detalhe.component.html`](../../../frontend/src/app/pedidos/pedido-detalhe.component.html) também poderão exibir o endereço e os novos rótulos sem recorrer a fallbacks técnicos.)
+
+### `BE-22` *(P2 · Sprint 2)* — Data/Hora e Valor nas Tentativas de Pagamento (`CheckoutResumo`)
+- **Constatação verificada:** [`CheckoutResumo.java`](../../../backend/src/main/java/br/com/restaurantmanager/pagamentos/dtos/CheckoutResumo.java) retorna apenas `(UUID id, String estado, String checkoutUrl, String ultimaFalha)` no endpoint `GET /api/v1/me/pedidos/{id}/pagamento`. No histórico colapsado (`<details>Histórico de tentativas anteriores</details>`), o cliente vê apenas o estado da tentativa sem saber quando ela ocorreu ou qual quantia foi processada.
+- **Proposta Backend:** Acrescentar `Instant criadoEm` e `BigDecimal valor` em `CheckoutResumo` (de forma retrocompatível), permitindo exibir linha temporal clara em `<app-pagamento-pedido>`.
+
 ---
 
 ## 4. Diretrizes de Integração Backend → Frontend após Entrega
 
-Quando o backend implementar qualquer grupo (`BE-01..BE-20`), seguir o protocolo abaixo:
+Quando o backend implementar qualquer grupo (`BE-01..BE-22`), seguir o protocolo abaixo:
 
 1. **Contratos `BE-01` e `BE-03..BE-09` (P0):** o frontend atual já possui as chamadas implementadas e tolerantes; basta subir a nova API e validar os fluxos reais em `/cardapio`, `/conta` e checkout Delivery (removendo mensagens de recurso pendente nos testes E2E).
-2. **Contratos `BE-02` e `BE-10..BE-20` (P1/P2):** abrir microtarefa específica no frontend após o endpoint estar publicado em contrato e testado em Java/PostgreSQL, evitando código morto ou suposições de payload antecipadas.
+2. **Contratos `BE-02` e `BE-10..BE-22` (P1/P2):** abrir microtarefa específica no frontend após o endpoint estar publicado em contrato e testado em Java/PostgreSQL, evitando código morto ou suposições de payload antecipadas.
 3. **Nunca enfraquecer validação no servidor:** limites de tamanho, máscaras de CPF, concorrência otimista (`versao`), escopo por `empresaId` + `unidadeId` e reautenticação de 5 minutos para ações sensíveis permanecem autoridade exclusiva do backend.

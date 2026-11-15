@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 
 interface Checkout {
   id: string;
@@ -11,6 +12,7 @@ interface Checkout {
 
 @Component({
   selector: 'app-pagamento-pedido',
+  imports: [HlmButton],
   templateUrl: './pagamento-pedido.component.html',
   styleUrl: '../operacao.css',
 })
@@ -50,7 +52,7 @@ export class PagamentoPedidoComponent {
           AGUARDANDO: 'Aguardando confirmação de pagamento',
           CONFIRMADO: 'Pagamento confirmado',
           RECUSADO: 'Tentativa recusada ou encerrada',
-          EM_RECONCILIACAO: 'Conferindo o resultado com o provedor',
+          EM_RECONCILIACAO: 'Conferindo pagamento com o Mercado Pago',
           BLOQUEADO: 'Pagamento exige análise da equipe',
         } as Record<string, string>
       )[estado] ?? estado

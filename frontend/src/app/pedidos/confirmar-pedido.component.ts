@@ -146,6 +146,13 @@ export class ConfirmarPedidoComponent {
     return !this.tipoMesa() && !!pessoa && pessoa.perfil !== 'CLIENTE';
   }
 
+  nomeComandaSelecionada(): string {
+    return (
+      this.mesas().find((mesa) => mesa.comandaId === this.comandaId)?.nome ??
+      'Selecione uma mesa com comanda aberta'
+    );
+  }
+
   podeEnviar(): boolean {
     if (
       !this.carrinho.confirmado() ||
@@ -204,7 +211,9 @@ export class ConfirmarPedidoComponent {
       if (pedido) this.concluir(pedido, pendente?.corpo.revisao ?? '');
       else {
         this.podeReenviar.set(true);
-        this.erro.set('Pedido ainda não encontrado. Reenvie somente a mesma intenção.');
+        this.erro.set(
+          'Pedido ainda não encontrado. Você pode tentar enviar este mesmo pedido novamente.',
+        );
       }
     } catch (error) {
       this.erro.set(mensagemErro(error));

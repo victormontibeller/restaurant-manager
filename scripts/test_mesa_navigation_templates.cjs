@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const repo = path.resolve(__dirname, '..');
 const { build } = require(repo + '/frontend/node_modules/esbuild');
 const playwright = require(repo + '/frontend/node_modules/playwright');
@@ -11,7 +12,8 @@ const ts = require(repo + '/frontend/node_modules/typescript');
 
 (async () => {
   const { angularJitApplicationTransform } = await import(
-    repo + '/frontend/node_modules/@angular/compiler-cli/bundles/index.js'
+    pathToFileURL(path.join(repo, 'frontend/node_modules/@angular/compiler-cli/bundles/index.js'))
+      .href
   );
   const program = ts.createProgram(
     [
@@ -168,11 +170,29 @@ const ts = require(repo + '/frontend/node_modules/typescript');
   });
   const name = process.env.RM_TEMPLATE_BROWSER || 'chromium';
   assert(['chromium', 'firefox', 'webkit'].includes(name));
-  const browser = await playwright[name].launch(
-    name === 'webkit' && process.env.RM_WEBKIT_EXECUTABLE
-      ? { executablePath: process.env.RM_WEBKIT_EXECUTABLE }
-      : {},
-  );
+  const launchOptions = {};
+  if (name === 'webkit' && process.env.RM_WEBKIT_EXECUTABLE) {
+    launchOptions.executablePath = process.env.RM_WEBKIT_EXECUTABLE;
+  } else if (name === 'chromium') {
+    const customExec = process.env.RM_CHROMIUM_EXECUTABLE;
+    const edgeExec = path.join(
+      process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)',
+      'Microsoft',
+      'Edge',
+      'Application',
+      'msedge.exe',
+    );
+    if (customExec) {
+      launchOptions.executablePath = customExec;
+    } else if (
+      process.platform === 'win32' &&
+      !fs.existsSync(playwright.chromium.executablePath()) &&
+      fs.existsSync(edgeExec)
+    ) {
+      launchOptions.executablePath = edgeExec;
+    }
+  }
+  const browser = await playwright[name].launch(launchOptions);
   const styles = fs.readFileSync(repo + '/frontend/src/styles.css', 'utf8');
   const server = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html' });

@@ -1,33 +1,62 @@
 .linha-pedido {
   border: 0;
   border-radius: 0;
-  padding: 0;
-  margin: 0;
   padding: 1rem 0;
-  border-bottom: 1px solid var(--border, #dedfd8);
+  margin: 0;
+  border-bottom: 1px solid var(--border, #e5ded3);
 }
 .linha-pedido h4 {
   margin: 0 0 0.6rem;
   font-size: 1rem;
   line-height: 1.4;
 }
-.cartao-pedido {
-  border-top: 4px solid var(--border, #dedfd8);
+.linha-pedido-talao {
+  border: 0;
+  padding: 0.45rem 0;
+  margin: 0;
 }
+.linha-pedido-talao + .linha-pedido-talao {
+  border-top: 1px dashed var(--border, #e5ded3);
+  padding-top: 0.7rem;
+}
+.talao-item-nome {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.38;
+  color: var(--foreground, #292521);
+}
+.talao-resumo-dl {
+  border-top: 0;
+  padding-top: 0.15rem;
+  margin: 0;
+  gap: 0.45rem 1rem;
+}
+.talao-resumo-dl dt {
+  font-size: 0.88rem;
+  color: #594e46;
+}
+.talao-resumo-dl dd {
+  color: var(--foreground, #292521);
+}
+.cartao-pedido {
+  border-top: 4px solid var(--border, #e5ded3);
+}
+.cartao-pedido[data-estado='AGUARDANDO_PAGAMENTO'],
 .cartao-pedido[data-estado='AGUARDANDO_ACEITE'] {
-  border-top-color: #d39134;
+  border-top-color: #c57d1f;
 }
 .cartao-pedido[data-estado='NA_FILA'] {
-  border-top-color: #8190c7;
+  border-top-color: #5364a8;
 }
 .cartao-pedido[data-estado='EM_PREPARO'] {
-  border-top-color: #cd7d37;
+  border-top-color: var(--primary, #a53e2b);
 }
 .cartao-pedido[data-estado='PRONTO'] {
-  border-top-color: #659c71;
+  border-top-color: var(--accent-foreground, #30523b);
 }
 .cartao-pedido[data-estado='CANCELADO'] {
-  border-top-color: #b86156;
+  border-top-color: var(--danger, #ad2929);
 }
 .cabecalho-pedido {
   display: flex;
@@ -38,21 +67,23 @@
 .cabecalho-pedido h3 {
   margin: 0.35rem 0 0.7rem;
   font-size: 1.15rem;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
+  color: var(--foreground, #292521);
 }
 .tempo-pedido {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
   flex: 0 0 auto;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .tempo-pedido strong {
   font-size: 1rem;
+  color: var(--foreground, #292521);
 }
 .tempo-pedido span {
-  font-size: 0.75rem;
-  color: var(--muted-foreground, #68736b);
+  font-size: 0.76rem;
+  color: var(--muted-foreground, #6e6259);
 }
 .estado-pedido {
   display: flex;
@@ -62,33 +93,81 @@
 .observacao-pedido {
   display: grid;
   gap: 0.25rem;
-  background: var(--muted, #f1f3ed);
-  border-radius: 0.6rem;
-  padding: 0.75rem;
-  font-size: 0.85rem;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  background: var(--muted, #f3eee7);
+  border: 1px solid var(--border, #e5ded3);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+  color: var(--foreground, #292521);
 }
 .observacao-pedido strong {
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground, #6e6259);
 }
 .componente-item {
-  margin: 0.35rem 0;
+  margin: 0.28rem 0 0;
   padding-left: 0.7rem;
-  border-left: 2px solid var(--border, #dedfd8);
-  font-size: 0.9rem;
+  border-left: 2px solid var(--border, #e5ded3);
+  font-size: 0.86rem;
+  color: #594e46;
+}
+.componente-sub {
+  margin-left: 0.65rem;
 }
 .resumo-producao {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0.75rem 0;
-  font-size: 0.75rem;
-  color: var(--muted-foreground, #68736b);
+  font-size: 0.78rem;
+  color: var(--muted-foreground, #6e6259);
 }
 .prazo-pedido {
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 650;
+  color: var(--foreground, #292521);
+}
+.prazo-pagamento-online {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  background: #fff9f2;
+  border: 1px solid #ead8c3;
+  font-size: 0.84rem;
+  font-weight: 650;
+  color: #7a440d;
+}
+.bloco-cancelamento {
+  margin-top: 0.9rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: #fffcf8;
+  display: grid;
+  gap: 0.5rem;
+}
+.bloco-cancelamento-titulo {
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: var(--foreground, #292521);
+}
+.bloco-cancelamento label {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted-foreground, #6e6259);
+}
+.bloco-cancelamento textarea {
+  min-height: 3.5rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+}
+.bloco-cancelamento .acoes-pedido {
+  margin: 0.2rem 0 0;
 }
 .acoes-pedido {
   margin-bottom: 0;
@@ -96,21 +175,28 @@
 .acoes-pedido button {
   flex: 1 1 10rem;
 }
+.solicitacao-estado,
+.aviso-pedido {
+  margin: 0.75rem 0 0;
+  font-size: 0.88rem;
+  color: var(--foreground, #292521);
+}
 .historico-pedido {
-  font-size: 0.8rem;
-  background: var(--muted, #f5f6f2);
-  border: 0;
+  font-size: 0.84rem;
+  background: var(--muted, #f3eee7);
+  border: 1px solid var(--border, #e5ded3);
   margin-bottom: 0;
+  color: var(--foreground, #292521);
 }
 .historico-pedido ol {
   padding-left: 1.25rem;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 .referencia-completa {
   overflow-wrap: anywhere;
   font-family: monospace;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
 }
 .cartao-cozinha .linha-pedido h4 {
   font-size: 1.15rem;
@@ -128,18 +214,18 @@
   align-items: center;
   gap: 0.65rem;
   min-height: 48px;
-  border: 1px solid var(--border, #dedfd8);
-  border-radius: 0.6rem;
+  border: 1px solid var(--border, #e5ded3);
+  border-radius: 0.7rem;
   padding: 0.65rem;
   margin: 0;
-  background: var(--background, #fff);
+  background: var(--card, #fff);
   cursor: pointer;
   font-size: 0.85rem;
 }
 .selecao.marcada {
-  border-color: var(--primary, #8c4824);
-  background: var(--accent, #f6efe8);
-  box-shadow: inset 0 0 0 1px var(--primary, #8c4824);
+  border-color: var(--primary, #a53e2b);
+  background: #fbefec;
+  box-shadow: inset 0 0 0 1px var(--primary, #a53e2b);
 }
 .selecao input {
   flex: 0 0 1.4rem;

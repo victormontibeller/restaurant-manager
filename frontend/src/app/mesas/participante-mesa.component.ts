@@ -12,6 +12,8 @@ import { mensagemErro, moeda } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { MeusPedidosComponent } from '../pedidos/meus-pedidos.component';
 import { nomeEstado } from '../pedidos/modelos';
+import { IconeComponent } from '../rotas/icone.component';
+import { HlmButton } from '../ui/button';
 import { Comanda, SolicitacaoMesa } from './modelos';
 import { SessaoMesaService } from './sessao-mesa.service';
 import { PendenciasMesaService, SolicitacaoMesaPendente } from './pendencias-mesa.service';
@@ -19,7 +21,7 @@ import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service'
 
 @Component({
   selector: 'app-participante-mesa',
-  imports: [MeusPedidosComponent],
+  imports: [MeusPedidosComponent, HlmButton, IconeComponent],
   templateUrl: './participante-mesa.component.html',
   styleUrl: '../operacao.css',
 })
@@ -96,7 +98,7 @@ export class ParticipanteMesaComponent {
     try {
       await this.sessao.autorizar(this.mesaId.trim(), codigo.value);
       codigo.value = '';
-      this.aviso.set('Participação autorizada pelo servidor.');
+      this.aviso.set('Tudo certo! Sua entrada na mesa foi confirmada.');
     } catch (error) {
       this.erroAcao.set(mensagemErro(error));
     } finally {
@@ -174,10 +176,14 @@ export class ParticipanteMesaComponent {
     } catch {
       this.encerramentoPendente.set(true);
       this.erroAcao.set(
-        'Acesso local removido; o encerramento no servidor ainda não foi confirmado. Reconecte para encerrar.',
+        'Saída registrada neste aparelho. Reconecte-se para confirmar o encerramento na mesa.',
       );
     } finally {
       this.ocupado.set(false);
     }
+  }
+
+  valorPositivo(valor?: string): boolean {
+    return !!valor && Number(valor) > 0;
   }
 }

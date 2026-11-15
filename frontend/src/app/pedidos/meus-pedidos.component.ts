@@ -1,15 +1,19 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { SessaoMesaService } from '../mesas/sessao-mesa.service';
 import { mensagemErro } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
+import { IconeComponent } from '../rotas/icone.component';
+import { MarcaService } from '../rotas/marca.service';
+import { HlmButton } from '../ui/button';
 import { PaginaPedidos, Pedido } from './modelos';
 import { PedidoDetalheComponent } from './pedido-detalhe.component';
 import { PedidoEnvioService } from './pedido-envio.service';
 
 @Component({
   selector: 'app-meus-pedidos',
-  imports: [PedidoDetalheComponent],
+  imports: [PedidoDetalheComponent, RouterLink, HlmButton, IconeComponent],
   templateUrl: './meus-pedidos.component.html',
   styleUrl: '../operacao.css',
 })
@@ -18,7 +22,9 @@ export class MeusPedidosComponent {
   private readonly sessao = inject(SessaoService);
   private readonly sessaoMesa = inject(SessaoMesaService);
   private readonly envio = inject(PedidoEnvioService);
+  private readonly marca = inject(MarcaService);
   readonly pedidos = signal<Pedido[]>([]);
+  readonly filtro = signal<'todos' | 'andamento' | 'concluidos'>('todos');
   readonly pagina = signal(0);
   readonly mais = signal(false);
   readonly ocupado = signal(false);
@@ -128,6 +134,27 @@ export class MeusPedidosComponent {
         this.agendarOutrasUnidades();
       }
     }
+  }
+
+  nomeEstabelecimento(): string {
+    return typeof this.marca?.nome === 'function' ? this.marca.nome() : '';
+  }
+
+  emAndamento(pedido: Pedido): boolean {
+    return !['CONCLUIDO', 'CANCELADO'].includes(pedido.estado);
+  }
+
+  pedidosVisiveis(): Pedido[] {
+    const modo = this.filtro();
+    if (modo === 'andamento') return this.pedidos().filter((pedido) => this.emAndamento(pedido));
+    if (modo === 'concluidos') return this.pedidos().filter((pedido) => !this.emAndamento(pedido));
+    return this.pedidos();
+  }
+
+  contagem(modo: 'andamento' | 'concluidos'): number {
+    return this.pedidos().filter((pedido) =>
+      modo === 'andamento' ? this.emAndamento(pedido) : !this.emAndamento(pedido),
+    ).length;
   }
 
   private agendarOutrasUnidades(): void {

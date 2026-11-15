@@ -13,7 +13,7 @@
     <p>Entre em sua conta para delivery/retirada ou autorize sua participação na mesa.</p>
   } @else {
     @if (assistido() && !acoes().includes('pedido.criar_assistido')) {
-      <p>Sua política atual não permite criar pedidos assistidos.</p>
+      <p>Seu perfil atual não permite criar pedidos assistidos.</p>
     }
     @if (carrinho.contexto()?.canal === 'MESA') {
       @if (tipoMesa()) {
@@ -23,23 +23,178 @@
         </p>
       } @else if (assistido()) {
         <label for="comanda-pedido-assistido">Comanda do pedido assistido</label>
-        <select
-          id="comanda-pedido-assistido"
-          #comanda
-          [value]="comandaId"
-          (change)="comandaId = comanda.value"
-          [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+        <div
+          class="bistro-select-wrap"
+          (focusout)="
+            !$any($event.currentTarget).contains($event.relatedTarget) &&
+              (menuComanda.checked = false)
+          "
         >
-          <option value="">Selecione uma mesa com comanda aberta</option>
-          @for (mesa of mesas(); track mesa.id) {
-            <option [value]="mesa.comandaId">{{ mesa.nome }}</option>
+          <input #menuComanda type="checkbox" hidden />
+          <div
+            class="bistro-select-pill"
+            [class.open]="menuComanda.checked"
+            [class.disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+            (mousedown)="!envio.ocupado() && !envio.pendente(tipoMesa()) && $event.preventDefault()"
+            (click)="
+              !envio.ocupado() && !envio.pendente(tipoMesa()) && comanda.focus();
+              !envio.ocupado() &&
+                !envio.pendente(tipoMesa()) &&
+                (menuComanda.checked = !menuComanda.checked)
+            "
+          >
+            <svg
+              class="bistro-select-ico"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 8h14v10H5zM8 3v3M16 3v3M8 20v2M16 20v2M2 11v4M22 11v4"
+              />
+            </svg>
+            <span class="bistro-select-val" aria-hidden="true">
+              {{ nomeComandaSelecionada() }}
+            </span>
+            <select
+              id="comanda-pedido-assistido"
+              #comanda
+              class="sr-select"
+              [value]="comandaId"
+              (keydown.enter)="$event.preventDefault(); menuComanda.checked = !menuComanda.checked"
+              (keydown.space)="$event.preventDefault(); menuComanda.checked = !menuComanda.checked"
+              (keydown.escape)="menuComanda.checked = false"
+              (change)="menuComanda.checked = false; comandaId = comanda.value"
+              [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+            >
+              <option value="">Selecione uma mesa com comanda aberta</option>
+              @for (mesa of mesas(); track mesa.id) {
+                <option [value]="mesa.comandaId" [selected]="mesa.comandaId === comandaId">
+                  {{ mesa.nome }}
+                </option>
+              }
+            </select>
+            <svg
+              class="bistro-select-chev"
+              [class.rot]="menuComanda.checked"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </div>
+          @if (menuComanda.checked && !envio.ocupado() && !envio.pendente(tipoMesa())) {
+            <div class="bistro-select-popover" role="presentation">
+              <p class="bistro-select-popover-title">Comanda aberta</p>
+              <button
+                type="button"
+                class="bistro-select-opt"
+                [class.on]="comandaId === ''"
+                tabindex="-1"
+                (mousedown)="$event.preventDefault()"
+                (click)="
+                  menuComanda.checked = false;
+                  comanda.value = '';
+                  comandaId = '';
+                  comanda.focus()
+                "
+              >
+                <span class="bistro-select-opt-main">
+                  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 8h14v10H5zM8 3v3M16 3v3M8 20v2M16 20v2M2 11v4M22 11v4"
+                    />
+                  </svg>
+                  <span>Selecione uma mesa com comanda aberta</span>
+                </span>
+                @if (comandaId === '') {
+                  <span class="bistro-select-opt-check" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24">
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m5 12.5 4.5 4.5L19 7.5"
+                      />
+                    </svg>
+                  </span>
+                }
+              </button>
+              @for (mesa of mesas(); track mesa.id) {
+                <button
+                  type="button"
+                  class="bistro-select-opt"
+                  [class.on]="mesa.comandaId === comandaId"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="
+                    menuComanda.checked = false;
+                    comanda.value = mesa.comandaId ?? '';
+                    comandaId = mesa.comandaId ?? '';
+                    comanda.focus()
+                  "
+                >
+                  <span class="bistro-select-opt-main">
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 8h14v10H5zM8 3v3M16 3v3M8 20v2M16 20v2M2 11v4M22 11v4"
+                      />
+                    </svg>
+                    <span>{{ mesa.nome }}</span>
+                  </span>
+                  @if (mesa.comandaId === comandaId) {
+                    <span class="bistro-select-opt-check" aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24">
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m5 12.5 4.5 4.5L19 7.5"
+                        />
+                      </svg>
+                    </span>
+                  }
+                </button>
+              }
+            </div>
           }
-        </select>
+        </div>
         <nav
           aria-label="Páginas de mesas para pedido assistido"
           class="paginacao paginacao-assistido"
         >
           <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
             (click)="carregarMesas(paginaMesas() - 1)"
             [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || paginaMesas() === 0"
           >
@@ -47,6 +202,10 @@
           </button>
           <span role="status">Página de mesas {{ paginaMesas() + 1 }}</span>
           <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
             (click)="carregarMesas(paginaMesas() + 1)"
             [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa()) || !maisMesas()"
           >
@@ -87,46 +246,20 @@
         "
       >
         <input #menuPagamento type="checkbox" hidden />
-        <label
+        <div
           class="bistro-select-pill"
           [class.open]="menuPagamento.checked"
-          for="pagamento-pedido"
+          [class.disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
           (mousedown)="!envio.ocupado() && !envio.pendente(tipoMesa()) && $event.preventDefault()"
           (click)="
-            $event.preventDefault();
             !envio.ocupado() && !envio.pendente(tipoMesa()) && meio.focus();
             !envio.ocupado() &&
               !envio.pendente(tipoMesa()) &&
               (menuPagamento.checked = !menuPagamento.checked)
           "
         >
-          <span class="bistro-select-val" aria-hidden="true">
-            {{
-              pagamento === 'ONLINE'
-                ? 'Pagar online com Mercado Pago'
-                : 'Pagar presencialmente ao restaurante'
-            }}
-          </span>
-          <select
-            id="pagamento-pedido"
-            #meio
-            class="sr-only"
-            [value]="pagamento"
-            (keydown.enter)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
-            (keydown.space)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
-            (keydown.escape)="menuPagamento.checked = false"
-            (change)="
-              menuPagamento.checked = false;
-              pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'
-            "
-            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
-          >
-            <option value="PRESENCIAL">Pagar presencialmente ao restaurante</option>
-            <option value="ONLINE">Pagar online com Mercado Pago</option>
-          </select>
           <svg
-            class="bistro-select-chev"
-            [class.rot]="menuPagamento.checked"
+            class="bistro-select-ico"
             width="16"
             height="16"
             viewBox="0 0 24 24"
@@ -137,12 +270,57 @@
             stroke-linejoin="round"
             aria-hidden="true"
           >
+            <rect x="3" y="6" width="18" height="12" rx="2" />
+            <path d="M3 10h18" />
+          </svg>
+          <span class="bistro-select-val" aria-hidden="true">
+            {{
+              pagamento === 'ONLINE'
+                ? 'Pagar online com Mercado Pago'
+                : 'Pagar presencialmente ao restaurante'
+            }}
+          </span>
+          <select
+            id="pagamento-pedido"
+            #meio
+            class="sr-select"
+            [value]="pagamento"
+            (keydown.enter)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
+            (keydown.space)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
+            (keydown.escape)="menuPagamento.checked = false"
+            (change)="
+              menuPagamento.checked = false;
+              pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'
+            "
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+          >
+            <option value="PRESENCIAL" [selected]="pagamento === 'PRESENCIAL'">
+              Pagar presencialmente ao restaurante
+            </option>
+            <option value="ONLINE" [selected]="pagamento === 'ONLINE'">
+              Pagar online com Mercado Pago
+            </option>
+          </select>
+          <svg
+            class="bistro-select-chev"
+            [class.rot]="menuPagamento.checked"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
             <path d="m6 9 6 6 6-6" />
           </svg>
-        </label>
+        </div>
 
-        @if (menuPagamento.checked) {
+        @if (menuPagamento.checked && !envio.ocupado() && !envio.pendente(tipoMesa())) {
           <div class="bistro-select-popover" role="presentation">
+            <p class="bistro-select-popover-title">Forma de pagamento</p>
             <button
               type="button"
               class="bistro-select-opt"
@@ -152,10 +330,41 @@
               (click)="
                 menuPagamento.checked = false;
                 meio.value = 'PRESENCIAL';
-                pagamento = 'PRESENCIAL'
+                pagamento = 'PRESENCIAL';
+                meio.focus()
               "
             >
-              <span>Pagar presencialmente ao restaurante</span>
+              <span class="bistro-select-opt-main">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 10h16v9H4z" />
+                  <path d="M3 10l2-5h14l2 5" />
+                </svg>
+                <span>Pagar presencialmente ao restaurante</span>
+              </span>
+              @if (pagamento === 'PRESENCIAL') {
+                <span class="bistro-select-opt-check" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m5 12.5 4.5 4.5L19 7.5"
+                    />
+                  </svg>
+                </span>
+              }
             </button>
             <button
               type="button"
@@ -166,18 +375,48 @@
               (click)="
                 menuPagamento.checked = false;
                 meio.value = 'ONLINE';
-                pagamento = 'ONLINE'
+                pagamento = 'ONLINE';
+                meio.focus()
               "
             >
-              <span>Pagar online com Mercado Pago</span>
+              <span class="bistro-select-opt-main">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="6" width="18" height="12" rx="2" />
+                  <path d="M3 10h18" />
+                </svg>
+                <span>Pagar online com Mercado Pago</span>
+              </span>
+              @if (pagamento === 'ONLINE') {
+                <span class="bistro-select-opt-check" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m5 12.5 4.5 4.5L19 7.5"
+                    />
+                  </svg>
+                </span>
+              }
             </button>
           </div>
         }
       </div>
       @if (pagamento === 'ONLINE') {
-        <p>
-          O pedido aguardará a confirmação do pagamento antes do aceite do restaurante. O prazo é
-          definido pela unidade e será exibido no pedido.
+        <p class="texto-secundario">
+          O pedido segue para confirmação assim que o pagamento for aprovado.
         </p>
       }
     }
@@ -186,32 +425,55 @@
       id="observacao-pedido"
       #observacoes
       maxlength="500"
+      placeholder="Ex.: sem cebola, ponto da carne, molho à parte"
       [value]="observacao"
       (input)="observacao = observacoes.value"
       [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
     ></textarea>
     <p class="texto-secundario">
-      O envio depende da confirmação do servidor. Pedidos de delivery/retirada aguardam aceite; mesa
-      autorizada segue para a cozinha.
+      O pedido é concluído após a confirmação do envio. Pedidos de delivery ou retirada aguardam
+      aceite da casa; na mesa autorizada, a rodada segue para a cozinha.
     </p>
     @if (envio.pendente(tipoMesa())) {
       <p class="aviso" role="status">
-        Envio sem confirmação. Os dados originais foram preservados nesta aba. Consulte antes de
-        repetir; recarregar a página perde este rascunho.
+        Envio sem confirmação. Seus dados originais foram preservados; confira o resultado antes de
+        tentar novamente.
       </p>
       <div class="acoes">
-        <button (click)="reconciliar()" [disabled]="envio.ocupado() || !carrinho.online()">
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          (click)="reconciliar()"
+          [disabled]="envio.ocupado() || !carrinho.online()"
+        >
           Consultar resultado do envio
         </button>
         @if (podeReenviar()) {
-          <button (click)="reenviar()" [disabled]="envio.ocupado() || !carrinho.online()">
-            Reenviar a mesma intenção
+          <button
+            hlmBtn
+            variant="default"
+            size="sm"
+            type="button"
+            (click)="reenviar()"
+            [disabled]="envio.ocupado() || !carrinho.online()"
+          >
+            Tentar enviar novamente
           </button>
         }
       </div>
     } @else {
-      <button (click)="enviar()" [disabled]="!podeEnviar()">
-        {{ envio.ocupado() ? 'Confirmando envio…' : assistido() ? 'Enviar pedido assistido' : tipoMesa() ? 'Enviar rodada para a cozinha' : 'Enviar pedido para aceite' }}
+      <button hlmBtn type="button" (click)="enviar()" [disabled]="!podeEnviar()">
+        {{
+          envio.ocupado()
+            ? 'Confirmando envio…'
+            : assistido()
+              ? 'Enviar pedido assistido'
+              : tipoMesa()
+                ? 'Enviar rodada para a cozinha'
+                : 'Enviar pedido para aceite'
+        }}
       </button>
     }
   }
@@ -219,13 +481,22 @@
     <p role="alert" class="erro">{{ erro() }}</p>
   }
   @if (confirmado(); as pedido) {
-    <p role="status" class="sucesso">
-      Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.
-    </p>
-    @if (navegacaoDisponivel) {
-      <a hlmBtn [routerLink]="tipoMesa() ? '/mesa' : assistido() ? '/gestao/pedidos' : '/pedidos'">
-        Acompanhar pedido
-      </a>
-    }
+    <div class="talao-pedido talao-pedido--salvia">
+      <span class="talao-titulo">Comprovante do pedido</span>
+      <p role="status" class="talao-destaque">
+        Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.
+      </p>
+      @if (navegacaoDisponivel) {
+        <div class="acoes">
+          <a
+            hlmBtn
+            size="sm"
+            [routerLink]="tipoMesa() ? '/mesa' : assistido() ? '/gestao/pedidos' : '/pedidos'"
+          >
+            Acompanhar pedido
+          </a>
+        </div>
+      }
+    </div>
   }
 </section>
