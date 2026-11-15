@@ -13,6 +13,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '../ui/button';
 import { ApiFailure } from '../identidade/sessao.service';
+import { MarcaService } from '../rotas/marca.service';
 import { CarrinhoComponent } from '../carrinho/carrinho.component';
 import { CarrinhoService } from '../carrinho/carrinho.service';
 import { ContextoCarrinho, ItemCarrinho, LinhaCarrinho } from '../carrinho/modelos';
@@ -45,6 +46,7 @@ export class VitrineComponent {
   private readonly api = inject(CatalogoApiService);
   readonly carrinho = inject(CarrinhoService);
   readonly favoritos = inject(FavoritosService);
+  readonly marca = inject(MarcaService);
   private geracao = 0;
   private destruido = false;
   private requisicao: AbortController | null = null;
@@ -143,6 +145,88 @@ export class VitrineComponent {
   quantidadeItens(): number {
     return this.carrinho.itens().reduce((total, item) => total + item.linha.quantidade, 0);
   }
+
+  quantidadeDoProdutoNoCarrinho(produtoId: string): number {
+    return this.carrinho
+      .itens()
+      .reduce(
+        (soma, item) => (item.linha.produtoId === produtoId ? soma + item.linha.quantidade : soma),
+        0,
+      );
+  }
+
+  totalEstimadoCarrinho(): string {
+    const resumo = this.carrinho.resumo();
+    if (resumo) return moeda(resumo.total);
+    let centavos = 0;
+    const mapa = new Map(this.produtos().map((p) => [p.id, p]));
+    for (const item of this.carrinho.itens()) {
+      const p = mapa.get(item.linha.produtoId);
+      if (!p) continue;
+      let unit = Math.round((Number(p.preco) || 0) * 100);
+      for (const esc of item.linha.escolhas) {
+        const g = p.grupos?.find((gr) => gr.id === esc.grupoId);
+        const op = g?.opcoes.find((o) => o.id === esc.opcaoId);
+        if (op) {
+          unit += Math.round((Number(op.acrescimo) || 0) * 100) * esc.quantidade;
+          for (const ad of esc.adicionais) {
+            const a = op.adicionais.find((x) => x.id === ad.adicionalId);
+            if (a) unit += Math.round((Number(a.preco) || 0) * 100) * ad.quantidade;
+          }
+        }
+      }
+      for (const ad of item.linha.adicionais) {
+        const a = p.adicionais?.find((x) => x.id === ad.adicionalId);
+        if (a) unit += Math.round((Number(a.preco) || 0) * 100) * ad.quantidade;
+      }
+      centavos += unit * item.linha.quantidade;
+    }
+    return centavos > 0
+      ? moeda((centavos / 100).toFixed(2))
+      : `${this.quantidadeItens()} ${this.quantidadeItens() === 1 ? 'item' : 'itens'}`;
+  }
+
+  private normalizarTexto(texto: string): string {
+    const base = (texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    return base.replace(/oes\b/g, 'ao').replace(/aes\b/g, 'ao').replace(/ais\b/g, 'al');
+  }
+
+  correspondeBusca(produto: ProdutoPublico, extra = ''): boolean {
+    const busca = this.normalizarTexto(this.termo.trim());
+    if (!busca) return true;
+    const alvo = this.normalizarTexto(produto.nome + ' ' + produto.descricao + ' ' + extra);
+    return alvo.includes(busca);
+  }
+
+  temSugestoesVisiveis(): boolean {
+    return this.produtos().some(
+      (p) =>
+        p.sugerido &&
+        (!this.categoriaId || p.categoriaId === this.categoriaId) &&
+        this.correspondeBusca(p),
+    );
+  }
+
+  temProdutosNaCategoria(cat: Categoria): boolean {
+    if (this.categoriaId && this.categoriaId !== cat.id) return false;
+    const exibirSugeridos = !this.termo.trim() && !this.categoriaId && !this.somenteFavoritos();
+    return this.produtos().some(
+      (p) =>
+        p.categoriaId === cat.id &&
+        (!p.sugerido || exibirSugeridos) &&
+        this.correspondeBusca(p, cat.nome),
+    );
+  }
+
+  temQualquerProdutoVisivel(): boolean {
+    return this.produtos().some(
+      (p) => (!this.categoriaId || p.categoriaId === this.categoriaId) && this.correspondeBusca(p),
+    );
+  }
+
   escolherCategoria(id: string): void {
     this.categoriaId = id;
     void this.carregar(0);

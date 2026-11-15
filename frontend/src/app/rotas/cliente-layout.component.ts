@@ -12,7 +12,7 @@ import { MarcaService } from './marca.service';
   imports: [RouterLink, RouterLinkActive, RouterOutlet, HlmButton, IconeComponent],
   template: `
     <header class="client-header">
-      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark"><app-icone nome="marca"/></span><span>{{ marca.nome() }}<small>Bom de escolher. Melhor de saborear.</small></span></a>
+      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark">@if (marca.logoUrl() && !marca.erroLogo()) {<img class="brand-logo" [src]="marca.logoUrl()!" [alt]="'Logo de ' + marca.nome()" (error)="marca.marcarErroLogo()"/>} @else {<app-icone nome="marca"/>}</span><span>{{ marca.nome() }}<small>{{ marca.slogan() }}</small></span></a>
       <nav class="desktop-nav" aria-label="Navegação do cliente">
         <a routerLink="/cardapio" routerLinkActive="active">Cardápio</a>
         <a [routerLink]="mesa.participante() ? ['/mesa'] : ['/pedidos']" routerLinkActive="active">{{ mesa.participante() ? 'Minha mesa' : 'Meus pedidos' }}</a>

@@ -12,18 +12,163 @@ import { NavegacaoProtegidaService } from './app/rotas/navegacao-protegida.servi
 import { SessaoNavegacaoService } from './app/identidade/sessao-navegacao.service';
 import { SessaoMesaService } from './app/mesas/sessao-mesa.service';
 import { PwaComponent } from './app/pwa/pwa.component';
+import { HlmButton } from './app/ui/button';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, PwaComponent],
+  imports: [RouterOutlet, PwaComponent, HlmButton],
   template: `
     <a class="skip" href="#conteudo" (click)="pularConteudo($event)">Pular para o conteúdo</a>
-    <div class="demo-banner">Ambiente de testes <span aria-hidden="true">·</span> Dados fictícios</div>
-    @if(navegacao.aviso()){<div class="navigation-notice" role="alert">{{navegacao.aviso()}}<button type="button" aria-label="Fechar aviso" (click)="navegacao.aviso.set('')">×</button></div>}
-    <router-outlet/>
-    <footer class="app-utilities"><details><summary><span class="connection-dot" [class.unavailable]="!conectado()"></span>{{conectado()?'Sistema conectado':'Verificar conexão'}}</summary><p role="status">{{mensagem()}}</p><button type="button" (click)="verificar()" [disabled]="carregando()">Verificar conexão</button></details><app-pwa/></footer>
+    <div class="demo-banner">
+      Ambiente de testes <span aria-hidden="true">·</span> Dados fictícios
+    </div>
+    @if (navegacao.aviso()) {
+      <div class="navigation-notice" role="alert">
+        {{ navegacao.aviso()
+        }}<button type="button" aria-label="Fechar aviso" (click)="navegacao.aviso.set('')">×</button>
+      </div>
+    }
+    <router-outlet />
+    <footer class="app-utilities">
+      <details>
+        <summary>
+          <span class="connection-dot" [class.unavailable]="!conectado()"></span
+          >{{ conectado() ? 'Sistema conectado' : 'Verificar conexão' }}
+        </summary>
+        <p role="status">{{ mensagem() }}</p>
+        <button
+          type="button"
+          hlmBtn
+          variant="outline"
+          (click)="verificar()"
+          [disabled]="carregando()"
+        >
+          Verificar conexão
+        </button>
+      </details>
+      <app-pwa />
+    </footer>
   `,
-  styles: `.demo-banner{padding:.45rem 1rem;text-align:center;background:#efe9d8;color:#6c5f36;font-size:.66rem;letter-spacing:.04em}.demo-banner span{padding:0 .4rem}.navigation-notice{position:fixed;top:45px;left:50%;transform:translateX(-50%);width:min(600px,calc(100% - 2rem));padding:1rem 3rem 1rem 1rem;background:#fff1d7;color:#694d1a;border:1px solid #dcc48c;border-radius:12px;z-index:100;box-shadow:0 8px 32px #0002}.navigation-notice button{position:absolute;right:.6rem;top:.5rem;background:none;border:none;font-size:1.5rem;color:inherit;min-height:40px;min-width:40px}.app-utilities{display:flex;align-items:flex-start;justify-content:center;gap:2rem;flex-wrap:wrap;padding:1rem 1.5rem 1.5rem;background:var(--rm-bg,#f8f8f3);border-top:1px solid var(--rm-border,#e2e7df);color:var(--rm-muted,#6b746c);font-size:.72rem}.app-utilities details{max-width:480px}.app-utilities summary{cursor:pointer;min-height:44px;align-content:center;list-style:none}.connection-dot{display:inline-block;width:6px;height:6px;margin-right:.45rem;border-radius:50%;background:#50834e}.connection-dot.unavailable{background:#b77c23}@media(max-width:800px){.app-utilities{padding-bottom:calc(90px + env(safe-area-inset-bottom));gap:.2rem 1.5rem}}`,
+  styles: `
+    .demo-banner {
+      padding: 0.42rem 1rem;
+      text-align: center;
+      background: var(--secondary, #f0ebe3);
+      color: var(--secondary-foreground, #44372e);
+      border-bottom: 1px solid var(--border, #e5ded3);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .demo-banner span {
+      padding: 0 0.4rem;
+    }
+    .navigation-notice {
+      position: fixed;
+      top: 45px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(600px, calc(100% - 2rem));
+      padding: 1rem 3.5rem 1rem 1.1rem;
+      background: #fff8e8;
+      color: #684614;
+      border: 1px solid #e6cf9e;
+      border-radius: var(--radius-lg, 1.05rem);
+      z-index: 100;
+      box-shadow: 0 10px 28px rgba(41, 37, 33, 0.14);
+    }
+    .navigation-notice button {
+      position: absolute;
+      right: 0.4rem;
+      top: 0.35rem;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md, 0.75rem);
+      font-size: 1.4rem;
+      color: inherit;
+      cursor: pointer;
+      min-height: 48px;
+      min-width: 48px;
+    }
+    .app-utilities {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 1.25rem 2rem;
+      flex-wrap: wrap;
+      padding: 1.25rem 1.5rem 1.75rem;
+      background: var(--background, #faf7f2);
+      border-top: 1px solid var(--border, #e5ded3);
+      color: var(--muted-foreground, #6e6259);
+      font-size: 0.8125rem;
+    }
+    .app-utilities details {
+      max-width: 480px;
+      border: 1px solid var(--border, #e5ded3);
+      border-radius: var(--radius-lg, 1.05rem);
+      background: var(--card, #ffffff);
+      padding: 0.2rem 1rem;
+      box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
+    }
+    .app-utilities summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      min-height: 48px;
+      font-weight: 600;
+      color: var(--foreground, #292521);
+      list-style: none;
+    }
+    .app-utilities summary::-webkit-details-marker {
+      display: none;
+    }
+    .app-utilities summary::after {
+      content: '▾';
+      margin-left: auto;
+      padding-left: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--muted-foreground, #6e6259);
+      transition: transform 0.16s ease;
+    }
+    .app-utilities details[open] > summary::after {
+      transform: rotate(180deg);
+    }
+    .app-utilities details[open] > p {
+      margin: 0.2rem 0 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border, #e5ded3);
+      color: var(--muted-foreground, #6e6259);
+      line-height: 1.55;
+    }
+    .app-utilities button[hlmBtn] {
+      min-height: 48px;
+      margin-bottom: 0.75rem;
+    }
+    .connection-dot {
+      display: inline-block;
+      width: 0.5rem;
+      height: 0.5rem;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--accent-foreground, #30523b);
+      box-shadow: 0 0 0 3px var(--accent, #e8efe7);
+    }
+    .connection-dot.unavailable {
+      background: #9a5b13;
+      box-shadow: 0 0 0 3px #fff8e8;
+    }
+    @media (max-width: 800px) {
+      .app-utilities {
+        padding: 0.9rem 0.75rem calc(88px + env(safe-area-inset-bottom));
+        gap: 0.75rem;
+      }
+      .app-utilities details {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  `,
 })
 class App {
   readonly navegacao = inject(NavegacaoProtegidaService);

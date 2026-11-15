@@ -1,4 +1,6 @@
 import { Component, OnDestroy, signal } from '@angular/core';
+import { HlmButton } from '../ui/button';
+import { IconeComponent } from '../rotas/icone.component';
 
 interface PedidoInstalacao extends Event {
   prompt(): Promise<void>;
@@ -7,35 +9,177 @@ interface PedidoInstalacao extends Event {
 
 @Component({
   selector: 'app-pwa',
+  imports: [HlmButton, IconeComponent],
   template: `
-    @if (!online()) { <p class="offline-notice" role="status">Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.</p> }
-    <details [open]="atualizacao()">
-      <summary id="aplicativo">{{ atualizacao() ? 'Nova versão disponível' : 'Aplicativo e conexão' }}</summary>
-      <p role="status" aria-live="polite">
-        @if (online()) {
-          Rede disponível. Consultas e cálculos dependem da conexão com o restaurante.
-        } @else {
-          Você está offline. Somente a estrutura do aplicativo está disponível. Reconecte para
-          consultar o catálogo ou recalcular o carrinho; nenhuma operação foi confirmada.
-        }
+    @if (!online()) {
+      <p class="offline-notice" role="status">
+        Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação
+        foi confirmada.
       </p>
-      @if (instalado()) {
-        <p>Aplicativo aberto em modo instalado.</p>
-      } @else if (instalavel()) {
-        <button (click)="instalar()" [disabled]="ocupado()">Instalar aplicativo</button>
-      } @else {
-        <p>Para instalar, use “Instalar aplicativo” ou “Adicionar à Tela de Início” no menu do
-          navegador, quando disponível.</p>
-      }
-      @if (atualizacao()) {
-        <p>Uma nova versão está pronta. Atualizar recarrega esta aba e descarta o carrinho e
-          formulários ainda não salvos. As outras abas mantêm seus dados em memória.</p>
-        <button (click)="atualizar()" [disabled]="ocupado()">Atualizar aplicativo</button>
-      }
-      <p role="status" aria-live="polite">{{ mensagem() }}</p>
+    }
+    <details class="pwa-card" [class.has-update]="atualizacao()" [open]="atualizacao()">
+      <summary id="aplicativo">
+        <app-icone class="pwa-icone" [class.update]="atualizacao()" nome="atualizacoes" />
+        <span>{{ atualizacao() ? 'Nova versão disponível' : 'Aplicativo e conexão' }}</span>
+      </summary>
+      <div class="pwa-body">
+        <p role="status" aria-live="polite">
+          @if (online()) {
+            Rede disponível. Consultas e cálculos dependem da conexão com o restaurante.
+          } @else {
+            Você está offline. Somente a estrutura do aplicativo está disponível. Reconecte para
+            consultar o catálogo ou recalcular o carrinho; nenhuma operação foi confirmada.
+          }
+        </p>
+        @if (instalado()) {
+          <p class="pwa-nota">Aplicativo aberto em modo instalado.</p>
+        } @else if (instalavel()) {
+          <div class="pwa-acoes">
+            <button type="button" hlmBtn variant="outline" (click)="instalar()" [disabled]="ocupado()">
+              Instalar aplicativo
+            </button>
+          </div>
+        } @else {
+          <p class="pwa-nota">
+            Para instalar, use “Instalar aplicativo” ou “Adicionar à Tela de Início” no menu do
+            navegador, quando disponível.
+          </p>
+        }
+        @if (atualizacao()) {
+          <div class="pwa-atualizacao">
+            <p>
+              Uma nova versão está pronta. Atualizar recarrega esta aba e descarta o carrinho e
+              formulários ainda não salvos. As outras abas mantêm seus dados em memória.
+            </p>
+            <div class="pwa-acoes">
+              <button type="button" hlmBtn (click)="atualizar()" [disabled]="ocupado()">
+                Atualizar aplicativo
+              </button>
+            </div>
+          </div>
+        }
+        <p class="pwa-feedback" role="status" aria-live="polite">{{ mensagem() }}</p>
+      </div>
     </details>
   `,
-  styles: `:host{display:block;max-width:520px}summary{min-height:44px;align-content:center;cursor:pointer;list-style:none}details p{line-height:1.6}button{margin:.5rem .5rem .5rem 0}.offline-notice{max-width:640px;margin:0 0 1rem;padding:1rem;border-radius:12px;background:#fff1d7;color:#694d1a;box-shadow:0 8px 32px #0002;font-size:.85rem}`,
+  styles: `
+    :host {
+      display: block;
+      max-width: 480px;
+    }
+    .pwa-card {
+      border: 1px solid var(--border, #e5ded3);
+      border-radius: var(--radius-lg, 1.05rem);
+      background: var(--card, #ffffff);
+      padding: 0.2rem 1rem;
+      box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
+    }
+    .pwa-card.has-update {
+      border-color: #d8a99f;
+    }
+    summary {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-height: 48px;
+      cursor: pointer;
+      list-style: none;
+      font-weight: 600;
+      color: var(--foreground, #292521);
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    summary::after {
+      content: '▾';
+      margin-left: auto;
+      padding-left: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--muted-foreground, #6e6259);
+      transition: transform 0.16s ease;
+    }
+    .pwa-card[open] > summary::after {
+      transform: rotate(180deg);
+    }
+    .pwa-icone {
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+      color: var(--muted-foreground, #6e6259);
+    }
+    .pwa-icone.update {
+      color: var(--primary, #a53e2b);
+    }
+    .pwa-body {
+      border-top: 1px dashed var(--border, #e5ded3);
+      padding: 0.75rem 0 0.85rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+    .pwa-body p {
+      margin: 0;
+      color: var(--muted-foreground, #6e6259);
+      line-height: 1.55;
+      font-size: 0.8125rem;
+    }
+    .pwa-nota {
+      padding: 0.65rem 0.8rem;
+      border-radius: var(--radius-md, 0.75rem);
+      background: var(--background, #faf7f2);
+      border: 1px solid var(--border, #e5ded3);
+      color: var(--secondary-foreground, #44372e) !important;
+    }
+    .pwa-atualizacao {
+      display: grid;
+      gap: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px dashed var(--border, #e5ded3);
+    }
+    .pwa-acoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .pwa-acoes button[hlmBtn] {
+      min-height: 48px;
+    }
+    .pwa-feedback:empty {
+      display: none;
+    }
+    .pwa-feedback {
+      color: var(--accent-foreground, #30523b) !important;
+      font-weight: 600;
+    }
+    .offline-notice {
+      max-width: 480px;
+      margin: 0 0 0.85rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid #e6cf9e;
+      border-radius: var(--radius-lg, 1.05rem);
+      background: #fff8e8;
+      color: #684614;
+      box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    @media (max-width: 800px) {
+      :host {
+        width: 100%;
+        max-width: none;
+      }
+      .offline-notice {
+        max-width: none;
+      }
+    }
+    @media (max-width: 520px) {
+      .pwa-acoes {
+        width: 100%;
+      }
+      .pwa-acoes button[hlmBtn] {
+        width: 100%;
+      }
+    }
+  `,
 })
 export class PwaComponent implements OnDestroy {
   readonly online = signal(navigator.onLine);

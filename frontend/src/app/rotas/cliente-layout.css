@@ -1,181 +1,330 @@
 :host {
-  display: block;
-  background: var(--rm-bg, #f8f8f3);
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
+  background-color: #faf7f2;
+  color: #292521;
+  font-family:
+    'Segoe UI Variable Text',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
+
 .client-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: 100%;
+  background-color: #faf7f2;
+  backdrop-filter: none;
+  border-bottom: 1px solid var(--border, #e5ded3);
+  height: 68px;
+  padding: 0 max(32px, calc((100% - 1216px) / 2));
   display: flex;
   align-items: center;
-  gap: 2rem;
-  max-width: 1480px;
-  margin: auto;
-  padding: 1.25rem clamp(1rem, 4vw, 4rem);
-  border-bottom: 1px solid var(--rm-border, #e5e9e1);
+  gap: 28px;
 }
+
 .restaurant-brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
+  color: var(--foreground, #292521);
   text-decoration: none;
-  color: var(--rm-text, #233527);
-  font-size: 1.15rem;
-  font-weight: 750;
-  letter-spacing: -0.025em;
+  flex: 0 1 auto;
 }
-.restaurant-brand small {
-  display: block;
-  font-size: 0.69rem;
-  letter-spacing: 0;
-  font-weight: 450;
-  color: var(--rm-muted, #6b746c);
-  margin-top: 0.2rem;
-}
+
 .brand-mark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--primary, #a53e2b);
+  color: #ffffff;
   display: grid;
   place-items: center;
-  border-radius: 14px;
-  background: var(--rm-primary, #285139);
-  color: white;
-  width: 46px;
-  height: 46px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 3px var(--primary, #a53e2b),
+    inset 0 0 0 4px #f3d9d2;
 }
+
+.brand-mark app-icone {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+
+.brand-mark img.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+}
+
+.restaurant-brand > span:last-child {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground, #292521);
+}
+
+.restaurant-brand small {
+  display: none;
+}
+
 .desktop-nav {
   display: flex;
-  gap: 1.6rem;
-  margin: auto;
-  font-size: 0.88rem;
-}
-.desktop-nav a {
-  padding: 1rem 0;
-  color: var(--rm-muted, #6b746c);
-  text-decoration: none;
-  font-weight: 550;
-}
-.desktop-nav .active {
-  color: var(--rm-primary, #285139);
-  box-shadow: 0 2px 0 var(--rm-primary, #285139);
-}
-.header-actions {
-  display: flex;
   align-items: center;
-  gap: 1.4rem;
+  gap: 4px;
+  flex: none;
 }
-.account-link {
-  display: flex;
-  gap: 0.5rem;
+
+.desktop-nav a {
+  display: inline-flex;
   align-items: center;
   min-height: 48px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: var(--muted-foreground, #6e6259);
   text-decoration: none;
-  color: inherit;
-  font-size: 0.86rem;
+  font-size: 14px;
+  font-weight: 600;
 }
-.cart-link {
-  gap: 0.6rem;
+
+.desktop-nav a:hover {
+  color: var(--foreground, #292521);
+  background-color: var(--muted, #f3eee7);
 }
-.cart-link b {
-  font-size: 0.73rem;
+
+.desktop-nav a.active {
+  background-color: var(--secondary, #f0ebe3);
+  color: var(--secondary-foreground, #44372e);
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.account-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 14px 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5ded3);
+  background-color: var(--card, #ffffff);
+  text-decoration: none;
+  color: var(--foreground, #292521);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.account-link app-icone {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent, #e8efe7);
+  color: var(--accent-foreground, #30523b);
   display: grid;
   place-items: center;
-  min-width: 22px;
-  height: 22px;
-  background: #ffffff25;
-  border-radius: 50%;
-  padding: 0 0.25rem;
 }
-.client-main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: clamp(1rem, 3vw, 2.5rem) clamp(1rem, 4vw, 3rem);
-  min-height: 65vh;
-  outline: none;
-}
-.client-footer {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
+
+.cart-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 2rem clamp(1rem, 4vw, 3rem);
-  font-size: 0.78rem;
-  line-height: 1.8;
-  color: var(--rm-muted, #6b746c);
-  border-top: 1px solid var(--rm-border, #e5e9e1);
-}
-.client-footer strong {
-  font-size: 0.95rem;
-  color: var(--rm-text, #233527);
-}
-.client-footer a {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  text-decoration: none;
-  color: inherit;
+  gap: 8px;
   min-height: 48px;
+  padding: 0 8px 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5ded3);
+  background-color: var(--card, #ffffff);
+  color: var(--foreground, #292521);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: none;
 }
+
+.cart-link:hover {
+  background-color: var(--muted, #f3eee7);
+}
+
+.cart-link b {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background-color: #fbefec;
+  color: var(--primary, #a53e2b);
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 0 7px;
+}
+
+.client-main {
+  flex: 1;
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 0 32px 72px;
+}
+
+.client-footer {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  padding: 20px 32px 32px;
+  border-top: 1px dashed var(--border, #e5ded3);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted-foreground, #6e6259);
+  font-size: 13px;
+}
+
+.client-footer strong {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  color: var(--foreground, #292521);
+}
+
+.client-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5ded3);
+  background-color: var(--card, #ffffff);
+  color: var(--secondary-foreground, #44372e);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .mobile-nav {
   display: none;
 }
-@media (max-width: 800px) {
+
+@media (max-width: 900px) {
   .client-header {
-    padding: 1rem;
-    gap: 1rem;
+    padding: 0 20px;
+    gap: 12px;
   }
+
+  .desktop-nav a {
+    padding: 0 11px;
+  }
+}
+
+@media (max-width: 680px) {
+  .client-header {
+    height: 64px;
+    padding: 0 16px;
+    gap: 12px;
+  }
+
   .desktop-nav,
-  .account-link,
+  .account-link span,
   .cart-link span {
     display: none;
   }
-  .header-actions {
-    margin-left: auto;
-  }
+
   .restaurant-brand {
-    font-size: 1rem;
-  }
-  .restaurant-brand small {
-    font-size: 0.6rem;
-  }
-  .brand-mark {
-    width: 40px;
-    height: 40px;
-  }
-  .mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 30;
-    background: #fffffff5;
-    backdrop-filter: blur(12px);
-    border-top: 1px solid var(--rm-border, #e5e9e1);
-    padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
-  }
-  .mobile-nav a {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 0.25rem;
-    text-decoration: none;
-    color: var(--rm-muted, #6b746c);
-    font-size: 0.68rem;
+    min-width: 0;
+    flex: 1 1 auto;
     min-height: 48px;
   }
-  .mobile-nav .active {
-    color: var(--rm-primary, #285139);
-    font-weight: 750;
+
+  .account-link {
+    padding: 0;
+    min-width: 48px;
+    min-height: 48px;
+    justify-content: center;
+    gap: 0;
   }
-  .client-footer {
-    margin-bottom: 75px;
+
+  .cart-link {
+    min-height: 48px;
+    padding: 0 10px 0 12px;
   }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+  }
+
+  .restaurant-brand > span:last-child {
+    font-size: 19px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .client-main {
-    padding: 1.25rem 1rem;
+    padding: 0 12px 24px;
   }
+
   .client-footer {
-    align-items: flex-start;
+    padding: 16px 12px 14px;
+    gap: 10px;
+  }
+
+  .client-footer a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+    background-color: #ffffff;
+    backdrop-filter: none;
+    border-top: 1px solid var(--border, #e5ded3);
+    box-shadow: 0 -8px 24px #2925210f;
+  }
+
+  .mobile-nav a {
+    min-height: 52px;
+    border-radius: 14px;
+    display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--muted-foreground, #6e6259);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 650;
+  }
+
+  .mobile-nav a.active {
+    background-color: #fbefec;
+    color: var(--primary, #a53e2b);
   }
 }

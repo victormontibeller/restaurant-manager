@@ -20,203 +20,563 @@ interface EscolhaRascunho extends Escolha {
   selector: 'app-configurador-produto',
   providers: [PreviaConfiguracaoService],
   template: `
-    <section aria-labelledby="configurador-titulo">
-      <h3 id="configurador-titulo">Configurar {{ produto.nome }}</h3>
-      <p>{{ produto.descricao }}</p>
-      <p>
-        Preço base: {{ moeda(produto.preco) }}. O servidor calcula a composição completa no resumo do
-        carrinho.
-      </p>
-      @if (!produto.disponivel) {
-        <p class="aviso">Este produto está indisponível na unidade e no canal selecionados.</p>
-      }
-      @if (!permitirAdicionar) {
-        <p class="aviso">
-          Para adicionar ou alterar itens, conecte-se e escolha uma unidade e canal abertos.
-        </p>
-      }
-      @if (erro()) {
-        <p role="alert" class="erro">{{ erro() }}</p>
-      }
-      @if (composicaoDesatualizada()) {
-        <p class="aviso">Uma escolha ou adicional da composição anterior mudou. Você pode escolher uma alternativa disponível ou limpar a composição para montá-la novamente.</p>
-        <button type="button" (click)="limparComposicao()">Limpar escolhas e adicionais</button>
-      }
-      <form #formulario (submit)="guardar($event)" (input)="previa.invalidar()" (change)="previa.invalidar()">
-        <fieldset [disabled]="!permitirAdicionar || !produto.disponivel" class="campos">
-          <legend>Composição de uma unidade</legend>
-          <label for="configurador-quantidade">Quantidade do produto</label>
-          <input
-            #quantidade
-            id="configurador-quantidade"
-            type="number"
-            min="1"
-            max="99"
-            step="1"
-            required
-            [value]="quantidadeProduto"
-            (input)="quantidadeProduto = +quantidade.value"
-          />
-          @if (produto.tipo === 'SIMPLES') {
-            <fieldset>
-              <legend>Adicionais por unidade do produto</legend>
-              @for (adicional of adicionaisAtivos(produto.adicionais); track adicional.id) {
-                <label [for]="'selecionar-' + adicional.id"
-                  >{{ adicional.nome }} · {{ moeda(adicional.preco) }} cada (máximo
-                  {{ adicional.maximo }})</label
+    <section class="configurador-bistro dlg-shell" aria-labelledby="configurador-titulo">
+      <div class="configurador-grade dlg-grid">
+        <div class="configurador-resumo-prato dlg-media">
+          <div class="ph">
+            @if (produto.midiaId) {
+              <img
+                class="configurador-foto"
+                [src]="'/api/v1/midias/' + produto.midiaId"
+                [alt]="produto.nome"
+                decoding="async"
+              />
+            } @else {
+              <div class="configurador-monograma" aria-hidden="true">
+                <span class="configurador-monograma-letra">{{ produto.nome.slice(0, 1) }}</span>
+              </div>
+            }
+          </div>
+          <div class="info">
+            <p class="kicker">
+              {{ produto.tipo === 'COMBO' ? 'Combo para montar' : 'Prato da casa' }}
+            </p>
+            <h3 id="configurador-titulo">
+              <span class="sr-only">Configurar </span>{{ produto.nome }}
+            </h3>
+            <p class="configurador-descricao">
+              {{ produto.descricao }} Preço base: {{ moeda(produto.preco) }}.
+            </p>
+            <div class="how">
+              <b>Como funciona</b>
+              Escolha as opções e adicionais desejados. Acréscimos aparecem ao lado de cada opção e
+              o total é conferido pelo restaurante no carrinho.
+            </div>
+            @if (!produto.disponivel) {
+              <p class="aviso">Este produto está indisponível na unidade e no canal selecionados.</p>
+            }
+            @if (!permitirAdicionar) {
+              <p class="aviso">
+                Para adicionar ou alterar itens, conecte-se e escolha uma unidade e canal abertos.
+              </p>
+            }
+            @if (erro()) {
+              <p role="alert" class="erro">{{ erro() }}</p>
+            }
+            @if (composicaoDesatualizada()) {
+              <p class="aviso">
+                Uma escolha ou adicional da composição anterior mudou. Você pode escolher uma
+                alternativa disponível ou limpar a composição para montá-la novamente.
+              </p>
+              <button class="secundario" type="button" (click)="limparComposicao()">
+                Limpar escolhas e adicionais
+              </button>
+            }
+          </div>
+        </div>
+
+        <form
+          #formulario
+          class="configurador-formulario dlg-main"
+          (submit)="guardar($event)"
+          (input)="previa.invalidar()"
+          (change)="previa.invalidar()"
+        >
+          <div class="dlg-top">
+            <div class="progress">
+              <span class="bars" aria-hidden="true"><i></i><i></i></span>
+              <span>{{
+                produto.tipo === 'COMBO'
+                  ? produto.grupos.length +
+                    (produto.grupos.length === 1 ? ' etapa de escolha' : ' etapas de escolha')
+                  : 'Personalize seu pedido'
+              }}</span>
+            </div>
+            <button class="x" type="button" (click)="cancelar.emit()">
+              <span class="sr-only">Fechar configuração</span>
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+
+          <fieldset
+            [disabled]="!permitirAdicionar || !produto.disponivel"
+            class="campos configurador-campos dlg-body"
+          >
+            <legend class="sr-only">Composição de uma unidade</legend>
+
+            @if (produto.tipo === 'SIMPLES') {
+              <fieldset class="bloco-adicionais extras">
+                <legend class="extras-t">Adicionais por unidade do produto</legend>
+                @for (adicional of adicionaisAtivos(produto.adicionais); track adicional.id) {
+                  <div class="linha-adicional extra">
+                    <label [for]="'selecionar-' + adicional.id">
+                      <b>{{ adicional.nome }}</b>
+                      <small
+                        >+ {{ moeda(adicional.preco) }} cada · até {{ adicional.maximo }}</small
+                      >
+                      <span class="sr-only">
+                        {{ adicional.nome }} · {{ moeda(adicional.preco) }} cada (máximo
+                        {{ adicional.maximo }})
+                      </span>
+                    </label>
+                    <div class="controle-quantidade stepper">
+                      <button
+                        class="btn-passo"
+                        type="button"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        [disabled]="quantidadeAdicionalSelecionada(adicionais, adicional.id) <= 0"
+                        (click)="
+                          adicionais = selecionarAdicional(
+                            adicionais,
+                            adicional.id,
+                            quantidadeAdicionalSelecionada(adicionais, adicional.id) - 1
+                          );
+                          previa.invalidar()
+                        "
+                      >
+                        −
+                      </button>
+                      <input
+                        #quantidadeAdicional
+                        [id]="'selecionar-' + adicional.id"
+                        type="number"
+                        min="0"
+                        [max]="adicional.maximo"
+                        step="1"
+                        required
+                        [value]="quantidadeAdicionalSelecionada(adicionais, adicional.id)"
+                        (input)="
+                          adicionais = selecionarAdicional(
+                            adicionais,
+                            adicional.id,
+                            +quantidadeAdicional.value
+                          )
+                        "
+                      />
+                      <button
+                        class="btn-passo"
+                        type="button"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        [disabled]="
+                          quantidadeAdicionalSelecionada(adicionais, adicional.id) >=
+                          adicional.maximo
+                        "
+                        (click)="
+                          adicionais = selecionarAdicional(
+                            adicionais,
+                            adicional.id,
+                            quantidadeAdicionalSelecionada(adicionais, adicional.id) + 1
+                          );
+                          previa.invalidar()
+                        "
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                } @empty {
+                  <p>Sem adicionais disponíveis.</p>
+                }
+              </fieldset>
+            } @else {
+              @for (grupo of produto.grupos; track grupo.id) {
+                <fieldset class="campos grupo-combo">
+                  <legend class="sr-only">{{ grupo.nome }}</legend>
+                  <div class="group-h">
+                    <h3>
+                      <span class="step-n" aria-hidden="true">✓</span>
+                      {{ grupo.nome }}
+                    </h3>
+                    <span class="req">
+                      Obrigatório · {{ totalGrupo(grupo.id) }} de {{ grupo.maximo }}
+                    </span>
+                  </div>
+                  <p class="regra-grupo">
+                    @if (grupo.minimo === grupo.maximo) {
+                      Selecione {{ grupo.minimo }}
+                      {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
+                    } @else {
+                      Selecione entre {{ grupo.minimo }} e {{ grupo.maximo }}
+                      {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
+                    }
+                    Selecionadas: {{ totalGrupo(grupo.id) }}.
+                  </p>
+                  <ul class="opcoes-catalogo sr-only" aria-label="Opções disponíveis">
+                    @for (opcao of grupo.opcoes; track opcao.id) {
+                      <li>
+                        {{ opcao.nome }} · Acréscimo {{ moeda(opcao.acrescimo) }} · Máximo
+                        {{ opcao.limite }}{{ opcao.disponivel ? '' : ' · Indisponível' }}
+                      </li>
+                    }
+                  </ul>
+
+                  @if (!escolhasDoGrupo(grupo.id).length) {
+                    <div class="opts grade-opcoes-tateis" aria-hidden="true">
+                      @for (item of grupo.opcoes; track item.id) {
+                        <div
+                          class="opt cartao-opcao-tatil"
+                          [class.off]="!item.disponivel"
+                          (click)="
+                            item.disponivel && adicionarEscolha(grupo);
+                            item.disponivel &&
+                              escolhasDoGrupo(grupo.id).length &&
+                              alterarOpcao(escolhasDoGrupo(grupo.id)[0].chave, item.id)
+                          "
+                        >
+                          <span class="radio"></span>
+                          <span>
+                            <b>{{ item.nome }}</b>
+                            <small>{{
+                              item.disponivel
+                                ? 'Toque para selecionar · limite ' + item.limite
+                                : 'Indisponível nesta unidade agora'
+                            }}</small>
+                          </span>
+                          <span class="delta" [class.inc]="item.acrescimo === '0.00'">{{
+                            !item.disponivel
+                              ? '—'
+                              : item.acrescimo === '0.00'
+                                ? 'Incluso'
+                                : '+ ' + moeda(item.acrescimo)
+                          }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @for (
+                    escolha of escolhasDoGrupo(grupo.id);
+                    track escolha.chave;
+                    let indice = $index
+                  ) {
+                    <fieldset class="campos cartao-escolha">
+                      <legend class="sr-only">Escolha {{ indice + 1 }} de {{ grupo.nome }}</legend>
+                      <div class="opts grade-opcoes-tateis" aria-hidden="true">
+                        @for (item of grupo.opcoes; track item.id) {
+                          <div
+                            class="opt cartao-opcao-tatil"
+                            [class.sel]="item.id === escolha.opcaoId"
+                            [class.off]="!item.disponivel"
+                            (click)="item.disponivel && alterarOpcao(escolha.chave, item.id)"
+                          >
+                            <span class="radio"></span>
+                            <span>
+                              <b>{{ item.nome }}</b>
+                              <small>{{
+                                item.disponivel
+                                  ? 'Selecionável · limite ' + item.limite
+                                  : 'Indisponível nesta unidade agora'
+                              }}</small>
+                            </span>
+                            <span class="delta" [class.inc]="item.acrescimo === '0.00'">{{
+                              !item.disponivel
+                                ? '—'
+                                : item.acrescimo === '0.00'
+                                  ? 'Incluso'
+                                  : '+ ' + moeda(item.acrescimo)
+                            }}</span>
+                          </div>
+                        }
+                      </div>
+
+                      <div
+                        class="controles-nativos-escolha"
+                        [class.sr-only]="grupo.maximo === 1"
+                      >
+                        <div>
+                          <label [for]="escolha.chave + '-opcao'">Opção da escolha</label>
+                          <select
+                            #opcao
+                            [id]="escolha.chave + '-opcao'"
+                            required
+                            [value]="escolha.opcaoId"
+                            (change)="alterarOpcao(escolha.chave, opcao.value)"
+                          >
+                            <option value="">Selecione uma opção</option>
+                            @for (item of grupo.opcoes; track item.id) {
+                              <option
+                                [value]="item.id"
+                                [disabled]="!item.disponivel"
+                                [selected]="item.id === escolha.opcaoId"
+                              >
+                                {{ item.nome }}{{ item.disponivel ? '' : ' (indisponível)' }}
+                              </option>
+                            }
+                          </select>
+                        </div>
+
+                        <div class="linha-contador">
+                          <label [for]="escolha.chave + '-quantidade'"
+                            >Quantidade desta escolha</label
+                          >
+                          <div class="controle-quantidade stepper">
+                            <button
+                              class="btn-passo"
+                              type="button"
+                              tabindex="-1"
+                              aria-hidden="true"
+                              [disabled]="escolha.quantidade <= 1"
+                              (click)="
+                                alterarEscolha(escolha.chave, {
+                                  quantidade: escolha.quantidade > 1 ? escolha.quantidade - 1 : 1,
+                                })
+                              "
+                            >
+                              −
+                            </button>
+                            <input
+                              #quantidadeEscolha
+                              [id]="escolha.chave + '-quantidade'"
+                              type="number"
+                              min="1"
+                              max="20"
+                              step="1"
+                              required
+                              [value]="escolha.quantidade"
+                              (input)="
+                                alterarEscolha(escolha.chave, {
+                                  quantidade: +quantidadeEscolha.value,
+                                })
+                              "
+                            />
+                            <button
+                              class="btn-passo"
+                              type="button"
+                              tabindex="-1"
+                              aria-hidden="true"
+                              [disabled]="escolha.quantidade >= 20"
+                              (click)="
+                                alterarEscolha(escolha.chave, {
+                                  quantidade: escolha.quantidade < 20 ? escolha.quantidade + 1 : 20,
+                                })
+                              "
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      @if (escolha.opcaoId && !opcaoDisponivel(escolha)) {
+                        <p class="aviso">
+                          A escolha anterior não está disponível. Selecione uma alternativa ou
+                          remova esta escolha.
+                        </p>
+                      }
+
+                      @if (opcaoDaEscolha(escolha); as selecionada) {
+                        <fieldset class="bloco-adicionais extras">
+                          <legend class="extras-t">Adicionais de {{ grupo.nome }}</legend>
+                          @for (
+                            adicional of adicionaisPermitidos(selecionada);
+                            track adicional.id
+                          ) {
+                            <div class="linha-adicional extra">
+                              <label [for]="escolha.chave + '-' + adicional.id">
+                                <b>{{ adicional.nome }}</b>
+                                <small
+                                  >+ {{ moeda(adicional.preco) }} cada · até
+                                  {{ adicional.maximo }}</small
+                                >
+                                <span class="sr-only">
+                                  {{ adicional.nome }} · {{ moeda(adicional.preco) }} cada (máximo
+                                  {{ adicional.maximo }})
+                                </span>
+                              </label>
+                              <div class="controle-quantidade stepper">
+                                <button
+                                  class="btn-passo"
+                                  type="button"
+                                  tabindex="-1"
+                                  aria-hidden="true"
+                                  [disabled]="
+                                    quantidadeAdicionalSelecionada(
+                                      escolha.adicionais,
+                                      adicional.id
+                                    ) <= 0
+                                  "
+                                  (click)="
+                                    alterarEscolha(escolha.chave, {
+                                      adicionais: selecionarAdicional(
+                                        escolha.adicionais,
+                                        adicional.id,
+                                        quantidadeAdicionalSelecionada(
+                                          escolha.adicionais,
+                                          adicional.id
+                                        ) - 1
+                                      ),
+                                    })
+                                  "
+                                >
+                                  −
+                                </button>
+                                <input
+                                  #extra
+                                  [id]="escolha.chave + '-' + adicional.id"
+                                  type="number"
+                                  min="0"
+                                  [max]="adicional.maximo"
+                                  step="1"
+                                  required
+                                  [value]="
+                                    quantidadeAdicionalSelecionada(escolha.adicionais, adicional.id)
+                                  "
+                                  (input)="
+                                    alterarEscolha(escolha.chave, {
+                                      adicionais: selecionarAdicional(
+                                        escolha.adicionais,
+                                        adicional.id,
+                                        +extra.value
+                                      ),
+                                    })
+                                  "
+                                />
+                                <button
+                                  class="btn-passo"
+                                  type="button"
+                                  tabindex="-1"
+                                  aria-hidden="true"
+                                  [disabled]="
+                                    quantidadeAdicionalSelecionada(
+                                      escolha.adicionais,
+                                      adicional.id
+                                    ) >= adicional.maximo
+                                  "
+                                  (click)="
+                                    alterarEscolha(escolha.chave, {
+                                      adicionais: selecionarAdicional(
+                                        escolha.adicionais,
+                                        adicional.id,
+                                        quantidadeAdicionalSelecionada(
+                                          escolha.adicionais,
+                                          adicional.id
+                                        ) + 1
+                                      ),
+                                    })
+                                  "
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          } @empty {
+                            <p class="extras-vazio">Sem adicionais permitidos nesta opção.</p>
+                          }
+                        </fieldset>
+                      }
+                      <button
+                        class="secundario btn-link-remover"
+                        [class.sr-only]="grupo.maximo === 1"
+                        type="button"
+                        (click)="removerEscolha(escolha.chave)"
+                      >
+                        Remover escolha {{ indice + 1 }} de {{ grupo.nome }}
+                      </button>
+                    </fieldset>
+                  }
+
+                  <button
+                    class="secundario btn-adicionar-escolha"
+                    [class.sr-only]="grupo.maximo === 1"
+                    type="button"
+                    (click)="adicionarEscolha(grupo)"
+                    [disabled]="totalGrupo(grupo.id) >= grupo.maximo"
+                  >
+                    Adicionar escolha de {{ grupo.nome }}
+                  </button>
+                </fieldset>
+              }
+            }
+
+            <div class="bloco-previa-acao">
+              <button
+                class="secundario btn-calcular-previa"
+                type="button"
+                (click)="calcularPrevia(formulario)"
+                [disabled]="previa.ocupado()"
+              >
+                Calcular total desta configuração
+              </button>
+              @if (previa.ocupado()) {
+                <p role="status">Consultando composição e valores no servidor…</p>
+              }
+              @if (previa.erro()) {
+                <p role="alert" class="erro">{{ previa.erro() }}</p>
+              }
+              @if (previa.linha(); as calculada) {
+                <div role="status" class="previa-comanda">
+                  <p>
+                    <strong>Prévia por unidade: {{ moeda(calculada.precoUnitario) }}</strong>
+                  </p>
+                  <p>
+                    Prévia de {{ calculada.quantidade }}
+                    {{ calculada.quantidade === 1 ? 'unidade' : 'unidades' }}:
+                    {{ moeda(calculada.subtotal) }}
+                  </p>
+                </div>
+              }
+            </div>
+          </fieldset>
+
+          <div class="dlg-foot">
+            <div class="linha-contador-rodape">
+              <label class="sr-only" for="configurador-quantidade">Quantidade do produto</label>
+              <div class="controle-quantidade stepper">
+                <button
+                  class="btn-passo"
+                  type="button"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  [disabled]="quantidadeProduto <= 1"
+                  (click)="
+                    quantidadeProduto = quantidadeProduto > 1 ? quantidadeProduto - 1 : 1;
+                    previa.invalidar()
+                  "
                 >
+                  −
+                </button>
                 <input
-                  #quantidadeAdicional
-                  [id]="'selecionar-' + adicional.id"
+                  #quantidade
+                  id="configurador-quantidade"
                   type="number"
-                  min="0"
-                  [max]="adicional.maximo"
+                  min="1"
+                  max="99"
                   step="1"
                   required
-                  [value]="quantidadeAdicionalSelecionada(adicionais, adicional.id)"
-                  (input)="
-                    adicionais = selecionarAdicional(
-                      adicionais,
-                      adicional.id,
-                      +quantidadeAdicional.value
-                    )
-                  "
+                  [value]="quantidadeProduto"
+                  (input)="quantidadeProduto = +quantidade.value; previa.invalidar()"
                 />
-              } @empty {
-                <p>Sem adicionais disponíveis.</p>
-              }
-            </fieldset>
-          } @else {
-            @for (grupo of produto.grupos; track grupo.id) {
-              <fieldset class="campos">
-                <legend>{{ grupo.nome }}</legend>
-                <p>
-                  @if (grupo.minimo === grupo.maximo) {
-                    Selecione {{ grupo.minimo }} {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
-                  } @else {
-                    Selecione entre {{ grupo.minimo }} e {{ grupo.maximo }} {{ grupo.maximo === 1 ? 'escolha' : 'escolhas' }} por combo.
-                  }
-                  Selecionadas: {{ totalGrupo(grupo.id) }}.
-                </p>
-                <ul aria-label="Opções disponíveis">
-                  @for (opcao of grupo.opcoes; track opcao.id) {
-                    <li>
-                      {{ opcao.nome }} · Acréscimo {{ moeda(opcao.acrescimo) }} · Máximo
-                      {{ opcao.limite }}{{ opcao.disponivel ? '' : ' · Indisponível' }}
-                    </li>
-                  }
-                </ul>
-                @for (escolha of escolhasDoGrupo(grupo.id); track escolha.chave; let indice = $index) {
-                  <fieldset class="campos">
-                    <legend>Escolha {{ indice + 1 }} de {{ grupo.nome }}</legend>
-                    <label [for]="escolha.chave + '-opcao'">Opção da escolha</label>
-                    <select
-                      #opcao
-                      [id]="escolha.chave + '-opcao'"
-                      required
-                      [value]="escolha.opcaoId"
-                      (change)="alterarOpcao(escolha.chave, opcao.value)"
-                    >
-                      <option value="">Selecione uma opção</option>
-                      @for (item of grupo.opcoes; track item.id) {
-                        <option
-                          [value]="item.id"
-                          [disabled]="!item.disponivel"
-                          [selected]="item.id === escolha.opcaoId"
-                        >
-                          {{ item.nome }}{{ item.disponivel ? '' : ' (indisponível)' }}
-                        </option>
-                      }
-                    </select>
-                    @if (escolha.opcaoId && !opcaoDisponivel(escolha)) {
-                      <p class="aviso">
-                        A escolha anterior não está disponível. Selecione uma alternativa ou remova esta
-                        escolha.
-                      </p>
-                    }
-                    <label [for]="escolha.chave + '-quantidade'">Quantidade desta escolha</label>
-                    <input
-                      #quantidadeEscolha
-                      [id]="escolha.chave + '-quantidade'"
-                      type="number"
-                      min="1"
-                      max="20"
-                      step="1"
-                      required
-                      [value]="escolha.quantidade"
-                      (input)="alterarEscolha(escolha.chave, { quantidade: +quantidadeEscolha.value })"
-                    />
-                    @if (opcaoDaEscolha(escolha); as selecionada) {
-                      <fieldset>
-                        <legend>Adicionais por unidade desta escolha</legend>
-                        @for (adicional of adicionaisPermitidos(selecionada); track adicional.id) {
-                          <label [for]="escolha.chave + '-' + adicional.id"
-                            >{{ adicional.nome }} · {{ moeda(adicional.preco) }} cada (máximo
-                            {{ adicional.maximo }})</label
-                          >
-                          <input
-                            #extra
-                            [id]="escolha.chave + '-' + adicional.id"
-                            type="number"
-                            min="0"
-                            [max]="adicional.maximo"
-                            step="1"
-                            required
-                            [value]="quantidadeAdicionalSelecionada(escolha.adicionais, adicional.id)"
-                            (input)="
-                              alterarEscolha(escolha.chave, {
-                                adicionais: selecionarAdicional(
-                                  escolha.adicionais,
-                                  adicional.id,
-                                  +extra.value
-                                ),
-                              })
-                            "
-                          />
-                        } @empty {
-                          <p>Sem adicionais permitidos nesta opção.</p>
-                        }
-                      </fieldset>
-                    }
-                    <button class="secundario" type="button" (click)="removerEscolha(escolha.chave)">
-                      Remover escolha {{ indice + 1 }} de {{ grupo.nome }}
-                    </button>
-                  </fieldset>
-                }
                 <button
+                  class="btn-passo"
                   type="button"
-                  (click)="adicionarEscolha(grupo)"
-                  [disabled]="totalGrupo(grupo.id) >= grupo.maximo"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  [disabled]="quantidadeProduto >= 99"
+                  (click)="
+                    quantidadeProduto = quantidadeProduto < 99 ? quantidadeProduto + 1 : 99;
+                    previa.invalidar()
+                  "
                 >
-                  Adicionar escolha de {{ grupo.nome }}
+                  +
                 </button>
-                <p>
-                  Para repetir uma opção com adicionais diferentes, adicione outra escolha e selecione a
-                  opção desejada.
-                </p>
-              </fieldset>
-            }
-          }
-          <button type="button" (click)="calcularPrevia(formulario)" [disabled]="previa.ocupado()">
-            Calcular total desta configuração
-          </button>
-          @if (previa.ocupado()) {
-            <p role="status">Consultando composição e valores no servidor…</p>
-          }
-          @if (previa.erro()) {
-            <p role="alert" class="erro">{{ previa.erro() }}</p>
-          }
-          @if (previa.linha(); as calculada) {
-            <div role="status">
-              <p><strong>Prévia por unidade: {{ moeda(calculada.precoUnitario) }}</strong></p>
-              <p>Prévia de {{ calculada.quantidade }} {{ calculada.quantidade === 1 ? 'unidade' : 'unidades' }}: {{ moeda(calculada.subtotal) }}</p>
-              <p>Esta prévia não reserva produtos. O resumo do carrinho consulta novamente a composição, os preços e a disponibilidade.</p>
+              </div>
             </div>
-          }
-          <button [disabled]="previa.ocupado()">{{ linha ? 'Atualizar composição no carrinho' : 'Adicionar ao carrinho' }}</button>
-        </fieldset>
-        <button class="secundario" type="button" (click)="cancelar.emit()">Fechar configuração</button>
-      </form>
+
+            <button
+              class="cta btn-confirmar-configurador"
+              type="submit"
+              [disabled]="previa.ocupado() || !permitirAdicionar || !produto.disponivel"
+            >
+              <span>{{ linha ? 'Atualizar composição no carrinho' : 'Adicionar ao carrinho' }}</span>
+              <span class="amount" aria-hidden="true">{{
+                moeda(totalEstimadoConfiguracao())
+              }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
   `,
   styleUrl: './catalogo.css',
@@ -240,11 +600,50 @@ export class ConfiguradorProdutoComponent implements OnChanges {
     if (!changes['produto'] && !changes['linha']) return;
     this.quantidadeProduto = this.linha?.quantidade ?? 1;
     this.adicionais = structuredClone(this.linha?.adicionais ?? []);
-    this.escolhas = (this.linha?.escolhas ?? []).map((item) => ({
-      ...structuredClone(item),
-      chave: crypto.randomUUID(),
-    }));
+    if (this.linha?.escolhas?.length) {
+      this.escolhas = this.linha.escolhas.map((item) => ({
+        ...structuredClone(item),
+        chave: crypto.randomUUID(),
+      }));
+    } else if (this.produto?.tipo === 'COMBO' && this.produto.grupos.length >= 2) {
+      this.escolhas = this.produto.grupos.flatMap((grupo) => {
+        const primeira = grupo.opcoes.find((opc) => opc.disponivel);
+        return primeira
+          ? [
+              {
+                chave: crypto.randomUUID(),
+                grupoId: grupo.id,
+                opcaoId: primeira.id,
+                quantidade: 1,
+                adicionais: [],
+              },
+            ]
+          : [];
+      });
+    } else {
+      this.escolhas = [];
+    }
     this.erro.set('');
+  }
+
+  totalEstimadoConfiguracao(): string {
+    if (this.previa.linha()) return this.previa.linha()!.subtotal;
+    let unitario = Number(this.produto?.preco) || 0;
+    for (const sel of this.adicionais) {
+      const add = this.produto?.adicionais.find((a) => a.id === sel.adicionalId);
+      if (add) unitario += (Number(add.preco) || 0) * sel.quantidade;
+    }
+    for (const esc of this.escolhas) {
+      const opc = this.opcaoDaEscolha(esc);
+      if (opc) {
+        unitario += (Number(opc.acrescimo) || 0) * esc.quantidade;
+        for (const extra of esc.adicionais) {
+          const add = opc.adicionais.find((a) => a.id === extra.adicionalId);
+          if (add) unitario += (Number(add.preco) || 0) * extra.quantidade;
+        }
+      }
+    }
+    return (unitario * (this.quantidadeProduto || 1)).toFixed(2);
   }
 
   adicionaisAtivos(adicionais: Adicional[]): Adicional[] {

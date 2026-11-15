@@ -2,8 +2,17 @@ import { Injectable, signal } from '@angular/core';
 
 export interface Identidade {
   usuarioId: string;
+  sessaoId?: string;
+  empresaId?: string;
   perfil: string;
   emailVerificado: boolean;
+  email?: string;
+  nome?: string;
+  telefone?: string;
+  cpfMascarado?: string;
+  cpfInformado?: boolean;
+  receberEmailsPedido?: boolean;
+  versao?: number;
 }
 
 interface Access {
@@ -147,6 +156,47 @@ export class SessaoService {
 
   async atualizarIdentidade(): Promise<void> {
     this.identidade.set(await this.api<Identidade>('/api/v1/auth/me'));
+  }
+
+  async atualizarPerfil(body: {
+    versao: number;
+    nome: string;
+    telefone: string;
+    cpf?: string;
+    receberEmailsPedido?: boolean;
+  }): Promise<Identidade> {
+    const salvo = await this.api<Identidade>('/api/v1/auth/me', 'PUT', body);
+    this.identidade.set(salvo);
+    return salvo;
+  }
+
+  async alterarSenha(body: { senhaAtual: string; novaSenha: string }): Promise<void> {
+    await this.api<void>('/api/v1/auth/senha', 'POST', body);
+  }
+
+  async reenviarVerificacao(): Promise<string> {
+    const res = await this.api<{ mensagem: string }>('/api/v1/auth/verificacao/reenviar', 'POST');
+    return res.mensagem;
+  }
+
+  async encerrarOutrasSessoes(): Promise<string> {
+    const res = await this.api<{ mensagem?: string } | undefined>(
+      '/api/v1/auth/sessoes/encerrar-outras',
+      'POST',
+    );
+    return res?.mensagem ?? 'Demais sessões encerradas. Apenas este acesso permanece ativo.';
+  }
+
+  async solicitarExclusaoConta(body: { senhaAtual: string }): Promise<string> {
+    const res = await this.api<{ mensagem?: string } | undefined>(
+      '/api/v1/auth/exclusao',
+      'POST',
+      body,
+    );
+    return (
+      res?.mensagem ??
+      'Solicitação registrada. Seus dados elegíveis serão removidos conforme a Política de Privacidade.'
+    );
   }
 
   async aceitarConvite(body: object): Promise<void> {

@@ -79,16 +79,101 @@
     }
     @if (!assistido() && carrinho.contexto()?.canal !== 'MESA') {
       <label for="pagamento-pedido">Como deseja pagar?</label>
-      <select
-        id="pagamento-pedido"
-        #meio
-        [value]="pagamento"
-        (change)="pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'"
-        [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+      <div
+        class="bistro-select-wrap"
+        (focusout)="
+          !$any($event.currentTarget).contains($event.relatedTarget) &&
+            (menuPagamento.checked = false)
+        "
       >
-        <option value="PRESENCIAL">Pagar presencialmente ao restaurante</option>
-        <option value="ONLINE">Pagar online com Mercado Pago</option>
-      </select>
+        <input #menuPagamento type="checkbox" hidden />
+        <label
+          class="bistro-select-pill"
+          [class.open]="menuPagamento.checked"
+          for="pagamento-pedido"
+          (mousedown)="!envio.ocupado() && !envio.pendente(tipoMesa()) && $event.preventDefault()"
+          (click)="
+            $event.preventDefault();
+            !envio.ocupado() && !envio.pendente(tipoMesa()) && meio.focus();
+            !envio.ocupado() &&
+              !envio.pendente(tipoMesa()) &&
+              (menuPagamento.checked = !menuPagamento.checked)
+          "
+        >
+          <span class="bistro-select-val" aria-hidden="true">
+            {{
+              pagamento === 'ONLINE'
+                ? 'Pagar online com Mercado Pago'
+                : 'Pagar presencialmente ao restaurante'
+            }}
+          </span>
+          <select
+            id="pagamento-pedido"
+            #meio
+            class="sr-only"
+            [value]="pagamento"
+            (keydown.enter)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
+            (keydown.space)="$event.preventDefault(); menuPagamento.checked = !menuPagamento.checked"
+            (keydown.escape)="menuPagamento.checked = false"
+            (change)="
+              menuPagamento.checked = false;
+              pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'
+            "
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+          >
+            <option value="PRESENCIAL">Pagar presencialmente ao restaurante</option>
+            <option value="ONLINE">Pagar online com Mercado Pago</option>
+          </select>
+          <svg
+            class="bistro-select-chev"
+            [class.rot]="menuPagamento.checked"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </label>
+
+        @if (menuPagamento.checked) {
+          <div class="bistro-select-popover" role="presentation">
+            <button
+              type="button"
+              class="bistro-select-opt"
+              [class.on]="pagamento === 'PRESENCIAL'"
+              tabindex="-1"
+              (mousedown)="$event.preventDefault()"
+              (click)="
+                menuPagamento.checked = false;
+                meio.value = 'PRESENCIAL';
+                pagamento = 'PRESENCIAL'
+              "
+            >
+              <span>Pagar presencialmente ao restaurante</span>
+            </button>
+            <button
+              type="button"
+              class="bistro-select-opt"
+              [class.on]="pagamento === 'ONLINE'"
+              tabindex="-1"
+              (mousedown)="$event.preventDefault()"
+              (click)="
+                menuPagamento.checked = false;
+                meio.value = 'ONLINE';
+                pagamento = 'ONLINE'
+              "
+            >
+              <span>Pagar online com Mercado Pago</span>
+            </button>
+          </div>
+        }
+      </div>
       @if (pagamento === 'ONLINE') {
         <p>
           O pedido aguardará a confirmação do pagamento antes do aceite do restaurante. O prazo é

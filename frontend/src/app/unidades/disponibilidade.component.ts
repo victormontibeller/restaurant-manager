@@ -96,8 +96,9 @@ interface FuncionamentoPublico {
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
     }
     article {
-      border: 1px solid #6b7a70;
-      border-radius: 0.5rem;
+      border: 1px solid var(--border, #e5ded3);
+      background: var(--background, #faf7f2);
+      border-radius: 0.85rem;
       padding: 1rem;
       min-width: 0;
     }

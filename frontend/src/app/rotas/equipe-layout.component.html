@@ -5,7 +5,13 @@
     }
     <aside class="sidebar" [class.open]="menuAberto()">
       <a routerLink="/gestao" class="workspace-brand"
-        ><span class="brand-mark"><app-icone nome="marca" /></span
+        ><span class="brand-mark"
+          >@if (marca.logoUrl() && !marca.erroLogo()) {<img
+            class="brand-logo"
+            [src]="marca.logoUrl()!"
+            [alt]="'Logo de ' + marca.nome()"
+            (error)="marca.marcarErroLogo()"
+          />} @else {<app-icone nome="marca" />}</span
         ><span>{{ marca.nome() }}<small>GESTÃO DO RESTAURANTE</small></span></a
       >
       <button
@@ -96,7 +102,13 @@
       }
       @if (cozinha) {
         <a routerLink="/cozinha" class="kitchen-brand"
-          ><span class="brand-mark"><app-icone nome="cozinha" /></span
+          ><span class="brand-mark"
+            >@if (marca.logoUrl() && !marca.erroLogo()) {<img
+              class="brand-logo"
+              [src]="marca.logoUrl()!"
+              [alt]="'Logo de ' + marca.nome()"
+              (error)="marca.marcarErroLogo()"
+            />} @else {<app-icone nome="cozinha" />}</span
           ><span>{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
         >
       } @else {

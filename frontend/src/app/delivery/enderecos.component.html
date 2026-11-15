@@ -1,99 +1,210 @@
-<section aria-label="Endereço de entrega">
-  <h3>{{ unidadeId() ? 'Entrega e endereço' : 'Meus endereços' }}</h3>
+<section aria-label="Endereço de entrega" class="enderecos-talao">
+  <div class="enderecos-topo">
+    <div>
+      <p class="enderecos-eyebrow">
+        {{ unidadeId() ? 'SELEÇÃO PARA ESTE PEDIDO' : 'CADERNO DE ENTREGAS' }}
+      </p>
+      <h3>{{ unidadeId() ? 'Entrega e endereço' : 'Meus endereços' }}</h3>
+    </div>
+    @if (cliente() && lista().length > 0) {
+      <span class="enderecos-contador">
+        {{ lista().length }} {{ lista().length === 1 ? 'endereço salvo' : 'endereços salvos' }}
+      </span>
+    }
+  </div>
+
   @if (cliente()) {
-    <ul>
-      @for (e of lista(); track e.id) {
-        <li>
-          <strong>{{ e.descricao }}</strong> · {{ e.endereco.logradouro }}, {{ e.endereco.numero }}
-          <button
-            type="button"
-            (click)="usar(e)"
-            [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
-          >
-            Usar endereço {{ e.descricao }}
-          </button>
-          <button
-            type="button"
-            (click)="remover(e)"
-            [disabled]="store.ocupado() || !!store.pendente() || bloqueado()"
-          >
-            Remover {{ e.descricao }}
-          </button>
-        </li>
-      }
-    </ul>
-    <div class="acoes">
+    @if (lista().length > 0) {
+      <ul class="enderecos-lista">
+        @for (e of lista(); track e.id; let idx = $index) {
+          <li class="endereco-talao" [class.endereco-talao--principal]="e.principal">
+            <div class="talao-topo">
+              <div class="talao-identidade">
+                <span class="talao-indice" aria-hidden="true">{{
+                  (pagina() * 50 + idx + 1 < 10 ? '0' : '') + (pagina() * 50 + idx + 1)
+                }}</span>
+                <strong class="talao-titulo">{{ e.descricao }}</strong>
+                @if (e.principal) {
+                  <span class="talao-badge-principal">Principal</span>
+                }
+              </div>
+              <p class="talao-resumo">
+                {{ e.endereco.logradouro }}, {{ e.endereco.numero }}
+                @if (e.endereco.complemento) {
+                  <span> · {{ e.endereco.complemento }}</span>
+                }
+                @if (e.endereco.bairro) {
+                  <span> · {{ e.endereco.bairro }}</span>
+                }
+                @if (e.endereco.cidade || e.endereco.uf) {
+                  <span>
+                    · {{ e.endereco.cidade }}
+                    @if (e.endereco.cidade && e.endereco.uf) {
+                      /
+                    }
+                    {{
+                      e.endereco.uf
+                    }}
+                  </span>
+                }
+                @if (e.endereco.cep) {
+                  <span> · CEP {{ e.endereco.cep }}</span>
+                }
+              </p>
+            </div>
+            <div class="talao-acoes">
+              <button
+                type="button"
+                class="talao-btn talao-btn--usar"
+                (click)="usar(e)"
+                [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
+              >
+                Usar endereço {{ e.descricao }}
+              </button>
+              <button
+                type="button"
+                class="talao-btn talao-btn--principal"
+                (click)="definirPrincipal(e)"
+                [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
+              >
+                {{
+                  e.principal
+                    ? 'Remover ' + e.descricao + ' como principal'
+                    : 'Marcar ' + e.descricao + ' como principal'
+                }}
+              </button>
+              <button
+                type="button"
+                class="talao-btn talao-btn--remover"
+                (click)="remover(e)"
+                [disabled]="store.ocupado() || !!store.pendente() || bloqueado()"
+              >
+                Remover {{ e.descricao }}
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="enderecos-vazio">
+        Nenhum endereço salvo ainda. Preencha a ficha abaixo para guardar seu local de entrega.
+      </p>
+    }
+
+    <div class="acoes enderecos-paginacao">
       <button
         type="button"
-        (click)="carregar(pagina()-1)"
+        class="talao-btn"
+        (click)="carregar(pagina() - 1)"
         [disabled]="consultando() || pagina() === 0"
       >
-        Endereços anteriores</button
-      ><span>Página {{ pagina()+1 }}</span
-      ><button
+        Endereços anteriores
+      </button>
+      <span class="enderecos-pagina">Página {{ pagina() + 1 }}</span>
+      <button
         type="button"
-        (click)="carregar(pagina()+1)"
+        class="talao-btn"
+        (click)="carregar(pagina() + 1)"
         [disabled]="consultando() || lista().length < 50"
       >
         Próximos endereços
       </button>
     </div>
   }
-  <form #form="ngForm" (ngSubmit)="salvar()">
-    <fieldset [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()">
-      <legend>Dados do endereço</legend>
-      @if (cliente()) {
-        <label
-          >Nome deste endereço<input
-            name="descricaoEndereco"
-            [(ngModel)]="descricao"
-            maxlength="100"
-            placeholder="Casa, trabalho…"
-        /></label>
-      }
-      @for (campo of campos; track campo.chave) {
-        <label
-          ><span>{{ campo.rotulo }}</span
-          ><input
-            [name]="'endereco-'+campo.chave"
-            [(ngModel)]="endereco[campo.chave]"
-            (ngModelChange)="alterar()"
-            [required]="!campo.opcional"
-            [maxlength]="campo.max"
-            [attr.autocomplete]="campo.autocomplete"
-        /></label>
-      }
-      <div class="acoes">
+
+  <form #form="ngForm" class="endereco-form" (ngSubmit)="salvar()">
+    <fieldset
+      class="endereco-fieldset"
+      [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
+    >
+      <legend class="endereco-legend">Dados do endereço</legend>
+      <div class="endereco-campos-grid">
         @if (cliente()) {
-          <button type="submit" [disabled]="!form.valid">Salvar endereço na minha conta</button>
+          <label class="endereco-campo endereco-campo--largo">
+            <span>Nome deste endereço</span>
+            <input
+              name="descricaoEndereco"
+              [(ngModel)]="descricao"
+              maxlength="100"
+              placeholder="Casa, trabalho…"
+            />
+          </label>
+          <label class="endereco-check endereco-campo--largo">
+            <input type="checkbox" name="principalEndereco" [(ngModel)]="principal" />
+            <span>Usar este como endereço principal</span>
+          </label>
         }
-        <button type="button" (click)="novo()">Novo endereço</button>
+        @for (campo of campos; track campo.chave) {
+          <label
+            class="endereco-campo"
+            [class.endereco-campo--largo]="campo.chave === 'destinatario'"
+            [class.endereco-campo--4]="campo.chave === 'logradouro' || campo.chave === 'cidade'"
+            [class.endereco-campo--3]="
+              campo.chave === 'contato' ||
+              campo.chave === 'cep' ||
+              campo.chave === 'complemento' ||
+              campo.chave === 'bairro'
+            "
+            [class.endereco-campo--2]="campo.chave === 'numero' || campo.chave === 'uf'"
+          >
+            <span>{{ campo.rotulo }}</span>
+            <input
+              [name]="'endereco-' + campo.chave"
+              [(ngModel)]="endereco[campo.chave]"
+              (ngModelChange)="alterar()"
+              [required]="!campo.opcional"
+              [maxlength]="campo.max"
+              [attr.autocomplete]="campo.autocomplete"
+            />
+          </label>
+        }
+      </div>
+      <div class="acoes endereco-form-acoes">
+        @if (cliente()) {
+          <button type="submit" class="talao-btn talao-btn--primario" [disabled]="!form.valid">
+            Salvar endereço na minha conta
+          </button>
+        }
+        <button type="button" class="talao-btn" (click)="novo()">Novo endereço</button>
         @if (unidadeId()) {
-          <button type="button" (click)="calcular()" [disabled]="!form.valid">
+          <button
+            type="button"
+            class="talao-btn talao-btn--secundario"
+            (click)="calcular()"
+            [disabled]="!form.valid"
+          >
             Calcular e confirmar entrega
           </button>
         }
       </div>
     </fieldset>
   </form>
+
   @if (cotacao(); as c) {
-    <p role="status">
+    <p class="endereco-cotacao" role="status">
       {{ c.regiao }} · Entrega {{ moeda(c.taxa) }} · mínimo de itens {{ moeda(c.minimo) }} · total
       com entrega {{ moeda(c.total) }}.
     </p>
   }
   @if (store.pendente()) {
-    <p class="aviso">
-      O salvamento não foi confirmado. Recupere o mesmo endereço antes de continuar.
-    </p>
-    <button type="button" (click)="recuperar()" [disabled]="store.ocupado()">
-      Recuperar salvamento do endereço
-    </button>
+    <div class="endereco-recuperacao">
+      <p class="aviso">
+        O salvamento não foi confirmado. Recupere o mesmo endereço antes de continuar.
+      </p>
+      <button
+        type="button"
+        class="talao-btn talao-btn--primario"
+        (click)="recuperar()"
+        [disabled]="store.ocupado()"
+      >
+        Recuperar salvamento do endereço
+      </button>
+    </div>
   }
   @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
+    <p class="endereco-feedback endereco-feedback--erro" role="alert">{{ erro() }}</p>
   }
   @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+    <p class="endereco-feedback endereco-feedback--aviso" role="status">{{ aviso() }}</p>
   }
 </section>

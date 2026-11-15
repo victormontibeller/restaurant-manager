@@ -32,4 +32,5 @@ export interface EnderecoCliente {
   descricao: string;
   endereco: EnderecoPedido;
   ativo: boolean;
+  principal?: boolean;
 }
