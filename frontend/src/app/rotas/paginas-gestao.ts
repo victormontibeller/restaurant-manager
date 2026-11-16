@@ -34,14 +34,14 @@ abstract class PaginaProtegida {
 @Component({
   selector: 'app-pagina-operacao',
   imports: [OperacaoPedidosComponent],
-  template: `<app-operacao-pedidos [unidadeExterna]="contexto.unidadeId()" [acoesExternas]="contexto.acoes()" [administradorExterno]="contexto.administrador()" [navegacaoInterna]="false" areaInicial="pedidos"/>`,
+  template: `<app-operacao-pedidos [unidadeExterna]="contexto.unidadeId()" [acoesExternas]="contexto.acoes()" [administradorExterno]="contexto.administrador()" [navegacaoInterna]="false" [filaCompacta]="true" areaInicial="pedidos"/>`,
 })
 export class PaginaOperacaoComponent extends PaginaProtegida {}
 
 @Component({
   selector: 'app-pagina-mesas',
-  imports: [MesasComponent],
-  template: `@if(contexto.unidadeId()){ @for(unidade of [contexto.unidadeId()];track unidade){<app-mesas [unidadeId]="unidade" [acoes]="contexto.acoes()" [administrador]="contexto.administrador()"/>} }@else{<p role="status">Selecione uma unidade para acompanhar as mesas.</p>}`,
+  imports: [MesasComponent, FormularioRotaDirective],
+  template: `@if(contexto.unidadeId()){ @for(unidade of [contexto.unidadeId()];track unidade){<div appFormularioRota="marcados" #rascunho="formularioRota"><app-mesas [unidadeId]="unidade" [acoes]="contexto.acoes()" [administrador]="contexto.administrador()" (salvo)="rascunho.confirmarSalvo('nova-mesa')"/></div>} }@else{<p role="status">Selecione uma unidade para acompanhar as mesas.</p>}`,
 })
 export class PaginaMesasComponent extends PaginaProtegida {}
 

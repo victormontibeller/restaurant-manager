@@ -528,7 +528,8 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
       exact: true,
     });
     await expect(proxima).toBeEnabled();
-    expect((await proxima.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+    const alturaPaginacao = (await proxima.boundingBox())!.height;
+    expect(alturaPaginacao).toBeGreaterThanOrEqual(testInfo.project.use.hasTouch ? 48 : 36);
     if (testInfo.project.use.hasTouch) await proxima.tap();
     else {
       await proxima.focus();
@@ -558,17 +559,6 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
         .getByRole('navigation', { name: 'Páginas de mesas para pedido assistido', exact: true })
         .getByRole('status'),
     ).not.toHaveText('Página de mesas 1');
-    const envio = page.waitForResponse(
-      (r) =>
-        new URL(r.url()).pathname === '/api/v1/operacao/pedidos' && r.request().method() === 'POST',
-    );
-    await page.getByRole('button', { name: 'Enviar pedido assistido', exact: true }).click();
-    const pedido = await ok<Pedido>(await envio);
-    expect(pedido.comandaId).toBe(abertura.comandaId);
-    expect(pedido.estado).toBe('NA_FILA');
-    await expect(
-      page.getByText('Pedido confirmado: ' + pedido.id + '.', { exact: false }),
-    ).toBeVisible();
     const paginasAssistido = page.getByRole('navigation', {
       name: 'Páginas de mesas para pedido assistido',
       exact: true,
@@ -609,6 +599,17 @@ test('S03-UI12 paginação alcança mesas, solicitações e comanda assistida al
       }
     }
     await capturar(page, paginasAssistido, 's03-paginacao-assistido');
+    const envio = page.waitForResponse(
+      (r) =>
+        new URL(r.url()).pathname === '/api/v1/operacao/pedidos' && r.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Enviar pedido assistido', exact: true }).click();
+    const pedido = await ok<Pedido>(await envio);
+    expect(pedido.comandaId).toBe(abertura.comandaId);
+    expect(pedido.estado).toBe('NA_FILA');
+    await expect(
+      page.getByText('Pedido confirmado: ' + pedido.id + '.', { exact: false }),
+    ).toBeVisible();
   } finally {
     await participante.dispose();
   }
@@ -635,9 +636,8 @@ test.describe(() => {
       }),
     );
     const salao = await operacao(page, 'Mesas e comandas');
-    await salao
-      .getByText('Cadastrar mesa e confirmar acesso administrativo', { exact: true })
-      .click();
+    const novaMesa = salao.getByText('Nova mesa', { exact: true });
+    await novaMesa.click();
     const nome = salao.getByLabel('Nome da mesa', { exact: true });
     await nome.fill(nomeOriginal);
     const rejeicao = page.waitForResponse(
@@ -679,9 +679,7 @@ test.describe(() => {
     await expect(recuperar).toBeEnabled();
     await navegarUi(page, '/gestao/pedidos');
     await navegarUi(page, '/gestao/mesas');
-    await salao
-      .getByText('Cadastrar mesa e confirmar acesso administrativo', { exact: true })
-      .click();
+    if (await nome.isHidden()) await novaMesa.click();
     await expect(nome).toHaveValue(nomeCorrigido);
     await expect(nome).toBeDisabled();
     await expect(recuperar).toBeEnabled();
@@ -697,6 +695,8 @@ test.describe(() => {
     expect(resultado.id).not.toBe(idRejeitado);
     expect(resultado.id).toBe((confirmado as Mesa | null)?.id);
     expect(resultado.nome).toBe(nomeCorrigido);
+    await expect(novaMesa).toBeFocused();
+    await novaMesa.click();
     await expect(nome).toBeEnabled();
     await expect(nome).toHaveValue('');
     const cadastro = await localizarMesa(salao, nomeCorrigido);
@@ -847,6 +847,11 @@ test('S03-UI04 combo cancela unidade completa e preserva primeiro preparo', asyn
   const primeiro = pedido.primeiroPreparoEm;
   const fila = await operacao(page);
   const card = fila.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
+  const detalhes = card.getByRole('button', { name: /^Detalhes do pedido #/ });
+  await expect(detalhes).toHaveAttribute('aria-expanded', 'false');
+  await detalhes.press('Enter');
+  await expect(detalhes).toBeFocused();
+  await expect(detalhes).toHaveAttribute('aria-expanded', 'true');
   // O login já abre a fila; aguarde o snapshot posterior ao preparo feito pelo setup.
   const unidadeEmPreparo = card.getByRole('checkbox', {
     name: 'Unidade 1 · Em preparo',
@@ -854,9 +859,21 @@ test('S03-UI04 combo cancela unidade completa e preserva primeiro preparo', asyn
   });
   await expect(unidadeEmPreparo).toBeVisible();
   await unidadeEmPreparo.check();
-  await card
-    .getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true })
-    .fill('Cancelamento da unidade inteira do combo');
+  const motivo = card.getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true });
+  await motivo.fill('Cancelamento da unidade inteira do combo');
+  const consultaFila = page.waitForResponse(
+    (resposta) =>
+      new URL(resposta.url()).pathname === '/api/v1/operacao/pedidos' &&
+      resposta.request().method() === 'GET' &&
+      resposta.ok(),
+  );
+  await fila.getByRole('button', { name: 'Atualizar fila de pedidos', exact: true }).click();
+  await motivo.focus();
+  await consultaFila;
+  await expect(detalhes).toHaveAttribute('aria-expanded', 'true');
+  await expect(motivo).toBeFocused();
+  await expect(motivo).toHaveValue('Cancelamento da unidade inteira do combo');
+  await expect(unidadeEmPreparo).toBeChecked();
   await card.getByRole('button', { name: 'Cancelar unidades selecionadas', exact: true }).click();
   await expect(card.getByText(/^Unidade \d+ · Cancelado$/).first()).toBeVisible();
   const atual = await ok<Pedido>(await api(request, cliente, '/api/v1/me/pedidos/' + pedido.id));
@@ -993,9 +1010,11 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
     try {
       const token = await loginUi(atual.page, fixture().contas[perfil]);
       const painel = await operacao(atual.page);
-      await expect(
-        painel.getByRole('article', { name: 'Pedido ' + criado.pedido.id, exact: true }),
-      ).toBeVisible();
+      const pedido = painel.getByRole('article', {
+        name: 'Pedido ' + criado.pedido.id,
+        exact: true,
+      });
+      await expect(pedido).toBeVisible();
       expect(
         (
           await api(request, token, '/api/v1/operacao/pedidos?unidadeId=' + fixture().unidadeB)
@@ -1020,9 +1039,10 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
       );
       expect(negado.status()).toBe(403);
       if (perfil === 'caixa' || perfil === 'cozinha' || perfil === 'expedicao') {
-        await expect(painel.getByRole('checkbox')).toHaveCount(0);
+        await pedido.getByRole('button', { name: /^Detalhes do pedido #/ }).click();
+        await expect(pedido.getByRole('checkbox')).toHaveCount(0);
         await expect(
-          painel.getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true }),
+          pedido.getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true }),
         ).toHaveCount(0);
         const aceite = await api(
           request,

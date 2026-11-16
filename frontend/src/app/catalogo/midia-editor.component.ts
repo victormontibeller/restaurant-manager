@@ -16,48 +16,8 @@ import { EnvioMidiaPendente, MidiaPendenteService } from './midia-pendente.servi
 
 @Component({
   selector: 'app-midia-editor',
-  template: `
-    <fieldset [attr.data-rascunho]="'midia-' + produto.id" [disabled]="bloqueado || ocupado()" aria-label="Imagem do produto">
-      <legend>Imagem do produto</legend>
-      @if (midiaId) {
-        <img class="previa" [src]="'/api/v1/midias/' + midiaId" alt="Imagem atual do produto" />
-      }
-      <p>
-        Envie uma imagem JPEG ou PNG de até 5 MiB, com até 4096 pixels por lado e 12 milhões de pixels
-        no total. O servidor publica uma cópia de até 1280 pixels por lado, sem metadados. A imagem só
-        será associada após salvar o produto.
-      </p>
-      <label for="produto-imagem">Arquivo da imagem</label>
-      <input
-        #arquivo
-        id="produto-imagem"
-        type="file"
-        accept="image/jpeg,image/png"
-        [disabled]="incerto() || temPendencia()"
-        (change)="selecionar(arquivo)"
-      />
-      <div class="acoes">
-        <button type="button" (click)="enviar()" [disabled]="!selecionado || incerto()">
-          Enviar imagem
-        </button>
-        @if (incerto()) {
-          <button type="button" (click)="consultar()">Consultar envio da imagem</button>
-        }
-        @if (midiaId && !incerto()) {
-          <button class="secundario" type="button" (click)="midiaIdChange.emit(null)">
-            Remover imagem do produto
-          </button>
-        }
-      </div>
-      @if (erro()) {
-        <p role="alert" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
-      }
-    </fieldset>
-  `,
-  styleUrl: './catalogo.css',
+  templateUrl: './midia-editor.component.html',
+  styleUrls: ['./catalogo.css', './catalogo-editor.css'],
 })
 export class MidiaEditorComponent implements OnChanges {
   @Input({ required: true }) produto!: Produto;

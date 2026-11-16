@@ -35,7 +35,13 @@ async function capturar(page: Page, alvo: Locator, nome: string): Promise<void> 
   await page.screenshot({ path: test.info().outputPath(nome + '.png'), fullPage: false });
 }
 
-async function verificarAlvoDeToque(alvo: Locator): Promise<void> {
+async function verificarAlvoDeToque(alvo: Locator, densidadeGestao = false): Promise<void> {
+  const compacto =
+    densidadeGestao &&
+    (await alvo.evaluate(
+      () => matchMedia('(min-width: 801px) and (not (any-pointer: coarse))').matches,
+    ));
+  const alturaEsperada = compacto ? 38 : 48;
   const alturaCss = await alvo.evaluate((elemento) => {
     const estilo = getComputedStyle(elemento);
     return Math.max(
@@ -44,10 +50,12 @@ async function verificarAlvoDeToque(alvo: Locator): Promise<void> {
     );
   });
   // O select nativo do WebKit expõe min-height de 18px, mas respeita height de 48px.
-  expect(alturaCss).toBeGreaterThanOrEqual(48);
+  expect(alturaCss).toBeGreaterThanOrEqual(alturaEsperada);
   // O Firefox pode reportar 47.99993896484375 para um alvo CSS de 48px.
   // A tolerância cobre apenas precisão geométrica, preservando o mínimo CSS.
-  expect((await alvo.boundingBox())!.height).toBeGreaterThanOrEqual(48 - 0.001);
+  const altura = (await alvo.boundingBox())!.height;
+  expect(altura).toBeGreaterThanOrEqual(alturaEsperada - 0.001);
+  if (compacto) expect(altura).toBeLessThanOrEqual(40.001);
 }
 
 async function entrarSemRecarregar(page: Page, conta: ContaCatalogo): Promise<string> {
@@ -146,7 +154,7 @@ async function abrirProduto(gestao: Locator, nome: string, categoriaId: string):
   await editor.getByLabel('Categoria do produto', { exact: true }).selectOption(categoriaId);
   for (const rotulo of ['Categoria do produto', 'Tipo de produto']) {
     const seletor = editor.getByLabel(rotulo, { exact: true });
-    await verificarAlvoDeToque(seletor);
+    await verificarAlvoDeToque(seletor, true);
   }
   return editor;
 }
@@ -333,6 +341,25 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   const sufixo = crypto.randomUUID().slice(0, 8);
   const nomeCategoria = 'S02 categoria ' + sufixo;
   const categoriaId = await criarCategoria(page, gestao, nomeCategoria);
+  const rascunho = await abrirProduto(gestao, 'Rascunho para descartar', categoriaId);
+  const cancelar = rascunho.getByRole('button', {
+    name: 'Cancelar edição de produto',
+    exact: true,
+  });
+  let confirmacao = '';
+  page.once('dialog', async (dialog) => {
+    confirmacao = dialog.message();
+    await dialog.dismiss();
+  });
+  await cancelar.click();
+  expect(confirmacao).toContain('alterações ainda não salvas');
+  await expect(rascunho.getByLabel('Nome do produto', { exact: true })).toHaveValue(
+    'Rascunho para descartar',
+  );
+  page.once('dialog', (dialog) => dialog.accept());
+  await cancelar.click();
+  await expect(rascunho).toHaveCount(0);
+  await expect(gestao.getByRole('button', { name: 'Novo produto', exact: true })).toBeFocused();
   const simplesEditor = await abrirProduto(gestao, 'S02 componente ' + sufixo, categoriaId);
   await simplesEditor.getByRole('button', { name: 'Adicionar adicional', exact: true }).click();
   const adicional = simplesEditor.getByRole('group', { name: 'Adicional 1', exact: true });
@@ -401,7 +428,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   }
   await expect(produtoOpcao).toHaveCount(1);
   await opcao.getByLabel('Produto da opção', { exact: true }).selectOption(simples.id);
-  await verificarAlvoDeToque(opcao.getByLabel('Produto da opção', { exact: true }));
+  await verificarAlvoDeToque(opcao.getByLabel('Produto da opção', { exact: true }), true);
   await opcao.getByLabel('Acréscimo por escolha (R$)', { exact: true }).fill('5.00');
   await opcao.getByLabel('Limite desta opção no grupo', { exact: true }).fill('2');
   await opcao.getByLabel('Queijo extra', { exact: true }).check();

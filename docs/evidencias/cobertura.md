@@ -166,7 +166,7 @@ a validação vigente é a revisão final acima, sem somar as execuções.
 
 | Cenário | Famílias | Superfícies e prova |
 | --- | --- | --- |
-| S02-UI03 | T02–T05/T20–T21, X05/X12/X14 | Categoria/produto/mídia/adicional/combo/oferta; vitrine e busca; prévia R$ 46; linhas distintas, cálculo, mudança de preço, reconfirmação, indisponibilidade, rede e troca de unidade |
+| S02-UI03 | T02–T05/T20–T21, X05/X12/X14 | Categoria/produto/mídia/adicional/combo/oferta; busca com categoria; filtros agrupados, cancelamento e foco; troca confirmada; prévia lateral e navegação com itens; cálculo, mudança de preço, reconfirmação, indisponibilidade e rede |
 | S02-UI04 | T20–T21, X01 | Edição concorrente, reconsulta de versão e imagem inválida sem publicação |
 | S02-UI05 | T20, X01/X13 | Upload real com resposta perdida, consulta pelo mesmo UUID, sem reenviar ou duplicar imagem |
 | S02-UI-PERFIL-* | T20–T21/T24–T25 | Administrador nas duas unidades; cinco perfis configuráveis com concessão/revogação por ação, UI/API, mesma sessão e filial não atribuída |
@@ -408,9 +408,9 @@ de identidade para impedir aprovação parcial como baseline da Sprint01.
 
 | Cenário | Superfície/ação real | Ator | Evidência |
 | --- | --- | --- | --- |
-| S00-UI01 | `/`: shell, health, CSS, alvo de toque, ausência de overflow | Público | Playwright nos cinco projetos; screenshots revisados |
-| S00-UI02 | Pular conteúdo, foco, verificar conexão, offline/online | Público | Playwright nos cinco projetos, sem mock de API |
-| S00-UI03 | Carregamento e botão desabilitado durante requisição real | Público | Playwright nos cinco projetos; apenas atraso, sem resposta fabricada |
+| S00-UI01 | Cardápio, CSS, ausência de overflow e diagnóstico na entrada da equipe | Público e equipe | Playwright; screenshots do shell |
+| S00-UI02 | Pular conteúdo no cardápio, foco e verificação offline/online na entrada da equipe | Público e equipe | Playwright, sem mock de API |
+| S00-UI03 | Carregamento do diagnóstico na entrada da equipe e ação desabilitada durante requisição real | Equipe | Playwright; apenas atraso, sem resposta fabricada |
 | S00-API01 | Domínio desconhecido, rota privada, health mínimo | Público | Playwright nos cinco projetos |
 | S00-DB01 | Duas empresas A/B, unidades A1/A2/B1, contexto neutro, SQL/rollback e conexão física reutilizada | Infraestrutura | FundacaoTest, PoolIsolationTest, TenantConnectionFailureTest; PostgreSQL real |
 | S00-DB02 | Allowlist, migração reaplicada, bloqueio de segundo migrador, erro SQL e recuperação | Migrador | MigrationBoundaryTest; PostgreSQL real exclusivo |

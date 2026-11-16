@@ -1,0 +1,75 @@
+.catalogo-editor {
+  display: grid;
+  gap: var(--gestao-espaco-3, 12px);
+}
+
+.catalogo-editor > :is(h3, p, fieldset) {
+  margin: 0;
+}
+
+.catalogo-editor > .gestao-campos {
+  border: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:host-context(.gestao-compacta) :is(button, input:not([type='checkbox']), select) {
+  min-height: var(--gestao-controle);
+  border-radius: var(--gestao-raio);
+}
+
+:host-context(.gestao-compacta) select {
+  height: var(--gestao-controle);
+}
+
+:host-context(.gestao-compacta) label.check {
+  min-height: var(--gestao-controle);
+}
+
+.catalogo-identificacao {
+  max-width: 55rem;
+}
+
+.catalogo-editor textarea {
+  min-height: 4rem;
+}
+
+.catalogo-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gestao-espaco-2, 8px) var(--gestao-espaco-4, 16px);
+}
+
+.catalogo-grupo {
+  padding: var(--gestao-espaco-3, 12px);
+}
+
+.catalogo-grupo-acoes {
+  margin-block-start: var(--gestao-espaco-3, 12px);
+}
+
+.catalogo-campo-largo {
+  grid-column: 1 / -1;
+}
+
+.catalogo-editor-secao {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--rm-border);
+  border-radius: 0;
+  padding: var(--gestao-espaco-3, 12px) 0 0;
+}
+
+.catalogo-editor-secao :is(legend, h4) {
+  margin: 0 0 var(--gestao-espaco-2, 8px);
+}
+
+.catalogo-editor-secao label {
+  margin-top: 0;
+}
+
+.catalogo-editor-acoes {
+  grid-column: 1 / -1;
+}

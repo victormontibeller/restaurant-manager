@@ -14,6 +14,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         import '@angular/compiler';
         import { signal } from '@angular/core';
         import { bootstrapApplication } from '@angular/platform-browser';
+        import { provideRouter } from '@angular/router';
         import { AcessosComponent } from './src/app/acessos/acessos.component';
         import { ConvitesComponent } from './src/app/acessos/convites.component';
         import { UnidadesComponent } from './src/app/unidades/unidades.component';
@@ -74,7 +75,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
                 return structuredClone(c);
               }
               if (method === 'POST') {
-                const c = { ...body, estado: 'PENDENTE', expiraEm: 'ficticia' };
+                const c = { ...body, estado: 'PENDENTE', expiraEm: '2026-11-13T00:15:00Z' };
                 invitations.push(c);
                 return structuredClone(c);
               }
@@ -135,6 +136,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
                 : AcessosComponent,
           {
             providers: [
+              provideRouter([]),
               { provide: SessaoService, useValue: mock },
               { provide: PlataformaSessaoService, useValue: platform },
             ],
@@ -166,13 +168,15 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       ? { executablePath: process.env.RM_WEBKIT_EXECUTABLE }
       : {},
   );
-  const styles = fs.readFileSync(repo + '/frontend/src/styles.css', 'utf8');
+  const styles =
+    fs.readFileSync(repo + '/frontend/src/styles.css', 'utf8') +
+    fs.readFileSync(repo + '/frontend/src/app/ui/gestao.css', 'utf8');
   const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(
       '<style>' +
         styles +
-        '</style><main><section>' +
+        '</style><main class="gestao-compacta"><section>' +
         (req.url === '/plataforma'
           ? '<app-plataforma></app-plataforma>'
           : req.url === '/convites'
@@ -254,36 +258,61 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       await expect(confirmation).not.toHaveAttribute('aria-invalid', 'true');
     };
     await checkConfirmation(page, 'Confirme sua senha', 'Confirmar identidade');
-    // A lista mostra o resumo; vínculos são montados só para o funcionário aberto.
-    await expect(page.locator('article input[type=checkbox]')).toHaveCount(6);
-    const kitchenCard = page.locator('article').nth(4);
+    // A lista mostra só o resumo; os controles são montados no editor aberto.
+    const roles = ['ADMINISTRADOR', 'GERENTE', 'ATENDIMENTO', 'CAIXA', 'COZINHA', 'EXPEDICAO'];
+    const cards = page.locator('article');
+    const kitchenCard = cards.nth(4);
+    const editEmployee = kitchenCard.getByRole('button', {
+      name: 'Editar funcionário',
+      exact: true,
+    });
+    const editUnits = kitchenCard.getByRole('button', {
+      name: 'Editar unidades atribuídas',
+      exact: true,
+    });
+    const saveEmployee = kitchenCard.getByRole('button', {
+      name: 'Salvar funcionário',
+      exact: true,
+    });
+    const employeeRole = kitchenCard.getByLabel('Perfil do funcionário');
+    const matrix = page.getByRole('button', { name: 'Matriz de permissões', exact: true });
+    const reload = page.getByRole('button', { name: 'Recarregar acessos' });
+    const assertRoles = async () => {
+      await expect(cards).toHaveCount(roles.length);
+      for (const [index, role] of roles.entries()) {
+        await expect(cards.nth(index)).toContainText(role);
+        await cards
+          .nth(index)
+          .getByRole('button', { name: 'Editar funcionário', exact: true })
+          .click();
+        await expect(cards.nth(index).getByLabel('Perfil do funcionário')).toHaveValue(role);
+        await cards.nth(index).getByRole('button', { name: 'Cancelar', exact: true }).click();
+      }
+    };
+    await assertRoles();
+    await expect(page.locator('article input[type=checkbox]')).toHaveCount(0);
+    await editEmployee.click();
+    await expect(kitchenCard.getByRole('heading', { name: 'Editar funcionário' })).toBeFocused();
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       assert(
         (await page.evaluate(() => document.documentElement.scrollWidth)) <= width,
         'Lista excede viewport',
       );
-      const edit = await kitchenCard
-        .getByRole('button', { name: 'Editar unidades atribuídas', exact: true })
-        .boundingBox();
-      const save = await kitchenCard
-        .getByRole('button', { name: 'Salvar funcionário', exact: true })
-        .boundingBox();
+      const edit = await editUnits.boundingBox();
+      const save = await saveEmployee.boundingBox();
+      const altura = (box) =>
+        box &&
+        (width <= 768
+          ? Math.round(box.height) >= 48
+          : Math.round(box.height) >= 36 && Math.round(box.height) <= 40);
       assert(
-        edit &&
-          save &&
-          edit.height >= 48 &&
-          save.height >= 48 &&
-          save.y >= edit.y + edit.height + 7,
-        'Ações devem ter alvo de toque e separação visível',
+        altura(edit) && altura(save) && save.y >= edit.y + edit.height + 7,
+        `Ações devem ter altura adequada e separação visível a ${width}px: ${JSON.stringify({ edit, save })}`,
       );
       await capture('lista-' + width, page.locator('app-acessos'));
     }
     await page.setViewportSize({ width: 360, height: 800 });
-    const editUnits = kitchenCard.getByRole('button', {
-      name: 'Editar unidades atribuídas',
-      exact: true,
-    });
     await editUnits.focus();
     await page.keyboard.press('Enter');
     await expect(editUnits).toHaveAttribute('aria-expanded', 'true');
@@ -301,104 +330,87 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await capture('unidades-abertas-mobile', kitchenCard);
     await kitchenCard.getByLabel('Filial 0', { exact: true }).check();
     await editUnits.click();
-    await expect(page.locator('article input[type=checkbox]')).toHaveCount(6);
+    await expect(page.locator('article input[type=checkbox]')).toHaveCount(1);
     await editUnits.click();
     await expect(kitchenCard.getByLabel('Filial 0', { exact: true })).toBeChecked();
-    await page
-      .locator('article')
-      .nth(1)
-      .getByRole('button', { name: 'Editar unidades atribuídas', exact: true })
-      .click();
-    await expect(editUnits).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('article fieldset')).toHaveCount(1);
+    await cards.nth(1).getByRole('button', { name: 'Editar funcionário', exact: true }).click();
+    await expect(editUnits).toHaveCount(0);
+    await expect(page.locator('article input[type=checkbox]')).toHaveCount(1);
+    await editEmployee.click();
     await editUnits.click();
-    await expect(kitchenCard.getByLabel('Filial 0', { exact: true })).toBeChecked();
-    await kitchenCard.getByLabel('Filial 0', { exact: true }).uncheck();
+    await expect(kitchenCard.getByLabel('Filial 0', { exact: true })).not.toBeChecked();
     await page.evaluate(() => (window.failLoad = true));
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+    await reload.click();
     await stable(page);
     await expect(page.getByRole('alert')).toHaveText('Falha fictícia de consulta.');
     await expect(page.locator('article fieldset')).toHaveCount(1);
     await page.evaluate(() => (window.failLoad = false));
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+    await reload.click();
     await stable(page);
     await expect(page.locator('article fieldset')).toHaveCount(0);
-    const values = await page
-      .locator('article select')
-      .evaluateAll((selects) => selects.map((s) => s.value));
-    const roles = ['ADMINISTRADOR', 'GERENTE', 'ATENDIMENTO', 'CAIXA', 'COZINHA', 'EXPEDICAO'];
-    console.log(JSON.stringify({ browser: name, expected: roles, observed: values }));
-    assert.deepEqual(values, roles, 'Perfil exibido diverge do modelo carregado');
+    await matrix.click();
     await page.getByLabel('Perfil operacional').selectOption('COZINHA');
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+    await reload.click();
     await stable(page);
     await expect(page.getByLabel('Perfil operacional')).toHaveValue('COZINHA');
-    await expect
-      .poll(() => page.locator('article select').evaluateAll((s) => s.map((x) => x.value)))
-      .toEqual(roles);
-    await page
-      .locator('article')
-      .nth(4)
-      .getByLabel('Perfil do funcionário')
-      .selectOption('GERENTE');
-    await page.locator('article').nth(4).getByLabel('Perfil do funcionário').focus();
+    await assertRoles();
+    await editEmployee.click();
+    await employeeRole.selectOption('GERENTE');
+    await employeeRole.focus();
     assert.equal(
-      await page.evaluate(() => window.fixture.app.instance.equipe()[4].perfil),
+      await page.evaluate(() => window.fixture.app.instance.rascunhoFuncionario().perfil),
       'GERENTE',
     );
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
-    await stable(page);
-    await expect(page.locator('article').nth(4).getByLabel('Perfil do funcionário')).toHaveValue(
+    assert.equal(
+      await page.evaluate(() => window.fixture.app.instance.equipe()[4].perfil),
       'COZINHA',
     );
-    await page
-      .locator('article')
-      .nth(4)
-      .getByLabel('Perfil do funcionário')
-      .selectOption('EXPEDICAO');
+    await reload.click();
+    await stable(page);
+    await editEmployee.click();
+    await expect(employeeRole).toHaveValue('COZINHA');
+    await employeeRole.selectOption('EXPEDICAO');
     await editUnits.click();
     await kitchenCard.getByLabel('Filial 7', { exact: true }).check();
     await editUnits.click();
-    await page
-      .locator('article')
-      .nth(4)
-      .getByRole('button', { name: 'Salvar funcionário' })
-      .click();
+    await saveEmployee.click();
     await stable(page);
+    await expect(editEmployee).toBeFocused();
     assert.deepEqual(await page.evaluate(() => window.fixture.writes.at(-1)), {
       path: '/api/v1/equipe/f4',
       method: 'PUT',
       body: { versao: 0, perfil: 'EXPEDICAO', ativo: true, unidades: ['u7'] },
     });
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+    await reload.click();
     await stable(page);
-    await expect(page.locator('article').nth(4).getByLabel('Perfil do funcionário')).toHaveValue(
-      'EXPEDICAO',
-    );
+    await editEmployee.click();
+    await expect(employeeRole).toHaveValue('EXPEDICAO');
     await editUnits.click();
     await expect(kitchenCard.getByLabel('Filial 7', { exact: true })).toBeChecked();
     await kitchenCard.getByLabel('Filial 7', { exact: true }).uncheck();
     await editUnits.click();
-    await kitchenCard.getByRole('button', { name: 'Salvar funcionário' }).click();
+    await saveEmployee.click();
     await stable(page);
     assert.deepEqual(await page.evaluate(() => window.fixture.writes.at(-1)), {
       path: '/api/v1/equipe/f4',
       method: 'PUT',
       body: { versao: 1, perfil: 'EXPEDICAO', ativo: true, unidades: [] },
     });
+    await editEmployee.click();
     await editUnits.click();
     await kitchenCard.getByLabel('Filial 7', { exact: true }).check();
-    await kitchenCard.getByLabel('Perfil do funcionário').selectOption('ADMINISTRADOR');
+    await employeeRole.selectOption('ADMINISTRADOR');
     await expect(page.locator('article fieldset')).toHaveCount(0);
     assert.deepEqual(
-      await page.evaluate(() => window.fixture.app.instance.equipe()[4].unidades),
+      await page.evaluate(() => window.fixture.app.instance.rascunhoFuncionario().unidades),
       [],
     );
-    await kitchenCard.getByLabel('Perfil do funcionário').selectOption('EXPEDICAO');
+    await employeeRole.selectOption('EXPEDICAO');
     await expect(editUnits).toHaveAttribute('aria-expanded', 'false');
     await editUnits.click();
     await expect(kitchenCard.getByLabel('Filial 7', { exact: true })).not.toBeChecked();
     await editUnits.click();
+    await matrix.click();
     await page.getByLabel('Consultar unidade', { exact: true }).check();
     await page.getByRole('button', { name: 'Salvar permissões' }).click();
     await stable(page);
@@ -407,7 +419,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       method: 'PUT',
       body: { versao: 0, perfil: 'COZINHA', acoes: ['UNIDADE_CONSULTAR'] },
     });
-    await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+    await reload.click();
     await stable(page);
     await expect(page.getByLabel('Perfil operacional')).toHaveValue('COZINHA');
     await expect(page.getByLabel('Consultar unidade', { exact: true })).toBeChecked();
@@ -428,6 +440,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       'Confirme sua senha para convidar',
       'Confirmar identidade para convites',
     );
+    await invitation.getByRole('button', { name: 'Novo convite', exact: true }).click();
     await invitation.getByLabel('Perfil do convite').selectOption('GERENTE');
     await invitation.evaluate(() =>
       window.fixture.app.instance.pendente.set({

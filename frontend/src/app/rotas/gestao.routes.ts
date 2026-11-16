@@ -52,7 +52,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'pedidos',
     title: 'Pedidos · Gestão',
-    data: { titulo: 'Pedidos', unidade: true, acao: 'pedido.consultar' },
+    data: { titulo: 'Pedidos', unidade: true, acao: 'pedido.consultar', compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaOperacaoComponent),
@@ -68,7 +68,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'mesas',
     title: 'Mesas e comandas · Gestão',
-    data: { titulo: 'Mesas e comandas', unidade: true, acao: 'pedido.consultar' },
+    data: { titulo: 'Mesas e comandas', unidade: true, acao: 'pedido.consultar', compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaMesasComponent),
@@ -76,7 +76,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'catalogo',
     title: 'Cardápio · Gestão',
-    data: { titulo: 'Cardápio', acao: 'catalogo.consultar' },
+    data: { titulo: 'Cardápio', acao: 'catalogo.consultar', compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaCatalogoComponent),
@@ -84,7 +84,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'equipe',
     title: 'Equipe e acessos · Gestão',
-    data: { titulo: 'Equipe e acessos', administrador: true },
+    data: { titulo: 'Equipe e acessos', administrador: true, compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaEquipeComponent),
@@ -92,7 +92,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'equipe/convites',
     title: 'Convites · Gestão',
-    data: { titulo: 'Convites', administrador: true },
+    data: { titulo: 'Convites', administrador: true, compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaConvitesComponent),
@@ -101,7 +101,7 @@ export const GESTAO_ROUTES: Routes = [
   {
     path: 'unidades',
     title: 'Unidades e horários · Gestão',
-    data: { titulo: 'Unidades e horários', administrador: true },
+    data: { titulo: 'Unidades e horários', administrador: true, compacta: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaUnidadesComponent),

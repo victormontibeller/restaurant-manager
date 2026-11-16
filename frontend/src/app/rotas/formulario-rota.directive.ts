@@ -9,10 +9,7 @@ export class FormularioRotaDirective {
   private readonly chave = 'formulario-' + crypto.randomUUID();
   private readonly grupos = new Set<HTMLElement>();
   constructor() {
-    this.navegacao.registrarRascunho(this.chave, () => {
-      for (const grupo of this.grupos) if (!grupo.isConnected) this.grupos.delete(grupo);
-      return this.grupos.size > 0;
-    });
+    this.navegacao.registrarRascunho(this.chave, () => this.temRascunho());
     inject(DestroyRef).onDestroy(() => this.navegacao.retirarRascunho(this.chave));
   }
   marcarAlterado(chave: string): void {
@@ -24,6 +21,19 @@ export class FormularioRotaDirective {
   confirmarSalvo(chave?: string): void {
     for (const grupo of this.grupos)
       if (!chave || grupo.dataset['rascunho'] === chave) this.grupos.delete(grupo);
+  }
+  temRascunho(chave?: string): boolean {
+    for (const grupo of this.grupos) if (!grupo.isConnected) this.grupos.delete(grupo);
+    return [...this.grupos].some((grupo) => !chave || grupo.dataset['rascunho'] === chave);
+  }
+  confirmarDescarte(chave?: string): boolean {
+    if (
+      this.temRascunho(chave) &&
+      !window.confirm('Há alterações ainda não salvas. Deseja descartá-las?')
+    )
+      return false;
+    this.confirmarSalvo(chave);
+    return true;
   }
   @HostListener('input', ['$event']) @HostListener('change', ['$event']) alterar(
     event: Event,

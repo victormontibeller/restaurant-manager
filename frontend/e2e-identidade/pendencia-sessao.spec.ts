@@ -37,6 +37,7 @@ test('S01-UI07: logout e retry sem reautenticação não descartam intenção in
   await navegarGestao(page, '/gestao/unidades');
   await confirmar(page);
   const nome = 'Pendente ' + crypto.randomUUID().slice(0, 8);
+  await page.getByRole('button', { name: 'Nova unidade', exact: true }).click();
   await page.getByLabel('Nome da nova unidade').fill(nome);
   await page.getByLabel('Fuso da nova unidade').fill('America/Manaus');
   let id = '';
@@ -110,6 +111,7 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', 
   const recebida = page.waitForResponse(
     (r) => r.url().endsWith('/api/v1/configuracoes/acessos') && r.request().method() === 'PUT',
   );
+  await page.getByRole('button', { name: 'Matriz de permissões', exact: true }).click();
   await page.getByRole('button', { name: 'Salvar permissões' }).click();
   await gravada;
   try {

@@ -123,6 +123,7 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
 
   // Cadastro pelo formulário real, sem fixture que substitua a API de unidades.
   const nome = '02 Funcionamento ' + crypto.randomUUID().slice(0, 8);
+  await admin.getByRole('button', { name: 'Nova unidade', exact: true }).click();
   await admin.getByLabel('Nome da nova unidade', { exact: true }).fill(nome);
   await admin.getByLabel('Fuso da nova unidade', { exact: true }).fill('UTC');
   const criacao = resposta(page, '/api/v1/configuracoes/unidades', 'POST');
@@ -132,7 +133,11 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
   const unidade = (await criada.json()) as { id: string; versao: number };
   const editor = page.getByRole('region', { name: 'Horários e canais de ' + nome, exact: true });
   const consulta = resposta(page, rota(unidade.id), 'GET');
-  await editor.getByRole('button', { name: 'Configurar horários e canais', exact: true }).click();
+  await page
+    .getByRole('article')
+    .filter({ has: page.getByRole('heading', { name: nome, exact: true }) })
+    .getByRole('button', { name: 'Configurar horários e canais', exact: true })
+    .click();
   expect((await consulta).status()).toBe(200);
   await expect(editor.getByText('Versão do funcionamento: 0.', { exact: true })).toBeVisible();
 
@@ -227,7 +232,11 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
   await expect(page.getByText(nomePerfil['ADMINISTRADOR'], { exact: true })).toBeVisible();
   await navegarUi(page, '/gestao/unidades');
   const reabertura = resposta(page, rota(unidade.id), 'GET');
-  await editor.getByRole('button', { name: 'Configurar horários e canais', exact: true }).click();
+  await page
+    .getByRole('article')
+    .filter({ has: page.getByRole('heading', { name: nome, exact: true }) })
+    .getByRole('button', { name: 'Configurar horários e canais', exact: true })
+    .click();
   expect((await reabertura).status()).toBe(200);
   await expect(editor.getByLabel('Delivery', { exact: true })).toBeChecked();
   await expect(primeiro.getByLabel('Início (HH:mm)', { exact: true })).toHaveValue('19:00');

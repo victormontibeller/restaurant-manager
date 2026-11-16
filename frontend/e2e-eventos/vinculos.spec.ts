@@ -90,13 +90,15 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
     expect(result.status()).toBe(200);
     await result.finished();
   }
-  await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Matriz de permissões' })).toBeEnabled();
   await page.getByLabel('Confirme sua senha').fill(fixture.admin.senha);
   const reauth = page.waitForResponse((r) => r.url().endsWith('/auth/reautenticar'));
   await page.getByRole('button', { name: 'Confirmar identidade' }).click();
   expect((await reauth).status()).toBe(204);
 
   const card = page.getByRole('article').filter({ hasText: fixture.cozinha.email });
+  const editar = card.getByRole('button', { name: 'Editar funcionário', exact: true });
+  await editar.click();
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   const editarUnidades = card.getByRole('button', {
     name: 'Editar unidades atribuídas',
@@ -146,6 +148,9 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
       await request.get('/api/v1/auth/me', { headers: { Authorization: 'Bearer ' + worker } })
     ).status(),
   ).toBe(401);
+  await expect(editar).toBeFocused();
+  await editar.click();
+  await editarUnidades.click();
   await expect(link).toBeChecked();
 
   // Reativar e remover o vínculo não recupera a sessão revogada.
@@ -154,6 +159,8 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   saved = save();
   await card.getByRole('button', { name: 'Salvar funcionário' }).click();
   expect((await saved).status()).toBe(200);
+  await expect(editar).toBeFocused();
+  await editar.click();
   await expect(link).toHaveCount(0);
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   const updated = (await (await request.get('/api/v1/equipe', { headers })).json()).find(
@@ -182,6 +189,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   );
   await page.getByRole('button', { name: 'Recarregar acessos' }).click();
   for (const response of await reload) expect(response.status()).toBe(200);
+  await editar.click();
   await expect(card.getByLabel('Perfil do funcionário')).toBeEnabled();
   await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('EXPEDICAO');
@@ -199,10 +207,16 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   saved = save();
   await card.getByRole('button', { name: 'Salvar funcionário' }).click();
   expect((await saved).status()).toBe(200);
+  await expect(editar).toBeFocused();
+  await editar.click();
   await expect(card.getByLabel('Perfil do funcionário')).toHaveValue('COZINHA');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
+  await expect(editarUnidades).toHaveAttribute('aria-expanded', 'false');
+  await editarUnidades.click();
+  await expect(editarUnidades).toHaveAttribute('aria-expanded', 'true');
+  await expect(card.getByRole('group', { name: 'Unidades atribuídas' })).toBeVisible();
   await editarUnidades.click();
   await expect(editarUnidades).toHaveAttribute('aria-expanded', 'false');
   await expect(card.getByRole('group', { name: 'Unidades atribuídas' })).toHaveCount(0);

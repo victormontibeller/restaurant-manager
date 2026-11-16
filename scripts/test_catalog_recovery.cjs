@@ -50,6 +50,8 @@ async function fixture() {
   class CatalogoPendenteService {}
   class MidiaPendenteService {}
   class DestroyRef {}
+  class ElementRef {}
+  class FormularioRotaDirective {}
   class ApiFailure extends Error {
     constructor(status, message) {
       super(message);
@@ -77,11 +79,14 @@ async function fixture() {
     Output: () => () => undefined,
     signal,
     DestroyRef,
+    ElementRef,
     EventEmitter,
     inject: (token) => {
       if (token === SessaoService) return sessao;
       if (token === CatalogoPendenteService) return { daConta: () => pendente };
       if (token === MidiaPendenteService) return { daConta: () => () => null };
+      if (token === FormularioRotaDirective) return null;
+      if (token === ElementRef) return { nativeElement: {} };
       if (token === DestroyRef) return { onDestroy: (fn) => destroys.push(fn) };
       throw new Error('Dependência inesperada.');
     },
@@ -94,6 +99,7 @@ async function fixture() {
       if (name.includes('sessao')) return { SessaoService, ApiFailure };
       if (name.includes('catalogo-pendente')) return { CatalogoPendenteService };
       if (name.includes('midia-pendente')) return { MidiaPendenteService };
+      if (name.includes('formulario-rota')) return { FormularioRotaDirective };
       if (name.includes('modelos')) return { mensagemErro: (error) => error.message };
       return {};
     },

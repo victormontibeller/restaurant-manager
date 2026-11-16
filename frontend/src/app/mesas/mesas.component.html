@@ -3,15 +3,7 @@
   aria-labelledby="operacao-mesas-titulo"
   [attr.aria-busy]="carregando()"
 >
-  <header class="cabecalho-painel">
-    <div>
-      <span class="sobretitulo">Salão</span>
-      <h2 id="operacao-mesas-titulo">Mesas e atendimentos</h2>
-      <p class="texto-secundario">
-        Abra atendimentos, acompanhe comandas e responda às solicitações do salão.
-      </p>
-    </div>
-  </header>
+  <h2 id="operacao-mesas-titulo" class="mesas-titulo">Mesas e atendimentos</h2>
   <div class="barra-conexao">
     <p role="status" class="status-consulta">
       <span class="status-reserva" aria-hidden="true">
@@ -26,35 +18,75 @@
     <button class="secundario" (click)="carregar()" [disabled]="ocupado()">Atualizar mesas</button>
   </div>
   @if (administrador()) {
-    <details>
-      <summary>Cadastrar mesa e confirmar acesso administrativo</summary>
-      <label for="senha-mesas">Confirme sua senha para configurar mesas</label>
-      <input
-        id="senha-mesas"
-        #senha
-        type="password"
-        autocomplete="current-password"
-        [disabled]="ocupado()"
-      />
-      <button (click)="confirmarSenha(senha)" [disabled]="ocupado()">
-        Confirmar senha para mesas
-      </button>
-      <form (submit)="criar($event)">
-        <label for="nome-nova-mesa">Nome da mesa</label>
-        <input
-          id="nome-nova-mesa"
-          #nomeMesa
-          [value]="nome"
-          (input)="nome = nomeMesa.value"
-          required
-          maxlength="80"
-          [disabled]="ocupado() || !!criacaoPendente()"
-        />
-        <button type="submit" [disabled]="ocupado()">
-          {{ criacaoPendente() ? 'Recuperar cadastro da mesma mesa' : 'Cadastrar mesa' }}
-        </button>
-      </form>
+    <details #cadastro class="cadastro-mesa">
+      <summary
+        #abrirCadastro
+        class="spartan-button"
+        (click)="alternarCadastro($event, cadastro, abrirCadastro)"
+      >
+        Nova mesa
+      </summary>
+      <section class="gestao-editor cadastro-mesa-editor" aria-labelledby="cadastro-mesa-titulo">
+        <h3 id="cadastro-mesa-titulo" tabindex="-1" data-gestao-foco>Cadastrar mesa</h3>
+        <form class="gestao-toolbar" (submit)="$event.preventDefault(); confirmarSenha(senha)">
+          <div>
+            <label for="senha-mesas">Confirme sua senha para configurar mesas</label>
+            <input
+              id="senha-mesas"
+              #senha
+              type="password"
+              autocomplete="current-password"
+              [attr.aria-invalid]="erroCadastro() === 'senha' ? true : null"
+              [attr.aria-describedby]="erroCadastro() === 'senha' ? 'erro-operacao-mesas' : null"
+              [disabled]="ocupado()"
+            />
+          </div>
+          <button type="submit" class="secundario" [disabled]="ocupado()">
+            Confirmar senha para mesas
+          </button>
+        </form>
+        @if (criacaoPendente()) {
+          <p class="aviso" role="status">
+            Confira o resultado do cadastro pendente antes de criar outra mesa.
+          </p>
+        }
+        <form data-rascunho="nova-mesa" (submit)="criar($event, cadastro, abrirCadastro)">
+          <div>
+            <label for="nome-nova-mesa">Nome da mesa</label>
+            <input
+              id="nome-nova-mesa"
+              #nomeMesa
+              [value]="nome"
+              (input)="nome = nomeMesa.value"
+              required
+              maxlength="80"
+              [attr.aria-invalid]="erroCadastro() === 'nome' ? true : null"
+              [attr.aria-describedby]="erroCadastro() === 'nome' ? 'erro-operacao-mesas' : null"
+              [disabled]="ocupado() || !!criacaoPendente()"
+            />
+          </div>
+          <div class="gestao-acoes">
+            <button type="submit" [disabled]="ocupado()">
+              {{ criacaoPendente() ? 'Recuperar cadastro da mesma mesa' : 'Cadastrar mesa' }}
+            </button>
+            <button
+              type="button"
+              class="secundario"
+              (click)="cancelarCadastro(cadastro, abrirCadastro)"
+              [disabled]="ocupado() || !!criacaoPendente()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </section>
     </details>
+  }
+  @if (erro()) {
+    <p id="erro-operacao-mesas" role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
   }
   @if (abertura()?.codigoTemporario; as codigo) {
     <aside class="codigo-atendimento" aria-label="Código temporário do atendimento">
@@ -249,11 +281,5 @@
         Próximas solicitações
       </button>
     </nav>
-  }
-  @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
   }
 </section>

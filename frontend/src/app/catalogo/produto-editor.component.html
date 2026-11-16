@@ -1,0 +1,134 @@
+<form
+  class="gestao-editor catalogo-editor"
+  [attr.data-rascunho]="'produto-' + produto.id"
+  (submit)="salvar($event)"
+  aria-label="Editor de produto"
+>
+  <h3 tabindex="-1" data-gestao-foco>{{ novo ? 'Novo produto' : 'Editar produto' }}</h3>
+  <p>
+    Os dados do produto valem para todas as unidades. Preço e disponibilidade são definidos na
+    oferta de cada unidade.
+  </p>
+  <fieldset [disabled]="bloqueado || midiaBloqueada()" class="catalogo-editor-secao">
+    <legend>Identificação</legend>
+    <div class="gestao-campos catalogo-identificacao">
+      <div>
+        <label for="produto-nome">Nome do produto</label>
+        <input
+          #nome
+          id="produto-nome"
+          required
+          maxlength="120"
+          [value]="rascunho.nome"
+          (input)="rascunho.nome = nome.value"
+        />
+      </div>
+      <div>
+        <label for="produto-categoria">Categoria do produto</label>
+        <select
+          #categoria
+          id="produto-categoria"
+          required
+          [value]="rascunho.categoriaId"
+          (change)="rascunho.categoriaId = categoria.value"
+        >
+          <option value="">Selecione uma categoria</option>
+          @for (item of categorias; track item.id) {
+            <option [value]="item.id" [selected]="item.id === rascunho.categoriaId">
+              {{ item.nome }}{{ item.ativa ? '' : ' (inativa)' }}
+            </option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="produto-tipo">Tipo de produto</label>
+        <select #tipo id="produto-tipo" [value]="rascunho.tipo" (change)="trocarTipo(tipo)">
+          <option value="SIMPLES" [selected]="rascunho.tipo === 'SIMPLES'">Produto simples</option>
+          <option value="COMBO" [selected]="rascunho.tipo === 'COMBO'">Combo personalizável</option>
+        </select>
+      </div>
+      <div class="catalogo-campo-largo">
+        <label for="produto-descricao">Descrição</label>
+        <textarea
+          #descricao
+          id="produto-descricao"
+          maxlength="2000"
+          [value]="rascunho.descricao"
+          (input)="rascunho.descricao = descricao.value"
+        ></textarea>
+      </div>
+      @if (tipoPendente()) {
+        <div class="catalogo-campo-largo">
+          <p class="aviso">Alterar o tipo remove a composição ou os adicionais deste rascunho.</p>
+          <div class="gestao-acoes">
+            <button type="button" (click)="confirmarTipo()">
+              Alterar tipo e limpar composição
+            </button>
+            <button class="secundario" type="button" (click)="tipoPendente.set(null)">
+              Manter tipo atual
+            </button>
+          </div>
+        </div>
+      }
+      <div class="catalogo-campo-largo catalogo-opcoes">
+        <label class="gestao-opcao"
+          ><input
+            #ativo
+            type="checkbox"
+            [checked]="rascunho.ativo"
+            (change)="rascunho.ativo = ativo.checked"
+          />Produto ativo</label
+        >
+        <label class="gestao-opcao"
+          ><input
+            #sugerido
+            type="checkbox"
+            [checked]="rascunho.sugerido"
+            (change)="rascunho.sugerido = sugerido.checked"
+          />Mostrar nas sugestões da casa</label
+        >
+      </div>
+    </div>
+  </fieldset>
+  <section class="catalogo-editor-secao" aria-labelledby="produto-composicao">
+    <h4 id="produto-composicao">Composição</h4>
+    @if (rascunho.tipo === 'SIMPLES') {
+      <app-adicionais-editor
+        [adicionais]="rascunho.adicionais"
+        [bloqueado]="bloqueado || midiaBloqueada()"
+        (adicionaisChange)="rascunho.adicionais = $event; marcarAlterado()"
+      />
+    } @else {
+      <app-grupos-editor
+        [grupos]="rascunho.grupos"
+        [componentes]="componentes"
+        [bloqueado]="bloqueado || midiaBloqueada()"
+        [temMaisComponentes]="temMaisComponentes"
+        (gruposChange)="rascunho.grupos = $event; marcarAlterado()"
+        (maisComponentes)="maisComponentes.emit()"
+      />
+    }
+  </section>
+  <app-midia-editor
+    [produto]="rascunho"
+    [novo]="novo"
+    [midiaId]="rascunho.midiaId"
+    [bloqueado]="bloqueado"
+    (midiaIdChange)="rascunho.midiaId = $event; marcarAlterado()"
+    (bloqueio)="bloquearMidia($event)"
+    (salvo)="salvo.emit($event)"
+  />
+  <div class="gestao-acoes catalogo-editor-acoes">
+    <button [disabled]="bloqueado || midiaBloqueada() || tipoPendente() !== null">
+      {{ novo ? 'Criar produto' : 'Salvar produto' }}
+    </button>
+    <button
+      class="secundario"
+      type="button"
+      (click)="cancelar.emit()"
+      [disabled]="bloqueado || midiaBloqueada()"
+    >
+      Cancelar edição de produto
+    </button>
+  </div>
+</form>

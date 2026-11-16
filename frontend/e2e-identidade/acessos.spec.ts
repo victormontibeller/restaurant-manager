@@ -44,6 +44,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
     await response.finished();
   }
   await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
+  await page.getByRole('button', { name: 'Matriz de permissões', exact: true }).click();
   const orientacao = page.getByText(
     'As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.',
     { exact: true },
@@ -119,7 +120,9 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
     await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   }
   await expect(employee).toHaveCount(1);
-  await employee.getByLabel('Ativo').uncheck();
+  const editar = employee.getByRole('button', { name: 'Editar funcionário', exact: true });
+  await editar.click();
+  await employee.getByLabel('Ativo', { exact: true }).uncheck();
   const protectedResponse = page.waitForResponse(
     (r) => r.url().includes('/api/v1/equipe/') && r.request().method() === 'PUT',
     { timeout: 15000 },
@@ -127,25 +130,31 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   await employee.getByRole('button', { name: 'Salvar funcionário' }).click();
   expect((await protectedResponse).status()).toBe(409);
   await expect(page.getByRole('alert')).toHaveText('Mantenha pelo menos um Administrador ativo.');
-  await employee.getByLabel('Ativo').check();
+  await employee.getByLabel('Ativo', { exact: true }).check();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
   // Capturas por superfície, sem recortar controles abaixo do viewport nem
   // gerar um bitmap de toda a lista persistente de funcionários/unidades.
   await page
-    .getByRole('group', { name: /^Permissões de COZINHA/ })
-    .screenshot({ path: test.info().outputPath('acessos.png') });
-  await page
     .locator('app-acessos form')
     .screenshot({ path: test.info().outputPath('reautenticacao-acessos.png') });
   await page
     .getByRole('alert')
     .screenshot({ path: test.info().outputPath('protecao-administrador.png') });
+  await employee.screenshot({ path: test.info().outputPath('administrador-protegido.png') });
+  const descarte = page.waitForEvent('dialog');
+  const abrirMatriz = page
+    .getByRole('button', { name: 'Matriz de permissões', exact: true })
+    .click();
+  await (await descarte).accept();
+  await abrirMatriz;
+  await page
+    .getByRole('group', { name: /^Permissões de COZINHA/ })
+    .screenshot({ path: test.info().outputPath('acessos.png') });
   await page
     .getByRole('button', { name: 'Salvar permissões', exact: true })
     .screenshot({ path: test.info().outputPath('salvar-acessos.png') });
-  await employee.screenshot({ path: test.info().outputPath('administrador-protegido.png') });
   await page.getByRole('button', { name: 'Sair da conta' }).click();
   await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toHaveCount(0);
 });

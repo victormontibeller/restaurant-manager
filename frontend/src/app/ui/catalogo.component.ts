@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { HlmButton } from './button';
 import { RM_TABS } from './tabs';
 
@@ -7,9 +7,30 @@ import { RM_TABS } from './tabs';
   imports: [HlmButton, RM_TABS],
   template: `
     <main class="ui-catalogo">
-      <p class="eyebrow">RESTAURANT MANAGER · DESIGN SYSTEM</p>
-      <h1>Uma experiência à mesa.</h1>
-      <p>Fundação visual compartilhada por cliente, gestão e cozinha.</p>
+      <h1>Componentes do Restaurant Manager</h1>
+      <section class="gestao-compacta" aria-labelledby="ui-gestao">
+        <h2 id="ui-gestao">Gestão</h2>
+        <div class="gestao-toolbar" role="group" aria-label="Filtros de exemplo">
+          <div><label for="ui-estado">Estado</label><select id="ui-estado"><option>Em andamento</option><option>Concluídos</option></select></div>
+          <div><label for="ui-canal">Canal</label><select id="ui-canal"><option>Todos os canais</option><option>Mesa</option></select></div>
+        </div>
+        <div class="gestao-lista">
+          <article class="gestao-linha">
+            <div><h3>Pedido #AB12CD34</h3><p>Mesa · 14:20</p></div>
+            <span class="gestao-estado">Em preparo</span>
+            <button hlmBtn variant="outline" type="button" [attr.aria-expanded]="detalhes()" aria-controls="ui-pedido-detalhes" (click)="detalhes.set(!detalhes())">Detalhes</button>
+            <div id="ui-pedido-detalhes" class="ui-pedido-detalhes" [hidden]="!detalhes()"><p>1 × Risoto de cogumelos</p></div>
+          </article>
+        </div>
+        <form class="gestao-editor" (submit)="$event.preventDefault()">
+          <h3>Editar unidade</h3>
+          <div class="gestao-campos">
+            <div><label for="ui-editar-nome">Nome</label><input id="ui-editar-nome" value="Unidade Centro" required /></div>
+            <div><label for="ui-editar-fuso">Fuso horário</label><input id="ui-editar-fuso" value="America/Sao_Paulo" required /></div>
+          </div>
+          <div class="gestao-acoes"><button hlmBtn type="submit">Salvar unidade</button><button hlmBtn variant="outline" type="reset">Restaurar campos</button></div>
+        </form>
+      </section>
       <section><h2>Ações e foco</h2><div class="acoes">
         <button hlmBtn>Confirmar pedido</button><button hlmBtn variant="secondary">Ver detalhes</button>
         <button hlmBtn variant="outline">Voltar</button><button hlmBtn disabled>Enviando…</button>
@@ -30,5 +51,10 @@ import { RM_TABS } from './tabs';
       </section>
     </main>
   `,
+  styles: `
+    .ui-pedido-detalhes { flex-basis: 100%; }
+  `,
 })
-export class CatalogoUiComponent {}
+export class CatalogoUiComponent {
+  readonly detalhes = signal(false);
+}

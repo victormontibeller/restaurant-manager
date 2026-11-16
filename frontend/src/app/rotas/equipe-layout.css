@@ -175,13 +175,6 @@
   gap: 1rem;
   margin-bottom: 1.8rem;
 }
-.eyebrow {
-  font-size: 0.64rem;
-  color: var(--muted-foreground);
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  margin: 0 0 0.55rem;
-}
 h1 {
   font-size: clamp(1.8rem, 3vw, 2.3rem);
   line-height: 1.12;
@@ -322,9 +315,6 @@ h1 {
     margin-bottom: 1.2rem;
     align-items: flex-start;
   }
-  .eyebrow {
-    font-size: 0.55rem;
-  }
   .kitchen-brand {
     font-size: 0.8rem;
   }
@@ -367,5 +357,91 @@ h1 {
 @media (max-width: 767px) {
   .kitchen-workplace .workspace-main {
     padding: 12px;
+  }
+}
+
+.gestao-compacta .workspace-header {
+  min-height: 60px;
+  padding: var(--gestao-espaco-2) var(--gestao-espaco-5);
+}
+.gestao-compacta .workspace-tools {
+  gap: var(--gestao-espaco-2);
+}
+.gestao-compacta .breadcrumb strong,
+.gestao-compacta .unit-picker,
+.gestao-compacta .user-avatar {
+  color: var(--foreground);
+}
+.gestao-compacta .unit-picker {
+  margin: 0;
+  padding: 0 0 0 var(--gestao-espaco-2);
+  border-radius: var(--gestao-raio);
+  border-color: var(--input);
+}
+.gestao-compacta .unit-picker select {
+  max-width: min(26vw, 215px);
+  padding-inline-start: var(--gestao-espaco-2);
+  font-size: 0.875rem;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+.gestao-compacta .user-avatar {
+  width: var(--gestao-controle);
+  height: var(--gestao-controle);
+  background: var(--muted);
+  border-radius: var(--gestao-raio);
+}
+.gestao-compacta .workspace-main {
+  padding: var(--gestao-espaco-5);
+}
+.gestao-compacta .page-heading {
+  align-items: center;
+  gap: var(--gestao-espaco-2);
+  margin-bottom: var(--gestao-espaco-4);
+}
+.gestao-compacta h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.workplace[data-tema-gestao='escuro'] .workspace-header {
+  background: var(--card);
+}
+.workplace[data-tema-gestao='escuro']
+  :is(.breadcrumb strong, .unit-picker select, .workspace-brand) {
+  color: var(--foreground);
+}
+.workplace[data-tema-gestao='escuro']
+  :is(.sidebar nav a, .sidebar-bottom a, .nav-label, .unit-picker) {
+  color: var(--muted-foreground);
+}
+.workplace[data-tema-gestao='escuro'] .sidebar nav a:hover {
+  background: var(--muted);
+}
+.workplace[data-tema-gestao='escuro'] .sidebar nav a.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.workplace[data-tema-gestao='escuro'] :is(.user-avatar, .empty-access) {
+  color: var(--foreground);
+  background: var(--muted);
+}
+.workplace[data-tema-gestao='escuro'] :focus-visible {
+  outline-color: var(--ring);
+}
+@media (max-width: 800px) {
+  .gestao-compacta .workspace-header,
+  .gestao-compacta .workspace-main {
+    padding-inline: var(--gestao-espaco-3);
+  }
+  .gestao-compacta .workspace-main {
+    padding-block: var(--gestao-espaco-4);
+  }
+  .gestao-compacta .unit-picker {
+    padding-inline-start: 0;
+  }
+  .gestao-compacta .unit-picker select {
+    max-width: min(46vw, 215px);
   }
 }
