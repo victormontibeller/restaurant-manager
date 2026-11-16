@@ -155,9 +155,10 @@ export class ParticipanteMesaComponent {
       if (!vigente()) return;
       this.aviso.set(
         intencao.tipo === 'AJUDA'
-          ? 'Pedido de ajuda registrado. Aguarde a equipe.'
+          ? 'Pedido de ajuda registrado. A equipe já foi notificada e virá à mesa.'
           : 'Pedido de conta registrado. A comanda só bloqueia novas rodadas quando a equipe iniciar o fechamento.',
       );
+      void this.consultar();
     } catch (error) {
       if (vigente()) this.erroAcao.set(mensagemErro(error));
     } finally {

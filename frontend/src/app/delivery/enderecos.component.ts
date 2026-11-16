@@ -523,6 +523,9 @@ export class EnderecosComponent {
     this.versao = e.versao;
     this.principal = Boolean(e.principal);
     this.alterar();
+    if (this.unidadeId() && !this.consultando() && !this.bloqueado() && this.endereco.cep.trim()) {
+      void this.calcular();
+    }
   }
   async carregar(pagina: number): Promise<void> {
     if (!this.cliente()) {
@@ -533,6 +536,7 @@ export class EnderecosComponent {
     if (pagina < 0 || this.store.ocupado()) return;
     const geracao = this.geracao;
     this.consultando.set(true);
+    let calcularAutomatico = false;
     try {
       const lista = await this.sessao.api<EnderecoCliente[]>(
         '/api/v1/clientes/me/enderecos?pagina=' + pagina,
@@ -540,11 +544,32 @@ export class EnderecosComponent {
       if (geracao === this.geracao) {
         this.lista.set(lista);
         this.pagina.set(pagina);
+        if (
+          pagina === 0 &&
+          lista.length > 0 &&
+          !this.store.pendente() &&
+          !this.endereco.cep.trim() &&
+          !this.endereco.logradouro.trim()
+        ) {
+          const preferido = lista.find((e) => e.principal && e.ativo) ?? lista.find((e) => e.ativo);
+          if (preferido) this.usar(preferido);
+        }
+        calcularAutomatico = Boolean(
+          this.unidadeId() &&
+          !this.cotacao() &&
+          !this.store.pendente() &&
+          this.endereco.cep.trim() &&
+          this.endereco.logradouro.trim() &&
+          this.endereco.numero.trim(),
+        );
       }
     } catch (erro) {
       if (geracao === this.geracao) this.erro.set(mensagemErro(erro));
     } finally {
       if (geracao === this.geracao) this.consultando.set(false);
+    }
+    if (calcularAutomatico && geracao === this.geracao) {
+      await this.calcular();
     }
   }
   async calcular(): Promise<void> {

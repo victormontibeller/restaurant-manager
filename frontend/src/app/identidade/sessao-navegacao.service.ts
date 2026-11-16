@@ -37,6 +37,11 @@ export class SessaoNavegacaoService {
     return this.inicializacao;
   }
 
+  dispensarPendenciaEncerramento(): void {
+    this.encerramentoPendente.set(false);
+    this.aviso.set('');
+  }
+
   async sair(): Promise<void> {
     if (this.encerrando()) return;
     this.encerrando.set(true);
@@ -48,7 +53,7 @@ export class SessaoNavegacaoService {
       this.aviso.set('Sessão encerrada no servidor.');
     } catch {
       this.aviso.set(
-        'O acesso local foi removido, mas a saída no servidor ainda não foi confirmada. Tente encerrar novamente antes de entrar.',
+        'O acesso local foi removido, mas a saída no servidor ainda não foi confirmada. Tente confirmar abaixo ou prossiga com um novo login.',
       );
       throw new Error(this.aviso());
     } finally {

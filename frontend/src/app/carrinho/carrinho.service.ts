@@ -3,6 +3,8 @@ import { CatalogoApiService } from '../catalogo/catalogo-api.service';
 import { mensagemErro } from '../catalogo/modelos';
 import { ContextoCarrinho, ItemCarrinho, LinhaCarrinho, ResumoCarrinho } from './modelos';
 
+const CHAVE_RASCUNHO_CARRINHO = 'rm-carrinho-rascunho-v1';
+
 @Injectable({ providedIn: 'root' })
 export class CarrinhoService {
   private readonly api = inject(CatalogoApiService);
@@ -19,6 +21,7 @@ export class CarrinhoService {
   readonly aviso = signal('');
 
   constructor() {
+    this.carregarRascunho();
     const rede = () => {
       this.online.set(navigator.onLine);
       this.invalidar(
@@ -46,12 +49,40 @@ export class CarrinhoService {
   definirContexto(contexto: ContextoCarrinho): void {
     const anterior = this.contexto();
     if (anterior?.unidadeId === contexto.unidadeId && anterior.canal === contexto.canal) return;
+    if (
+      anterior &&
+      anterior.unidadeId === contexto.unidadeId &&
+      anterior.canal !== 'MESA' &&
+      contexto.canal !== 'MESA'
+    ) {
+      this.contexto.set(contexto);
+      this.invalidar(
+        'Modalidade alterada para ' + contexto.canal.toLowerCase() + '. Recalcule o resumo.',
+      );
+      this.persistirRascunho();
+      return;
+    }
     this.itens.set([]);
     this.contexto.set(contexto);
     this.invalidar('Unidade e canal selecionados.');
+    this.persistirRascunho();
   }
 
-  guardar(linha: LinhaCarrinho, nome: string): boolean {
+  guardar(
+    linha: LinhaCarrinho,
+    nome: string,
+    extras?: Partial<
+      Pick<
+        ItemCarrinho,
+        | 'midiaId'
+        | 'resumoCustomizacao'
+        | 'pontoCarne'
+        | 'observacaoItem'
+        | 'aceitaObservacao'
+        | 'permitePontoCarne'
+      >
+    >,
+  ): boolean {
     if (!this.contexto() || !this.online()) {
       this.erro.set(
         'Selecione uma unidade e conecte-se ao servidor antes de configurar o carrinho.',
@@ -63,13 +94,27 @@ export class CarrinhoService {
       this.erro.set('O carrinho aceita até 50 configurações. Remova uma antes de adicionar outra.');
       return false;
     }
-    const novo = { linha: structuredClone(linha), nome };
+    const novo: ItemCarrinho = {
+      linha: structuredClone(linha),
+      nome,
+      ...(extras?.midiaId ? { midiaId: extras.midiaId } : {}),
+      ...(extras?.resumoCustomizacao ? { resumoCustomizacao: extras.resumoCustomizacao } : {}),
+      ...(extras?.pontoCarne ? { pontoCarne: extras.pontoCarne } : {}),
+      ...(extras?.observacaoItem ? { observacaoItem: extras.observacaoItem } : {}),
+      ...(typeof extras?.aceitaObservacao === 'boolean'
+        ? { aceitaObservacao: extras.aceitaObservacao }
+        : {}),
+      ...(typeof extras?.permitePontoCarne === 'boolean'
+        ? { permitePontoCarne: extras.permitePontoCarne }
+        : {}),
+    };
     this.itens.update((itens) =>
       existe ? itens.map((item) => (item.linha.id === linha.id ? novo : item)) : [...itens, novo],
     );
     this.invalidar(
       'Composição atualizada. Calcule o resumo para consultar os valores no servidor.',
     );
+    this.persistirRascunho();
     return true;
   }
 
@@ -84,17 +129,20 @@ export class CarrinhoService {
       ),
     );
     this.invalidar('Quantidade alterada. Recalcule o resumo.');
+    this.persistirRascunho();
   }
 
   remover(id: string): void {
     this.itens.update((itens) => itens.filter((item) => item.linha.id !== id));
     this.invalidar('Item removido. Recalcule os itens restantes.');
+    this.persistirRascunho();
   }
 
   concluirPedido(revisao: string): void {
     if (this.resumo()?.revisao !== revisao) return;
     this.itens.set([]);
     this.invalidar('Pedido confirmado pelo servidor. Acompanhe seu pedido abaixo.');
+    this.persistirRascunho();
   }
 
   async calcular(confirmar = false): Promise<void> {
@@ -154,5 +202,48 @@ export class CarrinhoService {
     this.confirmado.set(false);
     this.erro.set('');
     this.aviso.set(aviso);
+  }
+
+  private carregarRascunho(): void {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const bruto = localStorage.getItem(CHAVE_RASCUNHO_CARRINHO);
+      if (!bruto) return;
+      const dados = JSON.parse(bruto) as {
+        contexto?: ContextoCarrinho | null;
+        itens?: ItemCarrinho[];
+      };
+      if (dados.contexto && typeof dados.contexto.unidadeId === 'string') {
+        this.contexto.set(dados.contexto);
+      }
+      if (Array.isArray(dados.itens)) {
+        const validos = dados.itens.filter(
+          (i) => i && i.linha && typeof i.linha.id === 'string' && typeof i.nome === 'string',
+        );
+        if (validos.length) {
+          this.itens.set(validos.slice(0, 50));
+          this.aviso.set(
+            'Itens restaurados do rascunho. Confira e recalcule para validar valores atuais.',
+          );
+        }
+      }
+    } catch {
+      /* Rascunho corrompido não pode impedir o uso da loja. */
+    }
+  }
+
+  private persistirRascunho(): void {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const contexto = this.contexto();
+      const itens = this.itens();
+      if (!contexto && !itens.length) {
+        localStorage.removeItem(CHAVE_RASCUNHO_CARRINHO);
+        return;
+      }
+      localStorage.setItem(CHAVE_RASCUNHO_CARRINHO, JSON.stringify({ contexto, itens }));
+    } catch {
+      /* Navegação anônima ou limite de storage não interrompe o pedido. */
+    }
   }
 }

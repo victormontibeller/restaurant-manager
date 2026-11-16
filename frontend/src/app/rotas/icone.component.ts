@@ -17,7 +17,8 @@ export class IconeComponent {
           sacola: 'M5 7h14l1 14H4zM9 8V6a3 3 0 0 1 6 0v2',
           pedidos: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h3',
           conta: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M4 21v-2a8 8 0 0 1 16 0v2',
-          mesas: 'M5 8h14v10H5zM8 3v3M16 3v3M8 20v2M16 20v2M2 11v4M22 11v4',
+          mesas:
+            'M4 10.5h16v2.2H4zM6.5 12.7v6.8M17.5 12.7v6.8M12 12.7v6.8M9 6.5h6M12 6.5v4M3 14v5.5M21 14v5.5',
           cozinha: 'M7 14a5 5 0 0 1-2-9 4 4 0 0 1 7-2 4 4 0 0 1 7 2 5 5 0 0 1-2 9v6H7zM7 16h10',
           equipe:
             'M10 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M20 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M1 20v-2a6 6 0 0 1 12 0v2M13 14a6 6 0 0 1 10 4v2',

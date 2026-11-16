@@ -37,6 +37,7 @@ export interface UnidadeProducao {
 export interface LinhaPedido {
   id: string;
   produtoId?: string;
+  midiaId?: string | null;
   nome: string;
   tipo: 'SIMPLES' | 'COMBO';
   quantidade: number;
@@ -122,4 +123,19 @@ export function nomeEstado(estado: string): string {
 
 export function horario(iso: string | null): string {
   return iso ? new Date(iso).toLocaleString('pt-BR') : '—';
+}
+
+export function inicialProduto(nome: string): string {
+  return (nome || '').trim().slice(0, 1).toUpperCase();
+}
+
+export function resolverMidiaLinha(
+  linha: { midiaId?: string | null; produtoId?: string },
+  buscarPorProduto?: (produtoId: string) => string | null,
+  midiasComErro?: Readonly<Record<string, boolean>>,
+): string | null {
+  const bruto =
+    linha.midiaId ??
+    (linha.produtoId && buscarPorProduto ? buscarPorProduto(linha.produtoId) : null);
+  return bruto && !midiasComErro?.[bruto] ? bruto : null;
 }

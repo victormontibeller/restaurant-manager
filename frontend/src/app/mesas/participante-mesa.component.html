@@ -1,57 +1,107 @@
-<section class="painel-interno" aria-labelledby="participante-mesa-titulo">
+<section class="painel-interno mesa-painel" aria-labelledby="participante-mesa-titulo">
   @if (!sessao.participante()) {
-    <form class="cartao-formulario" (submit)="entrar($event, codigo)">
-      <div>
-        <span class="sobretitulo">Acesso à mesa</span>
-        <h2 id="participante-mesa-titulo" class="participante-titulo">Participar de uma mesa</h2>
-        <p class="texto-secundario">
-          Informe os dados da mesa e o código temporário passado pela equipe. Não é preciso criar
-          conta.
-        </p>
-      </div>
-      <div>
-        <label for="identificador-mesa">Código da mesa</label>
-        <input
-          id="identificador-mesa"
-          #mesa
-          [value]="mesaId"
-          (input)="mesaId = mesa.value"
-          required
-          maxlength="36"
-          autocomplete="off"
-          placeholder="Identificação exibida no QR Code"
-          [disabled]="ocupado()"
-        />
-      </div>
-      <div>
-        <label for="codigo-mesa">Código temporário do atendimento</label>
-        <input
-          id="codigo-mesa"
-          class="codigo-mesa-input"
-          #codigo
-          required
-          maxlength="100"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-          placeholder="Digite o código"
-          [disabled]="ocupado()"
-        />
-      </div>
-      <button
-        hlmBtn
-        variant="default"
-        type="submit"
-        [disabled]="ocupado() || encerramentoPendente()"
-      >
-        Autorizar participação na mesa
-      </button>
-    </form>
+    <div class="mesa-entrada-grid">
+      <form class="cartao-formulario mesa-entrada-form" (submit)="entrar($event, codigo)">
+        <div class="mesa-entrada-topo">
+          <span class="sobretitulo">Acesso à mesa</span>
+          <h2 id="participante-mesa-titulo" class="participante-titulo">Participar de uma mesa</h2>
+          <p class="texto-secundario">
+            Informe os dados da mesa e o código temporário passado pela equipe. Não é preciso criar
+            conta.
+          </p>
+        </div>
+        @if (erro()) {
+          <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+        }
+        @if (aviso()) {
+          <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+        }
+        @if (encerramentoPendente()) {
+          <div class="acoes">
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="sair()"
+              [disabled]="ocupado()"
+            >
+              Tentar encerrar participação novamente
+            </button>
+          </div>
+        }
+        <div>
+          <label for="identificador-mesa">Código da mesa</label>
+          <input
+            id="identificador-mesa"
+            #mesa
+            [value]="mesaId"
+            (input)="mesaId = mesa.value"
+            required
+            maxlength="36"
+            autocomplete="off"
+            placeholder="Identificação exibida no QR Code"
+            [disabled]="ocupado()"
+          />
+        </div>
+        <div>
+          <label for="codigo-mesa">Código temporário do atendimento</label>
+          <input
+            id="codigo-mesa"
+            class="codigo-mesa-input"
+            #codigo
+            required
+            maxlength="100"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="Digite o código"
+            [disabled]="ocupado()"
+          />
+        </div>
+        <button
+          hlmBtn
+          variant="default"
+          type="submit"
+          [disabled]="ocupado() || encerramentoPendente()"
+        >
+          Autorizar participação na mesa
+        </button>
+      </form>
+
+      <aside class="mesa-guia-salao" aria-label="Orientações do salão">
+        <span class="sobretitulo">Atendimento no salão</span>
+        <h3 class="mesa-guia-titulo">Sua comanda compartilhada, sem cadastro prévio</h3>
+        <ol class="mesa-guia-etapas">
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">01</span>
+            <div>
+              <strong>Autorize com o código da equipe</strong>
+              <p>Quem abre a mesa compartilha o código temporário com quem está sentado junto.</p>
+            </div>
+          </li>
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">02</span>
+            <div>
+              <strong>Peça rodadas direto do cardápio</strong>
+              <p>O canal Mesa fica ativo automaticamente no cardápio após confirmar sua entrada.</p>
+            </div>
+          </li>
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">03</span>
+            <div>
+              <strong>Chame a equipe ou peça a conta</strong>
+              <p>Acompanhe o consumo em tempo real e solicite ajuda ou fechamento quando quiser.</p>
+            </div>
+          </li>
+        </ol>
+      </aside>
+    </div>
   } @else {
-    <header class="cabecalho-painel">
+    <header class="cabecalho-painel mesa-cabecalho-ativo">
       <div>
         <span class="sobretitulo">Atendimento ativo</span>
-        <h2 id="participante-mesa-titulo">Seu atendimento</h2>
+        <h2 id="participante-mesa-titulo" class="participante-titulo">Seu atendimento</h2>
         <p class="texto-secundario">
           Autorizado apenas para esta mesa. Escolha o canal Mesa no cardápio para enviar novas
           rodadas.
@@ -65,7 +115,7 @@
           dele antes de autorizar uma nova participação.
         </p>
       }
-      <section class="cartao-formulario" aria-label="Minha comanda">
+      <section class="cartao-formulario mesa-comanda-cartao" aria-label="Minha comanda">
         <header class="comanda-cabecalho">
           <div class="comanda-identificacao">
             <app-icone nome="mesas" />
@@ -87,6 +137,30 @@
             Sair da mesa
           </button>
         </header>
+        @if (erro() || aviso() || encerramentoPendente()) {
+          <div class="mesa-feedback-topo">
+            @if (erro()) {
+              <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+            }
+            @if (aviso()) {
+              <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+            }
+            @if (encerramentoPendente()) {
+              <div class="acoes">
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="sair()"
+                  [disabled]="ocupado()"
+                >
+                  Tentar encerrar participação novamente
+                </button>
+              </div>
+            }
+          </div>
+        }
         @if (conta.estado === 'EM_FECHAMENTO') {
           <p class="aviso" role="status">
             A equipe iniciou o fechamento. Novas rodadas estão bloqueadas; você pode acompanhar as
@@ -177,58 +251,63 @@
         </div>
       </section>
     } @else {
-      <div class="acoes">
-        <button
-          hlmBtn
-          variant="outline"
-          size="sm"
-          type="button"
-          (click)="sair()"
-          [disabled]="ocupado()"
-        >
-          <app-icone nome="sair" />
-          Sair da mesa
-        </button>
-      </div>
-      <div class="barra-conexao">
+      @if (erro() || aviso() || encerramentoPendente()) {
+        <div class="mesa-feedback-topo">
+          @if (erro()) {
+            <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+          }
+          @if (aviso()) {
+            <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+          }
+          @if (encerramentoPendente()) {
+            <div class="acoes">
+              <button
+                hlmBtn
+                variant="outline"
+                size="sm"
+                type="button"
+                (click)="sair()"
+                [disabled]="ocupado()"
+              >
+                Tentar encerrar participação novamente
+              </button>
+            </div>
+          }
+        </div>
+      }
+      <div class="barra-conexao mesa-fallback-sync">
         <p role="status">
           {{ acompanhamento.estado() }}
           @if (acompanhamento.atualizadoEm(); as horario) {
             · Atualizado às {{ horario }}
           }
         </p>
-        <button
-          hlmBtn
-          variant="outline"
-          size="sm"
-          type="button"
-          (click)="consultar()"
-          [disabled]="ocupado()"
-        >
-          Consultar comanda da mesa
-        </button>
+        <div class="mesa-fallback-acoes">
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
+            (click)="consultar()"
+            [disabled]="ocupado()"
+          >
+            Consultar comanda da mesa
+          </button>
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            class="btn-sair-mesa"
+            type="button"
+            (click)="sair()"
+            [disabled]="ocupado()"
+          >
+            <app-icone nome="sair" />
+            Sair da mesa
+          </button>
+        </div>
       </div>
     }
     <app-meus-pedidos [mesa]="true" />
-  }
-  @if (encerramentoPendente()) {
-    <div class="acoes">
-      <button
-        hlmBtn
-        variant="outline"
-        size="sm"
-        type="button"
-        (click)="sair()"
-        [disabled]="ocupado()"
-      >
-        Tentar encerrar participação novamente
-      </button>
-    </div>
-  }
-  @if (erro()) {
-    <p class="erro" role="alert">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status" class="sucesso">{{ aviso() }}</p>
   }
 </section>

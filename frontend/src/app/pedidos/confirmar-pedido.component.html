@@ -15,12 +15,72 @@
     @if (assistido() && !acoes().includes('pedido.criar_assistido')) {
       <p>Seu perfil atual não permite criar pedidos assistidos.</p>
     }
+    @if (!tipoMesa() && !assistido() && carrinho.contexto(); as ctx) {
+      <div class="canal-checkout" role="group" aria-label="Modo de recebimento">
+        <div class="canal-checkout-topo">
+          <span class="canal-checkout-rotulo">Canal do pedido</span>
+          <span class="canal-checkout-unidade">{{ ctx.unidadeNome }}</span>
+        </div>
+        <div class="canal-alternancia">
+          <button
+            type="button"
+            class="canal-opcao"
+            [class.ativo]="ctx.canal === 'DELIVERY'"
+            [attr.aria-pressed]="ctx.canal === 'DELIVERY'"
+            (click)="alternarCanalCliente('DELIVERY')"
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+          >
+            <strong>Delivery</strong>
+            <small>Entrega no endereço escolhido</small>
+          </button>
+          <button
+            type="button"
+            class="canal-opcao"
+            [class.ativo]="ctx.canal === 'RETIRADA'"
+            [attr.aria-pressed]="ctx.canal === 'RETIRADA'"
+            (click)="alternarCanalCliente('RETIRADA')"
+            [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+          >
+            <strong>Retirada</strong>
+            <small>Retirar no balcão da casa</small>
+          </button>
+        </div>
+      </div>
+    }
+    @if ($any(carrinho).itens?.()?.length) {
+      <div class="resumo-itens-checkout" aria-label="Resumo rápido dos itens">
+        <p class="resumo-itens-titulo">Itens e preparos selecionados</p>
+        <ul class="resumo-itens-lista">
+          @for (item of carrinho.itens(); track item.linha.id) {
+            <li>
+              <span class="resumo-item-nome">{{ item.linha.quantidade }}× {{ item.nome }}</span>
+              @if (item.pontoCarne || item.observacaoItem) {
+                <span class="resumo-item-nota">
+                  @if (item.pontoCarne) {
+                    Ponto: {{ item.pontoCarne }}
+                  }
+                  @if (item.pontoCarne && item.observacaoItem) {
+                    ·
+                  }
+                  @if (item.observacaoItem) {
+                    Obs.: {{ item.observacaoItem }}
+                  }
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
     @if (carrinho.contexto()?.canal === 'MESA') {
       @if (tipoMesa()) {
-        <p>
-          A rodada será vinculada à sua participação no atendimento. Apenas suas rodadas podem ser
-          canceladas por você.
-        </p>
+        <div class="aviso-mesa-ativa" role="status">
+          <strong>Atendimento automático na mesa ativa (QR Code)</strong>
+          <p>
+            A rodada será vinculada à sua participação no atendimento. Apenas suas rodadas podem ser
+            canceladas por você.
+          </p>
+        </div>
       } @else if (assistido()) {
         <label for="comanda-pedido-assistido">Comanda do pedido assistido</label>
         <div
@@ -419,6 +479,15 @@
           O pedido segue para confirmação assim que o pagamento for aprovado.
         </p>
       }
+      @if (carrinho.contexto()?.canal === 'RETIRADA') {
+        <div class="aviso-retirada-pagamento" role="note">
+          <strong>Retirada aceita pagamento Online ou Presencial</strong>
+          <p>
+            Você pode pagar pelo Mercado Pago ou direto no balcão. O preparo começa na cozinha
+            somente após a confirmação do pagamento.
+          </p>
+        </div>
+      }
     }
     <label for="observacao-pedido">Observação de preparo</label>
     <textarea
@@ -464,6 +533,17 @@
         }
       </div>
     } @else {
+      @if (!podeEnviar() && motivoBloqueioEnvio(); as motivo) {
+        @if (!(assistido() && carregandoMesas() && !!comandaId)) {
+          <p class="aviso-bloqueio-envio" role="status">
+            {{
+              assistido() && carregandoMesas()
+                ? 'Selecione a mesa com comanda aberta antes de lançar o pedido assistido.'
+                : motivo
+            }}
+          </p>
+        }
+      }
       <button hlmBtn type="button" (click)="enviar()" [disabled]="!podeEnviar()">
         {{
           envio.ocupado()

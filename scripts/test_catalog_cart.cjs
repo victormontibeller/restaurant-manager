@@ -140,6 +140,18 @@ function preparar(carrinho) {
 async function confirmacaoExigeRevisaoVigenteSemPrecoNoPayload() {
   const { carrinho, calls, responder } = fixture();
   preparar(carrinho);
+  carrinho.guardar(
+    {
+      id: 'linha-b',
+      produtoId: 'burger-a',
+      quantidade: 1,
+      adicionais: [],
+      escolhas: [],
+    },
+    'Burger A',
+    { midiaId: 'mid-burger-a' },
+  );
+  assert.equal(carrinho.itens().find((i) => i.linha.id === 'linha-b')?.midiaId, 'mid-burger-a');
   await carrinho.calcular();
   assert.equal(carrinho.confirmado(), false);
   assert.equal(calls[0][2].revisaoAnterior, null);
@@ -150,6 +162,7 @@ async function confirmacaoExigeRevisaoVigenteSemPrecoNoPayload() {
     'unidadeId',
   ]);
   assert.equal(JSON.stringify(calls[0][2]).includes('preco'), false);
+  assert.equal(JSON.stringify(calls[0][2]).includes('midiaId'), false);
 
   responder(async () => quote('r2', true));
   await carrinho.calcular(true);

@@ -512,6 +512,9 @@ ul {
 .extra label {
   margin: 0;
   cursor: pointer;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: break-word;
 }
 
 .extra b {
@@ -519,6 +522,7 @@ ul {
   font-size: 14px;
   font-weight: 650;
   color: var(--foreground, #292521);
+  line-height: 1.3;
 }
 
 .extra small {
@@ -530,6 +534,7 @@ ul {
   display: inline-grid;
   grid-template-columns: 44px 44px 44px;
   align-items: center;
+  flex-shrink: 0;
   height: 48px;
   border-radius: 999px;
   border: 1px solid var(--input, #c6b9aa);
@@ -748,7 +753,133 @@ ul {
   }
 }
 
+.bloco-ponto-carne {
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border, #e5ded3);
+  background-color: var(--background, #faf7f2);
+  display: grid;
+  gap: 10px;
+}
+
+.bloco-ponto-carne legend {
+  padding: 0 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--foreground, #292521);
+}
+
+.ponto-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted-foreground, #6e6259);
+}
+
+.ponto-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ponto-chip {
+  min-height: 44px;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--input, #c6b9aa) !important;
+  background-color: var(--card, #ffffff) !important;
+  color: var(--foreground, #292521) !important;
+  font-size: 13.5px !important;
+  font-weight: 650 !important;
+  line-height: 1.2;
+  box-shadow: 0 2px 0 var(--border, #e5ded3) !important;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ponto-chip:hover:not(:disabled) {
+  border-color: var(--primary, #a53e2b) !important;
+  background-color: #fffdfa !important;
+}
+
+.ponto-chip.ativo,
+.ponto-chip[aria-pressed='true'] {
+  border-color: var(--primary, #a53e2b) !important;
+  background-color: #fbefec !important;
+  color: var(--primary-deep, #7f2f20) !important;
+  font-weight: 750 !important;
+  box-shadow: 0 0 0 2px #f5d8d2 !important;
+}
+
+.bloco-obs-item {
+  display: grid;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.bloco-obs-item label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--foreground, #292521);
+}
+
+.bloco-obs-item label small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground, #6e6259);
+}
+
+.bloco-obs-item textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--input, #c6b9aa);
+  background-color: var(--background, #faf7f2);
+  color: var(--foreground, #292521);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.bloco-obs-item textarea:focus-visible {
+  outline: 2px solid var(--primary, #a53e2b);
+  outline-offset: 2px;
+  background-color: var(--card, #ffffff);
+}
+
+.obs-conta {
+  justify-self: end;
+  font-size: 12px;
+  color: var(--muted-foreground, #6e6259);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 480px) {
+  .extra .stepper {
+    grid-template-columns: 40px 36px 40px;
+  }
+
+  .extra .stepper button.btn-passo {
+    width: 40px;
+  }
+
+  .extra .stepper input[type='number'] {
+    width: 36px !important;
+  }
+
   .acoes {
     align-items: stretch;
   }

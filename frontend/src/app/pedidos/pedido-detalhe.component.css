@@ -12,15 +12,55 @@
 }
 .linha-pedido-talao {
   border: 0;
-  padding: 0.45rem 0;
+  padding: 0.55rem 0;
   margin: 0;
 }
 .linha-pedido-talao + .linha-pedido-talao {
   border-top: 1px dashed var(--border, #e5ded3);
-  padding-top: 0.7rem;
+  padding-top: 0.75rem;
+}
+.talao-item-grade {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.talao-item-corpo {
+  min-width: 0;
+}
+.talao-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--card, #ffffff);
+  box-shadow: inset 0 0 0 1px var(--border, #e5ded3);
+  flex: none;
+}
+.talao-thumb--mono {
+  display: grid;
+  place-items: center;
+  background: var(--card, #ffffff);
+  color: var(--primary, #a53e2b);
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.talao-thumb img.talao-thumb-img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border: 0;
+  border-radius: 0;
+  display: block;
 }
 .talao-item-nome {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 0.96rem;
   font-weight: 700;
   line-height: 1.38;
@@ -142,19 +182,58 @@
   font-weight: 650;
   color: #7a440d;
 }
+.pedido-pagamento-prioritario {
+  margin-top: 0.95rem;
+  display: grid;
+  gap: 0.65rem;
+}
+.pedido-pagamento-prioritario .prazo-pagamento-online {
+  margin: 0;
+}
+.pedido-pessoal-grade {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.95rem;
+  align-items: start;
+}
+.pedido-pessoal-principal,
+.pedido-pessoal-apoio {
+  display: grid;
+  gap: 0.95rem;
+  align-content: start;
+  min-width: 0;
+}
+.pedido-pessoal-apoio:empty {
+  display: none;
+}
+.pedido-pessoal-principal > .talao-pedido,
+.pedido-pessoal-principal > .observacao-pedido,
+.pedido-pessoal-principal > .solicitacao-estado,
+.pedido-pessoal-principal > .aviso,
+.pedido-pessoal-principal > .acoes,
+.pedido-pessoal-principal > .erro,
+.pedido-pessoal-principal > .aviso-pedido,
+.pedido-pessoal-apoio > .talao-pedido,
+.pedido-pessoal-apoio > .bloco-cancelamento,
+.pedido-pessoal-apoio > .historico-pedido {
+  margin: 0;
+}
 .bloco-cancelamento {
   margin-top: 0.9rem;
   padding: 0.85rem 0.95rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--border, #e5ded3);
-  background: #fffcf8;
+  border: 1px dashed var(--border, #e5ded3);
+  background: var(--background, #faf7f2);
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 .bloco-cancelamento-titulo {
-  font-size: 0.82rem;
-  font-weight: 750;
-  color: var(--foreground, #292521);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--secondary-foreground, #44372e);
 }
 .bloco-cancelamento label {
   margin: 0;
@@ -185,13 +264,30 @@
   font-size: 0.84rem;
   background: var(--muted, #f3eee7);
   border: 1px solid var(--border, #e5ded3);
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.95rem;
   margin-bottom: 0;
   color: var(--foreground, #292521);
+}
+.historico-pedido summary {
+  cursor: pointer;
+  font-weight: 700;
 }
 .historico-pedido ol {
   padding-left: 1.25rem;
   display: grid;
   gap: 0.55rem;
+}
+@media (min-width: 840px) {
+  .cartao-pedido--cliente .pedido-pessoal-grade:has(> .pedido-pessoal-apoio > *) {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.95fr);
+    gap: 1rem 1.25rem;
+  }
+}
+@media (max-width: 480px) {
+  .talao-item-grade {
+    gap: 0.6rem;
+  }
 }
 .referencia-completa {
   overflow-wrap: anywhere;

@@ -22,9 +22,13 @@ export class PagamentoPedidoComponent {
   private readonly sessao = inject(SessaoService);
   readonly tentativas = signal<Checkout[]>([]);
   readonly erro = signal('');
+  readonly statusConferencia = signal('');
   readonly consultando = signal(false);
   podeTentar(): boolean {
     return this.tentativas().every((c) => c.estado === 'RECUSADO');
+  }
+  algumConfirmado(): boolean {
+    return this.tentativas().some((c) => c.estado === 'CONFIRMADO');
   }
   private consulta = 0;
   private intencao: string | null = null;
@@ -61,14 +65,28 @@ export class PagamentoPedidoComponent {
   private rota(): string {
     return '/api/v1/me/pedidos/' + this.pedidoId() + '/pagamento';
   }
-  async carregar(): Promise<void> {
+  async carregar(explicito = false): Promise<void> {
     if (this.consultando()) return;
     const consulta = ++this.consulta;
     const pedido = this.pedidoId();
     this.consultando.set(true);
+    if (explicito) this.statusConferencia.set('');
     try {
       const dados = await this.sessao.api<Checkout[]>(this.rota());
-      if (consulta === this.consulta && pedido === this.pedidoId()) this.tentativas.set(dados);
+      if (consulta === this.consulta && pedido === this.pedidoId()) {
+        this.tentativas.set(dados);
+        if (explicito) {
+          const confirmou = dados.some((c) => c.estado === 'CONFIRMADO');
+          const recusado = dados.length > 0 && dados.every((c) => c.estado === 'RECUSADO');
+          this.statusConferencia.set(
+            confirmou
+              ? 'Pagamento já confirmado no servidor.'
+              : recusado
+                ? 'Tentativa anterior recusada. Você pode iniciar um novo pagamento abaixo.'
+                : 'Ainda aguardando confirmação do provedor de pagamento.',
+          );
+        }
+      }
     } catch (erro) {
       if (consulta === this.consulta) this.erro.set(mensagemErro(erro));
     } finally {

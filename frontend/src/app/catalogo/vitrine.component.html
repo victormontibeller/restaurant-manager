@@ -113,7 +113,10 @@
       [linha]="linhaEditada()"
       [contexto]="carrinho.contexto()"
       [permitirAdicionar]="(aberto() || carrinho.online()) && carrinho.online() && !ocupado()"
-      (salvar)="guardar($event)"
+      (salvarComDetalhes)="guardar($event.linha, $event.detalhes)"
+      [categoriaNome]="categoriaDoProduto(selecionado())"
+      [pontoInicial]="itemEditado()?.pontoCarne ?? ''"
+      [observacaoInicial]="itemEditado()?.observacaoItem ?? ''"
       (cancelar)="fecharConfiguracao()"
     />
   </dialog>
@@ -236,13 +239,22 @@
               <input #menuCanal type="checkbox" hidden />
               <label
                 class="ctx"
-                [class.ctx-open]="menuCanal.checked"
+                [class.ctx-open]="menuCanal.checked && !mesaSessao.participante()"
+                [class.ctx-travado]="!!mesaSessao.participante()"
                 for="vitrine-canal"
-                (mousedown)="!ocupado() && !trocaPendente() && $event.preventDefault()"
+                (mousedown)="
+                  !ocupado() &&
+                    !trocaPendente() &&
+                    !mesaSessao.participante() &&
+                    $event.preventDefault()
+                "
                 (click)="
                   $event.preventDefault();
                   !ocupado() && !trocaPendente() && canal.focus();
-                  !ocupado() && !trocaPendente() && (menuCanal.checked = !menuCanal.checked);
+                  !ocupado() &&
+                    !trocaPendente() &&
+                    !mesaSessao.participante() &&
+                    (menuCanal.checked = !menuCanal.checked);
                   menuUnidade.checked = false
                 "
               >
@@ -251,7 +263,7 @@
                 </svg>
                 <span class="sr-only">Canal do cardápio</span>
                 <span class="ctx-val" aria-hidden="true">
-                  @for (item of canais; track item.valor) {
+                  @for (item of canaisDisponiveis(); track item.valor) {
                     @if (item.valor === canalSelecionado()) {
                       {{ item.nome }}
                     }
@@ -263,32 +275,40 @@
                   class="sr-only"
                   [value]="canalSelecionado()"
                   [disabled]="ocupado() || !!trocaPendente()"
-                  (keydown.enter)="$event.preventDefault(); menuCanal.checked = !menuCanal.checked"
-                  (keydown.space)="$event.preventDefault(); menuCanal.checked = !menuCanal.checked"
+                  (keydown.enter)="
+                    $event.preventDefault();
+                    !mesaSessao.participante() && (menuCanal.checked = !menuCanal.checked)
+                  "
+                  (keydown.space)="
+                    $event.preventDefault();
+                    !mesaSessao.participante() && (menuCanal.checked = !menuCanal.checked)
+                  "
                   (keydown.escape)="menuCanal.checked = false"
                   (change)="menuCanal.checked = false; selecionarCanal(canal)"
                 >
-                  @for (item of canais; track item.valor) {
+                  @for (item of canaisDisponiveis(); track item.valor) {
                     <option [value]="item.valor" [selected]="item.valor === canalSelecionado()">
                       {{ item.nome }}
                     </option>
                   }
                 </select>
-                <svg
-                  class="chev"
-                  [class.rot]="menuCanal.checked"
-                  width="16"
-                  height="16"
-                  aria-hidden="true"
-                >
-                  <use href="#i-chev" />
-                </svg>
+                @if (!mesaSessao.participante()) {
+                  <svg
+                    class="chev"
+                    [class.rot]="menuCanal.checked"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <use href="#i-chev" />
+                  </svg>
+                }
               </label>
 
-              @if (menuCanal.checked) {
+              @if (menuCanal.checked && !mesaSessao.participante()) {
                 <div class="ctx-popover" role="presentation">
                   <p class="ctx-popover-title">Como prefere receber</p>
-                  @for (item of canais; track item.valor) {
+                  @for (item of canaisDisponiveis(); track item.valor) {
                     <button
                       type="button"
                       class="ctx-opt"
@@ -317,6 +337,13 @@
             </div>
           </div>
 
+          @if (mesaSessao.participante()) {
+            <p class="selo-mesa-qr" role="status">
+              <svg width="15" height="15" aria-hidden="true"><use href="#i-check" /></svg>
+              Mesa vinculada via QR Code (comanda ativa)
+            </p>
+          }
+
           @if (consultadoEm()) {
             <div
               class="status contexto-status"
@@ -338,12 +365,12 @@
                 }}
                 (consulta em {{ horarioConsulta() }}).
               </span>
-              <a routerLink="/horarios">Ver horários</a>
+              <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
             </div>
           } @else {
             <div class="status contexto-status">
               <span class="status-hours">Horários sujeitos à unidade</span>
-              <a routerLink="/horarios">Ver horários</a>
+              <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
             </div>
           }
         </div>
@@ -469,9 +496,9 @@
               <button
                 type="button"
                 class="rail-link"
-                [class.on]="!categoriaId && !somenteFavoritos()"
-                [attr.aria-pressed]="!categoriaId"
-                (click)="somenteFavoritos.set(false); escolherCategoria('')"
+                [class.on]="!categoriaId && !somenteFavoritos() && !somenteSugestoes()"
+                [attr.aria-pressed]="!categoriaId && !somenteFavoritos() && !somenteSugestoes()"
+                (click)="limparFiltrosVitrine()"
                 [disabled]="ocupado()"
               >
                 <span class="n" aria-hidden="true">—</span>Todos
@@ -479,7 +506,9 @@
               <button
                 type="button"
                 class="rail-link"
-                (click)="somenteFavoritos.set(false); escolherCategoria('')"
+                [class.on]="somenteSugestoes()"
+                [attr.aria-pressed]="somenteSugestoes()"
+                (click)="escolherSugestoes()"
                 [disabled]="ocupado()"
               >
                 <span class="n" aria-hidden="true">01</span>Sugestões da casa
@@ -488,9 +517,13 @@
                 <button
                   type="button"
                   class="rail-link"
-                  [class.on]="categoriaId === categoria.id && !somenteFavoritos()"
-                  [attr.aria-pressed]="categoriaId === categoria.id"
-                  (click)="somenteFavoritos.set(false); escolherCategoria(categoria.id)"
+                  [class.on]="
+                    !somenteFavoritos() && !somenteSugestoes() && categoriaId === categoria.id
+                  "
+                  [attr.aria-pressed]="
+                    !somenteFavoritos() && !somenteSugestoes() && categoriaId === categoria.id
+                  "
+                  (click)="escolherCategoria(categoria.id)"
                   [disabled]="ocupado()"
                 >
                   <span class="n" aria-hidden="true">{{
@@ -619,8 +652,38 @@
                   <h2>Sugestões da casa</h2>
                   <span class="sec-rule" aria-hidden="true"></span>
                   <span class="sec-note">Escolhidas pela cozinha</span>
+                  <div
+                    class="carrossel-controles"
+                    role="group"
+                    aria-label="Navegar sugestões da casa"
+                  >
+                    <button
+                      type="button"
+                      class="carrossel-seta"
+                      aria-label="Sugestões anteriores"
+                      (click)="deslizarSugestoes(trilhoSugestoes, -1)"
+                    >
+                      <span aria-hidden="true">‹</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="carrossel-seta"
+                      aria-label="Próximas sugestões"
+                      (click)="deslizarSugestoes(trilhoSugestoes, 1)"
+                    >
+                      <span aria-hidden="true">›</span>
+                    </button>
+                  </div>
                 </header>
-                <div class="features">
+                <div
+                  #trilhoSugestoes
+                  class="features"
+                  [class.arrastando]="arrastandoCarrossel()"
+                  (mousedown)="iniciarArrasteCarrossel($event, trilhoSugestoes)"
+                  (mousemove)="moverArrasteCarrossel($event, trilhoSugestoes)"
+                  (mouseup)="finalizarArrasteCarrossel()"
+                  (mouseleave)="finalizarArrasteCarrossel()"
+                >
                   @for (produto of produtos(); track produto.id) {
                     @if (
                       produto.sugerido &&
@@ -631,6 +694,12 @@
                         class="feature item produto-card produto-sugerido"
                         [class.produto-esgotado]="!produto.disponivel"
                         [attr.aria-label]="produto.nome"
+                        (click)="
+                          produto.disponivel &&
+                            !ocupado() &&
+                            carrinho.online() &&
+                            aoClicarCartaoSugestao(produto, $event)
+                        "
                       >
                         <div class="f-photo">
                           @if (produto.midiaId) {
@@ -638,6 +707,8 @@
                               class="produto-foto"
                               [src]="'/api/v1/midias/' + produto.midiaId"
                               [alt]="produto.nome"
+                              width="400"
+                              height="300"
                               loading="lazy"
                               decoding="async"
                             />
@@ -655,7 +726,7 @@
                               class="fav botao-favorito"
                               [class.on]="favoritos.ids().includes(produto.id)"
                               type="button"
-                              (click)="favoritos.alternar(produto.id)"
+                              (click)="$event.stopPropagation(); favoritos.alternar(produto.id)"
                               [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
                               [disabled]="
                                 favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
@@ -663,12 +734,10 @@
                             >
                               <span class="sr-only">
                                 {{
-                                  favoritos.ids().includes(produto.id)
+                                  (favoritos.ids().includes(produto.id)
                                     ? 'Remover dos favoritos: '
-                                    : 'Favoritar: '
-
-
-                                }}{{ produto.nome }}
+                                    : 'Favoritar: ') + produto.nome
+                                }}
                               </span>
                               <svg width="20" height="20" aria-hidden="true">
                                 <use
@@ -701,7 +770,10 @@
                               <button
                                 class="add botao-configurar"
                                 type="button"
-                                (click)="configurar(produto.id, null, $event.currentTarget)"
+                                (click)="
+                                  $event.stopPropagation();
+                                  configurar(produto.id, null, $event.currentTarget)
+                                "
                                 [disabled]="ocupado() || !carrinho.online()"
                               >
                                 <span class="plus" aria-hidden="true">
@@ -732,7 +804,9 @@
                     <span class="sec-note">Na brasa e da casa</span>
                   </header>
                   <div class="rows">
-                    @if (!termo.trim() && !categoriaId && !somenteFavoritos()) {
+                    @if (
+                      !termo.trim() && !categoriaId && !somenteFavoritos() && !somenteSugestoes()
+                    ) {
                       @for (produto of produtos(); track produto.id) {
                         @if (produto.sugerido && produto.categoriaId === cat.id) {
                           <div
@@ -831,7 +905,7 @@
 
                     @for (produto of produtos(); track produto.id) {
                       @if (
-                        !produto.sugerido &&
+                        (!produto.sugerido || !temSugestoesVisiveis()) &&
                         produto.categoriaId === cat.id &&
                         correspondeBusca(produto, cat.nome)
                       ) {
@@ -909,12 +983,10 @@
                               >
                                 <span class="sr-only">
                                   {{
-                                    favoritos.ids().includes(produto.id)
+                                    (favoritos.ids().includes(produto.id)
                                       ? 'Remover dos favoritos: '
-                                      : 'Favoritar: '
-
-
-                                  }}{{ produto.nome }}
+                                      : 'Favoritar: ') + produto.nome
+                                  }}
                                 </span>
                                 <svg width="19" height="19" aria-hidden="true">
                                   <use
@@ -952,13 +1024,24 @@
             }
 
             @if (!ocupado() && !temQualquerProdutoVisivel()) {
-              <p class="vazio">
-                {{
-                  somenteFavoritos()
-                    ? 'Nenhum favorito encontrado para estes filtros.'
-                    : 'Nenhum produto encontrado para estes filtros.'
-                }}
-              </p>
+              <div class="vazio" role="status">
+                <p>
+                  {{
+                    somenteFavoritos()
+                      ? 'Nenhum favorito encontrado para estes filtros.'
+                      : 'Nenhum produto encontrado para estes filtros.'
+                  }}
+                </p>
+                <button
+                  hlmBtn
+                  variant="outline"
+                  type="button"
+                  (click)="limparFiltrosVitrine()"
+                  [disabled]="ocupado()"
+                >
+                  Ver todo o cardápio
+                </button>
+              </div>
             }
 
             <nav
@@ -990,7 +1073,11 @@
 
           <aside class="ticket-col carrinho-lateral" aria-label="Resumo do carrinho">
             <div class="ticket comanda-moldura">
-              <app-carrinho [produtos]="produtos()" (editar)="editarItem($event)" />
+              <app-carrinho
+                [produtos]="produtos()"
+                [exibirImagens]="false"
+                (editar)="editarItem($event)"
+              />
             </div>
             <div class="edge comanda-picote" aria-hidden="true"></div>
             <p class="t-help">

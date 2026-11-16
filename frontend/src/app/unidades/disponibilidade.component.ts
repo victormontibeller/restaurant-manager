@@ -465,9 +465,187 @@ interface FuncionamentoPublico {
       color: var(--danger, #ad2929);
       font-weight: 600;
     }
+    .sr-select {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      border: 0 !important;
+    }
+    .bistro-select-wrap {
+      position: relative;
+      display: inline-flex;
+      width: 100%;
+    }
+    .bistro-select-pill {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+      min-height: 50px;
+      padding: 0 44px 0 16px;
+      border-radius: 999px;
+      border: 1px solid #ded5c8;
+      background-color: var(--card, #ffffff);
+      box-shadow: 0 3px 0 var(--border, #e5ded3);
+      color: var(--foreground, #292521);
+      gap: 10px;
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease;
+    }
+    .bistro-select-pill:hover {
+      border-color: var(--primary, #a53e2b);
+      background-color: #fffdfa;
+    }
+    .bistro-select-pill.open,
+    .bistro-select-pill:focus-within {
+      border-color: var(--primary, #a53e2b);
+      box-shadow:
+        0 0 0 3px #fbefec,
+        0 3px 0 #e3bfb7;
+    }
+    .bistro-select-pill.disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .bistro-select-pill.disabled:hover {
+      border-color: #ded5c8;
+      background-color: var(--card, #ffffff);
+    }
+    .bistro-select-pill select.sr-select {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      pointer-events: none;
+      outline: none;
+    }
+    .bistro-select-ico {
+      color: var(--primary, #a53e2b);
+      flex: none;
+    }
+    .bistro-select-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--foreground, #292521);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bistro-select-chev {
+      position: absolute;
+      right: 16px;
+      color: var(--primary, #a53e2b);
+      pointer-events: none;
+      transition: transform 0.18s ease;
+    }
+    .bistro-select-chev.rot {
+      transform: rotate(180deg);
+    }
+    .bistro-select-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      min-width: min(220px, 100%);
+      max-width: min(100%, calc(100vw - 32px));
+      max-height: min(320px, 55vh);
+      overflow-y: auto;
+      padding: 8px;
+      border-radius: 20px;
+      border: 1px solid #ded5c8;
+      background-color: var(--card, #ffffff);
+      box-shadow:
+        0 20px 44px -12px rgba(41, 37, 33, 0.2),
+        0 4px 12px rgba(41, 37, 33, 0.08);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .bistro-select-popover-title {
+      margin: 0;
+      padding: 6px 12px 4px;
+      font-size: 10.5px;
+      font-weight: 750;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-foreground, #6e6259);
+    }
+    .bistro-select-opt {
+      min-height: 48px !important;
+      padding: 8px 12px !important;
+      border-radius: 13px !important;
+      border: 0 !important;
+      background-color: transparent !important;
+      color: var(--foreground, #292521) !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      font-size: 14.5px !important;
+      font-weight: 600 !important;
+      text-align: left;
+      box-shadow: none !important;
+      cursor: pointer;
+    }
+    .bistro-select-opt:hover {
+      background-color: var(--background, #faf7f2) !important;
+    }
+    .bistro-select-opt.on {
+      background-color: #fbefec !important;
+      color: var(--primary, #a53e2b) !important;
+      font-weight: 750 !important;
+    }
+    .bistro-select-opt-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .bistro-select-opt-main svg {
+      color: var(--primary, #a53e2b);
+      flex: none;
+    }
+    .bistro-select-opt-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: var(--primary, #a53e2b);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      flex: none;
+    }
     @media (max-width: 520px) {
       .disp-controles > button {
         width: 100%;
+      }
+      .bistro-select-pill {
+        min-height: 48px;
+        padding: 0 38px 0 14px;
+        gap: 8px;
+      }
+      .bistro-select-val {
+        font-size: 14px;
+      }
+      .bistro-select-chev {
+        right: 12px;
+      }
+      .bistro-select-popover {
+        left: 0;
+        right: 0;
+        max-width: 100%;
       }
     }
   `,
@@ -486,6 +664,16 @@ export class DisponibilidadeComponent implements OnInit, OnDestroy {
   private requisicao?: AbortController;
   private timer?: ReturnType<typeof setTimeout>;
   private expiraEm = 0;
+  private pendenteSync = '';
+
+  sincronizarUnidade(id: string): void {
+    const alvo = (id || '').trim();
+    if (!alvo) return;
+    this.pendenteSync = alvo;
+    if (this.unidades().some((u) => u.id === alvo) && this.selecionada() !== alvo) {
+      void this.selecionar(alvo);
+    }
+  }
 
   private readonly desconectar = (): void => {
     this.limpar();
@@ -526,6 +714,12 @@ export class DisponibilidadeComponent implements OnInit, OnDestroy {
       this.estado.set(
         unidades.length ? 'Selecione uma unidade.' : 'Nenhuma unidade disponível no momento.',
       );
+      if (this.pendenteSync && unidades.some((u) => u.id === this.pendenteSync)) {
+        const destino = this.pendenteSync;
+        setTimeout(() => {
+          if (!this.destruido && this.selecionada() !== destino) void this.selecionar(destino);
+        });
+      }
     } catch {
       if (!this.vigente(geracao)) return;
       this.estado.set('Consulta de unidades indisponível.');
@@ -544,6 +738,16 @@ export class DisponibilidadeComponent implements OnInit, OnDestroy {
     const geracao = this.limpar();
     const unidade = this.unidades().find((item) => item.id === id);
     this.selecionada.set(unidade ? id : '');
+    if (unidade) {
+      this.pendenteSync = unidade.id;
+      try {
+        if (typeof CustomEvent === 'function' && typeof window.dispatchEvent === 'function') {
+          window.dispatchEvent(new CustomEvent('rm-unidade-consulta', { detail: unidade.id }));
+        }
+      } catch {
+        /* Ambiente sem CustomEvent ignora sincronização cruzada. */
+      }
+    }
     if (!unidade) {
       this.estado.set('Selecione uma unidade.');
       return;

@@ -284,7 +284,7 @@
   }
 
   .client-footer {
-    padding: 16px 12px 14px;
+    padding: 16px 12px calc(5.75rem + env(safe-area-inset-bottom));
     gap: 10px;
   }
 

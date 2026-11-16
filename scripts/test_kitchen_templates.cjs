@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const { pathToFileURL } = require('node:url');
 const repo = path.resolve(__dirname, '..');
 const ts = require(repo + '/frontend/node_modules/typescript');
 const { build } = require(repo + '/frontend/node_modules/esbuild');
@@ -10,7 +11,8 @@ const playwright = require(repo + '/frontend/node_modules/playwright');
 const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
 (async () => {
   const { angularJitApplicationTransform } = await import(
-    repo + '/frontend/node_modules/@angular/compiler-cli/bundles/index.js'
+    pathToFileURL(path.join(repo, 'frontend/node_modules/@angular/compiler-cli/bundles/index.js'))
+      .href
   );
   const program = ts.createProgram(
     [
@@ -132,7 +134,30 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     );
   });
   const name = process.env.RM_TEMPLATE_BROWSER || 'chromium';
-  const browser = await playwright[name].launch();
+  assert(['chromium', 'firefox', 'webkit'].includes(name));
+  const launchOptions = {};
+  if (name === 'webkit' && process.env.RM_WEBKIT_EXECUTABLE) {
+    launchOptions.executablePath = process.env.RM_WEBKIT_EXECUTABLE;
+  } else if (name === 'chromium') {
+    const customExec = process.env.RM_CHROMIUM_EXECUTABLE;
+    const edgeExec = path.join(
+      process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)',
+      'Microsoft',
+      'Edge',
+      'Application',
+      'msedge.exe',
+    );
+    if (customExec) {
+      launchOptions.executablePath = customExec;
+    } else if (
+      process.platform === 'win32' &&
+      !fs.existsSync(playwright.chromium.executablePath()) &&
+      fs.existsSync(edgeExec)
+    ) {
+      launchOptions.executablePath = edgeExec;
+    }
+  }
+  const browser = await playwright[name].launch(launchOptions);
   const errors = [];
   try {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));

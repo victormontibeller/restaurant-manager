@@ -891,6 +891,12 @@ test('S03-UI04 combo cancela unidade completa e preserva primeiro preparo', asyn
   const clienteUi = await contexto(browser);
   try {
     await loginUi(clienteUi.page, fixture().contas.clienteA);
+    const resumoCard = clienteUi.page.getByRole('article', {
+      name: 'Pedido ' + pedido.id,
+      exact: true,
+    });
+    await resumoCard.getByRole('link', { name: 'Acompanhar pedido', exact: true }).click();
+    await expect(clienteUi.page).toHaveURL('/pedidos/' + pedido.id);
     const proprio = clienteUi.page.getByRole('article', {
       name: 'Pedido ' + pedido.id,
       exact: true,

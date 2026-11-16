@@ -188,12 +188,20 @@ export class SessaoMesaService {
   }
 
   private async erro(response: Response): Promise<ApiFailure> {
-    let mensagem = 'Não foi possível confirmar o resultado. Consulte o estado antes de repetir.';
+    let mensagem =
+      response.status === 401
+        ? 'Código temporário inválido ou expirado. Peça um novo código à equipe da mesa.'
+        : 'Não foi possível confirmar o resultado. Consulte o estado antes de repetir.';
     let codigo = '';
     if (response.status < 500) {
       try {
-        const body = (await response.json()) as { mensagem?: string; codigo?: string };
-        if (typeof body.mensagem === 'string') mensagem = body.mensagem;
+        const body = (await response.json()) as {
+          mensagem?: string;
+          detail?: string;
+          codigo?: string;
+        };
+        if (typeof body.mensagem === 'string' && body.mensagem.trim()) mensagem = body.mensagem;
+        else if (typeof body.detail === 'string' && body.detail.trim()) mensagem = body.detail;
         if (typeof body.codigo === 'string') codigo = body.codigo;
       } catch {
         /* Um intermediário pode responder HTML; não mostrar detalhes técnicos. */

@@ -9,8 +9,26 @@ import {
   signal,
 } from '@angular/core';
 import { ContextoCarrinho, Escolha, LinhaCarrinho, SelecaoAdicional } from '../carrinho/modelos';
-import { Adicional, GrupoPublico, OpcaoPublica, ProdutoPublico, moeda } from './modelos';
+import {
+  Adicional,
+  GrupoPublico,
+  OpcaoPublica,
+  PONTOS_CARNE,
+  ProdutoPublico,
+  mensagemErro,
+  moeda,
+  produtoExigePontoCarne,
+  produtoIndustrializadoBebida,
+} from './modelos';
 import { PreviaConfiguracaoService } from './previa-configuracao.service';
+
+export interface DetalhesItemConfigurado {
+  pontoCarne?: string;
+  observacaoItem?: string;
+  resumoCustomizacao?: string;
+  aceitaObservacao: boolean;
+  permitePontoCarne: boolean;
+}
 
 interface EscolhaRascunho extends Escolha {
   chave: string;
@@ -490,34 +508,47 @@ interface EscolhaRascunho extends Escolha {
               }
             }
 
-            <div class="bloco-previa-acao">
-              <button
-                class="secundario btn-calcular-previa"
-                type="button"
-                (click)="calcularPrevia(formulario)"
-                [disabled]="previa.ocupado()"
-              >
-                Calcular total desta configuração
-              </button>
-              @if (previa.ocupado()) {
-                <p role="status">Consultando composição e valores no servidor…</p>
-              }
-              @if (previa.erro()) {
-                <p role="alert" class="erro">{{ previa.erro() }}</p>
-              }
-              @if (previa.linha(); as calculada) {
-                <div role="status" class="previa-comanda">
-                  <p>
-                    <strong>Prévia por unidade: {{ moeda(calculada.precoUnitario) }}</strong>
-                  </p>
-                  <p>
-                    Prévia de {{ calculada.quantidade }}
-                    {{ calculada.quantidade === 1 ? 'unidade' : 'unidades' }}:
-                    {{ moeda(calculada.subtotal) }}
-                  </p>
+            @if (exigePontoCarne()) {
+              <fieldset class="bloco-ponto-carne">
+                <legend>Ponto da carne</legend>
+                <p class="ponto-sub">Escolha o ponto desejado para o preparo na chapa ou brasa.</p>
+                <div class="ponto-opcoes" role="group" aria-label="Ponto da carne">
+                  @for (ponto of pontosCarne; track ponto) {
+                    <button
+                      type="button"
+                      class="ponto-chip"
+                      [class.ativo]="pontoCarne() === ponto"
+                      [attr.aria-pressed]="pontoCarne() === ponto"
+                      (click)="definirPontoCarne(ponto)"
+                    >
+                      {{ ponto }}
+                    </button>
+                  }
                 </div>
-              }
-            </div>
+              </fieldset>
+            }
+
+            @if (aceitaObservacaoItem()) {
+              <div class="bloco-obs-item">
+                <label [for]="produto.id + '-obs-item'">
+                  Observação deste item <small>(opcional)</small>
+                </label>
+                <textarea
+                  #obsItemInput
+                  [id]="produto.id + '-obs-item'"
+                  rows="2"
+                  maxlength="160"
+                  placeholder="Ex.: tirar cebola, molho à parte, sem picles…"
+                  [value]="observacaoItem()"
+                  (input)="definirObservacaoItem(obsItemInput.value)"
+                ></textarea>
+                <small class="obs-conta">{{ observacaoItem().length }}/160</small>
+              </div>
+            }
+
+            @if (previa.erro()) {
+              <p role="alert" class="erro">{{ previa.erro() }}</p>
+            }
           </fieldset>
 
           <div class="dlg-foot">
@@ -586,10 +617,20 @@ export class ConfiguradorProdutoComponent implements OnChanges {
   @Input() linha: LinhaCarrinho | null = null;
   @Input() contexto: ContextoCarrinho | null = null;
   @Input() permitirAdicionar = false;
+  @Input() categoriaNome = '';
+  @Input() pontoInicial = '';
+  @Input() observacaoInicial = '';
   @Output() salvar = new EventEmitter<LinhaCarrinho>();
+  @Output() salvarComDetalhes = new EventEmitter<{
+    linha: LinhaCarrinho;
+    detalhes: DetalhesItemConfigurado;
+  }>();
   @Output() cancelar = new EventEmitter<void>();
   readonly moeda = moeda;
+  readonly pontosCarne = PONTOS_CARNE;
   readonly erro = signal('');
+  readonly pontoCarne = signal('');
+  readonly observacaoItem = signal('');
   readonly previa = inject(PreviaConfiguracaoService);
   quantidadeProduto = 1;
   adicionais: SelecaoAdicional[] = [];
@@ -597,7 +638,13 @@ export class ConfiguradorProdutoComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     this.previa.invalidar();
-    if (!changes['produto'] && !changes['linha']) return;
+    if (
+      !changes['produto'] &&
+      !changes['linha'] &&
+      !changes['pontoInicial'] &&
+      !changes['observacaoInicial']
+    )
+      return;
     this.quantidadeProduto = this.linha?.quantidade ?? 1;
     this.adicionais = structuredClone(this.linha?.adicionais ?? []);
     if (this.linha?.escolhas?.length) {
@@ -623,7 +670,38 @@ export class ConfiguradorProdutoComponent implements OnChanges {
     } else {
       this.escolhas = [];
     }
+    const precisaPonto = this.produto ? produtoExigePontoCarne(this.produto) : false;
+    this.pontoCarne.set(this.pontoInicial?.trim() || (precisaPonto ? 'Ao ponto' : ''));
+    this.observacaoItem.set(this.observacaoInicial?.trim() || '');
     this.erro.set('');
+  }
+
+  exigePontoCarne(): boolean {
+    if (!this.produto || !produtoExigePontoCarne(this.produto)) return false;
+    if (this.produto.tipo === 'COMBO' && this.escolhas.length) {
+      const escolhidaNaoCarne = this.escolhas.some((e) => {
+        const nome = this.opcaoDaEscolha(e)?.nome ?? '';
+        return /\b(frango|chicken|veggie|vegano|peixe)\b/i.test(nome);
+      });
+      const escolhidaCarne = this.escolhas.some((e) => {
+        const nome = this.opcaoDaEscolha(e)?.nome ?? '';
+        return /\b(burger|smash|costela|bovino|carne|picanha|blend)\b/i.test(nome);
+      });
+      if (escolhidaNaoCarne && !escolhidaCarne) return false;
+    }
+    return true;
+  }
+
+  aceitaObservacaoItem(): boolean {
+    return !!this.produto && !produtoIndustrializadoBebida(this.produto, this.categoriaNome);
+  }
+
+  definirPontoCarne(ponto: string): void {
+    this.pontoCarne.set(ponto);
+  }
+
+  definirObservacaoItem(valor: string): void {
+    this.observacaoItem.set(valor.replace(/[\r\n\t]+/g, ' ').slice(0, 160));
   }
 
   totalEstimadoConfiguracao(): string {
@@ -736,7 +814,46 @@ export class ConfiguradorProdutoComponent implements OnChanges {
   guardar(event: Event): void {
     event.preventDefault();
     const linha = this.montarLinha();
-    if (linha) this.salvar.emit(linha);
+    if (!linha) return;
+    const permitePonto = this.exigePontoCarne();
+    const aceitaObs = this.aceitaObservacaoItem();
+    const ponto = permitePonto ? this.pontoCarne().trim() || 'Ao ponto' : '';
+    const obs = aceitaObs ? this.observacaoItem().trim() : '';
+    this.salvar.emit(linha);
+    this.salvarComDetalhes.emit({
+      linha,
+      detalhes: {
+        ...(ponto ? { pontoCarne: ponto } : {}),
+        ...(obs ? { observacaoItem: obs } : {}),
+        resumoCustomizacao: this.montarResumoCustomizacao(ponto, obs),
+        aceitaObservacao: aceitaObs,
+        permitePontoCarne: permitePonto,
+      },
+    });
+  }
+
+  private montarResumoCustomizacao(ponto: string, obs: string): string {
+    const partes: string[] = [];
+    for (const sel of this.adicionais) {
+      const add = this.produto?.adicionais.find((a) => a.id === sel.adicionalId);
+      if (add && sel.quantidade > 0) partes.push(`${sel.quantidade}x ${add.nome}`);
+    }
+    for (const esc of this.escolhas) {
+      const opc = this.opcaoDaEscolha(esc);
+      if (opc) {
+        const base = esc.quantidade > 1 ? `${esc.quantidade}x ${opc.nome}` : opc.nome;
+        const extrasOpc = esc.adicionais
+          .map((e) => {
+            const add = opc.adicionais.find((a) => a.id === e.adicionalId);
+            return add && e.quantidade > 0 ? `+ ${e.quantidade}x ${add.nome}` : '';
+          })
+          .filter(Boolean);
+        partes.push(extrasOpc.length ? `${base} (${extrasOpc.join(', ')})` : base);
+      }
+    }
+    if (ponto) partes.push(`Ponto: ${ponto}`);
+    if (obs) partes.push(`Obs: ${obs}`);
+    return partes.join(' · ');
   }
 
   async calcularPrevia(formulario: HTMLFormElement): Promise<void> {

@@ -1,9 +1,26 @@
 import { PagamentoPedidoComponent } from '../pagamentos/pagamento-pedido.component';
 import { FinanceiroComponent } from '../financeiro/financeiro.component';
-import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
+import { CatalogoMidiaService } from '../catalogo/catalogo-midia.service';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { HlmButton } from '../ui/button';
-import { Pedido, UnidadeProducao, horario, nomeEstado } from './modelos';
+import {
+  Pedido,
+  UnidadeProducao,
+  horario,
+  inicialProduto,
+  nomeEstado,
+  resolverMidiaLinha,
+} from './modelos';
 import { PedidoComandoService } from './pedido-comando.service';
 
 @Component({
@@ -17,9 +34,11 @@ export class PedidoDetalheComponent {
   readonly contexto = input<'cliente' | 'mesa' | 'operacao' | 'cozinha'>('cliente');
   readonly acoes = input<string[]>([]);
   readonly atualizar = output<void>();
+  private readonly catalogoMidia = inject(CatalogoMidiaService, { optional: true });
   readonly comandos = inject(PedidoComandoService);
   readonly selecionadas = signal<string[]>([]);
   readonly financeiroAberto = signal(false);
+  readonly midiasComErro = signal<Record<string, boolean>>({});
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly agora = signal(Date.now());
@@ -37,6 +56,10 @@ export class PedidoDetalheComponent {
       if (versao !== this.versaoSelecao) {
         this.versaoSelecao = versao;
         this.selecionadas.set([]);
+      }
+      if (this.pessoal() && pedido.unidadeId && pedido.canal && Array.isArray(pedido.linhas)) {
+        const ids = pedido.linhas.map((linha) => linha.produtoId);
+        untracked(() => void this.catalogoMidia?.garantir?.(pedido.unidadeId, pedido.canal, ids));
       }
     });
     const rede = () => this.online.set(navigator.onLine);
@@ -64,6 +87,21 @@ export class PedidoDetalheComponent {
   }
   canal(): string {
     return { MESA: 'Mesa', RETIRADA: 'Retirada', DELIVERY: 'Delivery' }[this.pedido().canal];
+  }
+  midiaLinha(linha: { midiaId?: string | null; produtoId?: string }): string | null {
+    return resolverMidiaLinha(
+      linha,
+      (produtoId) => this.catalogoMidia?.midiaDoProduto?.(produtoId) ?? null,
+      this.midiasComErro(),
+    );
+  }
+  registrarErroMidia(midiaId: string): void {
+    if (!this.midiasComErro()[midiaId]) {
+      this.midiasComErro.update((atual) => ({ ...atual, [midiaId]: true }));
+    }
+  }
+  inicialProduto(nome: string): string {
+    return inicialProduto(nome);
   }
   horaCriacao(): string {
     return new Date(this.pedido().criadoEm).toLocaleTimeString('pt-BR', {

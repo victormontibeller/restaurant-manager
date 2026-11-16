@@ -1,5 +1,17 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { HlmButton } from '../ui/button';
+import { CatalogoMidiaService } from '../catalogo/catalogo-midia.service';
 import { CANAIS, ProdutoPublico, moeda } from '../catalogo/modelos';
 import { CarrinhoService } from './carrinho.service';
 import { ConfirmarPedidoComponent } from '../pedidos/confirmar-pedido.component';
@@ -56,16 +68,56 @@ import { ItemCarrinho } from './modelos';
             class="item t-item item-comanda"
             [attr.aria-label]="'Item ' + (indice + 1) + ': ' + item.nome"
           >
-            <div class="t-line item-comanda-topo">
-              <span class="t-qty item-qtd-selo" aria-hidden="true"
-                >{{ item.linha.quantidade }}×</span
-              >
-              <h3 class="t-name">{{ item.nome }}</h3>
-              <span class="t-price" aria-hidden="true">{{ moeda(subtotalItem(item)) }}</span>
+            <div
+              class="item-comanda-corpo"
+              [class.item-comanda-corpo--sem-imagem]="!exibirImagens"
+            >
+              @if (exibirImagens) {
+                @if (midiaDoItem(item); as midia) {
+                  <div class="item-thumb">
+                    <img
+                      class="item-thumb-img"
+                      [src]="'/api/v1/midias/' + midia"
+                      [alt]="item.nome"
+                      width="52"
+                      height="52"
+                      loading="lazy"
+                      decoding="async"
+                      (error)="registrarErroMidia(midia)"
+                    />
+                  </div>
+                } @else {
+                  <div class="item-thumb item-thumb--mono" aria-hidden="true">
+                    {{ inicialProduto(item.nome) }}
+                  </div>
+                }
+              }
+              <div class="item-comanda-conteudo">
+                <div class="t-line item-comanda-topo">
+                  <span class="t-qty item-qtd-selo" aria-hidden="true"
+                    >{{ item.linha.quantidade }}×</span
+                  >
+                  <h3 class="t-name">{{ item.nome }}</h3>
+                  <span class="t-price" aria-hidden="true">{{ moeda(subtotalItem(item)) }}</span>
+                </div>
+                @for (detalhe of detalhesItem(item); track $index) {
+                  <p class="t-mods" aria-hidden="true">{{ detalhe }}</p>
+                }
+                @if (item.pontoCarne || item.observacaoItem) {
+                  <p class="t-mods t-mods--nota">
+                    @if (item.pontoCarne) {
+                      <span>Ponto: {{ item.pontoCarne }}</span>
+                    }
+                    @if (item.pontoCarne && item.observacaoItem) {
+                      <span> · </span>
+                    }
+                    @if (item.observacaoItem) {
+                      <span>Obs.: {{ item.observacaoItem }}</span>
+                    }
+                  </p>
+                }
+              </div>
             </div>
-            @for (detalhe of detalhesItem(item); track $index) {
-              <p class="t-mods" aria-hidden="true">{{ detalhe }}</p>
-            }
             <p class="sr-only item-composicao">
               Composição: {{ item.linha.escolhas.length }}
               {{ item.linha.escolhas.length === 1 ? 'escolha' : 'escolhas' }} e
@@ -155,7 +207,7 @@ import { ItemCarrinho } from './modelos';
             hlmBtn
             class="cta btn-revisar-pedido"
             type="button"
-            (click)="carrinho.calcular()"
+            (click)="abrirRevisao($event.currentTarget)"
             [disabled]="carrinho.ocupado() || !carrinho.online()"
           >
             <span>Revisar meu pedido</span>
@@ -164,78 +216,148 @@ import { ItemCarrinho } from './modelos';
         </div>
       }
 
-      @if (carrinho.resumo(); as resumo) {
-        <section class="resumo-comanda" aria-labelledby="resumo-titulo">
-          <h3 id="resumo-titulo">Resumo dos itens</h3>
-          @for (linha of resumo.linhas; track linha.id; let indice = $index) {
-            <article class="item item-resumo">
-              <h4>{{ indice + 1 }}. {{ linha.quantidade }} × {{ linha.nome }}</h4>
-              <p>
-                Preço base: {{ moeda(linha.precoBase) }} · Valor de cada configuração:
-                {{ moeda(linha.precoUnitario) }}
-              </p>
-              @if (linha.adicionais.length) {
-                <ul>
-                  @for (adicional of linha.adicionais; track adicional.adicionalId) {
-                    <li>
-                      {{ adicional.quantidade }} × {{ adicional.nome }}:
-                      {{ moeda(adicional.total) }}
-                    </li>
-                  }
-                </ul>
-              }
-              @for (escolha of linha.escolhas; track $index) {
-                <p>
-                  {{ escolha.grupo }}: {{ escolha.quantidade }} × {{ escolha.nome }} · Acréscimo por
-                  escolha: {{ moeda(escolha.acrescimo) }} · Total da escolha:
-                  {{ moeda(escolha.total) }}
-                </p>
-                @if (escolha.adicionais.length) {
-                  <ul>
-                    @for (adicional of escolha.adicionais; track adicional.adicionalId) {
-                      <li>
-                        {{ adicional.quantidade }} × {{ adicional.nome }} por escolha ·
-                        {{ moeda(adicional.precoUnitario) }} cada
-                      </li>
-                    }
-                  </ul>
-                }
-              }
-              <p class="subtotal-linha">
-                <strong>Subtotal do item: {{ moeda(linha.subtotal) }}</strong>
-              </p>
-            </article>
-          }
-          <div class="total-comanda">
-            <p class="total-valor">
-              <strong>Total dos itens: {{ moeda(resumo.total) }}</strong>
-            </p>
-            <p class="nota-moeda">
-              Valores em BRL. Este resumo inclui somente os itens; não inclui frete, gorjeta ou taxa
-              de serviço.
-            </p>
-          </div>
-          @if (!carrinho.confirmado()) {
-            <button
-              hlmBtn
-              class="cta btn-confirmar-resumo"
-              type="button"
-              (click)="carrinho.calcular(true)"
-              [disabled]="carrinho.ocupado() || !carrinho.online()"
-            >
-              Confirmar composição e valores
+      <dialog
+        #modalRevisao
+        class="cfg-dlg revisao-dlg"
+        aria-labelledby="revisao-modal-titulo"
+        (cancel)="fecharRevisao()"
+        (click)="$event.target === modalRevisao && fecharRevisao()"
+      >
+        <section class="revisao-modal-card">
+          <header class="revisao-modal-topo">
+            <div>
+              <p class="kicker">Conferência &amp; Finalização</p>
+              <h2 id="revisao-modal-titulo">Revisar e enviar pedido</h2>
+            </div>
+            <button type="button" class="revisao-modal-fechar" (click)="fecharRevisao()" aria-label="Fechar revisão do pedido">
+              ✕
             </button>
-          } @else {
-            <p role="status" class="resumo-confirmado">
-              Resumo confirmado. O envio do pedido exige confirmação separada.
-            </p>
-          }
-        </section>
-      }
+          </header>
 
-      <div [class.confirmacao-oculta]="!carrinho.resumo() && (carrinho.online() || !carrinho.itens().length)">
-        <app-confirmar-pedido />
-      </div>
+          <div class="revisao-modal-corpo">
+            @if (carrinho.erro()) {
+              <p role="alert" class="erro">{{ carrinho.erro() }}</p>
+            }
+            @if (carrinho.aviso() && avisoImportante()) {
+              <p role="status" class="aviso-comanda">{{ carrinho.aviso() }}</p>
+            }
+            @if (carrinho.resumo(); as resumo) {
+              <section class="resumo-comanda" aria-labelledby="resumo-titulo">
+                <h3 id="resumo-titulo">Resumo dos itens</h3>
+                @for (linha of resumo.linhas; track linha.id; let indice = $index) {
+                  <article class="item item-resumo">
+                    <div class="item-resumo-cabecalho">
+                      @if (midiaDaLinhaResumo(linha.id, linha.produtoId); as midia) {
+                        <div class="item-thumb item-thumb--resumo">
+                          <img
+                            class="item-thumb-img"
+                            [src]="'/api/v1/midias/' + midia"
+                            [alt]="linha.nome"
+                            width="48"
+                            height="48"
+                            loading="lazy"
+                            decoding="async"
+                            (error)="registrarErroMidia(midia)"
+                          />
+                        </div>
+                      } @else {
+                        <div
+                          class="item-thumb item-thumb--mono item-thumb--resumo"
+                          aria-hidden="true"
+                        >
+                          {{ inicialProduto(linha.nome) }}
+                        </div>
+                      }
+                      <div class="item-resumo-titulo">
+                        <h4>{{ indice + 1 }}. {{ linha.quantidade }} × {{ linha.nome }}</h4>
+                        <p>
+                          Preço base: {{ moeda(linha.precoBase) }} · Valor de cada configuração:
+                          {{ moeda(linha.precoUnitario) }}
+                        </p>
+                      </div>
+                    </div>
+                    @if (extrasDaLinha(linha.id); as extras) {
+                      @if (extras.pontoCarne || extras.observacaoItem) {
+                        <p class="resumo-extra-item">
+                          @if (extras.pontoCarne) {
+                            <strong>Ponto: {{ extras.pontoCarne }}</strong>
+                          }
+                          @if (extras.pontoCarne && extras.observacaoItem) {
+                            <span> · </span>
+                          }
+                          @if (extras.observacaoItem) {
+                            <span>Obs.: {{ extras.observacaoItem }}</span>
+                          }
+                        </p>
+                      }
+                    }
+                    @if (linha.adicionais.length) {
+                      <ul>
+                        @for (adicional of linha.adicionais; track adicional.adicionalId) {
+                          <li>
+                            {{ adicional.quantidade }} × {{ adicional.nome }}:
+                            {{ moeda(adicional.total) }}
+                          </li>
+                        }
+                      </ul>
+                    }
+                    @for (escolha of linha.escolhas; track $index) {
+                      <p>
+                        {{ escolha.grupo }}: {{ escolha.quantidade }} × {{ escolha.nome }} · Acréscimo por
+                        escolha: {{ moeda(escolha.acrescimo) }} · Total da escolha:
+                        {{ moeda(escolha.total) }}
+                      </p>
+                      @if (escolha.adicionais.length) {
+                        <ul>
+                          @for (adicional of escolha.adicionais; track adicional.adicionalId) {
+                            <li>
+                              {{ adicional.quantidade }} × {{ adicional.nome }} por escolha ·
+                              {{ moeda(adicional.precoUnitario) }} cada
+                            </li>
+                          }
+                        </ul>
+                      }
+                    }
+                    <p class="subtotal-linha">
+                      <strong>Subtotal do item: {{ moeda(linha.subtotal) }}</strong>
+                    </p>
+                  </article>
+                }
+                <div class="total-comanda">
+                  <p class="total-valor">
+                    <strong>Total dos itens: {{ moeda(resumo.total) }}</strong>
+                  </p>
+                  <p class="nota-moeda">
+                    Valores em BRL. Este resumo inclui somente os itens; não inclui frete, gorjeta ou taxa
+                    de serviço.
+                  </p>
+                </div>
+                @if (!carrinho.confirmado()) {
+                  <button
+                    hlmBtn
+                    class="cta btn-confirmar-resumo"
+                    type="button"
+                    (click)="carrinho.calcular(true)"
+                    [disabled]="carrinho.ocupado() || !carrinho.online()"
+                  >
+                    Confirmar composição e valores
+                  </button>
+                } @else {
+                  <p role="status" class="resumo-confirmado">
+                    Resumo confirmado. Confira os dados abaixo para concluir o envio.
+                  </p>
+                }
+              </section>
+            } @else if (carrinho.ocupado()) {
+              <p role="status" class="aviso-comanda">Conferindo preços e disponibilidade atuais…</p>
+            }
+
+            <div [class.confirmacao-oculta]="!exibirConfirmacao()">
+              <app-confirmar-pedido />
+            </div>
+          </div>
+        </section>
+      </dialog>
     </section>
   `,
   styleUrls: ['../catalogo/catalogo.css', './carrinho.css'],
@@ -249,9 +371,93 @@ export class CarrinhoComponent {
     }
   }
 
+  @Input() exibirImagens = true;
+
   @Output() editar = new EventEmitter<ItemCarrinho>();
+  @ViewChild('modalRevisao') private modalRevisao?: ElementRef<HTMLDialogElement>;
+  @ViewChild(ConfirmarPedidoComponent) private confirmarComp?: ConfirmarPedidoComponent;
+  private readonly catalogoMidia = inject(CatalogoMidiaService, { optional: true });
+  private retornoFocoRevisao: HTMLElement | null = null;
+  readonly modalRevisaoAberto = signal(false);
+  readonly midiasComErro = signal<Record<string, boolean>>({});
   readonly carrinho = inject(CarrinhoService);
   readonly moeda = moeda;
+
+  constructor() {
+    effect(() => {
+      const contexto = this.carrinho.contexto();
+      const itens = this.carrinho.itens();
+      if (!contexto || !itens.length) return;
+      const ids = itens.map((item) => item.linha.produtoId);
+      untracked(() => void this.catalogoMidia?.garantir?.(contexto.unidadeId, contexto.canal, ids));
+    });
+  }
+
+  midiaDoItem(item: ItemCarrinho): string | null {
+    const conhecido = this.catalogoConhecido.get(item.linha.produtoId);
+    let bruto: string | null = null;
+    if (conhecido) {
+      bruto = conhecido.midiaId;
+    } else if (item.midiaId !== undefined) {
+      bruto = item.midiaId;
+    } else {
+      bruto = this.catalogoMidia?.midiaDoProduto?.(item.linha.produtoId) ?? null;
+    }
+    return bruto && !this.midiasComErro()[bruto] ? bruto : null;
+  }
+
+  midiaDaLinhaResumo(linhaId: string, produtoId?: string | null): string | null {
+    const item = this.extrasDaLinha(linhaId);
+    if (item) return this.midiaDoItem(item);
+    if (!produtoId) return null;
+    const conhecido = this.catalogoConhecido.get(produtoId);
+    const bruto = conhecido
+      ? conhecido.midiaId
+      : (this.catalogoMidia?.midiaDoProduto?.(produtoId) ?? null);
+    return bruto && !this.midiasComErro()[bruto] ? bruto : null;
+  }
+
+  registrarErroMidia(midiaId: string): void {
+    if (!this.midiasComErro()[midiaId]) {
+      this.midiasComErro.update((atual) => ({ ...atual, [midiaId]: true }));
+    }
+  }
+
+  inicialProduto(nome: string): string {
+    return (nome || '').trim().slice(0, 1).toUpperCase();
+  }
+
+  exibirConfirmacao(): boolean {
+    if (this.carrinho.resumo()) return true;
+    if (!this.carrinho.online() && this.carrinho.itens().length) return true;
+    if (!this.confirmarComp) return false;
+    return Boolean(
+      this.confirmarComp.confirmado() ||
+      this.confirmarComp.erro() ||
+      this.confirmarComp.envio.pendente(this.confirmarComp.tipoMesa()),
+    );
+  }
+
+  extrasDaLinha(id: string): ItemCarrinho | undefined {
+    return this.carrinho.itens().find((i) => i.linha.id === id);
+  }
+
+  async abrirRevisao(acionador?: EventTarget | null): Promise<void> {
+    this.retornoFocoRevisao = acionador instanceof HTMLElement ? acionador : null;
+    this.modalRevisaoAberto.set(true);
+    setTimeout(() => {
+      const dlg = this.modalRevisao?.nativeElement;
+      if (dlg && !dlg.open) dlg.showModal();
+    }, 0);
+    await this.carrinho.calcular();
+  }
+
+  fecharRevisao(): void {
+    const dlg = this.modalRevisao?.nativeElement;
+    if (dlg?.open) dlg.close();
+    this.modalRevisaoAberto.set(false);
+    this.retornoFocoRevisao?.focus();
+  }
 
   nomeCanal(canal: string): string {
     return CANAIS.find((item) => item.valor === canal)?.nome ?? canal;

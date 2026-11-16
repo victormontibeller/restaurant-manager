@@ -134,6 +134,25 @@ function formatarTelefoneEntrada(valor: string): string {
           </div>
         } @else {
           <div class="conta-layout">
+          @if (pagina() === 'cadastro' || pagina() === 'recuperacao' || pagina() === 'convite' || pagina() === 'verificacao') {
+            <div class="conta-aviso-rota" role="status">
+              <p>
+                <strong>Você já está conectado</strong> como {{ pessoa.nome || pessoa.email || 'cliente' }}.
+                Para {{
+                  pagina() === 'cadastro'
+                    ? 'criar uma nova conta'
+                    : pagina() === 'recuperacao'
+                      ? 'redefinir a senha de outro e-mail'
+                      : pagina() === 'convite'
+                        ? 'aceitar um convite'
+                        : 'verificar outra conta'
+                }}, encerre a sessão atual primeiro.
+              </p>
+              <button hlmBtn type="button" variant="outline" size="sm" (click)="sairParaDestino()" [disabled]="ocupado()">
+                Sair e continuar nesta tela
+              </button>
+            </div>
+          }
           <aside class="conta-passaporte" aria-label="Cartela da conta">
             <div class="conta-marca">
               <span class="conta-marca-selo">
@@ -367,7 +386,7 @@ function formatarTelefoneEntrada(valor: string): string {
                       maxlength="14"
                       [placeholder]="
                         pessoa.cpfMascarado
-                          ? pessoa.cpfMascarado + ' (salvo — digite apenas para trocar)'
+                          ? pessoa.cpfMascarado + ' (salvo)'
                           : '000.000.000-00'
                       "
                       [value]="cpfCadastro()"
@@ -668,6 +687,35 @@ function formatarTelefoneEntrada(valor: string): string {
               : 'Seu próximo pedido e bons momentos à mesa começam aqui.'
           }}
         </p>
+        @if (encerramentoPendente()) {
+          <div class="conta-pendencia-topo" role="alert">
+            <p>
+              <strong>Confirmação de saída pendente.</strong> O acesso anterior já foi limpo neste
+              navegador, mas o servidor ainda não confirmou o encerramento.
+            </p>
+            <div class="conta-pendencia-acoes">
+              <button
+                hlmBtn
+                type="button"
+                size="sm"
+                (click)="sair()"
+                [disabled]="ocupado()"
+              >
+                Tentar encerrar novamente
+              </button>
+              <button
+                hlmBtn
+                variant="outline"
+                type="button"
+                size="sm"
+                (click)="coordenacao.dispensarPendenciaEncerramento()"
+                [disabled]="ocupado()"
+              >
+                Continuar mesmo assim
+              </button>
+            </div>
+          </div>
+        }
         <form (submit)="entrar($event, email.value, senha)">
           <label for="email-conta">E-mail</label>
           <input
@@ -679,7 +727,7 @@ function formatarTelefoneEntrada(valor: string): string {
             required
             maxlength="254"
             placeholder="seu@email.com"
-            [disabled]="ocupado()"
+            [disabled]="ocupado() || encerramentoPendente()"
           />
           <div class="password-label">
             <label for="senha-conta">Senha</label>
@@ -701,7 +749,7 @@ function formatarTelefoneEntrada(valor: string): string {
             required
             maxlength="72"
             placeholder="Sua senha"
-            [disabled]="ocupado()"
+            [disabled]="ocupado() || encerramentoPendente()"
           />
           <button hlmBtn type="submit" [disabled]="ocupado() || encerramentoPendente()">
             {{ ocupado() ? 'Aguarde…' : 'Entrar' }}
@@ -1364,6 +1412,59 @@ function formatarTelefoneEntrada(valor: string): string {
       font-size: 0.9rem;
       font-weight: 600;
     }
+    .conta-aviso-rota {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem 1rem;
+      padding: 0.9rem 1.05rem;
+      border-radius: 14px;
+      background: #f9f4eb;
+      border: 1px solid #dfd3c2;
+      color: var(--foreground, #292521);
+    }
+    .conta-aviso-rota p {
+      margin: 0;
+      flex: 1 1 16rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .conta-pendencia-topo {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem 1rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px dashed var(--border, #e5ded3);
+    }
+    .conta-pendencia-topo p {
+      margin: 0.25rem 0 0;
+      color: var(--muted-foreground, #6e6259);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    .conta-pendencia-acoes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    @media (min-width: 1024px) {
+      .conta-aviso-rota {
+        grid-column: 1 / -1;
+      }
+    }
+    @media (max-width: 599px) {
+      .conta-aviso-rota a,
+      .conta-aviso-rota button,
+      .conta-pendencia-acoes a,
+      .conta-pendencia-acoes button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
     .perfil {
       font-weight: 700;
     }
@@ -1789,7 +1890,7 @@ export class IdentidadeComponent {
     }
   }
 
-  async sair(): Promise<void> {
+  async sair(destino = '/entrar'): Promise<void> {
     if (this.ocupado()) return;
     this.ocupado.set(true);
     this.erro.set('');
@@ -1801,8 +1902,19 @@ export class IdentidadeComponent {
       this.falha(error);
     } finally {
       this.ocupado.set(false);
-      if (this.router) await this.router.navigateByUrl('/entrar');
+      if (this.router) await this.router.navigateByUrl(destino);
     }
+  }
+
+  async sairParaDestino(): Promise<void> {
+    const mapa: Record<string, string> = {
+      cadastro: '/cadastro',
+      recuperacao: '/recuperar-senha',
+      convite: '/aceitar-convite',
+      verificacao: '/verificar-email',
+    };
+    const destino = mapa[this.pagina()] ?? '/entrar';
+    await this.sair(destino);
   }
 
   exigeTrocaParaEquipe(pessoa: Identidade): boolean {

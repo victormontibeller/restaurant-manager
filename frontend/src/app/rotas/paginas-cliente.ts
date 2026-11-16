@@ -1,8 +1,10 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ViewChild, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { VitrineComponent } from '../catalogo/vitrine.component';
 import { DisponibilidadeComponent } from '../unidades/disponibilidade.component';
 import { ParticipanteMesaComponent } from '../mesas/participante-mesa.component';
+import { SessaoMesaService } from '../mesas/sessao-mesa.service';
+import { ContextoVitrineService } from './contexto-vitrine.service';
 import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
 
@@ -11,7 +13,7 @@ import { MarcaService } from './marca.service';
   imports: [VitrineComponent, DisponibilidadeComponent, IconeComponent],
   template: `
     <app-vitrine />
-    <details class="service-hours">
+    <details class="service-hours" (toggle)="aoAlternarHorarios($any($event.target).open)">
       <summary>
         <span class="hours-title">
           <span class="hours-icon" aria-hidden="true"><app-icone nome="relogio" /></span>
@@ -119,7 +121,22 @@ import { MarcaService } from './marca.service';
     }
   `,
 })
-export class PaginaCardapioComponent {}
+export class PaginaCardapioComponent {
+  private readonly contextoVitrine = inject(ContextoVitrineService, { optional: true });
+  @ViewChild(DisponibilidadeComponent) private disponibilidade?: DisponibilidadeComponent;
+
+  constructor() {
+    effect(() => {
+      const id = this.contextoVitrine?.unidadeId() ?? '';
+      if (id) this.disponibilidade?.sincronizarUnidade(id);
+    });
+  }
+
+  aoAlternarHorarios(aberto: boolean): void {
+    const id = this.contextoVitrine?.unidadeId() ?? '';
+    if (aberto && id) this.disponibilidade?.sincronizarUnidade(id);
+  }
+}
 
 @Component({
   selector: 'app-pagina-carrinho',
@@ -141,7 +158,11 @@ export class PaginaCarrinhoComponent {}
           compartilhada.
         </p>
       </div>
-      <aside class="mesa-passos" aria-label="Como funciona o atendimento à mesa">
+      <aside
+        class="mesa-passos"
+        [class.mesa-passos--compacta]="!!mesaSessao.participante()"
+        aria-label="Como funciona o atendimento à mesa"
+      >
         <div class="mesa-passos-topo">
           <span class="mesa-passos-icone" aria-hidden="true"><app-icone nome="mesas" /></span>
           <strong>Fluxo em 3 passos</strong>
@@ -282,6 +303,7 @@ export class PaginaCarrinhoComponent {}
 })
 export class PaginaMesaComponent {
   readonly marca = inject(MarcaService);
+  readonly mesaSessao = inject(SessaoMesaService);
   readonly mesaId = signal<string | undefined>(undefined);
   constructor() {
     const parametros = inject(ActivatedRoute).paramMap.subscribe((params) =>

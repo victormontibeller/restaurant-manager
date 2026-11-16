@@ -6,7 +6,7 @@ Este relatório consolida **todos os requisitos, lacunas de contrato e evoluçõ
 
 ---
 
-## 1. Matriz Resumo de Itens (`BE-01` a `BE-22`)
+## 1. Matriz Resumo de Itens (`BE-01` a `BE-25`)
 
 | ID | Prioridade | Categoria | Resumo do requisito | Origem / Sprint |
 | --- | --- | --- | --- | --- |
@@ -32,6 +32,9 @@ Este relatório consolida **todos os requisitos, lacunas de contrato e evoluçõ
 | `BE-20` | **P2** | Observabilidade pública leve | Campos opcionais não sensíveis (`versaoAplicacao` / `avisoOperacional`) em `GET /api/v1/status`, preservando `/actuator/health` exato | Sprint 1 (Rodapé técnico e PWA) |
 | `BE-21` | **P1/P2** | Clareza de acompanhamento | Incluir `unidadeNome` e `mesaNome` em `PedidoDetalhe` (`GET /api/v1/me/pedidos` e `/pedidos/{id}`) | Sprint 2 (`/pedidos`, `/pedidos/:id`, `/mesa`) |
 | `BE-22` | **P2** | Transparência no Checkout Pro | Incluir `criadoEm` e `valor` em `CheckoutResumo` (`GET /api/v1/me/pedidos/{id}/pagamento`) | Sprint 2 (`<app-pagamento-pedido>`) |
+| `BE-23` | **P1** | Personalização por item | Suportar `observacao` por linha em `Linha`, `SnapshotLinha`, `LinhaPedido` e `LinhaPreparo` (além da nota geral do pedido) | Sprint 2.1 (`ConfiguradorProdutoComponent`, KDS) |
+| `BE-24` | **P1** | Metadados estruturados de produto | Expor flags/atributos de catálogo em `ProdutoPublico` para `exigePontoCarne` / `aceitaObservacao` (evitando campo de preparo em bebidas industrializadas) | Sprint 2.1 (`VitrineComponent`, `ConfiguradorProdutoComponent`) |
+| `BE-25` | **P0/P1** | Regra operacional de Retirada | Para canal `RETIRADA`, manter `ONLINE` e `PRESENCIAL` no envio, mas bloquear `cozinha.iniciar` enquanto houver saldo a receber (exigindo pagamento confirmado na recepção/caixa ou online antes do preparo) | Sprint 2.1 (`EnvioPedidoService`, `PedidoComandoService`) |
 
 ---
 
@@ -196,12 +199,27 @@ Os itens abaixo foram identificados ao mapear todas as telas das Sprints 2 a 7 e
 - **Constatação verificada:** [`CheckoutResumo.java`](../../../backend/src/main/java/br/com/restaurantmanager/pagamentos/dtos/CheckoutResumo.java) retorna apenas `(UUID id, String estado, String checkoutUrl, String ultimaFalha)` no endpoint `GET /api/v1/me/pedidos/{id}/pagamento`. No histórico colapsado (`<details>Histórico de tentativas anteriores</details>`), o cliente vê apenas o estado da tentativa sem saber quando ela ocorreu ou qual quantia foi processada.
 - **Proposta Backend:** Acrescentar `Instant criadoEm` e `BigDecimal valor` em `CheckoutResumo` (de forma retrocompatível), permitindo exibir linha temporal clara em `<app-pagamento-pedido>`.
 
+### `BE-23` *(P1 · Sprint 2.1)* — Observação Individual por Item (`Linha`, `SnapshotLinha`, `LinhaPreparo`)
+- **Constatação verificada:** Hoje [`Linha.java`](../../../backend/src/main/java/br/com/restaurantmanager/carrinho/dtos/Linha.java) aceita apenas `(id, produtoId, quantidade, adicionais, escolhas)`, e somente [`EnviarPedido.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/dtos/EnviarPedido.java) possui `observacao` única por pedido (máximo 500 caracteres). Na Sprint 2.1, o cliente passou a escolher **ponto da carne** e **observação específica por prato** já dentro do configurador; enquanto o backend não armazena `observacao` por linha, o frontend mantém a `Linha` da API limpa (para não violar checksum/DTO estrito) e compõe automaticamente o resumo estruturado dos itens em `EnviarPedido.observacao`.
+- **Proposta Backend:**
+  - Incluir `String observacao` (`@Size(max = 200)`, rejeitando caracteres de controle exceto espaço) opcional em `Linha`, [`SnapshotLinha.java`](../../../backend/src/main/java/br/com/restaurantmanager/carrinho/dtos/SnapshotLinha.java), [`LinhaPreparo.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/dtos/LinhaPreparo.java) e na projeção de `PedidoDetalhe`, preservando `observacao` nula/vazia em itens sem nota e mantendo retrocompatibilidade total com clientes que enviam apenas `observacao` geral em `EnviarPedido`.
+
+### `BE-24` *(P1 · Sprint 2.1)* — Metadados Estruturados de Produto (`ProdutoPublico`)
+- **Constatação verificada:** [`ProdutoPublico.java`](../../../backend/src/main/java/br/com/restaurantmanager/catalogo/dtos/ProdutoPublico.java) expõe `(id, versao, nome, descricao, categoriaId, tipo, sugerido, midiaId, preco, disponivel, adicionais, grupos)`, sem flags de preparo. Na Sprint 2.1, o frontend passou a oferecer seletor de ponto da carne para hambúrgueres/carnes na brasa e a ocultar o campo de observação livre para bebidas industrializadas não preparadas pela casa via inferência de catálogo/categoria.
+- **Proposta Backend:** Incluir campos booleanos opcionais com padrão seguro em `ProdutoPublico` (e na edição administrativa de produtos): `exigePontoCarne` (ou grupo obrigatório configurável no catálogo) e `aceitaObservacao` (ex.: `false` para bebidas lacradas/industrializadas, `true` para pratos preparados na cozinha).
+
+### `BE-25` *(P0/P1 · Sprint 2.1)* — Bloqueio de Início de Preparo na Retirada Antes do Pagamento
+- **Constatação verificada:** [`EnvioPedidoService.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/services/EnvioPedidoService.java) já aceita `ONLINE` e `PRESENCIAL` para os canais `DELIVERY` e `RETIRADA`. Porém, na regra de negócio validada com o produto na Sprint 2.1, pedidos de **Retirada na loja** podem ser pagos online ou presencialmente no balcão/caixa, **mas só iniciam o preparo na cozinha após o pagamento estar integralmente confirmado**; hoje [`PedidoComandoService.java`](../../../backend/src/main/java/br/com/restaurantmanager/pedidos/services/PedidoComandoService.java#L236-L273) (`produzir`, ação `"iniciar"`) verifica apenas `estado == NA_FILA || EM_PREPARO`, sem checar saldo pendente no canal `RETIRADA`.
+- **Proposta Backend:**
+  - No `PedidoComandoService.produzir(...)`, quando `acao.equals("iniciar")` e `pedido.canal() == CanalAtendimento.RETIRADA`, consultar o resumo financeiro do pedido e rejeitar com `409`/`422` caso haja `saldoAReceber > 0` (`"Pedido de retirada só pode iniciar o preparo após confirmação do pagamento online ou no caixa."`).
+  - Na suíte Java (em ambiente Linux/CI com PostgreSQL real), acrescentar teste de integração cobrindo pedido `RETIRADA` + `PRESENCIAL`: bloqueio de `cozinha.iniciar` antes do lançamento no caixa e liberação imediata após quitação integral (`FinanceiroTest` / `CozinhaTest`).
+
 ---
 
 ## 4. Diretrizes de Integração Backend → Frontend após Entrega
 
-Quando o backend implementar qualquer grupo (`BE-01..BE-22`), seguir o protocolo abaixo:
+Quando o backend implementar qualquer grupo (`BE-01..BE-25`), seguir o protocolo abaixo:
 
 1. **Contratos `BE-01` e `BE-03..BE-09` (P0):** o frontend atual já possui as chamadas implementadas e tolerantes; basta subir a nova API e validar os fluxos reais em `/cardapio`, `/conta` e checkout Delivery (removendo mensagens de recurso pendente nos testes E2E).
-2. **Contratos `BE-02` e `BE-10..BE-22` (P1/P2):** abrir microtarefa específica no frontend após o endpoint estar publicado em contrato e testado em Java/PostgreSQL, evitando código morto ou suposições de payload antecipadas.
+2. **Contratos `BE-02` e `BE-10..BE-25` (P1/P2):** abrir microtarefa específica no frontend após o endpoint estar publicado em contrato e testado em Java/PostgreSQL, evitando código morto ou suposições de payload antecipadas. No caso de `BE-23`/`BE-24`, o frontend da Sprint 2.1 já opera com composição segura em `EnviarPedido.observacao` e inferência local até a ativação nativa dos campos no servidor.
 3. **Nunca enfraquecer validação no servidor:** limites de tamanho, máscaras de CPF, concorrência otimista (`versao`), escopo por `empresaId` + `unidadeId` e reautenticação de 5 minutos para ações sensíveis permanecem autoridade exclusiva do backend.

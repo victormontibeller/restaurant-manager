@@ -1,6 +1,8 @@
 <article
   class="cartao-pedido"
   [class.cartao-cozinha]="contexto() === 'cozinha'"
+  [class.cartao-pedido--pessoal]="pessoal()"
+  [class.cartao-pedido--cliente]="contexto() === 'cliente'"
   [attr.data-estado]="pedido().estado"
   [attr.aria-label]="'Pedido ' + pedido().id"
 >
@@ -52,51 +54,217 @@
       }
     </p>
   }
-  @if (pedido().observacao) {
-    <p class="observacao-pedido"><strong>Observação</strong> {{ pedido().observacao }}</p>
-  }
-  @if (contexto() === 'cozinha') {
-    <div class="resumo-producao" aria-label="Resumo das unidades de produção">
-      <span>{{ quantidadeEstado('NA_FILA') }} na fila</span>
-      <span>{{ quantidadeEstado('EM_PREPARO') }} em preparo</span>
-      <span
-        >{{ quantidadeEstado('PRONTO') }}
-        {{ quantidadeEstado('PRONTO') === 1 ? 'pronta' : 'prontas' }}</span
-      >
-    </div>
-  }
   @if (pessoal()) {
-    <div class="talao-pedido">
-      <span class="talao-titulo">Itens do pedido</span>
-      @for (linha of pedido().linhas; track linha.id) {
-        <section class="linha-pedido-talao" [attr.aria-label]="linha.nome">
-          <div class="talao-linha">
-            <h4 class="talao-item-nome">
-              {{ linha.quantidade }} × {{ linha.nome }}
-              {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
-            </h4>
-            @if (linha.subtotal) {
-              <span class="talao-guia" aria-hidden="true"></span>
-              <span class="talao-valor">{{ moeda(linha.subtotal!) }}</span>
-            }
-          </div>
-          @for (extra of linha.adicionais; track $index) {
-            <p class="componente-item">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+    @if (contexto() === 'cliente' && pedido().pagoOnline && aguardandoPagamento()) {
+      <section class="pedido-pagamento-prioritario" aria-label="Pagamento online pendente">
+        @if (pedido().pagamentoExpiraEm) {
+          <p class="prazo-pagamento-online">
+            Conclua o pagamento até {{ horario(pedido().pagamentoExpiraEm!) }}.
+          </p>
+        }
+        <app-pagamento-pedido [pedidoId]="pedido().id" [aguardando]="aguardandoPagamento()" />
+      </section>
+    }
+    <div class="pedido-pessoal-grade">
+      <div class="pedido-pessoal-principal">
+        @if (pedido().observacao) {
+          <p class="observacao-pedido"><strong>Observação</strong> {{ pedido().observacao }}</p>
+        }
+        <div class="talao-pedido">
+          <span class="talao-titulo">Itens do pedido</span>
+          @for (linha of pedido().linhas; track linha.id) {
+            <section class="linha-pedido-talao" [attr.aria-label]="linha.nome">
+              <div class="talao-item-grade">
+                @if (midiaLinha(linha); as midia) {
+                  <div class="talao-thumb">
+                    <img
+                      class="talao-thumb-img"
+                      [src]="'/api/v1/midias/' + midia"
+                      [alt]="linha.nome"
+                      width="48"
+                      height="48"
+                      loading="lazy"
+                      decoding="async"
+                      (error)="registrarErroMidia(midia)"
+                    />
+                  </div>
+                } @else {
+                  <div class="talao-thumb talao-thumb--mono" aria-hidden="true">
+                    {{ inicialProduto(linha.nome) }}
+                  </div>
+                }
+                <div class="talao-item-corpo">
+                  <div class="talao-linha">
+                    <h4 class="talao-item-nome">
+                      {{ linha.quantidade }} × {{ linha.nome }}
+                      {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
+                    </h4>
+                    @if (linha.subtotal) {
+                      <span class="talao-guia" aria-hidden="true"></span>
+                      <span class="talao-valor">{{ moeda(linha.subtotal!) }}</span>
+                    }
+                  </div>
+                  @for (extra of linha.adicionais; track $index) {
+                    <p class="componente-item">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+                  }
+                  @for (escolha of linha.escolhas; track $index) {
+                    <p class="componente-item">
+                      <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} ×
+                      {{ escolha.nome }}
+                    </p>
+                    @for (extra of escolha.adicionais ?? []; track $index) {
+                      <p class="componente-item componente-sub">
+                        + {{ extra.quantidade }} × {{ extra.nome }}
+                      </p>
+                    }
+                  }
+                </div>
+              </div>
+            </section>
           }
-          @for (escolha of linha.escolhas; track $index) {
-            <p class="componente-item">
-              <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
-            </p>
-            @for (extra of escolha.adicionais ?? []; track $index) {
-              <p class="componente-item componente-sub">
-                + {{ extra.quantidade }} × {{ extra.nome }}
+        </div>
+        @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
+          <p class="solicitacao-estado">
+            Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua
+            até decisão.
+          </p>
+        }
+        @if (pendente()) {
+          <p class="aviso" role="status">
+            Ainda aguardando a confirmação da última solicitação. Confira o resultado antes de
+            tentar novamente.
+          </p>
+          <div class="acoes">
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="repetir()"
+              [disabled]="comandos.ocupado() || !online()"
+            >
+              Conferir resultado da solicitação
+            </button>
+          </div>
+        }
+        @if (erro()) {
+          <p role="alert" class="erro">{{ erro() }}</p>
+        }
+        @if (aviso()) {
+          <p role="status" class="aviso-pedido">{{ aviso() }}</p>
+        }
+      </div>
+
+      <div class="pedido-pessoal-apoio">
+        @if (pedido().saldo; as saldo) {
+          <div class="talao-pedido talao-resumo-caixa">
+            <span class="talao-titulo">Resumo financeiro</span>
+            <dl class="talao-resumo-dl">
+              <dt>Total</dt>
+              <dd>{{ moeda(saldo.totalDevido) }}</dd>
+              @if (valorPositivo(saldo.pagoConfirmado)) {
+                <dt>Já pago</dt>
+                <dd>{{ moeda(saldo.pagoConfirmado) }}</dd>
+              }
+              @if (valorPositivo(saldo.saldoAReceber)) {
+                <dt>A pagar</dt>
+                <dd>{{ moeda(saldo.saldoAReceber) }}</dd>
+              }
+              @if (valorPositivo(saldo.saldoADevolver)) {
+                <dt>A devolver</dt>
+                <dd>{{ moeda(saldo.saldoADevolver) }}</dd>
+              }
+              @if (valorPositivo(saldo.devolvidoConfirmado)) {
+                <dt>Devolução confirmada</dt>
+                <dd>{{ moeda(saldo.devolvidoConfirmado) }}</dd>
+              }
+            </dl>
+            @if (saldo.pendenciaFinanceira) {
+              <p class="aviso" role="status">
+                Há pagamento ou devolução aguardando confirmação. Acompanhe a atualização.
               </p>
             }
-          }
-        </section>
-      }
+          </div>
+        }
+        @if (contexto() === 'cliente' && pedido().pagoOnline && !aguardandoPagamento()) {
+          <app-pagamento-pedido [pedidoId]="pedido().id" [aguardando]="aguardandoPagamento()" />
+        }
+        @if (pedido().historico?.length) {
+          <details class="historico-pedido">
+            <summary>Histórico do pedido</summary>
+            <p class="texto-secundario">Acompanhamento do pedido #{{ referencia() }}</p>
+            <ol>
+              @for (evento of pedido().historico ?? []; track $index) {
+                <li>
+                  {{ horario(evento.ocorridoEm) }} · {{ nomeEvento(evento.tipo) }}
+                  @if (evento.motivo) {
+                    · {{ evento.motivo }}
+                  }
+                </li>
+              }
+            </ol>
+          </details>
+        }
+        @if (!terminal()) {
+          <section class="bloco-cancelamento" aria-label="Cancelamento do pedido">
+            <span class="bloco-cancelamento-titulo">Precisa cancelar?</span>
+            <label [for]="'motivo-pedido-' + pedido().id"
+              >Motivo de recusa, cancelamento ou avaliação</label
+            >
+            <textarea
+              [id]="'motivo-pedido-' + pedido().id"
+              #motivoInput
+              rows="2"
+              maxlength="500"
+              placeholder="Conte o motivo rapidamente para continuarmos"
+              [value]="motivo"
+              (input)="motivo = motivoInput.value"
+              [disabled]="bloqueado()"
+            ></textarea>
+            <div class="acoes acoes-pedido">
+              @if (!pedido().primeiroPreparoEm) {
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  class="btn-cancelar-outline"
+                  (click)="comandar('cancelar')"
+                  [disabled]="bloqueado()"
+                >
+                  Cancelar meu pedido integralmente
+                </button>
+              } @else {
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="comandar('solicitar-cancelamento')"
+                  [disabled]="bloqueado()"
+                >
+                  Solicitar avaliação de cancelamento
+                </button>
+              }
+            </div>
+          </section>
+        }
+      </div>
     </div>
   } @else {
+    @if (pedido().observacao) {
+      <p class="observacao-pedido"><strong>Observação</strong> {{ pedido().observacao }}</p>
+    }
+    @if (contexto() === 'cozinha') {
+      <div class="resumo-producao" aria-label="Resumo das unidades de produção">
+        <span>{{ quantidadeEstado('NA_FILA') }} na fila</span>
+        <span>{{ quantidadeEstado('EM_PREPARO') }} em preparo</span>
+        <span
+          >{{ quantidadeEstado('PRONTO') }}
+          {{ quantidadeEstado('PRONTO') === 1 ? 'pronta' : 'prontas' }}</span
+        >
+      </div>
+    }
     @for (linha of pedido().linhas; track linha.id) {
       <section class="linha-pedido" [attr.aria-label]="linha.nome">
         <h4>
@@ -149,81 +317,6 @@
         </ul>
       </section>
     }
-  }
-  @if (pessoal() && pedido().saldo; as saldo) {
-    <div class="talao-pedido talao-resumo-caixa">
-      <span class="talao-titulo">Resumo financeiro</span>
-      <dl class="talao-resumo-dl">
-        <dt>Total</dt>
-        <dd>{{ moeda(saldo.totalDevido) }}</dd>
-        @if (valorPositivo(saldo.pagoConfirmado)) {
-          <dt>Já pago</dt>
-          <dd>{{ moeda(saldo.pagoConfirmado) }}</dd>
-        }
-        @if (valorPositivo(saldo.saldoAReceber)) {
-          <dt>A pagar</dt>
-          <dd>{{ moeda(saldo.saldoAReceber) }}</dd>
-        }
-        @if (valorPositivo(saldo.saldoADevolver)) {
-          <dt>A devolver</dt>
-          <dd>{{ moeda(saldo.saldoADevolver) }}</dd>
-        }
-        @if (valorPositivo(saldo.devolvidoConfirmado)) {
-          <dt>Devolução confirmada</dt>
-          <dd>{{ moeda(saldo.devolvidoConfirmado) }}</dd>
-        }
-      </dl>
-      @if (saldo.pendenciaFinanceira) {
-        <p class="aviso" role="status">
-          Há pagamento ou devolução aguardando confirmação. Acompanhe a atualização.
-        </p>
-      }
-    </div>
-  }
-  @if (pessoal() && !terminal()) {
-    <section class="bloco-cancelamento" aria-label="Cancelamento do pedido">
-      <span class="bloco-cancelamento-titulo">Precisa cancelar?</span>
-      <label [for]="'motivo-pedido-' + pedido().id"
-        >Motivo de recusa, cancelamento ou avaliação</label
-      >
-      <textarea
-        [id]="'motivo-pedido-' + pedido().id"
-        #motivoInput
-        rows="2"
-        maxlength="500"
-        placeholder="Conte o motivo rapidamente para continuarmos"
-        [value]="motivo"
-        (input)="motivo = motivoInput.value"
-        [disabled]="bloqueado()"
-      ></textarea>
-      <div class="acoes acoes-pedido">
-        @if (!pedido().primeiroPreparoEm) {
-          <button
-            hlmBtn
-            variant="outline"
-            size="sm"
-            type="button"
-            class="btn-cancelar-outline"
-            (click)="comandar('cancelar')"
-            [disabled]="bloqueado()"
-          >
-            Cancelar meu pedido integralmente
-          </button>
-        } @else {
-          <button
-            hlmBtn
-            variant="outline"
-            size="sm"
-            type="button"
-            (click)="comandar('solicitar-cancelamento')"
-            [disabled]="bloqueado()"
-          >
-            Solicitar avaliação de cancelamento
-          </button>
-        }
-      </div>
-    </section>
-  } @else {
     @if (pedeMotivo()) {
       <label [for]="'motivo-pedido-' + pedido().id"
         >Motivo de recusa, cancelamento ou avaliação</label
@@ -282,46 +375,27 @@
         }
       }
     </div>
-  }
-  @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
-    <p class="solicitacao-estado">
-      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
-      decisão.
-    </p>
-    @if (
-      contexto() === 'operacao' &&
-      solicitacao.estado === 'PENDENTE' &&
-      tem('pedido.cancelar_apos_preparo')
-    ) {
-      <div class="acoes">
-        <button (click)="comandar('aprovar', solicitacao.id)" [disabled]="bloqueado()">
-          Aprovar solicitação
-        </button>
-        <button (click)="comandar('rejeitar', solicitacao.id)" [disabled]="bloqueado()">
-          Rejeitar solicitação
-        </button>
-      </div>
-    }
-  }
-  @if (pendente()) {
-    @if (pessoal()) {
-      <p class="aviso" role="status">
-        Ainda aguardando a confirmação da última solicitação. Confira o resultado antes de tentar
-        novamente.
+    @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
+      <p class="solicitacao-estado">
+        Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
+        decisão.
       </p>
-      <div class="acoes">
-        <button
-          hlmBtn
-          variant="outline"
-          size="sm"
-          type="button"
-          (click)="repetir()"
-          [disabled]="comandos.ocupado() || !online()"
-        >
-          Conferir resultado da solicitação
-        </button>
-      </div>
-    } @else {
+      @if (
+        contexto() === 'operacao' &&
+        solicitacao.estado === 'PENDENTE' &&
+        tem('pedido.cancelar_apos_preparo')
+      ) {
+        <div class="acoes">
+          <button (click)="comandar('aprovar', solicitacao.id)" [disabled]="bloqueado()">
+            Aprovar solicitação
+          </button>
+          <button (click)="comandar('rejeitar', solicitacao.id)" [disabled]="bloqueado()">
+            Rejeitar solicitação
+          </button>
+        </div>
+      }
+    }
+    @if (pendente()) {
       <p class="aviso">
         Resultado da ação ainda não confirmado. O reenvio usa o mesmo identificador e os mesmos
         dados.
@@ -330,63 +404,39 @@
         Recuperar resultado da mesma ação
       </button>
     }
-  }
-  @if (pedido().historico?.length) {
-    <details class="historico-pedido">
-      <summary>Histórico do pedido</summary>
-      @if (pessoal()) {
-        <p class="texto-secundario">Acompanhamento do pedido #{{ referencia() }}</p>
-        <ol>
-          @for (evento of pedido().historico ?? []; track $index) {
-            <li>
-              {{ horario(evento.ocorridoEm) }} · {{ nomeEvento(evento.tipo) }}
-              @if (evento.motivo) {
-                · {{ evento.motivo }}
-              }
-            </li>
-          }
-        </ol>
-      } @else {
+    @if (pedido().historico?.length) {
+      <details class="historico-pedido">
+        <summary>Histórico do pedido</summary>
         <p class="referencia-completa">Referência completa: {{ pedido().id }}</p>
         <ol>
           @for (evento of pedido().historico ?? []; track $index) {
             <li>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</li>
           }
         </ol>
-      }
-    </details>
-  }
-  @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status" class="aviso-pedido">{{ aviso() }}</p>
-  }
-
-  @if (
-    contexto() === 'operacao' &&
-    !pedido().comandaId &&
-    (tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar'))
-  ) {
-    <details #painelFinanceiro (toggle)="financeiroAberto.set(painelFinanceiro.open)">
-      <summary>Recebimentos, ajustes e devoluções deste pedido</summary>
-      @if (financeiroAberto()) {
-        <app-financeiro
-          [recurso]="pedido().id"
-          [acoes]="acoes()"
-          [atualizacao]="pedido()"
-          (atualizar)="atualizar.emit()"
-        />
-      }
-    </details>
-  }
-
-  @if (contexto() === 'cliente' && pedido().pagoOnline) {
-    @if (aguardandoPagamento() && pedido().pagamentoExpiraEm) {
-      <p class="prazo-pagamento-online">
-        Conclua o pagamento até {{ horario(pedido().pagamentoExpiraEm!) }}.
-      </p>
+      </details>
     }
-    <app-pagamento-pedido [pedidoId]="pedido().id" [aguardando]="aguardandoPagamento()" />
+    @if (erro()) {
+      <p role="alert" class="erro">{{ erro() }}</p>
+    }
+    @if (aviso()) {
+      <p role="status" class="aviso-pedido">{{ aviso() }}</p>
+    }
+    @if (
+      contexto() === 'operacao' &&
+      !pedido().comandaId &&
+      (tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar'))
+    ) {
+      <details #painelFinanceiro (toggle)="financeiroAberto.set(painelFinanceiro.open)">
+        <summary>Recebimentos, ajustes e devoluções deste pedido</summary>
+        @if (financeiroAberto()) {
+          <app-financeiro
+            [recurso]="pedido().id"
+            [acoes]="acoes()"
+            [atualizacao]="pedido()"
+            (atualizar)="atualizar.emit()"
+          />
+        }
+      </details>
+    }
   }
 </article>

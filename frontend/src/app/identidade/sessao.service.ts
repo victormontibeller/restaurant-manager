@@ -227,12 +227,20 @@ export class SessaoService {
   }
 
   private async erroComando(response: Response): Promise<ApiFailure> {
-    let mensagem = 'Não foi possível confirmar o resultado da operação.';
+    let mensagem =
+      response.status === 401
+        ? 'E-mail ou senha inválidos. Confira suas credenciais e tente novamente.'
+        : 'Não foi possível confirmar o resultado da operação.';
     let codigo = '';
     if (response.status < 500) {
       try {
-        const body = (await response.json()) as { mensagem?: unknown; codigo?: unknown };
-        if (typeof body.mensagem === 'string') mensagem = body.mensagem;
+        const body = (await response.json()) as {
+          mensagem?: unknown;
+          detail?: unknown;
+          codigo?: unknown;
+        };
+        if (typeof body.mensagem === 'string' && body.mensagem.trim()) mensagem = body.mensagem;
+        else if (typeof body.detail === 'string' && body.detail.trim()) mensagem = body.detail;
         if (typeof body.codigo === 'string') codigo = body.codigo;
       } catch {
         /* Intermediário pode devolver HTML; não expor erro técnico de parsing. */

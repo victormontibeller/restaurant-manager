@@ -10,9 +10,22 @@
   </p>
   <!-- A API lista as tentativas por criado_em desc, id. -->
   @if (tentativas()[0]; as atual) {
-    <section aria-label="Tentativa mais recente">
-      <p><strong>Tentativa mais recente</strong></p>
-      <p>{{ estado(atual.estado) }}</p>
+    <section class="mp-tentativa" aria-label="Tentativa mais recente">
+      <div class="mp-tentativa-topo">
+        <strong>Tentativa mais recente</strong>
+        <span
+          class="etiqueta"
+          [attr.data-estado]="
+            atual.estado === 'CONFIRMADO'
+              ? 'PRONTO'
+              : atual.estado === 'RECUSADO'
+                ? 'CANCELADO'
+                : 'AGUARDANDO_ACEITE'
+          "
+        >
+          {{ estado(atual.estado) }}
+        </span>
+      </div>
       @if (atual.estado === 'RECUSADO' && atual.ultimaFalha) {
         <p class="mp-falha">{{ atual.ultimaFalha }}</p>
       }
@@ -26,16 +39,18 @@
     </section>
   }
   <div class="acoes">
-    <button
-      hlmBtn
-      variant="outline"
-      size="sm"
-      type="button"
-      (click)="carregar()"
-      [disabled]="consultando()"
-    >
-      Conferir pagamento
-    </button>
+    @if (!algumConfirmado()) {
+      <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        type="button"
+        (click)="carregar(true)"
+        [disabled]="consultando()"
+      >
+        {{ consultando() ? 'Conferindo pagamento…' : 'Conferir pagamento' }}
+      </button>
+    }
     @if (aguardando() && tentativas().length && podeTentar()) {
       <button
         hlmBtn
@@ -49,6 +64,9 @@
       </button>
     }
   </div>
+  @if (statusConferencia()) {
+    <p role="status" class="mp-nota">{{ statusConferencia() }}</p>
+  }
   @if (tentativas().length > 1) {
     <details>
       <summary>Histórico de tentativas anteriores</summary>

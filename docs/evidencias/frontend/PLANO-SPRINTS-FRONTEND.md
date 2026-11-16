@@ -62,6 +62,12 @@ flowchart LR
 
 ## 3. Regras Obrigatórias para Todos os Chats de Sprint
 
+0. **Gate Obrigatório de Abertura de Sprint — Planejamento + Representação Visual Pré-Código:**
+   - Ao iniciar **qualquer Sprint**, **ANTES de modificar qualquer arquivo do sistema (`frontend/` ou código)**, o coordenador/agente deve:
+     1. Inspecionar as telas reais atuais (se aplicável, gerar ou consultar as capturas `"Antes"`);
+     2. Apresentar ao usuário o **planejamento detalhado da Sprint acompanhado de uma representação visual clara** do resultado proposto (protótipo visual HTML interativo, mockup/esquema visual comparativo ou wireframe fiel aos tokens `#faf7f2`/`#292521`/`#a53e2b`/`#30523b` para Desktop `1280px`, Tablet `768px` e Celular `360px`);
+     3. **Parar e aguardar a aprovação explícita do usuário** sobre a representação visual. **Somente após aprovada**, seguir para as alterações de código no repositório.
+   - **Fluxo Git e PR:** os avanços aprovados de cada Sprint são salvos por meio de **commits locais** na branch `feat/frontend-bistro-sprints`; **o Pull Request será aberto uma única vez apenas após a conclusão de todas as sprints** (sem PRs intermediários por sprint).
 1. **Proibido alterar `backend/`:** Toda alteração deste roadmap ocorre somente em `frontend/` e `docs/`. Se surgir necessidade de novo campo, filtro ou endpoint, registrar/referenciar em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md) e implementar fallback visual resiliente no frontend.
 2. **Divisão estrita Coordenador × `artesao-ux-bistro`:**
    - O subagente especialista `artesao-ux-bistro` possui bloqueio determinístico por hook (`guardiao_frontend.cjs`) contra edições em `backend/`, `*.service.ts`, `modelos.ts`, `guardas.ts`, `*.routes.ts`, `scripts/`, `package.json`, `angular.json` e `service-worker.js`.
@@ -215,7 +221,11 @@ Finalize validando `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, to
 ```markdown
 Você está executando a **Sprint 3 — Shell da Equipe (`equipe-layout`) & Painel KDS da Cozinha (`/cozinha`)** do frontend de `SAAS Restaurante MB`.
 
-Leia antes de editar:
+ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
+- Leia os arquivos abaixo, inspecione o estado atual (incluindo `sprint3-antes-*` se disponíveis) e apresente ao usuário o planejamento da Sprint 3 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) das telas propostas.
+- **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo de sistema em `frontend/`.
+
+Leia antes de planejar/editar:
 1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 3) e `docs/evidencias/painel-cozinha-2026-11-10.md`.
 3. `scripts/test_route_shell.cjs`, `scripts/test_kitchen_templates.cjs` e `scripts/test_kitchen_board.cjs` (ATENÇÃO máxima aos rótulos exatos e seletores dos testes!).
@@ -260,7 +270,11 @@ Valide ao final `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `test
 ```markdown
 Você está executando a **Sprint 4 — Gestão Operacional Diária (Pedidos, Mesas/Salão, Expedição, Financeiro, Pendências & Relatórios de Vendas)** do frontend de `SAAS Restaurante MB`.
 
-Leia antes de editar:
+ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 4 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
+
+Leia antes de planejar/editar:
 1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 4).
 3. Leia obrigatoriamente `scripts/test_mesa_navigation_templates.cjs`, `scripts/test_mesa_pagination.cjs`, `scripts/test_order_recovery.cjs`, `scripts/test_delivery_reports.cjs` e `scripts/test_snapshot_queue.cjs`.
@@ -304,7 +318,11 @@ Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todos os probe
 ```markdown
 Você está executando a **Sprint 5 — Gestão Comercial & Configuração de Loja (Catálogo Admin, Mídia, Delivery, Prazos e Mercado Pago)** do frontend de `SAAS Restaurante MB`.
 
-Leia antes de editar:
+ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 5 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
+
+Leia antes de planejar/editar:
 1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 5) e `docs/evidencias/frontend/RELATORIO-PENDENCIAS-BACKEND.md` (`BE-02`, `BE-11`).
 3. Leia `scripts/test_catalog_media.cjs`, `scripts/test_catalog_recovery.cjs` e `scripts/test_catalog_cart.cjs`.
@@ -346,7 +364,11 @@ Valide `format:check` + prettier em `catalogo/`, `typecheck`, `ngc --noEmit`, `t
 ```markdown
 Você está executando a **Sprint 6 — Gestão Corporativa & Segurança (Equipe/Acessos, Convites, Unidades, Funcionamento e Eventos)** do frontend de `SAAS Restaurante MB`.
 
-Leia antes de editar:
+ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 6 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
+
+Leia antes de planejar/editar:
 1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 6).
 3. Leia obrigatoriamente `scripts/test_profile_selects.cjs`, `scripts/test_inactive_memberships.cjs`, `scripts/test_unit_schedule_templates.cjs`, `scripts/test_unit_schedule.cjs`, `scripts/test_unit_export.cjs` e `scripts/test_unit_events.cjs`.
@@ -391,7 +413,11 @@ Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as 6 son
 ```markdown
 Você está executando a **Sprint 7 (Final) — Console da Plataforma SaaS (`/plataforma`) & Auditoria Global do Frontend** de `SAAS Restaurante MB`.
 
-Leia antes de editar:
+ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 7 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
+
+Leia antes de planejar/editar:
 1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 7) e `docs/evidencias/frontend/RELATORIO-PENDENCIAS-BACKEND.md`.
 3. Leia `scripts/test_platform_session.cjs`, `scripts/test_profile_selects.cjs` e `scripts/check_contrast.cjs`.

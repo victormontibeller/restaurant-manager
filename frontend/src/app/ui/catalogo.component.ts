@@ -69,13 +69,50 @@ interface TokenPaleta {
           <h2>Ações e foco</h2>
         </div>
         <div class="acoes">
-          <button type="button" hlmBtn>Confirmar pedido</button>
-          <button type="button" hlmBtn variant="secondary">Ver detalhes</button>
-          <button type="button" hlmBtn variant="outline">Voltar</button>
-          <button type="button" hlmBtn variant="ghost">Cancelar</button>
-          <button type="button" hlmBtn variant="destructive">Remover</button>
+          <button
+            type="button"
+            hlmBtn
+            (click)="acaoShowcase.set('Ação primária selecionada (Confirmar pedido).')"
+          >
+            Confirmar pedido
+          </button>
+          <button
+            type="button"
+            hlmBtn
+            variant="secondary"
+            (click)="acaoShowcase.set('Ação secundária selecionada (Ver detalhes).')"
+          >
+            Ver detalhes
+          </button>
+          <button
+            type="button"
+            hlmBtn
+            variant="outline"
+            (click)="acaoShowcase.set('Ação de contorno selecionada (Voltar).')"
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            hlmBtn
+            variant="ghost"
+            (click)="acaoShowcase.set('Ação discreta selecionada (Cancelar).')"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            hlmBtn
+            variant="destructive"
+            (click)="acaoShowcase.set('Ação destrutiva selecionada (Remover).')"
+          >
+            Remover
+          </button>
           <button type="button" hlmBtn disabled>Enviando…</button>
         </div>
+        @if (acaoShowcase()) {
+          <p class="ui-showcase-feedback" role="status">{{ acaoShowcase() }}</p>
+        }
       </section>
 
       <section>
@@ -358,6 +395,17 @@ interface TokenPaleta {
       background: var(--background);
       color: var(--secondary-foreground);
     }
+    .ui-showcase-feedback {
+      margin: 0.9rem 0 0;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid #b7d2be;
+      background: var(--accent, #e8efe7);
+      color: var(--accent-foreground, #30523b);
+      font-size: 0.9rem;
+      font-weight: 650;
+      line-height: 1.45;
+    }
     .bistro-details {
       margin-top: 0.9rem;
     }
@@ -380,6 +428,7 @@ export class CatalogoUiComponent {
   readonly unidades = ['Centro', 'Jardins', 'Vila Nova'];
   readonly unidadeSelecionada = signal('Centro');
   readonly seletorAberto = signal(false);
+  readonly acaoShowcase = signal('');
 
   readonly paleta: TokenPaleta[] = [
     { nome: 'Linho', hex: '#faf7f2', uso: 'Fundo principal' },

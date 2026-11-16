@@ -23,6 +23,37 @@ export interface LinhaCarrinho {
 export interface ItemCarrinho {
   linha: LinhaCarrinho;
   nome: string;
+  midiaId?: string | null;
+  resumoCustomizacao?: string;
+  pontoCarne?: string;
+  observacaoItem?: string;
+  aceitaObservacao?: boolean;
+  permitePontoCarne?: boolean;
+}
+
+export function montarObservacaoPedido(
+  itens: readonly ItemCarrinho[],
+  observacaoGeral: string,
+  limite = 500,
+): string {
+  const blocos: string[] = [];
+  for (const item of itens) {
+    const detalhes: string[] = [];
+    if (item.pontoCarne?.trim()) detalhes.push('Ponto: ' + item.pontoCarne.trim());
+    if (item.observacaoItem?.trim()) detalhes.push('Obs: ' + item.observacaoItem.trim());
+    if (detalhes.length) {
+      blocos.push(`${item.linha.quantidade}x ${item.nome} (${detalhes.join('; ')})`);
+    }
+  }
+  const notasItens = blocos.join(' | ');
+  const geral = observacaoGeral.replace(/[\r\n\t]+/g, ' ').trim();
+  const combinado =
+    notasItens && geral
+      ? `[Itens] ${notasItens}\n[Geral] ${geral}`
+      : notasItens
+        ? `[Itens] ${notasItens}`
+        : geral;
+  return combinado.length <= limite ? combinado : combinado.slice(0, limite - 1).trimEnd() + '…';
 }
 
 export interface SnapshotAdicional extends SelecaoAdicional {

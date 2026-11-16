@@ -1,8 +1,17 @@
 import { EnderecosComponent } from '../delivery/enderecos.component';
 import { EntregaConfirmada } from '../delivery/modelos';
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  ViewChild,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { ROUTES, RouterLink } from '@angular/router';
 import { CarrinhoService } from '../carrinho/carrinho.service';
+import { montarObservacaoPedido } from '../carrinho/modelos';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 import { Mesa } from '../mesas/modelos';
@@ -153,6 +162,58 @@ export class ConfirmarPedidoComponent {
     );
   }
 
+  motivoBloqueioEnvio(): string {
+    if (!this.carrinho.online()) {
+      return 'Sem conexão com o servidor. Reconecte-se para validar e enviar o pedido.';
+    }
+    const resumo = this.carrinho.resumo();
+    if (!resumo) {
+      return 'Calcule o resumo do carrinho clicando em "Revisar meu pedido" antes de finalizar.';
+    }
+    if (!this.carrinho.confirmado()) {
+      return 'Falta apenas clicar em "Confirmar composição e valores" acima para liberar o envio.';
+    }
+    const contexto = this.carrinho.contexto();
+    if (contexto?.canal === 'DELIVERY' && !this.entrega()) {
+      return 'Informe ou escolha um endereço de entrega e aguarde o cálculo da taxa para liberar o envio.';
+    }
+    if (contexto?.canal === 'MESA') {
+      if (this.tipoMesa()) {
+        if (this.sessaoMesa.participante()?.unidadeId !== contexto.unidadeId) {
+          return 'Esta participação de mesa pertence a outra unidade. Retorne à tela da mesa para continuar.';
+        }
+        if (this.envio.ocupado()) return 'Enviando rodada para a mesa…';
+        return '';
+      }
+      if (!this.assistido() || !this.acoes().includes('pedido.criar_assistido')) {
+        return 'O canal Mesa só é liberado automaticamente ao abrir o cardápio pelo QR Code da mesa.';
+      }
+      if (this.carregandoMesas()) return 'Carregando mesas com comanda aberta…';
+      if (!this.mesas().some((mesa) => mesa.comandaId === this.comandaId)) {
+        return 'Selecione a mesa com comanda aberta antes de lançar o pedido assistido.';
+      }
+    } else if (
+      this.sessao.identidade()?.perfil !== 'CLIENTE' &&
+      !(this.assistido() && this.acoes().includes('pedido.criar_assistido'))
+    ) {
+      return 'Entre na sua conta de cliente para confirmar e acompanhar este pedido.';
+    }
+    if (this.envio.ocupado()) return 'Enviando pedido ao servidor…';
+    return '';
+  }
+
+  alternarCanalCliente(canal: 'DELIVERY' | 'RETIRADA'): void {
+    const atual = this.carrinho.contexto();
+    if (!atual || this.tipoMesa() || this.assistido()) return;
+    if (atual.canal === canal) return;
+    this.entrega.set(null);
+    this.carrinho.definirContexto({
+      unidadeId: atual.unidadeId,
+      unidadeNome: atual.unidadeNome,
+      canal,
+    });
+  }
+
   podeEnviar(): boolean {
     if (
       !this.carrinho.confirmado() ||
@@ -180,6 +241,8 @@ export class ConfirmarPedidoComponent {
   async enviar(): Promise<void> {
     if (!this.podeEnviar()) return;
     const resumo = this.carrinho.resumo()!;
+    const itens = this.carrinho.itens();
+    const observacaoCombinada = montarObservacaoPedido(itens, this.observacao);
     const corpo: EnvioPedido = {
       intencaoId: crypto.randomUUID(),
       unidadeId: resumo.unidadeId,
@@ -189,8 +252,8 @@ export class ConfirmarPedidoComponent {
           ? (this.sessaoMesa.participante()?.comandaId ?? this.comandaId)
           : null,
       revisao: resumo.revisao,
-      linhas: structuredClone(this.carrinho.itens().map((item) => item.linha)),
-      observacao: this.observacao.trim(),
+      linhas: structuredClone(itens.map((item) => item.linha)),
+      observacao: observacaoCombinada,
       endereco: resumo.canal === 'DELIVERY' ? structuredClone(this.entrega()!.endereco) : null,
       revisaoDelivery: resumo.canal === 'DELIVERY' ? this.entrega()!.orcamento.revisao : null,
       pagamento: resumo.canal === 'MESA' || this.assistido() ? 'PRESENCIAL' : this.pagamento,
