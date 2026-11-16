@@ -1,5 +1,221 @@
 # Checkpoint de execução
 
+## Rodapé do cliente e avisos da PWA — 2026-11-16
+
+A [demonstração local](https://demo.localhost:8095/cardapio) serve o frontend
+`5d5e7b246a308340cc9f` com o mesmo JAR da publicação anterior. Foram conferidos
+os 36 arquivos do build, os índices das rotas e a saúde por HTTPS. A publicação
+preservou o processo da demo e guardou os arquivos substituídos para retorno.
+
+O rodapé do cliente apresenta instalação como ação discreta quando o
+navegador a oferece e avisos quando a rede cai ou há atualização. O cardápio
+deixou de consultar o diagnóstico do servidor. A área interna mantém a
+consulta e a recuperação manual. O rodapé móvel reserva a altura medida da
+navegação fixa.
+
+Build, formatação, tipos e lógica passaram. S02-PWA01/02 passaram nas três
+larguras no Chromium, com API e PostgreSQL isolados. O prompt de instalação
+foi simulado; o service worker e a troca de versão foram exercitados.
+Na primeira rodada de fundação, S00-UI02 esperava foco no seletor que o
+redesenho moveu para o diálogo Filtros. A asserção foi atualizada para a busca
+visível do cardápio e os nove pares da fundação passaram na reexecução. Na
+demo, foram conferidos a altura zero do bloco vazio, os avisos, a ação de
+instalação e o acesso ao rodapé acima da navegação fixa a 360, 768 e 1280 px.
+
+## Abertura da PWA, links inválidos e aceite de convite — 2026-11-16
+
+A [demonstração local](https://demo.localhost:8095/cardapio) serve a PWA
+`942a9e0c687e403941fe`. O JAR integrado tem SHA-256
+`bfc90e625ea89f55404846398ce1b865e643db329bd960b680b33cb07876da32`.
+O pacote foi preparado sobre a base local `1f3feb6`. A publicação reiniciou
+somente a JVM da demo e preservou o certificado, o banco `rm_dev`, os chunks
+de versões anteriores e o pacote de retorno. As 36 migrações são idênticas.
+
+Manifesto, cor de abertura e ícones usam terracota. A falha de inicialização
+do Angular mostra um painel com recarga por teclado. Links públicos inválidos
+abertos diretamente mostram HTML com status 404 e atalhos para Cardápio e
+Minha mesa. A página funciona sem JavaScript. As rotas da API e as respostas
+de autorização mantêm seus contratos. O formulário de convite ganhou ações
+primária e secundária com alvos de 48 px. [Diretrizes](09_UI_GUIDELINES.md#politica-implementada-na-sprint-2).
+
+O backend passou 76 testes de rotas, fundação e convites com PostgreSQL 18
+isolado. A revisão final manteve classes, recursos e dependências de backend
+idênticos em bytes fora do frontend. Formatação, tipos, lógica e build
+passaram.
+A rodada inicial de navegador passou nos 21 pares dirigidos, mas a conferência
+visual encontrou rolagem horizontal no cabeçalho de convite a 200%. O cabeçalho
+foi ajustado e o E2E de aceite incorporou essa verificação. No build final,
+passaram os 15 pares de PWA e recuperação e os seis pares de convites
+(S01-UI17/19) em 360 × 800, 768 × 1024 e 1280 × 900 no Chromium. Na demo
+republicada, a inspeção confirmou foco e zoom de 200% sem transbordamento
+horizontal e contraste mínimo de 6,32:1 nos botões verificados. Foram
+conferidos a saúde, os assets e o 404 por HTTPS. Instalação em aparelho
+físico e homologação integrada seguem pendentes.
+
+## Jornada do cliente com o visual do cardápio — 2026-11-15
+
+A [demonstração local](https://demo.localhost:8095/cardapio) serve a PWA
+`ce45f8f955e4992ad3b1`. Os 36 arquivos, o índice de 14 rotas e a saúde
+foram conferidos por HTTPS. **Minha mesa**, **Minha conta**, os formulários
+de acesso, o configurador, o pagamento, os horários e os avisos receberam
+o mesmo padrão visual do cardápio. [Diretrizes](09_UI_GUIDELINES.md#minha-mesa-conta-e-acesso).
+
+No Chromium, foram conferidas as larguras 360, 768 e 1280 px. A conta
+usou login e leitura da demo, com endereços fictícios nas imagens. O diálogo
+usou produto, imagem e cotação da API da demo. As capturas da mesa usaram
+um atendimento fictício simulado e foram complementadas pela jornada de mesa
+com API e PostgreSQL de teste. Foram verificados foco, zoom a 200%, alvos de
+48 px e acesso às ações em telas estreitas. A página de rota inexistente foi
+conferida no roteador Angular com o shell carregado para o cenário.
+As capturas foram entregues na conversa.
+
+Build, formatação, tipos, lógica, templates no Chromium e verificação dos
+links locais passaram.
+Com a API HTTPS e o PostgreSQL 18 isolados, o build intermediário
+`1a4f6cbe5f4eb0bfeb8a` passou em mesa, pedido assistido e teclado offline
+(S03-UI02/08/09 nas três larguras) e cadastro, recuperação e verificação
+(S01-UI10/11/13/14/20/21 em 360 px). O build `c56ef0fcc73f6f0a9c7f` passou
+em catálogo e cotação nas três larguras (S02-UI03), conta e endereços
+(S04-UI01) e pagamento (S04-UI08, provedor simulado) em 360 px.
+No build publicado, foram verificados a jornada de mesa (S03-UI02), horários
+sem conexão e após reconexão (S02-UI02), a abertura offline sem dados privados
+em cache e a atualização da PWA (S02-PWA01/02), todos em 360 px.
+Na primeira execução, o teste de horários esperava o texto anterior. A
+asserção foi ajustada para conferir a orientação e o horário de consulta.
+O certificado fictício bloqueou duas execuções da abertura offline. A prova
+passou com a exceção de certificado aplicada ao processo descartável do
+Chromium na API isolada. O banco de teste foi encerrado e a demo segue ativa.
+Firefox, WebKit e a matriz integrada de homologação permanecem pendentes.
+
+## Meus pedidos, acompanhamento e itens do carrinho — 2026-11-14
+
+A [demonstração local](https://demo.localhost:8095/pedidos) serve a PWA
+`022a1c6b03f1edbea4fc`. O acompanhamento mostra estado, orientação e etapas
+no topo. Em 360 px, o estado e a etapa de retirada ficaram visíveis antes da
+primeira rolagem. O carrinho mostra a miniatura do produto quando disponível,
+descrição e composição por unidade. A cotação continua usando as linhas
+originais do carrinho. [Diretrizes da interface](09_UI_GUIDELINES.md#meus-pedidos-e-acompanhamento).
+
+Os 36 arquivos do build, o índice de quatro rotas e a saúde foram conferidos por
+HTTPS. Em 360 × 800, 768 × 1024 e 1280 × 900, o Chromium verificou lista e detalhe
+com pedidos fictícios existentes, foto do hambúrguer, opções do combo e cálculo
+do carrinho. Os cenários de espera de pagamento, fila de mesa, entrega em curso,
+conclusão e cancelamento também passaram com respostas simuladas. Não houve
+envio de pedido na demo. Tipos, formatação, lógica e build passaram.
+
+No candidato funcional `b02d33641dd3c2b48fe3`, passaram S02-UI03 e
+S03-UI01/03/07 nas três larguras em Chromium, com API e PostgreSQL isolados.
+S03-UI10/11 passaram em 360 px, cobrindo revogação do acesso, interrupção
+do SSE, atualização por consulta periódica e reconexão.
+O acompanhamento direto em 360 px exibiu as mudanças reais de estado até
+**Para retirar**, devolveu à lista e ocultou o pedido da outra conta, com
+404 da API. A alteração final empilhou sequências de cinco ou mais etapas
+no celular. O build publicado passou novamente no acompanhamento direto
+e no S03-UI01 em 360 px. S04-UI08 passou em 360 px no mesmo build com o
+emulador de pagamento local, incluindo retorno sem confirmação, nova
+tentativa e estorno fictício. Firefox, WebKit e a homologação integrada
+permanecem pendentes.
+
+## Carrinho e finalização na demonstração local — 2026-11-14
+
+O [carrinho do cliente](https://demo.localhost:8095/carrinho) recebeu a
+[apresentação responsiva do cardápio](09_UI_GUIDELINES.md#carrinho-e-finalização).
+A revisão usa composição e preços expansíveis por item. Em telas estreitas,
+a ação de revisão ou confirmação acompanha a rolagem acima da navegação
+inferior, e o botão de envio ocupa a largura do formulário. O checkout orienta
+o visitante a entrar e retorna ao carrinho na mesma aba.
+
+A PWA `41f8a2f373b18c405085` foi publicada na porta 8095. Os 37 arquivos,
+quatro rotas e a saúde coincidiram com o build por HTTPS. Na demo, o Chromium
+em 360 × 800, 768 × 1024 e 1280 × 900 verificou edição, remoção, estado vazio,
+cotação, detalhes, foco da revisão e da finalização e bloqueio offline. Em
+360 px, foram verificados também texto ampliado a 200%, botões acima da
+navegação inferior, ação fixa durante a rolagem de seis configurações e
+retorno do login com dois itens preservados. Nenhum pedido foi enviado
+na demo. Build, formatação, tipos e lógica passaram.
+
+No candidato funcional `38aeb5a7e37840e3c1dd`, passaram 18 pares no Chromium
+com API e PostgreSQL 18 isolados. S02-UI03, S03-UI01/03/07/08 e S04-UI08
+passaram nas três larguras, cobrindo cálculo e reconfirmação, envio, cozinha,
+recuperação, retirada, delivery, modo offline e pagamento com simulador local.
+No build publicado `41f8a2f373b18c405085`, S02-UI03 e S03-UI01/08 passaram
+novamente em 360 × 800, incluindo envio pela API isolada. A homologação
+completa, Firefox e WebKit permanecem pendentes.
+
+## Cardápio de bistrô contemporâneo na demonstração local — 2026-11-14
+
+O [cardápio público](https://demo.localhost:8095/cardapio) usa o
+[novo padrão da vitrine](09_UI_GUIDELINES.md#cardápio-do-cliente).
+Nas capturas do Centro, canal Retirada, o banner passou de 136 para 248 px em
+1280 × 900 e de 92 para 102 px em 360 × 800. No celular, a faixa de categorias
+e o primeiro prato completo aparecem antes da rolagem, com o prato começando
+63 px mais acima que na versão anterior. O painel abre pela base no celular e
+fica centralizado em 768 e 1280 px. As três larguras passaram sem rolagem
+horizontal da página. Em 360 px, a ampliação de texto a 200% fez o banner
+crescer sem cortar o título. O contraste calculado do terracota nos fundos
+claros testados ficou entre 5,40:1 e 6,32:1.
+
+O build Angular/PWA `9d37a64db3d3c10cfee6` passou 9 de 9 E2E no Chromium
+com API e PostgreSQL 18 isolados. Em cada uma das três larguras passaram
+[S02-UI03 e S02-UI-PERFIS-CLIENTES](evidencias/cobertura.md#sprint-2-integrada--validação-local-concluída)
+e S03-UI01. As duas asserções preliminares ajustadas verificam o aviso de
+offline e leem quantidade e nome em elementos separados. A reexecução passou
+no mesmo conjunto. Formatação, tipos, lógica, build e verificação do
+repositório passaram. Os cinco checks de templates passaram com o Chrome
+local. A execução padrão de templates parou pela ausência do Chromium do
+Playwright. Firefox, WebKit e a matriz completa de homologação permanecem
+pendentes.
+
+A sessão de depuração havia encerrado. O serviço HTTPS foi iniciado na mesma
+porta 8095 com a configuração existente e o banco `rm_dev` na porta 5432.
+Os 37 arquivos do build, o índice de quatro rotas e a saúde foram conferidos
+por HTTPS. A verificação na demo incluiu teclado, foco, simulação de perda de
+conexão e de canal fechado e a prévia com quatro configurações e cinco itens.
+A prévia exibiu três linhas e uma configuração excedente. O link abriu o
+carrinho com todos os itens, e o servidor calculou o resumo sem envio de
+pedido. As capturas lado a lado foram entregues na conversa.
+
+## Cardápio do cliente na demonstração local — 2026-11-14
+
+O [cardápio público](https://demo.localhost:8095/cardapio) usa a direção visual
+[clara com terracota](09_UI_GUIDELINES.md#cardápio-do-cliente). Na primeira tela
+de 360 × 800 px, o banner mediu 92 px, ante 283 px, e a primeira categoria e
+o primeiro prato completo passaram a aparecer antes da rolagem. O preço fica
+junto ao título e a descrição completa aparece ao abrir as opções.
+
+O build Angular e da PWA `d2abfd03c2767557e2f6` foi publicado na porta 8095.
+Índice, arquivos compilados e saúde foram conferidos por HTTPS. No Chromium,
+o cardápio consultou a API da demonstração em 360, 768 e 1280 px. Passaram o
+filtro por categoria, a busca, a abertura e o fechamento do produto por teclado,
+o retorno do foco e as verificações de largura. Em 360 px, foram simuladas
+perda de conexão e resposta de canal fechado. A consulta de favoritos e a
+navegação para o carrinho passaram com a conta de cliente. O Administrador
+abriu a vitrine do pedido assistido com a unidade vinculada ao contexto.
+Formatação, tipos, lógica e build passaram. A matriz completa de homologação
+permanece pendente.
+
+## Gestão compacta na demonstração local — 2026-11-13
+
+Os arquivos estáticos do build validado, com PWA `3c8af36b931bbe52a34a`,
+foram publicados na [Gestão da demonstração](https://demo.localhost:8095/gestao/pedidos).
+O Java da sessão VS Code continuou na porta 8095 e o PostgreSQL `rm_dev`
+continuou na porta 5432. O índice, o service worker e os arquivos compilados
+servidos por HTTPS coincidiram com o build. Os arquivos com hash da versão
+anterior foram preservados para abas abertas. [Evidência local](evidencias/gestao-compacta-2026-11-12.md#publicação-na-demonstração-local).
+
+## Gestão compacta — 2026-11-12
+
+Base local `1f3feb69d1b9` (PR #14 integrado). A fila de Pedidos foi reformulada
+primeiro. O mesmo padrão foi aplicado a Cardápio, Mesas e comandas, Unidades e
+horários, Equipe e acessos e Convites. O alternador do cabeçalho guarda a
+preferência claro/escuro no navegador. O menu lateral manteve a estrutura e as
+proporções da versão anterior. [Diretrizes da gestão](09_UI_GUIDELINES.md#densidade-da-gestão).
+
+[Evidência local e reexecuções](evidencias/gestao-compacta-2026-11-12.md). A
+comparação visual usa o build original e o candidato com a mesma massa
+simulada. A regressão funcional usou API HTTPS e PostgreSQL `rm_test` próprios
+no Mac. A matriz completa do release integrado permanece pendente.
+
 ## Depuração no VS Code no Mac — 2026-11-12
 
 O F5 iniciou o Spring Boot em Java 21 com o `.env` local e, em sequência,

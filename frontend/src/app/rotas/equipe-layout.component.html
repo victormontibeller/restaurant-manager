@@ -1,4 +1,9 @@
-<div class="workplace" [class.kitchen-workplace]="cozinha">
+<div
+  class="workplace"
+  [class.kitchen-workplace]="cozinha"
+  [class.gestao-compacta]="pagina()['compacta']"
+  [attr.data-tema-gestao]="cozinha ? null : tema()"
+>
   @if (!cozinha) {
     @if (menuAberto()) {
       <button class="sidebar-overlay" aria-label="Fechar menu" (click)="fecharMenu()"></button>
@@ -31,9 +36,21 @@
             ><app-icone nome="mesas" />Mesas e comandas</a
           >
         }
-        @if (contexto.podeExpedicao()) {<a routerLink="/gestao/expedicao" routerLinkActive="active"><app-icone nome="pedidos" />Expedição</a>}
-        @if (contexto.tem('relatorio.consultar')) {<a routerLink="/gestao/relatorios" routerLinkActive="active"><app-icone nome="atualizacoes" />Vendas e movimentos</a>}
-        @if (contexto.tem('pagamento.reconciliar')) {<a routerLink="/gestao/pendencias" routerLinkActive="active"><app-icone nome="relogio" />Pendências e notificações</a>}
+        @if (contexto.podeExpedicao()) {
+          <a routerLink="/gestao/expedicao" routerLinkActive="active"
+            ><app-icone nome="pedidos" />Expedição</a
+          >
+        }
+        @if (contexto.tem('relatorio.consultar')) {
+          <a routerLink="/gestao/relatorios" routerLinkActive="active"
+            ><app-icone nome="atualizacoes" />Vendas e movimentos</a
+          >
+        }
+        @if (contexto.tem('pagamento.reconciliar')) {
+          <a routerLink="/gestao/pendencias" routerLinkActive="active"
+            ><app-icone nome="relogio" />Pendências e notificações</a
+          >
+        }
         @if (contexto.tem('catalogo.consultar')) {
           <a routerLink="/gestao/catalogo" routerLinkActive="active"
             ><app-icone nome="cardapio" />Cardápio</a
@@ -46,8 +63,12 @@
         }
         @if (contexto.administrador()) {
           <p class="nav-label">ADMINISTRAÇÃO</p>
-          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"><app-icone nome="unidade" />Regiões e checkout</a>
-          <a routerLink="/gestao/integracoes" routerLinkActive="active"><app-icone nome="conta" />Mercado Pago</a>
+          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"
+            ><app-icone nome="unidade" />Regiões e checkout</a
+          >
+          <a routerLink="/gestao/integracoes" routerLinkActive="active"
+            ><app-icone nome="conta" />Mercado Pago</a
+          >
           <a
             routerLink="/gestao/equipe"
             routerLinkActive="active"
@@ -100,9 +121,13 @@
           ><span>{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
         >
       } @else {
-        <div class="breadcrumb">
-          Restaurante <span>/</span> <strong>{{ titulo() }}</strong>
-        </div>
+        @if (pagina()['compacta']) {
+          <div class="breadcrumb">Gestão</div>
+        } @else {
+          <div class="breadcrumb">
+            Restaurante <span>/</span> <strong>{{ titulo() }}</strong>
+          </div>
+        }
       }
       <div class="workspace-tools">
         @if (cozinha || pagina()['unidade']) {
@@ -124,6 +149,20 @@
         @if (cozinha) {
           <a hlmBtn variant="outline" routerLink="/gestao/pedidos">Gestão</a>
         }
+        @if (!cozinha) {
+          <button
+            hlmBtn
+            variant="ghost"
+            size="icon"
+            type="button"
+            class="alternar-tema"
+            [attr.aria-label]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
+            [attr.title]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
+            (click)="alternarTema()"
+          >
+            <app-icone [nome]="tema() === 'escuro' ? 'sol' : 'lua'" />
+          </button>
+        }
         <a class="user-avatar" routerLink="/conta" aria-label="Minha conta"
           ><app-icone nome="conta"
         /></a>
@@ -142,10 +181,7 @@
     <main id="conteudo" class="workspace-main" tabindex="-1">
       <div class="page-heading">
         <div>
-          <p class="eyebrow">
-            {{ cozinha ? 'PREPARO E EXPEDIÇÃO' : 'SEU RESTAURANTE, EM SINTONIA' }}
-          </p>
-          <h1>{{ titulo() }}</h1>
+          <h1 id="gestao-titulo" tabindex="-1">{{ titulo() }}</h1>
         </div>
         @if (!cozinha && contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
           <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>

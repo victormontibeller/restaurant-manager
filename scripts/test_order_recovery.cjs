@@ -168,10 +168,29 @@ async function comandoIncertoReutilizaMesmasUnidadesEVersao() {
     /ação anterior/,
   );
   assert.equal(f.chamadas.length, 1);
+  assert.equal(f.service.pendenciasDaFila('unidade-a').length, 0);
   f.responder(async () => ({ id: 'pedido-a', versao: 5 }));
   await f.service.executar('pedido-a', false, f.service.pendente('pedido-a', false));
   assert.deepEqual(f.chamadas.at(-1).corpo, intencao.corpo);
   assert.equal(f.service.pendente('pedido-a', false), null);
+}
+
+async function pendenciaDaFilaPermaneceNaUnidadeENaSessaoDoPedido() {
+  const f = preparar('pedido-comando.service.ts', 'PedidoComandoService');
+  const intencao = {
+    rota: '/api/v1/operacao/pedidos/pedido-a/servir',
+    corpo: { intencaoId: 'comando-a', versao: 4, motivo: '', unidades: [] },
+  };
+  await assert.rejects(f.service.executar('pedido-a', false, intencao, 'unidade-a'));
+  assert.deepEqual(Array.from(f.service.pendenciasDaFila('unidade-a')), ['pedido-a']);
+  assert.equal(f.service.pendenciasDaFila('unidade-b').length, 0);
+  f.trocarConta('cliente-b');
+  assert.equal(f.service.pendenciasDaFila('unidade-a').length, 0);
+  f.trocarConta('cliente-a');
+  f.responder(async () => ({ id: 'pedido-a', versao: 5 }));
+  await f.service.executar('pedido-a', false, f.service.pendente('pedido-a', false));
+  assert.deepEqual(f.chamadas.at(-1).corpo, intencao.corpo);
+  assert.equal(f.service.pendenciasDaFila('unidade-a').length, 0);
 }
 
 async function selecaoSobreviveSnapshotDaMesmaVersao() {
@@ -278,6 +297,7 @@ async function rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal() {
     rejeicaoDefinitivaInicialLiberaCorrecaoDoCarrinho,
     respostaDeOutraContaNaoApareceNaSessaoAtual,
     comandoIncertoReutilizaMesmasUnidadesEVersao,
+    pendenciaDaFilaPermaneceNaUnidadeENaSessaoDoPedido,
     selecaoSobreviveSnapshotDaMesmaVersao,
     rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal,
   ]) {

@@ -1,5 +1,5 @@
 import { EnderecosComponent } from '../delivery/enderecos.component';
-import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, ROUTES, Router, RouterLink } from '@angular/router';
 import { CriacaoPendenteService } from '../unidades/criacao-pendente.service';
 import { ConvitePendenteService } from '../acessos/convite-pendente.service';
@@ -29,42 +29,87 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     AceitarConviteComponent,
     VerificacaoComponent,
   ],
+  host: { '[class.identidade-cliente]': 'apresentacaoCliente()' },
   template: `
-    <section class="auth-card" [attr.aria-labelledby]="tituloFormulario()" [attr.aria-busy]="ocupado()">
+    <section
+      class="auth-card"
+      [class.auth-cliente]="apresentacaoCliente()"
+      [class.conta-cliente]="apresentacaoCliente() && sessao.identidade()?.perfil === 'CLIENTE'"
+      [attr.aria-labelledby]="tituloFormulario()"
+      [attr.aria-busy]="ocupado()"
+    >
       @if (sessao.identidade(); as pessoa) {
-        <span class="auth-symbol" aria-hidden="true">✓</span>
-        <p class="eyebrow">MINHA CONTA</p>
-        <h1 id="conta-titulo">Que bom ter você por aqui.</h1>
-        <p class="perfil">{{ nomePerfil(pessoa.perfil) }}</p>
-        <p>{{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</p>
-        @if (!pessoa.emailVerificado) { <p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p> }
-        @if (router) {
+        <div class="account-profile">
+          @if (apresentacaoCliente()) {
+            <h1 id="conta-titulo">Minha conta</h1>
+            <dl class="dados-perfil">
+              <div>
+                <dt>Perfil</dt>
+                <dd>{{ nomePerfil(pessoa.perfil) }}</dd>
+              </div>
+              <div>
+                <dt>Verificação</dt>
+                <dd class="status-email" [class.email-verificado]="pessoa.emailVerificado">
+                  {{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}
+                </dd>
+              </div>
+            </dl>
+          } @else {
+            <span class="auth-symbol" aria-hidden="true">✓</span>
+            <p class="eyebrow">MINHA CONTA</p>
+            <h1 id="conta-titulo">Que bom ter você por aqui.</h1>
+            <p class="perfil">{{ nomePerfil(pessoa.perfil) }}</p>
+            <p>{{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</p>
+          }
+          @if (!pessoa.emailVerificado) {
+            <p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p>
+          }
           <div class="account-actions">
-            @if (pessoa.perfil === 'CLIENTE') { <a hlmBtn routerLink="/pedidos">Acompanhar meus pedidos</a> }
-            @else { <a hlmBtn routerLink="/gestao">Abrir área da equipe</a> }
-            <a hlmBtn variant="outline" routerLink="/cardapio">Explorar cardápio</a>
+            @if (router) {
+              @if (pessoa.perfil === 'CLIENTE') {
+                <a hlmBtn class="account-primary" routerLink="/pedidos">Acompanhar meus pedidos</a>
+              } @else {
+                <a hlmBtn routerLink="/gestao">Abrir área da equipe</a>
+              }
+              <a hlmBtn variant="outline" routerLink="/cardapio">Explorar cardápio</a>
+            }
+            @if (apresentacaoCliente()) {
+              <button hlmBtn variant="ghost" type="button" (click)="sair()" [disabled]="ocupado()">
+                Sair da conta
+              </button>
+            }
           </div>
+        </div>
+        @if (pessoa.perfil === 'CLIENTE') {
+          <app-enderecos [apresentacaoCliente]="apresentacaoCliente()" />
         }
-        @if (pessoa.perfil === 'CLIENTE') { <app-enderecos /> }
-        <button hlmBtn variant="ghost" type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
+        @if (!apresentacaoCliente()) {
+          <button hlmBtn variant="ghost" type="button" (click)="sair()" [disabled]="ocupado()">
+            Sair da conta
+          </button>
+        }
       } @else if (pagina() === 'verificacao') {
-        <app-verificacao (voltar)="voltarAoLogin()"/>
+        <app-verificacao [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else if (pagina() === 'convite') {
         <app-aceitar-convite (voltar)="voltarAoLogin()"/>
       } @else if (pagina() === 'cadastro') {
-        <app-cadastro (voltar)="voltarAoLogin()"/>
+        <app-cadastro [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else if (pagina() === 'recuperacao') {
-        <app-recuperacao (voltar)="voltarAoLogin()"/>
+        <app-recuperacao [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else {
-        <span class="auth-symbol" aria-hidden="true">↗</span>
-        <p class="eyebrow">{{ equipe ? 'ÁREA DA EQUIPE' : 'BEM-VINDO DE VOLTA' }}</p>
+        @if (!apresentacaoCliente()) {
+          <span class="auth-symbol" aria-hidden="true">↗</span>
+          <p class="eyebrow">{{ equipe ? 'ÁREA DA EQUIPE' : 'BEM-VINDO DE VOLTA' }}</p>
+        }
         <h1 id="conta-titulo">Entre na sua conta.</h1>
-        <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
+        @if (!apresentacaoCliente()) {
+          <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
+        }
         <form (submit)="entrar($event, email.value, senha)">
           <label for="email-conta">E-mail</label>
-          <input #email id="email-conta" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="seu@email.com" [disabled]="ocupado()">
+          <input #email id="email-conta" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="seu@email.com" [disabled]="ocupado()" [attr.aria-describedby]="erro() ? 'erro-identidade' : null">
           <div class="password-label"><label for="senha-conta">Senha</label><button type="button" class="text-action" (click)="abrirFormulario('recuperacao')" [disabled]="ocupado() || encerramentoPendente()">Recuperar senha</button></div>
-          <input #senha id="senha-conta" name="senha" type="password" autocomplete="current-password" required maxlength="72" placeholder="Sua senha" [disabled]="ocupado()">
+          <input #senha id="senha-conta" name="senha" type="password" autocomplete="current-password" required maxlength="72" placeholder="Sua senha" [disabled]="ocupado()" [attr.aria-describedby]="erro() ? 'erro-identidade' : null">
           <button hlmBtn type="submit" [disabled]="ocupado() || encerramentoPendente()">{{ ocupado() ? 'Aguarde…' : 'Entrar' }}</button>
         </form>
         @if(equipe && router) { <p class="signup">Veio escolher seu pedido? <a routerLink="/entrar">Acessar conta de cliente</a></p> }
@@ -74,13 +119,123 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
           <button hlmBtn variant="ghost" type="button" (click)="abrirFormulario('verificacao')" [disabled]="ocupado() || encerramentoPendente()">Verificar e-mail existente</button>
         </nav></details>
       }
-      @if (erro()) { <p #alerta class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
+      @if (erro()) { <p #alerta id="erro-identidade" class="erro" role="alert" tabindex="-1">{{ erro() }}</p> }
       @if (encerramentoPendente()) { <button hlmBtn type="button" (click)="sair()" [disabled]="ocupado()">Tentar encerrar novamente</button> }
       @if (aviso() || coordenacao.aviso()) { <p role="status">{{ aviso() || coordenacao.aviso() }}</p> }
     </section>
   `,
   styles: `
     :host{display:block;padding:clamp(1rem,5vw,4rem) 0}.auth-card{width:min(100%,35rem);margin:auto;background:var(--rm-surface,#fff);padding:clamp(1.25rem,5vw,3rem);border:1px solid var(--rm-border,#e4e8e2);border-radius:24px;box-shadow:0 16px 60px #163d2810}.auth-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#edf3e9;color:#254d36;font-size:1.65rem;margin-bottom:1.75rem}.eyebrow{font-size:.73rem;font-weight:750;letter-spacing:.13em;color:var(--rm-primary,#285139)}h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;letter-spacing:-.045em;margin:.6rem 0 1rem}.auth-intro{color:var(--rm-muted,#6b746c);margin-bottom:2rem}form{display:grid;gap:.65rem}input{width:100%;min-height:50px;border:1px solid var(--rm-border,#dce2d9);border-radius:11px;padding:.8rem 1rem;font:inherit;background:#fcfcfa}label{font-size:.88rem;font-weight:650}.password-label{display:flex;justify-content:space-between;align-items:center;margin-top:.65rem;gap:.5rem}.text-action{background:none;border:0;padding:0;color:var(--rm-primary,#285139);font:inherit;font-size:.85rem;text-decoration:underline;text-underline-offset:4px;min-height:44px}form button[type=submit]{margin-top:.75rem;width:100%}.signup{margin:1.2rem 0;text-align:center;font-size:.88rem;color:var(--rm-muted,#6b746c)}.other-access{border-top:1px solid var(--rm-border,#dce2d9);padding-top:1rem;font-size:.85rem}.other-access summary{min-height:44px;cursor:pointer;align-content:center}.other-access nav,.account-actions{display:flex;gap:.6rem;flex-wrap:wrap}.account-actions{margin:1.5rem 0}.erro{color:#9d2424;font-weight:600}.perfil{font-weight:650}
+
+    :host(.identidade-cliente) {
+      padding-block: 0 16px;
+    }
+    .auth-cliente {
+      --fonte-editorial: Georgia, 'Times New Roman', serif;
+      width: min(100%, 36rem);
+      padding: clamp(16px, 4vw, 32px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: none;
+      overflow-wrap: anywhere;
+    }
+    .auth-cliente h1 {
+      margin: 0 0 16px;
+      font: 400 clamp(1.9rem, 4vw, 2.5rem) / 1.12 var(--fonte-editorial);
+      letter-spacing: -0.035em;
+    }
+    .auth-cliente :is(input, button, .other-access summary) {
+      min-height: 48px;
+    }
+    .auth-cliente :is(input, button, .other-access) {
+      border-radius: 8px;
+    }
+    .auth-cliente input {
+      min-width: 0;
+      padding: 8px 12px;
+      border-color: var(--input);
+      background: var(--card);
+    }
+    .auth-cliente .password-label {
+      flex-wrap: wrap;
+      gap: 0 12px;
+      margin: 0;
+    }
+    .auth-cliente .signup {
+      margin: 8px 0;
+      text-align: start;
+    }
+    .auth-cliente .other-access {
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      background: #fffdf9;
+    }
+    .auth-cliente .other-access nav {
+      padding-bottom: 8px;
+    }
+    .auth-cliente .erro {
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff1ed;
+    }
+    .conta-cliente {
+      width: min(100%, 1000px);
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .conta-cliente .account-profile {
+      padding: clamp(16px, 3vw, 24px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fffdf9;
+    }
+    .conta-cliente .dados-perfil {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px 32px;
+      margin: 0;
+    }
+    .conta-cliente dt {
+      color: var(--muted-foreground);
+      font-size: 0.875rem;
+    }
+    .conta-cliente dd {
+      margin: 4px 0 0;
+      font-weight: 650;
+    }
+    .conta-cliente .status-email {
+      width: fit-content;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background: var(--muted);
+      color: var(--muted-foreground);
+    }
+    .conta-cliente .email-verificado {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .conta-cliente .account-actions {
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+    .conta-cliente .account-actions :is(a, button) {
+      min-height: 48px;
+      border-radius: 8px;
+    }
+    @media (max-width: 600px) {
+      .conta-cliente .account-actions :is(a, button) {
+        flex: 1 1 auto;
+        padding-inline: 12px;
+        font-size: 0.875rem;
+      }
+      .conta-cliente .account-actions .account-primary {
+        flex-basis: 100%;
+      }
+    }
   `,
 })
 export class IdentidadeComponent {
@@ -99,6 +254,11 @@ export class IdentidadeComponent {
   readonly ocupado = signal(true);
   readonly erro = signal('');
   readonly aviso = signal('');
+  private readonly rotaCliente = this.rota?.snapshot.data['visualCliente'] === true;
+  readonly apresentacaoCliente = computed(() => {
+    const pessoa = this.sessao.identidade();
+    return this.rotaCliente && (!pessoa || pessoa.perfil === 'CLIENTE');
+  });
   readonly encerramentoPendente = this.coordenacao.encerramentoPendente;
   readonly equipe = this.rota?.snapshot.data['equipe'] === true;
   readonly pagina = signal<Formulario>(

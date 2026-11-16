@@ -5,6 +5,7 @@ import br.com.restaurantmanager.identidade.services.IdentidadeService;
 import br.com.restaurantmanager.shared.dtos.ApiError;
 import br.com.restaurantmanager.shared.filters.ErroSseDesconectadoFilter;
 import br.com.restaurantmanager.shared.security.DespachoErroSseMatcher;
+import br.com.restaurantmanager.shared.security.PaginaPublicaNaoEncontrada;
 import br.com.restaurantmanager.tenancy.context.TenantScope;
 import br.com.restaurantmanager.tenancy.filters.TenantFilter;
 
@@ -328,6 +329,9 @@ public class SecurityConfiguration {
                         e ->
                                 e.authenticationEntryPoint(
                                                 (request, response, exception) -> {
+                                                    if (PaginaPublicaNaoEncontrada.responder(request, response)) {
+                                                        return;
+                                                    }
                                                     response.setStatus(401);
                                                     response.setContentType("application/json");
                                                     mapper.writeValue(
@@ -338,6 +342,9 @@ public class SecurityConfiguration {
                                                 })
                                         .accessDeniedHandler(
                                                 (request, response, exception) -> {
+                                                    if (PaginaPublicaNaoEncontrada.responder(request, response)) {
+                                                        return;
+                                                    }
                                                     response.setStatus(403);
                                                     response.setContentType("application/json");
                                                     mapper.writeValue(

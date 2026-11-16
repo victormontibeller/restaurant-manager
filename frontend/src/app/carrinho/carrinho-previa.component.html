@@ -1,0 +1,26 @@
+<header>
+  <h2><app-icone nome="sacola" /> Meu carrinho</h2>
+  <span class="contagem" role="status">
+    {{ quantidade() }} {{ quantidade() === 1 ? 'item' : 'itens' }}
+  </span>
+</header>
+@if (contexto(); as contextoAtual) {
+  <p class="contexto">{{ contextoAtual.unidadeNome }} · {{ canal() }}</p>
+}
+@if (itensVisiveis().length) {
+  <ul class="itens">
+    @for (item of itensVisiveis(); track item.linha.id) {
+      <li>
+        <strong>{{ item.linha.quantidade }} ×</strong> <span>{{ item.nome }}</span>
+      </li>
+    }
+  </ul>
+  @if (restantes() > 0) {
+    <p class="restantes">
+      + {{ restantes() }} {{ restantes() === 1 ? 'configuração' : 'configurações' }}
+    </p>
+  }
+  <a hlmBtn routerLink="/carrinho">Ver carrinho</a>
+} @else {
+  <p class="vazio">Seu carrinho está vazio.</p>
+}

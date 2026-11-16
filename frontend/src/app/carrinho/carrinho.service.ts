@@ -1,7 +1,20 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { CatalogoApiService } from '../catalogo/catalogo-api.service';
-import { mensagemErro } from '../catalogo/modelos';
-import { ContextoCarrinho, ItemCarrinho, LinhaCarrinho, ResumoCarrinho } from './modelos';
+import { Adicional, ProdutoPublico, mensagemErro } from '../catalogo/modelos';
+import {
+  ContextoCarrinho,
+  ItemCarrinho,
+  LinhaCarrinho,
+  ResumoCarrinho,
+  SelecaoAdicional,
+} from './modelos';
+
+function detalharAdicionais(selecao: SelecaoAdicional[], adicionais: Adicional[]) {
+  return selecao.map(({ adicionalId, quantidade }) => ({
+    nome: adicionais.find((item) => item.id === adicionalId)?.nome ?? 'Adicional',
+    quantidade,
+  }));
+}
 
 @Injectable({ providedIn: 'root' })
 export class CarrinhoService {
@@ -51,7 +64,7 @@ export class CarrinhoService {
     this.invalidar('Unidade e canal selecionados.');
   }
 
-  guardar(linha: LinhaCarrinho, nome: string): boolean {
+  guardar(linha: LinhaCarrinho, produto: ProdutoPublico): boolean {
     if (!this.contexto() || !this.online()) {
       this.erro.set(
         'Selecione uma unidade e conecte-se ao servidor antes de configurar o carrinho.',
@@ -63,7 +76,23 @@ export class CarrinhoService {
       this.erro.set('O carrinho aceita até 50 configurações. Remova uma antes de adicionar outra.');
       return false;
     }
-    const novo = { linha: structuredClone(linha), nome };
+    const novo: ItemCarrinho = {
+      linha: structuredClone(linha),
+      nome: produto.nome,
+      descricao: produto.descricao,
+      midiaId: produto.midiaId,
+      adicionais: detalharAdicionais(linha.adicionais, produto.adicionais),
+      escolhas: linha.escolhas.map((escolha) => {
+        const grupo = produto.grupos.find((item) => item.id === escolha.grupoId);
+        const opcao = grupo?.opcoes.find((item) => item.id === escolha.opcaoId);
+        return {
+          grupo: grupo?.nome ?? 'Escolha',
+          nome: opcao?.nome ?? 'Opção selecionada',
+          quantidade: escolha.quantidade,
+          adicionais: detalharAdicionais(escolha.adicionais, opcao?.adicionais ?? []),
+        };
+      }),
+    };
     this.itens.update((itens) =>
       existe ? itens.map((item) => (item.linha.id === linha.id ? novo : item)) : [...itens, novo],
     );

@@ -10,101 +10,14 @@ import {
   signal,
 } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 import { CatalogoPendenteService } from './catalogo-pendente.service';
 import { CANAIS, Canal, Oferta, Unidade, mensagemErro } from './modelos';
 
 @Component({
   selector: 'app-oferta-unidade',
-  template: `
-    <section aria-labelledby="oferta-titulo" [attr.aria-busy]="ocupado()">
-      <h3 id="oferta-titulo">Preço e disponibilidade de {{ nome }}</h3>
-      <label for="oferta-unidade">Unidade da oferta</label>
-      <select
-        #unidade
-        id="oferta-unidade"
-        data-sem-rascunho
-        [value]="unidadeId()"
-        [disabled]="ocupado() || incerto() || bloqueado"
-        (change)="selecionarUnidade(unidade.value)"
-      >
-        <option value="">Selecione a unidade</option>
-        @for (item of unidades; track item.id) {
-          <option [value]="item.id" [selected]="item.id === unidadeId()">{{ item.nome }}</option>
-        }
-      </select>
-      @if (erro()) {
-        <p role="alert" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
-      }
-      @if (incerto()) {
-        <p class="aviso">
-          Consulte a oferta para conferir o resultado antes de editar novamente. A consulta substitui o
-          rascunho.
-        </p>
-      }
-      @if (unidadeId()) {
-        <button
-          class="secundario"
-          type="button"
-          (click)="consultar()"
-          [disabled]="ocupado() || bloqueado"
-        >
-          Consultar oferta no servidor
-        </button>
-      }
-      @if (oferta(); as atual) {
-        <form [attr.data-rascunho]="grupoRascunho()" (submit)="salvar($event)">
-          <fieldset [disabled]="ocupado() || incerto() || bloqueado || !podeAlterar" class="campos">
-            <legend>Oferta desta unidade</legend>
-            <p>
-              Esta alteração afeta somente a unidade selecionada. O horário de atendimento também
-              controla a disponibilidade para o carrinho.
-            </p>
-            <label for="oferta-preco">Preço base nesta unidade (R$)</label>
-            <input
-              #preco
-              id="oferta-preco"
-              type="number"
-              required
-              min="0"
-              max="999999.99"
-              step="0.01"
-              [value]="atual.preco"
-              (input)="alterar({ preco: preco.value })"
-            />
-            <label class="check"
-              ><input
-                #disponivel
-                type="checkbox"
-                [checked]="atual.disponivel"
-                (change)="alterar({ disponivel: disponivel.checked })"
-              />Disponível nesta unidade</label
-            >
-            <fieldset>
-              <legend>Canais desta oferta</legend>
-              @for (canal of canais; track canal.valor) {
-                <label class="check"
-                  ><input
-                    #habilitado
-                    type="checkbox"
-                    [checked]="atual.canais.includes(canal.valor)"
-                    (change)="habilitar(canal.valor, habilitado.checked)"
-                  />{{ canal.nome }}</label
-                >
-              }
-            </fieldset>
-            <button>Salvar oferta da unidade</button>
-          </fieldset>
-          @if (!podeAlterar) {
-            <p>Seu acesso permite consultar esta oferta, sem alterá-la.</p>
-          }
-        </form>
-      }
-    </section>
-  `,
-  styleUrl: './catalogo.css',
+  templateUrl: './oferta-unidade.component.html',
+  styleUrls: ['./catalogo.css', './catalogo-editor.css'],
 })
 export class OfertaUnidadeComponent implements OnChanges {
   @Input({ required: true }) produtoId = '';
@@ -114,8 +27,10 @@ export class OfertaUnidadeComponent implements OnChanges {
   @Input() bloqueado = false;
   @Output() bloqueio = new EventEmitter<boolean>();
   @Output() salvo = new EventEmitter<string>();
+  @Output() fechar = new EventEmitter<void>();
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(CatalogoPendenteService);
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
   private destruido = false;
   private geracao = 0;
   readonly unidadeId = signal('');
@@ -151,11 +66,30 @@ export class OfertaUnidadeComponent implements OnChanges {
     }
   }
 
-  async selecionarUnidade(id: string): Promise<void> {
-    if (this.ocupado() || this.incerto() || this.bloqueado) return;
+  async selecionarUnidade(seletor: HTMLSelectElement): Promise<void> {
+    const id = seletor.value;
+    if (
+      this.ocupado() ||
+      this.incerto() ||
+      this.bloqueado ||
+      this.formulario?.confirmarDescarte(this.grupoRascunho()) === false
+    ) {
+      seletor.value = this.unidadeId();
+      return;
+    }
     this.unidadeId.set(id);
     this.oferta.set(null);
     if (id) await this.consultar();
+  }
+
+  atualizar(): void {
+    if (
+      !this.incerto() &&
+      this.formulario?.temRascunho(this.grupoRascunho()) &&
+      !window.confirm('A consulta substitui as alterações ainda não salvas. Deseja continuar?')
+    )
+      return;
+    void this.consultar();
   }
 
   async consultar(): Promise<void> {

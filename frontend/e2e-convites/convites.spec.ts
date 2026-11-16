@@ -72,6 +72,11 @@ async function capturar(email: string): Promise<string> {
 }
 
 async function criar(page: Page, email: string): Promise<{ id: string; codigo: string }> {
+  const novo = page.getByRole('button', { name: 'Novo convite', exact: true });
+  if ((await novo.getAttribute('aria-expanded')) === 'false') {
+    await novo.click();
+    await expect(page.getByRole('heading', { name: 'Novo convite', exact: true })).toBeFocused();
+  }
   await page.getByLabel('E-mail do funcionário convidado').fill(email);
   const resposta = page.waitForResponse(
     (r) => r.url().endsWith('/equipe/convites') && r.request().method() === 'POST',
@@ -112,16 +117,40 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
 
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
   await abrirAceite(page);
+  const aceitar = page.getByRole('button', { name: 'Verificar e aceitar convite', exact: true });
+  const voltar = page.getByRole('button', { name: 'Voltar ao login', exact: true });
+  await expect(aceitar).toHaveAttribute('data-variant', 'default');
+  await expect(voltar).toHaveAttribute('data-variant', 'outline');
+  const acaoPrimaria = (await aceitar.boundingBox())!;
+  const acaoSecundaria = (await voltar.boundingBox())!;
+  expect(acaoPrimaria.height).toBeGreaterThanOrEqual(48);
+  expect(acaoSecundaria.height).toBeGreaterThanOrEqual(48);
+  if (page.viewportSize()!.width <= 600) {
+    expect(acaoSecundaria.y).toBeGreaterThanOrEqual(acaoPrimaria.y + acaoPrimaria.height);
+  } else {
+    expect(acaoSecundaria.x).toBeGreaterThanOrEqual(acaoPrimaria.x + acaoPrimaria.width);
+  }
+  await page.locator('html').evaluate((html) => (html.style.zoom = '2'));
+  const dimensoes = await page.evaluate(() => ({
+    conteudo: document.documentElement.scrollWidth,
+    janela: document.documentElement.clientWidth,
+  }));
+  expect(dimensoes.conteudo).toBeLessThanOrEqual(dimensoes.janela + 1);
+  await page.locator('html').evaluate((html) => html.style.removeProperty('zoom'));
+
   await preencher(page, codigo, senha);
   const r = page.waitForResponse((r) => r.url().endsWith('/convites/aceitar'));
-  await page.getByRole('button', { name: 'Verificar e aceitar convite', exact: true }).click();
+  await page.getByLabel('Confirmar senha de funcionário', { exact: true }).focus();
+  await page.keyboard.press('Tab');
+  await expect(aceitar).toBeFocused();
+  await page.keyboard.press('Enter');
   expect((await r).status()).toBe(204);
   await expect(
     page.getByRole('status').filter({ hasText: 'Convite aceito e e-mail verificado' }),
   ).toBeVisible();
   await expect(page.getByLabel('Senha da conta de funcionário', { exact: true })).toHaveValue('');
 
-  await page.getByRole('button', { name: 'Voltar ao login', exact: true }).click();
+  await voltar.click();
   await entrar(page, email, senha);
   await expect(page.getByText('Equipe da cozinha', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
@@ -134,6 +163,7 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
 
 test('S01-UI41: seleção do perfil de convite persiste até aceite e login', async ({ page }) => {
   await admin(page);
+  await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
   await expect(page.getByLabel('Perfil do convite')).toHaveValue('COZINHA');
   await page.getByLabel('Perfil do convite').selectOption('EXPEDICAO');
   const email = crypto.randomUUID() + '@example.invalid',
@@ -181,6 +211,7 @@ test.describe('Fronteira de rede S01-UI18', () => {
   }) => {
     await admin(page);
     const email = crypto.randomUUID() + '@example.invalid';
+    await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
     await page.getByLabel('E-mail do funcionário convidado').fill(email);
 
     // Perde a resposta depois de confirmar a criação no servidor.
@@ -259,7 +290,8 @@ test.describe('Fronteira de rede S01-UI18', () => {
       .locator('form')
       .first()
       .screenshot({ path: test.info().outputPath('convites-reautenticacao.png') });
-    // Mesmo já visível, centralizar o campo inclui perfil/início das unidades no desktop.
+    await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
+    // Centralizar o campo inclui perfil e início das unidades no desktop.
     await page
       .getByLabel('E-mail do funcionário convidado')
       .evaluate((element) => element.scrollIntoView({ block: 'center' }));

@@ -1,3 +1,51 @@
+.mesas-titulo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cadastro-mesa {
+  margin-block: 0 var(--gestao-espaco-3, 12px);
+}
+
+.cadastro-mesa > summary {
+  width: max-content;
+}
+
+.cadastro-mesa > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cadastro-mesa-editor {
+  max-width: 42rem;
+}
+
+.cadastro-mesa-editor h3 {
+  margin-top: 0;
+}
+
+.cadastro-mesa-editor form + form {
+  margin-top: var(--gestao-espaco-4, 16px);
+}
+
+.cadastro-mesa-editor .gestao-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--gestao-espaco-2, 8px);
+}
+
+.cadastro-mesa-editor .gestao-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gestao-espaco-2, 8px);
+}
+
 .codigo {
   display: block;
   font-size: 1.5rem;
@@ -6,7 +54,7 @@
   overflow-wrap: anywhere;
 }
 .cartao-mesa {
-  border-top: 3px solid #a8b5a3;
+  border-top: 3px solid var(--gestao-sucesso-borda, #a8b5a3);
 }
 .cartao-mesa.mesa-ocupada {
   border-top-color: var(--primary, #8c4824);
@@ -38,8 +86,9 @@
   margin: 1.25rem 0;
 }
 .codigo-atendimento {
-  background: #fff5e8;
-  border-color: #e9cba3;
+  background: var(--gestao-alerta-bg, #fff5e8);
+  border-color: var(--gestao-alerta-borda, #e9cba3);
+  color: var(--gestao-alerta-fg, inherit);
 }
 .codigo-atendimento .codigo {
   margin: 1rem 0;

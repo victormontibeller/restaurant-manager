@@ -2,6 +2,7 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
+@import './app/ui/gestao.css';
 
 /* Tokens do bistrô; componentes Helm adaptados são mantidos em app/ui. */
 :root {
@@ -377,5 +378,10 @@ dialog::backdrop {
 @media (max-width: 800px) {
   html {
     scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+
+  app-root:has(> app-cliente-layout) {
+    display: block;
+    padding-bottom: var(--cliente-nav-altura, calc(75px + env(safe-area-inset-bottom)));
   }
 }

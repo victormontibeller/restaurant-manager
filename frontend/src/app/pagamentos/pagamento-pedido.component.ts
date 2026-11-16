@@ -12,11 +12,13 @@ interface Checkout {
 @Component({
   selector: 'app-pagamento-pedido',
   templateUrl: './pagamento-pedido.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './pagamento-pedido.component.css'],
 })
 export class PagamentoPedidoComponent {
   readonly pedidoId = input.required<string>();
   readonly aguardando = input(false);
+  readonly apresentacaoCliente = input(false);
+  readonly prazo = input<string | null>(null);
   private readonly sessao = inject(SessaoService);
   readonly tentativas = signal<Checkout[]>([]);
   readonly erro = signal('');

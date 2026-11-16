@@ -1,22 +1,44 @@
-<section class="painel-interno" [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'">
-  <header class="cabecalho-painel">
-    <div>
-      <span class="sobretitulo">Acompanhamento</span>
-      <h2>{{ mesa() ? 'Minhas rodadas' : 'Meus pedidos' }}</h2>
-      <p class="texto-secundario">Veja o andamento e os detalhes de cada pedido.</p>
-    </div>
-  </header>
-  <div class="barra-conexao">
-    <p role="status">
-      {{ acompanhamento.estado() }} Última atualização:
-      {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
-    </p>
-    <button class="secundario" (click)="carregar(pagina())" [disabled]="ocupado()">
-      Atualizar pedidos
+<section
+  class="painel-interno pedidos-cliente"
+  [class.rodadas-mesa]="mesa()"
+  [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'"
+>
+  <header class="cabecalho-meus-pedidos">
+    @if (mesa()) {
+      <h2>Minhas rodadas</h2>
+    } @else {
+      <h1>Meus pedidos</h1>
+    }
+    <button
+      hlmBtn
+      variant="outline"
+      type="button"
+      aria-label="Atualizar pedidos"
+      (click)="carregar(pagina())"
+      [disabled]="ocupado()"
+    >
+      Atualizar
     </button>
-  </div>
+    @if (mesa() || pedidos().length) {
+      <div class="conexao-meus-pedidos">
+        <p role="status">
+          <span
+            class="indicador-conexao"
+            [class.conectado]="acompanhamento.conectado()"
+            aria-hidden="true"
+          ></span>
+          {{ acompanhamento.estado() }}
+        </p>
+        @if (acompanhamento.atualizadoEm(); as horario) {
+          <span class="horario-atualizacao">Atualizado às {{ horario }}</span>
+        }
+      </div>
+    }
+  </header>
   @if (outrasUnidades()) {
-    <p>Pedidos desta página são conferidos também a cada cinco segundos.</p>
+    <p class="frequencia-atualizacao">
+      Pedidos desta página são conferidos também a cada cinco segundos.
+    </p>
   }
   @if (erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>
@@ -26,26 +48,54 @@
       <app-pedido-detalhe
         [pedido]="pedido"
         [contexto]="mesa() ? 'mesa' : 'cliente'"
+        [apresentacaoCliente]="true"
+        [linkAcompanhamento]="!mesa()"
         (atualizar)="carregar(pagina())"
       />
     } @empty {
-      <div class="vazio">
-        <h3>{{ ocupado() ? 'Atualizando seus pedidos…' : 'Nenhum pedido nesta página' }}</h3>
-        <p>Quando seu pedido for confirmado, você poderá acompanhá-lo aqui.</p>
-      </div>
+      @if (ocupado()) {
+        <p class="carregamento-pedidos" role="status">
+          {{ mesa() ? 'Buscando suas rodadas…' : 'Buscando seus pedidos…' }}
+        </p>
+      } @else if (!erro()) {
+        <div class="vazio">
+          <span class="icone-vazio"><app-icone nome="pedidos" /></span>
+          @if (mesa()) {
+            <h3>
+              {{ pagina() === 0 ? 'Você ainda não enviou rodadas' : 'Nenhuma rodada nesta página' }}
+            </h3>
+          } @else {
+            <h2>
+              {{ pagina() === 0 ? 'Você ainda não tem pedidos' : 'Nenhum pedido nesta página' }}
+            </h2>
+            @if (pagina() === 0) {
+              <p>Acompanhe seus pedidos por aqui após o envio.</p>
+              <a hlmBtn variant="outline" routerLink="/cardapio">Ver cardápio</a>
+            }
+          }
+        </div>
+      }
     }
   </div>
-  <nav class="paginacao" aria-label="Páginas dos meus pedidos">
-    <button
-      class="secundario"
-      (click)="carregar(pagina() - 1)"
-      [disabled]="ocupado() || pagina() === 0"
-    >
-      Página anterior de pedidos
-    </button>
-    <span>Página {{ pagina() + 1 }}</span>
-    <button class="secundario" (click)="carregar(pagina() + 1)" [disabled]="ocupado() || !mais()">
-      Próxima página de pedidos
-    </button>
-  </nav>
+  @if (pagina() > 0 || mais()) {
+    <nav class="paginacao" aria-label="Páginas dos meus pedidos">
+      <button
+        class="secundario"
+        type="button"
+        (click)="carregar(pagina() - 1)"
+        [disabled]="ocupado() || pagina() === 0"
+      >
+        Página anterior de pedidos
+      </button>
+      <span>Página {{ pagina() + 1 }}</span>
+      <button
+        class="secundario"
+        type="button"
+        (click)="carregar(pagina() + 1)"
+        [disabled]="ocupado() || !mais()"
+      >
+        Próxima página de pedidos
+      </button>
+    </nav>
+  }
 </section>

@@ -1,0 +1,125 @@
+<section
+  class="gestao-editor catalogo-editor"
+  aria-labelledby="oferta-titulo"
+  [attr.aria-busy]="ocupado()"
+>
+  <h3 id="oferta-titulo" tabindex="-1" data-gestao-foco>Preço e disponibilidade de {{ nome }}</h3>
+  <div class="gestao-toolbar">
+    <div>
+      <label for="oferta-unidade">Unidade da oferta</label>
+      <select
+        #unidade
+        id="oferta-unidade"
+        data-sem-rascunho
+        [value]="unidadeId()"
+        [disabled]="ocupado() || incerto() || bloqueado"
+        (change)="selecionarUnidade(unidade)"
+      >
+        <option value="">Selecione a unidade</option>
+        @for (item of unidades; track item.id) {
+          <option [value]="item.id" [selected]="item.id === unidadeId()">{{ item.nome }}</option>
+        }
+      </select>
+    </div>
+    @if (unidadeId()) {
+      <button
+        class="secundario"
+        type="button"
+        (click)="atualizar()"
+        [disabled]="ocupado() || bloqueado"
+      >
+        Consultar oferta no servidor
+      </button>
+    }
+  </div>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+  @if (incerto()) {
+    <p class="aviso">
+      Consulte a oferta para conferir o resultado antes de editar novamente. A consulta substitui o
+      rascunho.
+    </p>
+  }
+  @if (oferta(); as atual) {
+    <form [attr.data-rascunho]="grupoRascunho()" (submit)="salvar($event)">
+      <fieldset
+        [disabled]="ocupado() || incerto() || bloqueado || !podeAlterar"
+        class="catalogo-editor-secao"
+      >
+        <legend>Oferta desta unidade</legend>
+        <p>
+          Esta alteração afeta somente a unidade selecionada. O horário de atendimento também
+          controla a disponibilidade para o carrinho.
+        </p>
+        <div class="gestao-toolbar">
+          <div>
+            <label for="oferta-preco">Preço base nesta unidade (R$)</label>
+            <input
+              #preco
+              id="oferta-preco"
+              type="number"
+              required
+              min="0"
+              max="999999.99"
+              step="0.01"
+              [value]="atual.preco"
+              (input)="alterar({ preco: preco.value })"
+            />
+          </div>
+          <label class="gestao-opcao"
+            ><input
+              #disponivel
+              type="checkbox"
+              [checked]="atual.disponivel"
+              (change)="alterar({ disponivel: disponivel.checked })"
+            />Disponível nesta unidade</label
+          >
+        </div>
+        <fieldset class="catalogo-opcoes">
+          <legend>Canais desta oferta</legend>
+          @for (canal of canais; track canal.valor) {
+            <label class="gestao-opcao"
+              ><input
+                #habilitado
+                type="checkbox"
+                [checked]="atual.canais.includes(canal.valor)"
+                (change)="habilitar(canal.valor, habilitado.checked)"
+              />{{ canal.nome }}</label
+            >
+          }
+        </fieldset>
+      </fieldset>
+      <div class="gestao-acoes">
+        @if (podeAlterar) {
+          <button [disabled]="ocupado() || incerto() || bloqueado">Salvar oferta da unidade</button>
+        }
+        <button
+          class="secundario"
+          type="button"
+          (click)="fechar.emit()"
+          [disabled]="ocupado() || incerto() || bloqueado"
+        >
+          Fechar oferta
+        </button>
+      </div>
+      @if (!podeAlterar) {
+        <p>Seu acesso permite consultar esta oferta, sem alterá-la.</p>
+      }
+    </form>
+  } @else {
+    <div class="gestao-acoes">
+      <button
+        class="secundario"
+        type="button"
+        (click)="fechar.emit()"
+        [disabled]="ocupado() || incerto() || bloqueado"
+      >
+        Fechar oferta
+      </button>
+    </div>
+  }
+</section>

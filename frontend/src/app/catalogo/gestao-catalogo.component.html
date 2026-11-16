@@ -1,7 +1,7 @@
 <section aria-labelledby="gestao-catalogo-titulo" [attr.aria-busy]="ocupado()">
-  <h2 id="gestao-catalogo-titulo">Gestão do catálogo</h2>
+  <h2 id="gestao-catalogo-titulo" class="catalogo-titulo">Gestão do catálogo</h2>
   @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
+    <p id="gestao-catalogo-erro" role="alert" class="erro">{{ erro() }}</p>
   }
   @if (aviso()) {
     <p role="status">{{ aviso() }}</p>
@@ -17,7 +17,7 @@
   }
   @if (acessos(); as acesso) {
     @if (podeEditar()) {
-      <nav class="acoes" aria-label="Gestão do catálogo">
+      <nav class="gestao-toolbar catalogo-abas" aria-label="Gestão do catálogo">
         <button
           type="button"
           [attr.aria-pressed]="aba() === 'produtos'"
@@ -36,27 +36,37 @@
         </button>
       </nav>
     } @else if (podeConsultar()) {
-      <p>Seu acesso permite consultar o catálogo operacional das unidades vinculadas.</p>
-      <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
-      <select
-        #unidade
-        id="catalogo-operacional-unidade"
-        [value]="unidadeOperacional()"
-        [disabled]="travado()"
-        (change)="trocarUnidade(unidade.value)"
-      >
-        @for (item of acesso.unidades; track item.id) {
-          <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
-            {{ item.nome }}
-          </option>
-        }
-      </select>
+      <div class="gestao-toolbar">
+        <div>
+          <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
+          <select
+            #unidade
+            id="catalogo-operacional-unidade"
+            data-sem-rascunho
+            [value]="unidadeOperacional()"
+            [disabled]="travado()"
+            (change)="trocarUnidade(unidade)"
+          >
+            @for (item of acesso.unidades; track item.id) {
+              <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
+                {{ item.nome }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
     } @else {
       <p>Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.</p>
     }
     @if (aba() === 'categorias' && podeEditar()) {
-      <div class="acoes">
-        <button type="button" (click)="novaCategoria()" [disabled]="travado()">
+      <div class="gestao-toolbar">
+        <button
+          #criarCategoria
+          type="button"
+          data-catalogo-foco-lista
+          (click)="novaCategoria(criarCategoria)"
+          [disabled]="travado()"
+        >
           Nova categoria
         </button>
       </div>
@@ -65,17 +75,27 @@
           [categoria]="categoria"
           [nova]="criando()"
           [bloqueado]="ocupado() || incerto()"
+          [erroNome]="erroNomeCategoria()"
           (salvarCategoria)="salvarCategoria($event)"
-          (cancelar)="categoriaSelecionada.set(null)"
+          (cancelar)="fecharEditor()"
         />
       }
-      <div class="grade">
+      <div class="gestao-lista">
         @for (categoria of categorias(); track categoria.id) {
-          <article class="item">
-            <h3>{{ categoria.nome }}</h3>
-            <p>{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</p>
-            <button type="button" (click)="editarCategoria(categoria)" [disabled]="travado()">
-              Editar categoria {{ categoria.nome }}
+          <article class="gestao-linha catalogo-linha">
+            <div class="catalogo-dados">
+              <h3>{{ categoria.nome }}</h3>
+              <span class="gestao-estado">{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</span>
+            </div>
+            <button
+              #editar
+              type="button"
+              class="secundario"
+              [attr.aria-label]="'Editar categoria ' + categoria.nome"
+              (click)="editarCategoria(categoria, editar)"
+              [disabled]="travado()"
+            >
+              Editar
             </button>
           </article>
         } @empty {
@@ -83,12 +103,21 @@
         }
       </div>
     } @else if (podeConsultar()) {
-      <div class="acoes">
+      <div class="gestao-toolbar">
         @if (podeEditar()) {
-          <button type="button" (click)="novoProduto()" [disabled]="travado()">Novo produto</button>
+          <button
+            #criarProduto
+            type="button"
+            data-catalogo-foco-lista
+            (click)="novoProduto(criarProduto)"
+            [disabled]="travado()"
+          >
+            Novo produto
+          </button>
         }
         <button
           class="secundario"
+          [attr.data-catalogo-foco-lista]="podeEditar() ? null : ''"
           type="button"
           (click)="carregarProdutos(pagina())"
           [disabled]="travado()"
@@ -109,7 +138,7 @@
           (rascunhoAlterado)="rascunhoAlterado.emit($event)"
           (maisComponentes)="carregarComponentes()"
           (bloqueio)="bloquearFilho($event)"
-          (cancelar)="produtoSelecionado.set(null)"
+          (cancelar)="fecharEditor()"
         />
       }
       @if (ofertaSelecionada(); as produto) {
@@ -121,34 +150,49 @@
           (salvo)="salvo.emit($event)"
           [bloqueado]="ocupado() || incerto()"
           (bloqueio)="bloquearFilho($event)"
+          (fechar)="fecharEditor()"
         />
-        <button
-          class="secundario"
-          type="button"
-          (click)="ofertaSelecionada.set(null)"
-          [disabled]="travado()"
-        >
-          Fechar oferta
-        </button>
       }
-      <div class="grade">
+      <div class="gestao-lista">
         @for (produto of produtos(); track produto.id) {
-          <article class="item">
-            <h3>{{ produto.nome }}</h3>
-            <p>{{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</p>
-            <div class="acoes">
+          <article class="gestao-linha catalogo-linha">
+            <div class="catalogo-dados">
+              <h3>{{ produto.nome }}</h3>
+              <span
+                >{{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</span
+              >
+              @if ('ativo' in produto) {
+                <span class="gestao-estado">{{ produto.ativo ? 'Ativo' : 'Inativo' }}</span>
+              } @else {
+                <span
+                  class="gestao-estado"
+                  >{{ produto.disponivel ? 'Disponível' : 'Indisponível' }}</span
+                >
+                <span>{{ moeda(produto.preco) }}</span>
+              }
+            </div>
+            <div class="gestao-acoes">
               @if (podeEditar()) {
-                <button type="button" (click)="editarProduto(produto.id)" [disabled]="travado()">
-                  Editar produto {{ produto.nome }}
+                <button
+                  #editar
+                  type="button"
+                  class="secundario"
+                  [attr.aria-label]="'Editar produto ' + produto.nome"
+                  (click)="editarProduto(produto.id, editar)"
+                  [disabled]="travado()"
+                >
+                  Editar
                 </button>
               }
               <button
+                #ofertar
                 class="secundario"
                 type="button"
-                (click)="abrirOferta(produto)"
+                [attr.aria-label]="'Oferta de ' + produto.nome"
+                (click)="abrirOferta(produto, ofertar)"
                 [disabled]="travado()"
               >
-                Oferta de {{ produto.nome }}
+                Oferta
               </button>
             </div>
           </article>
@@ -156,8 +200,9 @@
           <p class="vazio">Nenhum produto nesta página.</p>
         }
       </div>
-      <nav class="acoes" aria-label="Páginas dos produtos">
+      <nav class="gestao-toolbar" aria-label="Páginas dos produtos">
         <button
+          class="secundario"
           type="button"
           (click)="carregarProdutos(pagina() - 1)"
           [disabled]="travado() || pagina() === 0"
@@ -166,6 +211,7 @@
         </button>
         <span>Página {{ pagina() + 1 }}</span>
         <button
+          class="secundario"
           type="button"
           (click)="carregarProdutos(pagina() + 1)"
           [disabled]="travado() || !temMais()"

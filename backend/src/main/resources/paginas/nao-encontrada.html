@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#a53e2b">
+    <title>Página não encontrada · Restaurant Manager</title>
+    <style>
+      :root {
+        color-scheme: light;
+        color: #292521;
+        background: #faf7f2;
+        font: 1rem / 1.55 system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        padding: clamp(16px, 5vw, 32px);
+      }
+      main {
+        width: min(100%, 37.5rem);
+        padding: clamp(24px, 6vw, 40px);
+        border: 1px solid #e5ded3;
+        border-radius: 16px;
+        background: #fffdf9;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font: 400 clamp(1.875rem, 6vw, 2.75rem) / 1.1 Georgia, 'Times New Roman', serif;
+        letter-spacing: -0.035em;
+        overflow-wrap: anywhere;
+      }
+      p {
+        margin: 12px 0 0;
+        color: #6e6259;
+      }
+      nav {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 24px;
+      }
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 8px 16px;
+        border: 1px solid #a53e2b;
+        border-radius: 8px;
+        background: #a53e2b;
+        color: #fff;
+        font-weight: 650;
+        text-decoration: none;
+      }
+      a + a {
+        border-color: #c6b9aa;
+        background: #fff;
+        color: #292521;
+      }
+      a:hover {
+        filter: brightness(0.94);
+      }
+      a:focus-visible {
+        outline: 2px solid #a53e2b;
+        outline-offset: 2px;
+      }
+      @media (max-width: 420px) {
+        a {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Essa página saiu do cardápio.</h1>
+      <p>O endereço pode ter mudado. Você pode voltar ao cardápio ou informar sua mesa.</p>
+      <nav aria-label="Continuar no restaurante">
+        <a href="/cardapio">Ver cardápio</a>
+        <a href="/mesa">Minha mesa</a>
+      </nav>
+    </main>
+  </body>
+</html>

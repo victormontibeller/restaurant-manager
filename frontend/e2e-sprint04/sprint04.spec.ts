@@ -153,6 +153,7 @@ async function financeiro(page: Page, pedido: Pedido): Promise<Locator> {
   await page.getByLabel('Ordenar pedidos', { exact: true }).selectOption('RECENTES');
   const card = page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
   await expect(card).toBeVisible();
+  await card.getByRole('button', { name: /^Detalhes do pedido #/ }).click();
   await card.getByText('Recebimentos, ajustes e devoluções deste pedido', { exact: true }).click();
   const painel = card.getByRole('region', { name: 'Recebimentos e devoluções', exact: true });
   await expect(
@@ -190,7 +191,7 @@ test('S04-UI01: cliente mantém endereço próprio com versão e remoção', asy
   const tokenCliente = await loginUi(page, fixture().contas.clienteA);
   const descricao = 'Casa Sprint 4 ' + randomUUID().slice(0, 8);
   await navegarUi(page, '/conta');
-  const painel = page.getByRole('region', { name: 'Endereço de entrega' });
+  const painel = page.getByRole('region', { name: 'Meus endereços' });
   await endereco(page, descricao);
   await page.getByLabel('UF', { exact: true }).focus();
   await page.keyboard.press('Tab');
@@ -200,14 +201,26 @@ test('S04-UI01: cliente mantém endereço próprio com versão e remoção', asy
   });
   await expect(salvar).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(painel.getByRole('button', { name: 'Usar endereço ' + descricao })).toBeVisible();
+  const editar = painel.getByRole('button', { name: 'Editar endereço ' + descricao });
+  await expect(editar).toBeVisible();
+  await editar.click();
+  await expect(painel.getByLabel('Nome deste endereço')).toBeFocused();
+  await expect(painel.getByLabel('Nome deste endereço')).toHaveValue(descricao);
+  await painel.getByLabel('Complemento', { exact: true }).fill('Apto 2');
+  await salvar.click();
+  await expect(editar).toBeEnabled();
+  const editados = await ok<{ descricao: string; endereco: { complemento: string } }[]>(
+    await api(request, tokenCliente, '/api/v1/clientes/me/enderecos'),
+  );
+  expect(editados.find((e) => e.descricao === descricao)?.endereco.complemento).toBe('Apto 2');
   const token = await loginApi(request, fixture().contas.clienteB);
   const lista = await ok<unknown[]>(await api(request, token, '/api/v1/clientes/me/enderecos'));
   expect(lista).toEqual([]);
   await capturar(page, 'endereco');
   page.once('dialog', (dialogo) => void dialogo.accept());
   await painel.getByRole('button', { name: 'Remover ' + descricao, exact: true }).click();
-  await expect(painel.getByRole('button', { name: 'Usar endereço ' + descricao })).toBeHidden();
+  await expect(editar).toBeHidden();
+  await expect(painel.getByLabel('Nome deste endereço')).toHaveValue('');
   const salvos = await ok<{ descricao: string }[]>(
     await api(request, tokenCliente, '/api/v1/clientes/me/enderecos'),
   );
@@ -257,7 +270,7 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
   const pedido = await pedidoApi(request);
   const administrador = await loginUi(page, fixture());
   await area(page, '/gestao/mesas');
-  await page.getByText('Cadastrar mesa e confirmar acesso administrativo', { exact: true }).click();
+  await page.getByText('Nova mesa', { exact: true }).click();
   await page
     .getByLabel('Confirme sua senha para configurar mesas', { exact: true })
     .fill(fixture().senha);
@@ -288,6 +301,7 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
       .getByRole('region', { name: 'Recebimentos e devoluções', exact: true })
       .getByRole('button', { name: 'Confirmar recebimento presencial', exact: true }),
   ).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Atualizar mesas', exact: true })).toBeEnabled();
   const painel = await financeiro(page, pedido);
   await painel.getByRole('combobox', { name: 'Meio', exact: true }).selectOption('DINHEIRO');
   await painel.getByLabel('Valor aplicado (ex.: 20.00)', { exact: true }).fill('20.00');

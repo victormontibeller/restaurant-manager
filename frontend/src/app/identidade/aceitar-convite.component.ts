@@ -1,9 +1,11 @@
 import { Component, ElementRef, ViewChild, inject, output, signal } from '@angular/core';
+import { HlmButton } from '../ui/button';
 import { ApiFailure, SessaoService } from './sessao.service';
 import { senhaEmBranco } from './senha';
 
 @Component({
   selector: 'app-aceitar-convite',
+  imports: [HlmButton],
   template: `
     <section aria-labelledby="aceitar-convite-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="aceitar-convite-titulo" tabindex="-1">Aceitar convite de funcionário</h2>
@@ -50,15 +52,17 @@ import { senhaEmBranco } from './senha';
           [attr.aria-invalid]="campoErro() === 'confirmacao' ? true : null"
           [disabled]="ocupado()"
         >
-        <button [disabled]="ocupado()">Verificar e aceitar convite</button>
+        @if (erro()) {
+          <p #alerta id="erro-convite" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
+        }
+        @if (aviso()) {
+          <p #resultado role="status" tabindex="-1">{{ aviso() }}</p>
+        }
+        <div class="acoes">
+          <button hlmBtn type="submit" [disabled]="ocupado()">Verificar e aceitar convite</button>
+          <button hlmBtn variant="outline" type="button" (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
+        </div>
       </form>
-      @if (erro()) {
-        <p #alerta id="erro-convite" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p #resultado role="status" tabindex="-1">{{ aviso() }}</p>
-      }
-      <button (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
     </section>
   `,
   styles: `
@@ -75,6 +79,21 @@ import { senhaEmBranco } from './senha';
     }
     label {
       font-weight: 650;
+    }
+    .acoes {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .acoes button {
+      min-height: 48px;
+      border-radius: 8px;
+    }
+    @media (max-width: 600px) {
+      .acoes {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
     .erro {
       color: #9d2424;

@@ -149,7 +149,7 @@ import { Adicional, Grupo, Opcao, Produto } from './modelos';
       </p>
     </div>
   `,
-  styleUrl: './catalogo.css',
+  styleUrls: ['./catalogo.css', './catalogo-editor.css'],
 })
 export class GruposEditorComponent {
   @Input() grupos: Grupo[] = [];

@@ -1,12 +1,14 @@
 import {
   Component,
   DestroyRef,
+  ElementRef,
   effect,
   inject,
   input,
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { mensagemErro, moeda } from '../catalogo/modelos';
@@ -20,11 +22,17 @@ import { EnderecosService } from './enderecos.service';
   selector: 'app-enderecos',
   imports: [FormsModule],
   templateUrl: './enderecos.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './enderecos-finalizacao.css'],
   styles: `form{display:grid;gap:.75rem}fieldset{min-width:0;display:grid;gap:.75rem}input,button{min-height:48px}input{width:100%}li{margin-block:.5rem}`,
+  host: {
+    '[class.enderecos-finalizacao]': 'apresentacaoCliente()',
+    '[class.enderecos-conta]': 'modoConta()',
+  },
 })
 export class EnderecosComponent {
+  readonly apresentacaoCliente = input(false);
   readonly unidadeId = input('');
+  private readonly campoDescricao = viewChild<ElementRef<HTMLInputElement>>('campoDescricao');
   readonly subtotal = input('0.00');
   readonly bloqueado = input(false);
   readonly entrega = output<EntregaConfirmada | null>();
@@ -125,6 +133,9 @@ export class EnderecosComponent {
       uf: this.endereco.uf.toUpperCase(),
     };
   }
+  modoConta(): boolean {
+    return this.apresentacaoCliente() && !this.unidadeId();
+  }
   cliente(): boolean {
     return this.sessao.identidade()?.perfil === 'CLIENTE';
   }
@@ -133,20 +144,22 @@ export class EnderecosComponent {
     this.cotacao.set(null);
     this.entrega.emit(null);
   }
-  novo(): void {
+  novo(focar = false): void {
     this.endereco = this.vazio();
     this.descricao = '';
     this.id = crypto.randomUUID();
     this.versao = 0;
     this.alterar();
+    if (focar && this.modoConta()) this.campoDescricao()?.nativeElement.focus();
   }
-  usar(e: EnderecoCliente): void {
+  usar(e: EnderecoCliente, focar = false): void {
     if (this.store.pendente()) return;
     this.endereco = structuredClone(e.endereco);
     this.descricao = e.descricao;
     this.id = e.id;
     this.versao = e.versao;
     this.alterar();
+    if (focar && this.modoConta()) this.campoDescricao()?.nativeElement.focus();
   }
   async carregar(pagina: number): Promise<void> {
     if (!this.cliente()) {
@@ -207,8 +220,13 @@ export class EnderecosComponent {
     this.aviso.set('');
     try {
       const salvo = await this.store.salvar(body);
-      this.usar(salvo);
-      this.aviso.set('Endereço salvo.');
+      if (this.modoConta() && !salvo.ativo) {
+        if (salvo.id === this.id) this.novo();
+        this.aviso.set('Endereço removido.');
+      } else {
+        this.usar(salvo);
+        this.aviso.set('Endereço salvo.');
+      }
       await this.carregar(this.pagina());
     } catch (erro) {
       this.erro.set(mensagemErro(erro));

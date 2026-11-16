@@ -1,5 +1,15 @@
-import { Component, DestroyRef, EventEmitter, Output, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  EventEmitter,
+  Output,
+  inject,
+  signal,
+} from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
+import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 import { CatalogoPendenteService, EdicaoCatalogoPendente } from './catalogo-pendente.service';
 import { MidiaPendenteService } from './midia-pendente.service';
 import { CategoriaEditorComponent } from './categoria-editor.component';
@@ -12,13 +22,14 @@ import {
   Produto,
   ProdutoPublico,
   mensagemErro,
+  moeda,
 } from './modelos';
 
 @Component({
   selector: 'app-gestao-catalogo',
   imports: [CategoriaEditorComponent, ProdutoEditorComponent, OfertaUnidadeComponent],
   templateUrl: './gestao-catalogo.component.html',
-  styleUrl: './catalogo.css',
+  styleUrls: ['./catalogo.css', './gestao-catalogo.component.css'],
 })
 export class GestaoCatalogoComponent {
   @Output() bloqueio = new EventEmitter<boolean>();
@@ -27,6 +38,9 @@ export class GestaoCatalogoComponent {
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(CatalogoPendenteService);
   private readonly midiasPendentes = inject(MidiaPendenteService);
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
+  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+  private origemEditor?: HTMLElement;
   private destruido = false;
   private componentesPagina = 0;
   readonly acessos = signal<AcessosCatalogo | null>(null);
@@ -38,6 +52,7 @@ export class GestaoCatalogoComponent {
   readonly incerto = signal(false);
   readonly filhoBloqueado = signal(false);
   readonly erro = signal('');
+  readonly erroNomeCategoria = signal(false);
   readonly aviso = signal('');
   readonly aba = signal<'produtos' | 'categorias'>('produtos');
   readonly pagina = signal(0);
@@ -47,6 +62,7 @@ export class GestaoCatalogoComponent {
   readonly categoriaSelecionada = signal<Categoria | null>(null);
   readonly produtoSelecionado = signal<Produto | null>(null);
   readonly ofertaSelecionada = signal<{ id: string; nome: string } | null>(null);
+  readonly moeda = moeda;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -106,29 +122,27 @@ export class GestaoCatalogoComponent {
   }
 
   abrirAba(aba: 'produtos' | 'categorias'): void {
-    if (this.travado()) return;
+    if (aba === this.aba() || !this.prepararEditor()) return;
     this.aba.set(aba);
-    this.categoriaSelecionada.set(null);
-    this.produtoSelecionado.set(null);
-    this.ofertaSelecionada.set(null);
   }
 
-  novaCategoria(): void {
-    if (this.travado()) return;
+  novaCategoria(origem: HTMLElement): void {
+    if (!this.prepararEditor(origem)) return;
     this.criando.set(true);
     this.categoriaSelecionada.set({ id: crypto.randomUUID(), nome: '', ativa: true, versao: 0 });
+    this.focoNoEditor();
   }
 
-  editarCategoria(categoria: Categoria): void {
-    if (this.travado()) return;
+  editarCategoria(categoria: Categoria, origem: HTMLElement): void {
+    if (!this.prepararEditor(origem)) return;
     this.criando.set(false);
     this.categoriaSelecionada.set(structuredClone(categoria));
+    this.focoNoEditor();
   }
 
-  async novoProduto(): Promise<void> {
-    if (this.travado()) return;
+  async novoProduto(origem: HTMLElement): Promise<void> {
+    if (!this.prepararEditor(origem)) return;
     this.criando.set(true);
-    this.ofertaSelecionada.set(null);
     this.produtoSelecionado.set({
       id: crypto.randomUUID(),
       versao: 0,
@@ -142,33 +156,43 @@ export class GestaoCatalogoComponent {
       adicionais: [],
       grupos: [],
     });
+    this.focoNoEditor();
     if (!this.componentes().length) await this.carregarComponentes();
   }
 
-  async editarProduto(id: string): Promise<void> {
-    if (this.travado()) return;
+  async editarProduto(id: string, origem: HTMLElement): Promise<void> {
+    if (!this.prepararEditor(origem)) return;
     await this.executar(async () => {
       const produto = await this.sessao.api<Produto>('/api/v1/gestao/catalogo/produtos/' + id);
       await this.carregarReferencias(produto);
       if (this.destruido) return;
       this.criando.set(false);
-      this.ofertaSelecionada.set(null);
       this.produtoSelecionado.set(produto);
+      this.focoNoEditor();
     });
-    if (!this.componentes().length && !this.destruido) await this.carregarComponentes();
+    if (this.destruido) return;
+    if (!this.produtoSelecionado()) this.focoNaLista(origem);
+    else if (!this.componentes().length) await this.carregarComponentes();
   }
 
-  abrirOferta(produto: { id: string; nome: string }): void {
-    if (this.travado()) return;
-    this.produtoSelecionado.set(null);
+  abrirOferta(produto: { id: string; nome: string }, origem: HTMLElement): void {
+    if (!this.prepararEditor(origem)) return;
     this.ofertaSelecionada.set({ id: produto.id, nome: produto.nome });
+    this.focoNoEditor();
   }
 
-  async trocarUnidade(id: string): Promise<void> {
-    if (this.travado()) return;
-    this.unidadeOperacional.set(id);
-    this.ofertaSelecionada.set(null);
+  async trocarUnidade(seletor: HTMLSelectElement): Promise<void> {
+    if (!this.prepararEditor()) {
+      seletor.value = this.unidadeOperacional();
+      return;
+    }
+    this.unidadeOperacional.set(seletor.value);
     await this.carregarProdutos(0);
+  }
+
+  fecharEditor(): void {
+    const origem = this.origemEditor;
+    if (this.prepararEditor()) this.focoNaLista(origem);
   }
 
   async carregarProdutos(pagina: number): Promise<void> {
@@ -225,22 +249,31 @@ export class GestaoCatalogoComponent {
         );
       this.criando.set(!atual);
       this.aba.set(pendente.tipo === 'categoria' ? 'categorias' : 'produtos');
-      if (pendente.tipo === 'categoria')
+      if (pendente.tipo === 'categoria') {
+        this.produtoSelecionado.set(null);
         this.categoriaSelecionada.set((atual ?? pendente.dados) as Categoria);
-      else {
+      } else {
         const produto = (atual ?? pendente.dados) as Produto;
         await this.carregarReferencias(produto);
         if (this.destruido) return;
+        this.categoriaSelecionada.set(null);
         this.produtoSelecionado.set(produto);
       }
       estado.set(null);
       this.incerto.set(false);
+      if (atual) {
+        this.salvo.emit(pendente.tipo + '-' + pendente.dados.id);
+      } else {
+        // A retomada pode abrir o editor de novo. Marque o rascunho após o DOM ser montado.
+        this.marcarAposMontagem(pendente.tipo + '-' + pendente.dados.id);
+      }
       this.aviso.set(
         atual
           ? 'Versão atual recuperada. Revise os campos antes de fazer uma nova alteração.'
           : 'Criação não encontrada no servidor. O rascunho e seu identificador foram preservados para nova tentativa.',
       );
     });
+    if (this.formulario && !this.incerto()) this.focoNoEditor();
   }
 
   bloquearFilho(bloqueado: boolean): void {
@@ -254,6 +287,7 @@ export class GestaoCatalogoComponent {
     const estado = this.estadoPendente();
     if (!estado || this.travado() || !this.podeEditar()) return;
     estado.set(structuredClone(pendente));
+    let confirmado = false;
     await this.executar(async () => {
       const base =
         '/api/v1/gestao/catalogo/' + (pendente.tipo === 'categoria' ? 'categorias' : 'produtos');
@@ -272,12 +306,20 @@ export class GestaoCatalogoComponent {
           error.status !== 409
         );
         if (!incerto) estado.set(null);
-        if (!this.destruido) this.incerto.set(incerto);
+        if (!this.destruido) {
+          this.incerto.set(incerto);
+          this.erroNomeCategoria.set(
+            pendente.tipo === 'categoria' &&
+              error instanceof ApiFailure &&
+              error.codigo === 'ENTRADA_INVALIDA',
+          );
+        }
         throw error;
       }
       if (this.destruido) return;
-      this.categoriaSelecionada.set(null);
-      this.produtoSelecionado.set(null);
+      confirmado = true;
+      this.salvo.emit(pendente.tipo + '-' + pendente.dados.id);
+      this.limparEditor();
       if (pendente.tipo === 'categoria') await this.consultarCategorias();
       else {
         this.componentes.set([]);
@@ -290,6 +332,44 @@ export class GestaoCatalogoComponent {
           ? 'Categoria salva no servidor.'
           : 'Produto salvo no servidor. Configure sua oferta nas unidades.',
       );
+    });
+    if (confirmado && !this.destruido) {
+      this.focoNaLista(this.origemEditor);
+      this.origemEditor = undefined;
+    }
+  }
+
+  private prepararEditor(origem?: HTMLElement): boolean {
+    if (this.travado() || this.formulario?.confirmarDescarte() === false) return false;
+    this.limparEditor();
+    this.erro.set('');
+    this.erroNomeCategoria.set(false);
+    this.origemEditor = origem;
+    return true;
+  }
+
+  private limparEditor(): void {
+    this.categoriaSelecionada.set(null);
+    this.produtoSelecionado.set(null);
+    this.ofertaSelecionada.set(null);
+  }
+
+  private focoNaLista(origem?: HTMLElement): void {
+    restaurarFoco(
+      origem,
+      this.elemento.nativeElement.querySelector<HTMLElement>('[data-catalogo-foco-lista]') ??
+        undefined,
+    );
+  }
+
+  private focoNoEditor(): void {
+    if (!this.destruido) focarEditor(this.elemento.nativeElement);
+  }
+
+  private marcarAposMontagem(chave: string): void {
+    if (!this.formulario) return;
+    requestAnimationFrame(() => {
+      if (!this.destruido) this.rascunhoAlterado.emit(chave);
     });
   }
 
@@ -346,6 +426,7 @@ export class GestaoCatalogoComponent {
   private async executar(acao: () => Promise<void>): Promise<void> {
     this.ocupado.set(true);
     this.erro.set('');
+    this.erroNomeCategoria.set(false);
     this.aviso.set('');
     this.emitirBloqueio();
     try {

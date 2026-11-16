@@ -1,0 +1,166 @@
+:host(.enderecos-finalizacao) {
+  margin-block: 16px;
+  padding-block-end: 16px;
+  border-block-end: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+:host(.enderecos-finalizacao) h3 {
+  margin: 0 0 12px;
+  font-family: var(--fonte-editorial, Georgia, 'Times New Roman', serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+:host(.enderecos-finalizacao) ul {
+  padding: 0;
+  list-style: none;
+}
+
+:host(.enderecos-finalizacao) li {
+  border-block-end: 1px solid var(--border);
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+}
+
+:host(.enderecos-finalizacao) .paginas-enderecos {
+  align-items: center;
+}
+
+:host(.enderecos-finalizacao) .paginas-enderecos[hidden] {
+  display: none;
+}
+
+:host(.enderecos-finalizacao) fieldset {
+  margin-inline: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  gap: 8px;
+}
+
+:host(.enderecos-finalizacao) label {
+  min-width: 0;
+  margin: 0;
+}
+
+:host(.enderecos-finalizacao) input {
+  margin-block-start: 4px;
+  border-radius: var(--radius);
+  background: var(--card);
+  font-size: 1rem;
+}
+
+:host(.enderecos-finalizacao) button {
+  border-radius: var(--radius);
+}
+
+:host(.enderecos-finalizacao) .cotacao-entrega {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 700px) {
+  :host(.enderecos-finalizacao) fieldset {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  :host(.enderecos-finalizacao) fieldset .acoes {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+}
+
+:host(.enderecos-conta) {
+  display: block;
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+:host(.enderecos-conta) h2 {
+  margin: 0 0 12px;
+  font: 600 clamp(1.375rem, 3vw, 1.75rem) / 1.2 var(--fonte-editorial);
+}
+
+:host(.enderecos-conta) h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+:host(.enderecos-conta) .paineis-enderecos {
+  display: grid;
+  gap: 16px;
+}
+
+:host(.enderecos-conta) .lista-enderecos {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+:host(.enderecos-conta) ul {
+  margin: 8px 0 0;
+}
+
+:host(.enderecos-conta) li {
+  margin: 0;
+}
+
+:host(.enderecos-conta) li:last-child {
+  border-bottom: 0;
+}
+
+:host(.enderecos-conta) .lista-enderecos-estado,
+:host(.enderecos-conta) .localidade-endereco {
+  color: var(--muted-foreground);
+}
+
+:host(.enderecos-conta) .localidade-endereco {
+  display: block;
+  margin: 4px 0;
+}
+
+:host(.enderecos-conta) .acoes-endereco {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+:host(.enderecos-conta) .acoes-endereco button {
+  padding-inline: 12px;
+  font-size: 0.875rem;
+}
+
+:host(.enderecos-conta) .acoes-endereco button:last-child {
+  background: transparent;
+  border-color: transparent;
+}
+
+:host(.enderecos-conta) :is(button, input, fieldset) {
+  border-radius: 8px;
+}
+
+:host(.enderecos-conta) .acoes {
+  margin: 0;
+}
+
+:host(.enderecos-conta) .paginas-enderecos {
+  margin-top: 8px;
+}
+
+@media (min-width: 900px) {
+  :host(.enderecos-conta) .paineis-enderecos {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+    align-items: start;
+  }
+}

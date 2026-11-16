@@ -1,0 +1,83 @@
+section {
+  max-width: 600px;
+  margin: 3rem auto;
+  text-align: center;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 2.4rem;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+p {
+  color: var(--muted-foreground);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+div {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.illustration {
+  display: inline-grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  background: #eaf0e5;
+  color: #254d36;
+  border-radius: 24px;
+}
+
+.illustration app-icone {
+  width: 36px;
+  height: 36px;
+}
+
+:host(.informativa-cliente) section {
+  margin-block: clamp(12px, 4vw, 40px);
+  padding: clamp(20px, 5vw, 40px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fffdf9;
+}
+
+:host(.informativa-cliente) h1 {
+  margin: 12px 0;
+  font:
+    400 clamp(1.875rem, 5vw, 2.75rem) / 1.1 Georgia,
+    'Times New Roman',
+    serif;
+  letter-spacing: -0.035em;
+}
+
+:host(.informativa-cliente) .illustration {
+  width: 48px;
+  height: 48px;
+  background: #f5e9e2;
+  color: var(--primary);
+  border-radius: 12px;
+}
+
+:host(.informativa-cliente) .illustration app-icone {
+  width: 24px;
+  height: 24px;
+}
+
+:host(.informativa-cliente) div {
+  margin-top: 16px;
+  gap: 8px;
+}
+
+@media (max-width: 420px) {
+  :host(.informativa-cliente) a {
+    width: 100%;
+  }
+}

@@ -1,0 +1,40 @@
+<form
+  class="gestao-editor catalogo-editor"
+  [attr.data-rascunho]="'categoria-' + categoria.id"
+  (submit)="salvar($event)"
+  aria-label="Editor de categoria"
+>
+  <h3 tabindex="-1" data-gestao-foco>{{ nova ? 'Nova categoria' : 'Editar categoria' }}</h3>
+  <p>Alterações nesta categoria valem para todas as unidades.</p>
+  <fieldset [disabled]="bloqueado" class="gestao-campos">
+    <div>
+      <label for="categoria-nome">Nome da categoria</label>
+      <input
+        #nome
+        id="categoria-nome"
+        required
+        maxlength="120"
+        [value]="rascunho.nome"
+        (input)="rascunho.nome = nome.value"
+        [attr.aria-invalid]="erroNome ? true : null"
+        [attr.aria-describedby]="erroNome ? 'gestao-catalogo-erro' : null"
+      />
+    </div>
+    <label class="gestao-opcao"
+      ><input
+        #ativa
+        type="checkbox"
+        [checked]="rascunho.ativa"
+        (change)="rascunho.ativa = ativa.checked"
+        aria-describedby="categoria-ativa-ajuda"
+      />Categoria ativa</label
+    >
+    <small id="categoria-ativa-ajuda">Desativar a categoria retira seus produtos da vitrine.</small>
+    <div class="gestao-acoes catalogo-editor-acoes">
+      <button>{{ nova ? 'Criar categoria' : 'Salvar categoria' }}</button>
+      <button class="secundario" type="button" (click)="cancelar.emit()">
+        Cancelar edição de categoria
+      </button>
+    </div>
+  </fieldset>
+</form>

@@ -1,0 +1,100 @@
+.pagamento-cliente {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffdf9;
+  overflow-wrap: anywhere;
+}
+
+.pagamento-cliente header,
+.pagamento-cliente .acoes-pagamento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.pagamento-cliente header {
+  justify-content: space-between;
+}
+
+.pagamento-cliente h3 {
+  margin: 0;
+  font:
+    600 1.25rem / 1.25 Georgia,
+    'Times New Roman',
+    serif;
+}
+
+.pagamento-cliente .prazo-pagamento {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--primary);
+}
+
+.pagamento-cliente .orientacao-pagamento {
+  margin: 8px 0 12px;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.pagamento-cliente .tentativa-pagamento {
+  margin: 12px 0;
+  padding-block: 12px;
+  border-block: 1px solid var(--border);
+}
+
+.pagamento-cliente .titulo-tentativa {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+}
+
+.pagamento-cliente .estado-tentativa {
+  display: table;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #f5e9e2;
+  color: #833322;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.pagamento-cliente .estado-tentativa[data-estado='CONFIRMADO'] {
+  background: #e6f3e9;
+  color: #28623e;
+}
+
+.pagamento-cliente .botao,
+.pagamento-cliente .acoes-pagamento button {
+  min-height: 48px;
+  border-radius: 8px;
+}
+
+.pagamento-cliente .botao {
+  margin-top: 12px;
+}
+
+.pagamento-cliente details {
+  margin-top: 12px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+.pagamento-cliente summary {
+  min-height: 48px;
+  align-content: center;
+  font-size: 0.875rem;
+}
+
+.pagamento-cliente .erro {
+  margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  .pagamento-cliente .botao,
+  .pagamento-cliente .acoes-pagamento button {
+    width: 100%;
+  }
+}

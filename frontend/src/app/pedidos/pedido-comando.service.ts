@@ -16,11 +16,16 @@ export interface IntencaoComando {
       };
 }
 
+interface IntencaoPendente {
+  intencao: IntencaoComando;
+  unidadeId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PedidoComandoService {
   private readonly sessao = inject(SessaoService);
   private readonly mesa = inject(SessaoMesaService);
-  private readonly intencoes = new Map<string, IntencaoComando>();
+  private readonly intencoes = new Map<string, IntencaoPendente>();
   readonly alteracao = signal(0);
   readonly ocupado = signal(false);
 
@@ -35,16 +40,34 @@ export class PedidoComandoService {
 
   pendente(pedido: string, mesa: boolean): IntencaoComando | null {
     this.alteracao();
-    return this.intencoes.get(this.chave(pedido, mesa)) ?? null;
+    return this.intencoes.get(this.chave(pedido, mesa))?.intencao ?? null;
   }
 
-  async executar(pedido: string, mesa: boolean, intencao: IntencaoComando): Promise<Pedido> {
+  pendenciasDaFila(unidadeId: string): string[] {
+    this.alteracao();
+    const prefixo = this.chave('', false);
+    return Array.from(this.intencoes)
+      .filter(
+        ([chave, pendencia]) => chave.startsWith(prefixo) && pendencia.unidadeId === unidadeId,
+      )
+      .map(([chave]) => chave.slice(prefixo.length));
+  }
+
+  async executar(
+    pedido: string,
+    mesa: boolean,
+    intencao: IntencaoComando,
+    unidadeDaFila = '',
+  ): Promise<Pedido> {
     if (this.ocupado()) throw new Error('Aguarde a operação em andamento.');
     const chave = this.chave(pedido, mesa);
     const anterior = this.intencoes.get(chave);
-    if (anterior && JSON.stringify(anterior) !== JSON.stringify(intencao))
+    if (anterior && JSON.stringify(anterior.intencao) !== JSON.stringify(intencao))
       throw new Error('Confirme o resultado da ação anterior antes de outra alteração.');
-    this.intencoes.set(chave, structuredClone(intencao));
+    this.intencoes.set(
+      chave,
+      anterior ?? { intencao: structuredClone(intencao), unidadeId: unidadeDaFila },
+    );
     this.alteracao.update((valor) => valor + 1);
     this.ocupado.set(true);
     try {

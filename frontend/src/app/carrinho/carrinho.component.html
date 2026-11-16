@@ -1,0 +1,287 @@
+<section aria-labelledby="carrinho-titulo" [attr.aria-busy]="carrinho.ocupado()">
+  <header class="carrinho-cabecalho">
+    <div>
+      @if (apresentacaoCliente()) {
+        <h1 id="carrinho-titulo">Meu carrinho</h1>
+      } @else {
+        <h2 id="carrinho-titulo">Meu carrinho</h2>
+      }
+      @if (carrinho.contexto(); as contexto) {
+        <p>{{ contexto.unidadeNome }} · {{ nomeCanal(contexto.canal) }}</p>
+      }
+    </div>
+    @if (apresentacaoCliente() && quantidade()) {
+      <span class="carrinho-quantidade">
+        <app-icone nome="sacola" />
+        {{ quantidade() }} {{ quantidade() === 1 ? 'item' : 'itens' }}
+      </span>
+    }
+  </header>
+  @if (!apresentacaoCliente()) {
+    <p class="carrinho-instrucao">Confira seus itens e confirme o envio ao finalizar.</p>
+    <ng-container [ngTemplateOutlet]="ajuda" />
+  }
+
+  <div class="retorno-carrinho">
+    @if (carrinho.erro()) {
+      <p role="alert" class="erro" tabindex="-1">{{ carrinho.erro() }}</p>
+    }
+    @if (carrinho.aviso() && quantidade()) {
+      <p role="status">{{ carrinho.aviso() }}</p>
+    } @else if (carrinho.aviso() && !apresentacaoCliente()) {
+      <p role="status">{{ carrinho.aviso() }}</p>
+    }
+  </div>
+
+  <div class="carrinho-grade">
+    <div class="carrinho-lista">
+      @if (apresentacaoCliente() && quantidade()) {
+        <h2 class="sr-only">Itens do carrinho</h2>
+      }
+      @for (item of carrinho.itens(); track item.linha.id; let indice = $index) {
+        <article
+          class="item carrinho-item"
+          [attr.aria-label]="'Item ' + (indice + 1) + ': ' + item.nome"
+        >
+          <div class="carrinho-item-apresentacao">
+            @if (apresentacaoCliente() && item.midiaId; as midiaId) {
+              @if (!midiasIndisponiveis().has(midiaId)) {
+                <img
+                  class="carrinho-item-foto"
+                  [src]="'/api/v1/midias/' + midiaId"
+                  alt=""
+                  width="80"
+                  height="80"
+                  loading="lazy"
+                  decoding="async"
+                  (error)="ocultarMidia(midiaId)"
+                />
+              }
+            }
+            <div class="carrinho-item-titulo">
+              <h3>{{ item.nome }}</h3>
+              @if (apresentacaoCliente()) {
+                @if (item.descricao) {
+                  <p class="carrinho-item-descricao">{{ item.descricao }}</p>
+                }
+              } @else {
+                <p>
+                  Composição: {{ item.linha.escolhas.length }}
+                  {{ item.linha.escolhas.length === 1 ? 'escolha' : 'escolhas' }} e
+                  {{ item.linha.adicionais.length }}
+                  {{ item.linha.adicionais.length === 1 ? 'adicional' : 'adicionais' }}.
+                </p>
+              }
+            </div>
+          </div>
+          <div class="carrinho-item-quantidade">
+            <label [for]="'quantidade-' + item.linha.id">
+              @if (apresentacaoCliente()) {
+                Quantidade <span class="sr-only">de {{ item.nome }} (item {{ indice + 1 }})</span>
+              } @else {
+                Quantidade de {{ item.nome }} (item {{ indice + 1 }})
+              }
+            </label>
+            <input
+              #quantidade
+              [id]="'quantidade-' + item.linha.id"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="99"
+              step="1"
+              [value]="item.linha.quantidade"
+              [disabled]="carrinho.ocupado()"
+              (change)="alterarQuantidade(item, quantidade)"
+            />
+          </div>
+          @if (apresentacaoCliente() && (item.escolhas.length || item.adicionais.length)) {
+            <div class="carrinho-item-composicao">
+              <p>Composição por unidade</p>
+              <ul>
+                @for (escolha of item.escolhas; track $index) {
+                  <li>
+                    <strong>{{ escolha.grupo }}</strong
+                    >: {{ escolha.quantidade }} × {{ escolha.nome }}
+                    @if (escolha.adicionais.length) {
+                      <ul>
+                        @for (adicional of escolha.adicionais; track $index) {
+                          <li>+ {{ adicional.quantidade }} × {{ adicional.nome }} por escolha</li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+                @for (adicional of item.adicionais; track $index) {
+                  <li>+ {{ adicional.quantidade }} × {{ adicional.nome }}</li>
+                }
+              </ul>
+            </div>
+          }
+          <div class="acoes carrinho-item-acoes">
+            <button
+              hlmBtn
+              class="secundario"
+              type="button"
+              [attr.aria-label]="'Editar composição do item ' + (indice + 1)"
+              (click)="editarComposicao(item, $event.currentTarget)"
+              [disabled]="consultandoCatalogo() || carrinho.ocupado() || !carrinho.online()"
+            >
+              {{ apresentacaoCliente() ? 'Editar composição' : 'Editar composição do item ' + (indice + 1) }}
+            </button>
+            <button
+              hlmBtn
+              class="secundario"
+              type="button"
+              [attr.aria-label]="'Remover item ' + (indice + 1)"
+              (click)="carrinho.remover(item.linha.id)"
+              [disabled]="carrinho.ocupado()"
+            >
+              {{ apresentacaoCliente() ? 'Remover' : 'Remover item ' + (indice + 1) }}
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <div class="vazio carrinho-vazio">
+          @if (apresentacaoCliente()) {
+            <app-icone nome="sacola" />
+          }
+          <p>Seu carrinho está vazio.</p>
+          @if (apresentacaoCliente()) {
+            <a hlmBtn routerLink="/cardapio" variant="outline">Ver cardápio</a>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="carrinho-revisao">
+      @if (!apresentacaoCliente()) {
+        <ng-container [ngTemplateOutlet]="revisar" />
+      }
+      @if (carrinho.resumo(); as resumo) {
+        <section class="carrinho-resumo" aria-labelledby="resumo-titulo">
+          @if (apresentacaoCliente()) {
+            <h2 id="resumo-titulo" tabindex="-1">Resumo dos itens</h2>
+            <h3 class="sr-only">Valores por item</h3>
+          } @else {
+            <h3 id="resumo-titulo">Resumo dos itens</h3>
+          }
+          @for (linha of resumo.linhas; track linha.id; let indice = $index) {
+            <article class="item carrinho-resumo-item">
+              <h4>{{ indice + 1 }}. {{ linha.quantidade }} × {{ linha.nome }}</h4>
+              @if (apresentacaoCliente()) {
+                <strong class="carrinho-subtotal">{{ moeda(linha.subtotal) }}</strong>
+                <details>
+                  <summary>Composição e preços</summary>
+                  <ng-container [ngTemplateOutlet]="detalhesLinha" />
+                </details>
+              } @else {
+                <ng-container [ngTemplateOutlet]="detalhesLinha" />
+                <p>
+                  <strong>Subtotal do item: {{ moeda(linha.subtotal) }}</strong>
+                </p>
+              }
+              <ng-template #detalhesLinha>
+                <p>
+                  Preço base: {{ moeda(linha.precoBase) }} · Valor de cada configuração:
+                  {{ moeda(linha.precoUnitario) }}
+                </p>
+                @if (linha.adicionais.length) {
+                  <ul>
+                    @for (adicional of linha.adicionais; track adicional.adicionalId) {
+                      <li>
+                        {{ adicional.quantidade }} × {{ adicional.nome }}:
+                        {{ moeda(adicional.total) }}
+                      </li>
+                    }
+                  </ul>
+                }
+                @for (escolha of linha.escolhas; track $index) {
+                  <p>
+                    {{ escolha.grupo }}: {{ escolha.quantidade }} × {{ escolha.nome }} · Acréscimo
+                    por escolha: {{ moeda(escolha.acrescimo) }} · Total da escolha:
+                    {{ moeda(escolha.total) }}
+                  </p>
+                  @if (escolha.adicionais.length) {
+                    <ul>
+                      @for (adicional of escolha.adicionais; track adicional.adicionalId) {
+                        <li>
+                          {{ adicional.quantidade }} × {{ adicional.nome }} por escolha ·
+                          {{ moeda(adicional.precoUnitario) }} cada
+                        </li>
+                      }
+                    </ul>
+                  }
+                }
+              </ng-template>
+            </article>
+          }
+          <p class="carrinho-total">
+            <strong>Total dos itens: {{ moeda(resumo.total) }}</strong>
+          </p>
+          <p class="carrinho-exclusoes">
+            Valores em BRL. Este resumo inclui somente os itens; não inclui frete, gorjeta ou taxa
+            de serviço.
+          </p>
+          @if (carrinho.confirmado()) {
+            <p role="status" class="carrinho-confirmado">
+              Resumo confirmado. O envio do pedido exige confirmação separada.
+            </p>
+          } @else if (!apresentacaoCliente()) {
+            <ng-container [ngTemplateOutlet]="confirmar" />
+          }
+        </section>
+      }
+      @if (apresentacaoCliente() && quantidade()) {
+        <ng-container [ngTemplateOutlet]="ajuda" />
+        <div class="carrinho-etapa" [class.carrinho-etapa-ativa]="!carrinho.confirmado()">
+          @if (carrinho.resumo() && !carrinho.confirmado()) {
+            <ng-container [ngTemplateOutlet]="confirmar" />
+          }
+          <ng-container [ngTemplateOutlet]="revisar" />
+        </div>
+      }
+    </div>
+  </div>
+
+  <app-confirmar-pedido [apresentacaoCliente]="apresentacaoCliente()" />
+</section>
+
+<ng-template #revisar>
+  @if (carrinho.itens().length) {
+    <div class="acoes carrinho-revisar">
+      <button
+        #botaoRevisar
+        hlmBtn
+        type="button"
+        [variant]="apresentacaoCliente() && carrinho.resumo() ? 'outline' : 'default'"
+        (click)="calcular(false, botaoRevisar)"
+        [disabled]="carrinho.ocupado() || !carrinho.online()"
+      >
+        Revisar meu pedido
+      </button>
+    </div>
+  }
+</ng-template>
+
+<ng-template #confirmar>
+  <button
+    #botaoConfirmar
+    hlmBtn
+    type="button"
+    (click)="calcular(true, botaoConfirmar)"
+    [disabled]="carrinho.ocupado() || !carrinho.online()"
+  >
+    Confirmar composição e valores
+  </button>
+</ng-template>
+
+<ng-template #ajuda>
+  <details class="carrinho-ajuda">
+    <summary>Sobre o carrinho e os valores</summary>
+    <p>
+      Os itens ficam nesta aba durante a navegação. Atualizar ou fechar a página descarta o
+      rascunho. O resumo é validado pelo restaurante antes do envio.
+    </p>
+  </details>
+</ng-template>

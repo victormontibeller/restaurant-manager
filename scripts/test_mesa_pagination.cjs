@@ -29,6 +29,7 @@ class CarrinhoService {}
 class PedidoEnvioService {}
 class PendenciasMesaService {}
 class NavegacaoProtegidaService {}
+class FormularioRotaDirective {}
 class AcompanhamentoEventos {
   iniciar() {}
   encerrar() {}
@@ -59,32 +60,35 @@ function componente(arquivo, nome, api) {
           signal,
           computed: (fn) => fn,
           input,
+          output: () => ({ emit() {} }),
           effect: (fn) => efeitos.push(fn),
           untracked: (fn) => fn(),
           DestroyRef,
           inject: (type) =>
-            type === DestroyRef
-              ? { onDestroy: (fn) => destruidores.push(fn) }
-              : type === SessaoService
-                ? sessao
-                : type === CarrinhoService
-                  ? carrinho
-                  : type === SessaoMesaService
-                    ? { participante: () => null }
-                    : type === PendenciasMesaService
-                      ? (raiz.pendencias ??= servicoReal(
-                          'mesas/pendencias-mesa.service.ts',
-                          'PendenciasMesaService',
-                        ))
-                      : type === NavegacaoProtegidaService
-                        ? (raiz.navegacao ??= servicoReal(
-                            'rotas/navegacao-protegida.service.ts',
-                            'NavegacaoProtegidaService',
+            type === FormularioRotaDirective
+              ? null
+              : type === DestroyRef
+                ? { onDestroy: (fn) => destruidores.push(fn) }
+                : type === SessaoService
+                  ? sessao
+                  : type === CarrinhoService
+                    ? carrinho
+                    : type === SessaoMesaService
+                      ? { participante: () => null }
+                      : type === PendenciasMesaService
+                        ? (raiz.pendencias ??= servicoReal(
+                            'mesas/pendencias-mesa.service.ts',
+                            'PendenciasMesaService',
                           ))
-                        : (raiz.envio ??= servicoReal(
-                            'pedidos/pedido-envio.service.ts',
-                            'PedidoEnvioService',
-                          )),
+                        : type === NavegacaoProtegidaService
+                          ? (raiz.navegacao ??= servicoReal(
+                              'rotas/navegacao-protegida.service.ts',
+                              'NavegacaoProtegidaService',
+                            ))
+                          : (raiz.envio ??= servicoReal(
+                              'pedidos/pedido-envio.service.ts',
+                              'PedidoEnvioService',
+                            )),
         };
       if (name.includes('sessao-mesa')) return { SessaoMesaService };
       if (name.includes('sessao.service')) return { SessaoService, ApiFailure };
@@ -92,6 +96,7 @@ function componente(arquivo, nome, api) {
       if (name.includes('pedido-envio.service')) return { PedidoEnvioService };
       if (name.includes('pendencias-mesa.service')) return { PendenciasMesaService };
       if (name.includes('navegacao-protegida.service')) return { NavegacaoProtegidaService };
+      if (name.includes('formulario-rota.directive')) return { FormularioRotaDirective };
       if (name.includes('acompanhamento')) return { AcompanhamentoEventos };
       if (name.includes('catalogo/modelos')) return { mensagemErro: (error) => error.message };
       return {};

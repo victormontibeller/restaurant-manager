@@ -44,6 +44,15 @@ automaticamente. Duas versões anteriores dos assets permitem manter abas
 já abertas durante a transição. Instalação depende do suporte do navegador;
 emulação local não comprova instalação em aparelho físico.
 
+A cor de abertura da PWA e os ícones instaláveis usam terracota `#a53e2b`.
+O rodapé do cliente exibe a instalação como ação discreta quando o navegador
+oferece o recurso. Avisos aparecem quando a conexão cai ou quando uma atualização
+está disponível. A consulta de diagnóstico do servidor fica na área interna.
+Links públicos inexistentes abertos diretamente no navegador recebem uma página
+HTML com status 404, acesso ao cardápio e entrada manual de mesa. O frontend
+usa a mesma mensagem nas navegações internas. A abertura offline de pedidos e
+mesas exige que o identificador na rota tenha formato de UUID.
+
 A vitrine permite consulta de unidade fechada, mas a composição confirmável
 depende de funcionamento atual e recálculo pelo servidor. Resumo expira após
 60 segundos ou mudança de rede/itens. Troca de unidade/canal informa o impacto
@@ -163,3 +172,120 @@ Tela cheia depende de ação do operador. Os controles têm alvo mínimo de 48 p
 A implementação e a validação desse incremento ficam no
 [registro do painel](evidencias/painel-cozinha-2026-11-10.md); pendências globais
 continuam no checkpoint.
+
+## Densidade da gestão
+
+Pedidos, Cardápio, Mesas e comandas, Unidades e horários, Equipe e acessos e
+Convites usam o tema claro da gestão. Superfícies claras, texto escuro, bordas
+discretas e cantos de 8 px acompanham a referência visual do Airbnb claro. Os
+filtros têm rótulo visível e texto de 14 px, com espaçamento inspirado no Notion.
+O terracota `#a53e2b` identifica a ação primária e o foco. A escala de espaçamento
+é 4, 8, 12, 16, 24 e 32 px. Controles compactos usam 38 px no desktop com
+ponteiro preciso e pelo menos 48 px em telas de toque. O catálogo interno
+`/design-system` demonstra filtros, resumo expansível, estado e formulário.
+O cabeçalho da gestão oferece um botão para alternar entre tema claro e escuro.
+A preferência é guardada no navegador e o claro é o padrão da primeira visita.
+O menu lateral conserva a estrutura e as proporções da versão anterior.
+
+A fila usa um resumo por pedido. Referência, canal, horário, tempo decorrido,
+estado e prazo de aceite aplicável ficam visíveis junto das ações imediatas.
+Itens, observações, histórico, ações que exigem motivo e financeiro ficam no
+painel expansível. Atualizações preservam o painel e o rascunho do pedido
+identificado. A versão vigente continua determinando a validade da seleção de
+unidades de produção. A recuperação reutiliza a intenção original e fica
+disponível na unidade da operação mesmo quando o filtro oculta o pedido.
+
+Os cadastros apresentam dados resumidos em listas e abrem um editor por vez.
+Ao abrir, movem o foco para o editor. Ao fechar, devolvem o foco ao controle
+que o abriu. Mudanças locais pedem confirmação de descarte e operações incertas
+mantêm seu fluxo de reconciliação. A edição de oferta continua vinculada à
+unidade escolhida, e horários e canais têm controles próprios dentro da unidade.
+
+## Cardápio do cliente
+
+A vitrine pública usa superfícies claras, títulos serifados e terracota nas
+ações e na categoria selecionada. No desktop, o banner parte de 248 px e
+dedica pouco mais da metade da largura à fotografia. No celular, parte de
+96 px e cresce conforme o texto. A busca e o botão **Filtros** ficam na mesma
+linha, seguidos pela unidade e pelo canal ativos e pela faixa rolável de
+categorias. Clientes autenticados também podem alternar para **Meus favoritos**.
+
+O painel de filtros abre pela base no celular e fica centralizado nas telas
+maiores. **Aplicar filtros** seleciona unidade e canal juntos. **Cancelar** e
+**Escape** descartam a edição e devolvem o foco. Se houver itens no carrinho,
+a troca de contexto exige confirmação. Após a troca, a busca mantém o texto
+e volta à primeira página em **Todos**.
+
+Nos cartões, a foto do prato, quando disponível, acompanha nome e preço. Em
+telas estreitas, a descrição da lista tem até duas linhas e **Ver opções**
+abre o texto completo. Os controles principais preservam alvos de 48 px.
+Mensagens de indisponibilidade e perda de conexão continuam visíveis durante
+a consulta do cardápio.
+
+No desktop, a prévia do carrinho acompanha a rolagem da vitrine e mostra a
+contagem, a unidade e o canal. Com itens, lista até três configurações, com
+nome e quantidade, e indica quantas ficaram de fora. **Ver carrinho** abre
+a página completa na aplicação. Os valores calculados pelo servidor, a edição
+e o envio ficam nessa página. Celular e tablet usam o atalho móvel.
+
+### Carrinho e finalização
+
+O mesmo frontend Angular atende celular, tablet e desktop. Em **Meu carrinho**,
+cada configuração tem nome, descrição, quantidade e ações de edição e remoção.
+Quando o produto tem foto, a miniatura acompanha o nome. A composição por
+unidade mostra os nomes e as quantidades das escolhas e dos adicionais.
+O desktop mostra os itens e a revisão lado a lado. No celular, a página empilha os
+painéis e mantém a ação de revisão ou confirmação acessível acima da
+navegação inferior. O resumo apresenta os subtotais e o total calculados
+pelo servidor e permite expandir a composição e os preços de cada linha.
+
+Ao confirmar os valores, o foco segue para **Enviar pedido**. O formulário
+apresenta os campos do canal e o botão principal ocupa a largura disponível
+no celular. Se uma cotação deixar de valer, o envio permanece desabilitado
+até nova confirmação. Um envio pendente mantém a consulta e a recuperação
+da mesma intenção. O visitante pode entrar na conta e voltar ao carrinho
+pela navegação da aplicação.
+
+### Meus pedidos e acompanhamento
+
+Cada pedido mostra perto do topo o canal, o estado atual e uma orientação
+para o cliente. As etapas seguem o canal e a modalidade de pagamento.
+Em telas estreitas, sequências com cinco ou mais etapas ficam na vertical
+para manter os rótulos legíveis. Quando um pedido é cancelado, o estado e
+os detalhes do pedido ficam disponíveis com o histórico e os valores.
+
+O link **Acompanhar pedido** abre a página individual. O estado muda conforme
+as atualizações recebidas do servidor. Quando a conexão cai, a interface
+identifica que está mostrando a informação da última consulta.
+
+### Minha mesa, conta e acesso
+
+O QR abre o formulário com a mesa identificada pelo link. Na rota **Minha mesa**,
+a entrada manual também está disponível. Após a autorização, a comanda mostra
+mesa, estado, total e saldos do atendimento junto das ações de ajuda e conta.
+Comanda e rodadas ficam lado a lado no desktop e empilhadas no celular. O
+andamento das rodadas usa o contexto da mesa. Avisos de fechamento, perda
+de conexão e recuperação aparecem próximos das ações correspondentes.
+
+**Minha conta** mostra a situação da verificação do e-mail, atalhos e os
+endereços salvos. A edição usa o formulário de endereço na própria página.
+Os formulários de entrada, cadastro, recuperação e verificação exibem rótulos
+e feedback junto aos campos. A navegação preserva o destino original da jornada.
+
+Em **Aceitar convite**, a confirmação usa terracota e **Voltar ao login**
+usa contorno. As ações ficam lado a lado em telas largas e empilhadas no
+celular. Se a aplicação falhar ao iniciar, o painel de recuperação recebe
+foco no título e oferece a ação **Recarregar página**.
+
+### Configuração, pagamento e horários
+
+**Ver opções** e **Editar composição** compartilham um diálogo com os dados
+do produto e a foto cadastrada, quando disponível. O diálogo abre pela base
+no celular e fica centralizado em telas maiores. Cálculo e confirmação ficam
+junto à área de composição. Ao fechar, o foco retorna ao acionador.
+
+No acompanhamento, o painel de pagamento prioriza prazo, tentativa atual e
+ações disponíveis. O histórico de tentativas fica recolhido. **Horários e
+atendimento** organiza a consulta por unidade e canal e mostra a situação e
+o horário da última consulta confirmada. Páginas informativas e controles de
+conexão, instalação e atualização da PWA seguem o visual das rotas do cliente.

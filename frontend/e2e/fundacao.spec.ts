@@ -2,29 +2,40 @@ import { test, expect } from '@playwright/test';
 
 test('S00-UI01: shell conecta à API e PostgreSQL reais', async ({ page }) => {
   const errors: string[] = [];
+  let consultasTecnicas = 0;
   page.on('pageerror', (e) => errors.push(e.message));
+  page.on('request', (requisicao) => {
+    if (new URL(requisicao.url()).pathname === '/actuator/health') consultasTecnicas++;
+  });
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.locator('.app-utilities > details > summary').click();
-  await expect(page.locator('.app-utilities > details').getByRole('status')).toHaveText(
-    'Sistema conectado. Banco de dados disponível.',
-  );
+  await expect(page.getByRole('searchbox', { name: 'Buscar produtos' })).toBeEnabled();
+  await expect(page.locator('.app-utilities > details')).toHaveCount(0);
+  expect(consultasTecnicas).toBe(0);
   await expect(
     page.getByText('Ambiente de testes · Dados fictícios', { exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
+  expect(await page.locator('main').evaluate((e) => getComputedStyle(e).paddingLeft)).not.toBe(
+    '0px',
+  );
+  await page.screenshot({ path: test.info().outputPath('shell.png'), fullPage: true });
+
+  await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
+  await expect(page).toHaveURL(/\/gestao\/entrar$/);
+  await page.locator('.app-utilities > details > summary').click();
+  await expect(page.locator('.app-utilities > details').getByRole('status')).toHaveText(
+    'Sistema conectado. Banco de dados disponível.',
+  );
   expect(
     await page
       .getByRole('button', { name: 'Verificar conexão' })
       .evaluate((e) => e.getBoundingClientRect().height),
   ).toBeGreaterThanOrEqual(48);
-  expect(await page.locator('main').evaluate((e) => getComputedStyle(e).paddingLeft)).not.toBe(
-    '0px',
-  );
+  expect(consultasTecnicas).toBe(1);
   expect(errors).toEqual([]);
-  await page.screenshot({ path: test.info().outputPath('shell.png'), fullPage: true });
 });
 
 test('S00-UI02: teclado e recuperação após rede indisponível', async ({
@@ -33,10 +44,8 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({
   browserName,
 }) => {
   await page.goto('/');
-  await expect(
-    page.locator('.app-utilities > details').getByRole('status', { includeHidden: true }),
-  ).toContainText('Sistema conectado');
-  await expect(page.getByLabel('Unidade do cardápio', { exact: true })).toBeEnabled();
+  const busca = page.getByRole('searchbox', { name: 'Buscar produtos' });
+  await expect(busca).toBeEnabled();
   await expect(page.locator('main#conteudo')).toBeFocused();
   // No WebKit/macOS, Option-Tab inclui links na navegação nativa por teclado.
   // O router posiciona o foco no conteúdo; percorra o cabeçalho em sentido inverso.
@@ -59,7 +68,12 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({
   );
   await expect(page.locator('main#conteudo')).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(page.getByLabel('Unidade do cardápio', { exact: true })).toBeFocused();
+  await expect(busca).toBeFocused();
+
+  await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
+  await expect(
+    page.locator('.app-utilities > details').getByRole('status', { includeHidden: true }),
+  ).toContainText('Sistema conectado');
   await page.locator('.app-utilities > details > summary').focus();
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
@@ -74,6 +88,9 @@ test('S00-UI02: teclado e recuperação após rede indisponível', async ({
   await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
     'Sistema conectado',
   );
+  await page.getByRole('link', { name: 'Ir ao cardápio', exact: true }).click();
+  await expect(page).toHaveURL(/\/cardapio$/);
+  await expect(page.locator('.app-utilities > details')).toHaveCount(0);
 });
 
 test.describe('Fronteira de rede S00-UI03', () => {
@@ -83,16 +100,18 @@ test.describe('Fronteira de rede S00-UI03', () => {
 
   test('S00-UI03: carregamento aguarda resposta real sem duplicar consulta', async ({ page }) => {
     let release!: () => void;
+    let consultas = 0;
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
     // Somente retarda a requisição; resposta continua sendo da API/PostgreSQL reais.
     await page.route('**/actuator/health', async (route) => {
+      consultas++;
       await gate;
       await route.continue();
     });
     try {
-      await page.goto('/');
+      await page.goto('/gestao/entrar');
       await page.locator('.app-utilities > details > summary').click();
       await expect(page.locator('.app-utilities > details').getByRole('status')).toHaveText(
         'Verificando conexão…',
@@ -105,6 +124,7 @@ test.describe('Fronteira de rede S00-UI03', () => {
       'Sistema conectado',
     );
     await expect(page.getByRole('button', { name: 'Verificar conexão' })).toBeEnabled();
+    expect(consultas).toBe(1);
   });
 });
 

@@ -6,11 +6,13 @@ import {
   Input,
   Output,
   ViewChild,
+  afterNextRender,
   effect,
   inject,
   signal,
 } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 
 type Canal = 'DELIVERY' | 'RETIRADA' | 'MESA';
 
@@ -38,12 +40,11 @@ interface Funcionamento {
   selector: 'app-funcionamento-unidade',
   template: `
     <section [attr.data-rascunho]="'funcionamento-' + unidadeId" [attr.aria-labelledby]="'funcionamento-titulo-' + unidadeId" [attr.aria-busy]="ocupado()">
-      <h5 [id]="'funcionamento-titulo-' + unidadeId">Horários e canais de {{ nome }}</h5>
+      <h4 [id]="'funcionamento-titulo-' + unidadeId" tabindex="-1" data-gestao-foco>Horários e canais de {{ nome }}</h4>
       <button
         type="button"
-        (click)="consultar()"
+        (click)="consultar()" data-variant="outline"
         [disabled]="bloqueado || ocupado()"
-        [attr.aria-expanded]="aberto()"
         [attr.aria-controls]="'funcionamento-editor-' + unidadeId"
       >{{ aberto() ? 'Consultar funcionamento no servidor' : 'Configurar horários e canais' }}</button>
       @if (aberto()) {
@@ -78,75 +79,82 @@ interface Funcionamento {
               <p>Sem horário cadastrado, o canal fica fechado. Desabilitar um canal preserva seus horários para uma futura reativação.</p>
               @for (horario of horarios(); track horario.chave; let indice = $index) {
                 <fieldset
-                  class="horario"
+                  class="horario gestao-campos"
                   [disabled]="bloqueado || ocupado() || reconsultaObrigatoria()"
                   [attr.aria-describedby]="'funcionamento-ajuda-' + unidadeId"
                 >
                   <legend>Horário {{ indice + 1 }}</legend>
-                  <label [for]="campo(horario.chave, 'canal')">Canal</label>
-                  <select
-                    #canalHorario
-                    [id]="campo(horario.chave, 'canal')"
-                    [value]="horario.canal"
-                    (change)="alterarCanal(horario.chave, canalHorario.value)"
-                  >
-                    @for (canal of opcoesCanais; track canal.valor) {
-                      <option [value]="canal.valor" [selected]="canal.valor === horario.canal">{{ canal.rotulo }}</option>
-                    }
-                  </select>
-                  <label [for]="campo(horario.chave, 'dia')">Dia de início</label>
-                  <select
-                    #dia
-                    [id]="campo(horario.chave, 'dia')"
-                    [value]="horario.diaSemana"
-                    (change)="alterarDia(horario.chave, dia.value)"
-                  >
-                    @for (dia of dias; track dia.valor) {
-                      <option [value]="dia.valor" [selected]="dia.valor === horario.diaSemana">{{ dia.rotulo }}</option>
-                    }
-                  </select>
-                  <label [for]="campo(horario.chave, 'inicio')">Início (HH:mm)</label>
-                  <input
-                    #inicio
-                    [id]="campo(horario.chave, 'inicio')"
-                    type="text"
-                    autocomplete="off"
-                    placeholder="09:00"
-                    maxlength="5"
-                    pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-                    required
-                    [value]="horario.inicio"
-                    (input)="alterarHora(horario.chave, 'inicio', inicio.value)"
-                  >
-                  <label [for]="campo(horario.chave, 'fim')">Fim (HH:mm ou 24:00)</label>
-                  <input
-                    #fim
-                    [id]="campo(horario.chave, 'fim')"
-                    type="text"
-                    autocomplete="off"
-                    placeholder="18:00"
-                    maxlength="5"
-                    pattern="(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
-                    required
-                    [value]="horario.fim"
-                    (input)="alterarHora(horario.chave, 'fim', fim.value)"
-                  >
+                  <div>
+                    <label [for]="campo(horario.chave, 'canal')">Canal</label>
+                    <select
+                      #canalHorario
+                      [id]="campo(horario.chave, 'canal')"
+                      [value]="horario.canal"
+                      (change)="alterarCanal(horario.chave, canalHorario.value)"
+                    >
+                      @for (canal of opcoesCanais; track canal.valor) {
+                        <option [value]="canal.valor" [selected]="canal.valor === horario.canal">{{ canal.rotulo }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label [for]="campo(horario.chave, 'dia')">Dia de início</label>
+                    <select
+                      #dia
+                      [id]="campo(horario.chave, 'dia')"
+                      [value]="horario.diaSemana"
+                      (change)="alterarDia(horario.chave, dia.value)"
+                    >
+                      @for (dia of dias; track dia.valor) {
+                        <option [value]="dia.valor" [selected]="dia.valor === horario.diaSemana">{{ dia.rotulo }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label [for]="campo(horario.chave, 'inicio')">Início (HH:mm)</label>
+                    <input
+                      #inicio
+                      [id]="campo(horario.chave, 'inicio')"
+                      type="text"
+                      autocomplete="off"
+                      placeholder="09:00"
+                      maxlength="5"
+                      pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
+                      required
+                      [value]="horario.inicio"
+                      (input)="alterarHora(horario.chave, 'inicio', inicio.value)"
+                    >
+                  </div>
+                  <div>
+                    <label [for]="campo(horario.chave, 'fim')">Fim (HH:mm ou 24:00)</label>
+                    <input
+                      #fim
+                      [id]="campo(horario.chave, 'fim')"
+                      type="text"
+                      autocomplete="off"
+                      placeholder="18:00"
+                      maxlength="5"
+                      pattern="(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
+                      required
+                      [value]="horario.fim"
+                      (input)="alterarHora(horario.chave, 'fim', fim.value)"
+                    >
+                  </div>
                   @if (horario.fim < horario.inicio) {
                     <small>Este horário termina no dia seguinte ao selecionado.</small>
                   }
-                  <button type="button" (click)="remover(horario.chave)">Remover horário {{ indice + 1 }}</button>
+                  <button class="remover-horario" type="button" data-variant="ghost" (click)="remover(horario.chave)">Remover horário {{ indice + 1 }}</button>
                 </fieldset>
               } @empty {
                 <p>Nenhum horário cadastrado. Todos os canais ficam fechados até que seus horários sejam definidos e habilitados.</p>
               }
               <p>{{ horarios().length }} de 84 horários cadastrados.</p>
-              <button
-                type="button"
-                (click)="adicionar()"
-                [disabled]="bloqueado || ocupado() || reconsultaObrigatoria() || horarios().length >= 84"
-              >Adicionar horário</button>
               <p>Para salvar, confirme sua identidade no formulário acima. A confirmação vale por cinco minutos.</p>
-              <button [disabled]="bloqueado || ocupado() || reconsultaObrigatoria()">Salvar funcionamento</button>
+              <div class="gestao-acoes">
+                <button [disabled]="bloqueado || ocupado() || reconsultaObrigatoria()">Salvar funcionamento</button>
+                <button type="button" data-variant="outline" (click)="adicionar()"
+                  [disabled]="bloqueado || ocupado() || reconsultaObrigatoria() || horarios().length >= 84">Adicionar horário</button>
+              </div>
             </form>
           }
         </div>
@@ -154,65 +162,17 @@ interface Funcionamento {
     </section>
   `,
   styles: `
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    section {
-      margin-top: 1.5rem;
-      border-top: 1px solid #6b7a70;
-    }
-    h5 {
-      font-size: 1rem;
-    }
-    h5,
-    p,
-    small {
-      overflow-wrap: anywhere;
-    }
-    form {
-      display: grid;
-      gap: 0.75rem;
-      max-width: 32rem;
-    }
-    fieldset {
-      min-width: 0;
-      margin: 0;
-      padding: 0.75rem;
-      border: 1px solid #6b7a70;
-      border-radius: 0.5rem;
-    }
-    .horario {
-      display: grid;
-      gap: 0.5rem;
-    }
-    input:not([type='checkbox']),
-    select {
-      box-sizing: border-box;
-      width: 100%;
-      min-width: 0;
-      min-height: 48px;
-      font: inherit;
-      padding: 0.5rem;
-    }
+    :host { display: block; min-width: 0; }
+    h4 { margin-top: 0; }
+    .horario { align-items: end; }
+    .horario small, .remover-horario { grid-column: 1 / -1; }
+    .remover-horario { justify-self: start; }
     .canal {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      min-height: 48px;
-      gap: 0.5rem;
-    }
-    input[type='checkbox'] {
-      width: 22px;
-      height: 22px;
-    }
-    button {
-      min-height: 48px;
-      max-width: 100%;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    .erro {
-      color: #9d2424;
+      min-height: var(--gestao-controle, 48px);
+      gap: var(--gestao-espaco-2, 8px);
+      margin-inline-end: var(--gestao-espaco-4, 16px);
     }
   `,
 })
@@ -225,6 +185,7 @@ export class FuncionamentoUnidadeComponent {
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
 
   private readonly sessao = inject(SessaoService);
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
   private readonly conta = this.sessao.identidade()?.usuarioId;
   private geracao = 0;
   private proximaChave = 0;
@@ -255,6 +216,7 @@ export class FuncionamentoUnidadeComponent {
   ];
 
   constructor() {
+    afterNextRender(() => void this.consultar());
     effect(() => {
       if (this.conta !== this.sessao.identidade()?.usuarioId) this.encerrar();
     });
@@ -270,6 +232,10 @@ export class FuncionamentoUnidadeComponent {
 
   async consultar(): Promise<void> {
     if (!this.podeIniciar()) return;
+    const chave = 'funcionamento-' + this.unidadeId;
+    const alterado = this.formulario?.temRascunho(chave);
+    if (!this.reconsultaObrigatoria() && this.formulario?.confirmarDescarte(chave) === false)
+      return;
     this.aberto.set(true);
     const geracao = ++this.geracao;
     const unidade = this.unidadeId;
@@ -279,8 +245,12 @@ export class FuncionamentoUnidadeComponent {
       if (!this.vigente(geracao, unidade)) return;
       this.receber(dados, unidade);
       this.aviso.set('Funcionamento consultado no servidor. O rascunho usa a versão atual.');
+      this.formulario?.confirmarSalvo(chave);
     } catch (error) {
-      if (this.vigente(geracao, unidade)) this.falhar(error, false);
+      if (this.vigente(geracao, unidade)) {
+        if (alterado) this.formulario?.marcarAlterado(chave);
+        this.falhar(error, false);
+      }
     } finally {
       if (this.vigente(geracao, unidade)) this.finalizar();
     }
@@ -309,12 +279,14 @@ export class FuncionamentoUnidadeComponent {
       },
     ]);
     this.aviso.set('');
+    this.formulario?.marcarAlterado('funcionamento-' + this.unidadeId);
   }
 
   remover(chave: number): void {
     if (!this.podeEditar()) return;
     this.horarios.update((horarios) => horarios.filter((horario) => horario.chave !== chave));
     this.aviso.set('');
+    this.formulario?.marcarAlterado('funcionamento-' + this.unidadeId);
   }
 
   alterarCanal(chave: number, canal: string): void {

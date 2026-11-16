@@ -1,0 +1,27 @@
+<header class="cabecalho-acompanhamento">
+  <a hlmBtn variant="ghost" routerLink="/pedidos">← Meus pedidos</a>
+  <h1>Acompanhe seu pedido</h1>
+</header>
+@if (erro()) {
+  <p role="alert" class="erro-acompanhamento">{{ erro() }}</p>
+}
+@if (pedido(); as atual) {
+  <app-pedido-detalhe
+    [pedido]="atual"
+    contexto="cliente"
+    [apresentacaoCliente]="true"
+    (atualizar)="carregar()"
+  />
+} @else if (carregando()) {
+  <p role="status" class="carregando-acompanhamento">Buscando seu pedido…</p>
+}
+<button
+  hlmBtn
+  variant="outline"
+  class="atualizar-acompanhamento"
+  type="button"
+  (click)="carregar()"
+  [disabled]="carregando()"
+>
+  Atualizar pedido
+</button>

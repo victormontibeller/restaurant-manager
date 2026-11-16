@@ -34,6 +34,7 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
   expect((await reauth).status()).toBe(204);
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
   const nome = 'Recuperada ' + crypto.randomUUID().slice(0, 8);
+  await page.getByRole('button', { name: 'Nova unidade', exact: true }).click();
   await page.getByLabel('Nome da nova unidade').fill(nome);
   let liberar!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -74,7 +75,7 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
     page.getByText('Unidade criada no servidor. Recarregue para ordenar a lista.'),
   ).toBeVisible();
   await expect(page.getByRole('heading', { name: nome, exact: true })).toHaveCount(1);
-  await expect(page.getByLabel('Nome da nova unidade')).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Nova unidade', exact: true })).toBeEnabled();
   await expect(
     page.getByRole('link', { name: 'Equipe e acessos', exact: true, includeHidden: true }),
   ).toHaveAttribute('href', '/gestao/equipe');

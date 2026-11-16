@@ -1,4 +1,16 @@
-import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { Unidade, mensagemErro } from '../catalogo/modelos';
 import { CozinhaComponent } from '../cozinha/cozinha.component';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
@@ -6,21 +18,26 @@ import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { MesasComponent } from '../mesas/mesas.component';
 import { PrazosAceiteComponent } from '../unidades/prazos-aceite.component';
 import { AcessosOperacao, PaginaPedidos, Pedido } from './modelos';
+import { PedidoComandoService } from './pedido-comando.service';
 import { PedidoDetalheComponent } from './pedido-detalhe.component';
 
 @Component({
   selector: 'app-operacao-pedidos',
   imports: [PedidoDetalheComponent, MesasComponent, CozinhaComponent, PrazosAceiteComponent],
   templateUrl: './operacao-pedidos.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './operacao-pedidos.component.css'],
 })
 export class OperacaoPedidosComponent {
   readonly unidadeExterna = input<string | undefined>(undefined);
   readonly acoesExternas = input<string[] | undefined>(undefined);
   readonly administradorExterno = input(false);
   readonly navegacaoInterna = input(true);
+  readonly filaCompacta = input(false);
   readonly areaInicial = input<'pedidos' | 'cozinha' | 'mesas' | 'prazos'>('pedidos');
   private readonly sessao = inject(SessaoService);
+  private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  readonly comandos = inject(PedidoComandoService);
   readonly acoes = signal<string[]>([]);
   readonly unidades = signal<Unidade[]>([]);
   readonly administrador = signal(false);
@@ -32,6 +49,13 @@ export class OperacaoPedidosComponent {
   readonly ocupado = signal(false);
   readonly carregandoAcessos = signal(false);
   readonly erro = signal('');
+  readonly erroRecuperacao = signal('');
+  readonly avisoRecuperacao = signal('');
+  readonly online = signal(navigator.onLine);
+  readonly pendenciasForaDaPagina = computed(() => {
+    const visiveis = new Set(this.pedidos().map((pedido) => pedido.id));
+    return this.comandos.pendenciasDaFila(this.unidadeId()).filter((id) => !visiveis.has(id));
+  });
   readonly filtroEstado = signal('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO');
   readonly filtroCanal = signal('');
   readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('RECENTES');
@@ -42,6 +66,9 @@ export class OperacaoPedidosComponent {
   private timer?: ReturnType<typeof setTimeout>;
 
   constructor() {
+    const rede = () => this.online.set(navigator.onLine);
+    window.addEventListener('online', rede);
+    window.addEventListener('offline', rede);
     effect(() => {
       const unidade = this.unidadeExterna();
       const acoes = this.acoesExternas();
@@ -65,6 +92,8 @@ export class OperacaoPedidosComponent {
       this.geracao++;
       clearTimeout(this.timer);
       this.acompanhamento.encerrar();
+      window.removeEventListener('online', rede);
+      window.removeEventListener('offline', rede);
     });
   }
 
@@ -117,6 +146,8 @@ export class OperacaoPedidosComponent {
     this.unidadeId.set(id);
     this.pedidos.set([]);
     this.pagina.set(0);
+    this.erroRecuperacao.set('');
+    this.avisoRecuperacao.set('');
     this.ocupado.set(false);
     this.acompanhamento.encerrar();
     if (id && this.area() === 'pedidos') this.acompanhar();
@@ -143,6 +174,22 @@ export class OperacaoPedidosComponent {
     this.mais.set(false);
     this.pedidos.set([]);
     void this.carregarPedidos(0);
+  }
+
+  async recuperar(id: string): Promise<void> {
+    const intencao = this.comandos.pendente(id, false);
+    if (!intencao || !this.online() || this.comandos.ocupado()) return;
+    const geracao = this.geracao;
+    this.erroRecuperacao.set('');
+    this.avisoRecuperacao.set('');
+    try {
+      await this.comandos.executar(id, false, intencao);
+      if (geracao === this.geracao) this.avisoRecuperacao.set('Resultado recuperado.');
+    } catch (erro) {
+      if (geracao === this.geracao) this.erroRecuperacao.set(mensagemErro(erro));
+    } finally {
+      if (geracao === this.geracao) await this.carregarPedidos(this.pagina());
+    }
   }
 
   private acompanhar(): void {
@@ -190,6 +237,20 @@ export class OperacaoPedidosComponent {
           }),
       );
       if (geracao !== this.geracao || this.destruido) return;
+      const linhaFocada =
+        this.filaCompacta() && document.activeElement?.closest('app-pedido-detalhe');
+      if (linhaFocada && this.elemento.nativeElement.contains(linhaFocada)) {
+        afterNextRender(
+          () => {
+            if (document.activeElement !== document.body) return;
+            const destino = linhaFocada.isConnected
+              ? linhaFocada.querySelector<HTMLElement>('.alternar-detalhes')
+              : this.elemento.nativeElement.querySelector<HTMLElement>('.atualizar-fila');
+            destino?.focus();
+          },
+          { injector: this.injector },
+        );
+      }
       this.pedidos.set(resultado.itens);
       this.pagina.set(pagina);
       this.mais.set(resultado.mais);

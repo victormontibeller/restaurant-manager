@@ -1,3 +1,8 @@
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { IconeComponent } from '../rotas/icone.component';
+import { HlmButton } from '../ui/button';
+import { andamentoPedido, orientacaoPedido } from './andamento-pedido';
 import { PagamentoPedidoComponent } from '../pagamentos/pagamento-pedido.component';
 import { FinanceiroComponent } from '../financeiro/financeiro.component';
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
@@ -6,18 +11,30 @@ import { Pedido, UnidadeProducao, horario, nomeEstado } from './modelos';
 import { PedidoComandoService } from './pedido-comando.service';
 
 @Component({
-  imports: [FinanceiroComponent, PagamentoPedidoComponent],
+  imports: [
+    FinanceiroComponent,
+    NgTemplateOutlet,
+    PagamentoPedidoComponent,
+    RouterLink,
+    IconeComponent,
+    HlmButton,
+  ],
   selector: 'app-pedido-detalhe',
   templateUrl: './pedido-detalhe.component.html',
-  styleUrls: ['../operacao.css', './pedido-detalhe.component.css'],
+  styleUrls: ['../operacao.css', './pedido-detalhe.component.css', './pedido-acompanhamento.css'],
 })
 export class PedidoDetalheComponent {
   readonly pedido = input.required<Pedido>();
   readonly contexto = input<'cliente' | 'mesa' | 'operacao' | 'cozinha'>('cliente');
+  readonly compacto = input(false);
+  readonly apresentacaoCliente = input(false);
+  readonly linkAcompanhamento = input(false);
+  readonly unidadeDaFila = input('');
   readonly acoes = input<string[]>([]);
   readonly atualizar = output<void>();
   readonly comandos = inject(PedidoComandoService);
   readonly selecionadas = signal<string[]>([]);
+  readonly detalhesAbertos = signal(false);
   readonly financeiroAberto = signal(false);
   readonly erro = signal('');
   readonly aviso = signal('');
@@ -26,6 +43,8 @@ export class PedidoDetalheComponent {
   readonly nomeEstado = nomeEstado;
   readonly horario = horario;
   readonly moeda = moeda;
+  readonly andamentoPedido = andamentoPedido;
+  readonly orientacaoPedido = orientacaoPedido;
   motivo = '';
   private versaoSelecao = '';
 
@@ -146,6 +165,10 @@ export class PedidoDetalheComponent {
     );
   }
 
+  alternarDetalhes(): void {
+    this.detalhesAbertos.update((abertos) => !abertos);
+  }
+
   selecionar(id: string, marcado: boolean): void {
     this.selecionadas.update((lista) =>
       marcado ? [...new Set([...lista, id])] : lista.filter((atual) => atual !== id),
@@ -186,13 +209,14 @@ export class PedidoDetalheComponent {
             : '/api/v1/operacao/pedidos';
     const rota =
       base + '/' + pedido.id + (solicitacaoId ? '/solicitacoes/' + solicitacaoId : '') + '/' + acao;
+    const usaSelecao = !this.pessoal() && (!this.compacto() || acao === 'cancelar');
     await this.executar({
       rota,
       corpo: {
         intencaoId: crypto.randomUUID(),
         versao: pedido.versao,
-        motivo: this.motivo.trim(),
-        unidades: this.pessoal() ? [] : [...this.selecionadas()],
+        motivo: !this.compacto() || precisaMotivo ? this.motivo.trim() : '',
+        unidades: usaSelecao ? [...this.selecionadas()] : [],
       },
     });
   }
@@ -208,7 +232,12 @@ export class PedidoDetalheComponent {
     this.erro.set('');
     this.aviso.set('');
     try {
-      await this.comandos.executar(this.pedido().id, this.contexto() === 'mesa', intencao);
+      await this.comandos.executar(
+        this.pedido().id,
+        this.contexto() === 'mesa',
+        intencao,
+        this.unidadeDaFila(),
+      );
       this.motivo = '';
       this.selecionadas.set([]);
       this.aviso.set('Ação confirmada pelo servidor.');
