@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 
 interface Checkout {
   id: string;
@@ -11,12 +12,14 @@ interface Checkout {
 
 @Component({
   selector: 'app-pagamento-pedido',
+  imports: [HlmButton],
   templateUrl: './pagamento-pedido.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './pagamento-pedido.component.css'],
 })
 export class PagamentoPedidoComponent {
   readonly pedidoId = input.required<string>();
   readonly aguardando = input(false);
+  readonly prazo = input<string | null>(null);
   private readonly sessao = inject(SessaoService);
   readonly tentativas = signal<Checkout[]>([]);
   readonly erro = signal('');
@@ -66,7 +69,10 @@ export class PagamentoPedidoComponent {
     this.consultando.set(true);
     try {
       const dados = await this.sessao.api<Checkout[]>(this.rota());
-      if (consulta === this.consulta && pedido === this.pedidoId()) this.tentativas.set(dados);
+      if (consulta === this.consulta && pedido === this.pedidoId()) {
+        this.tentativas.set(dados);
+        this.erro.set('');
+      }
     } catch (erro) {
       if (consulta === this.consulta) this.erro.set(mensagemErro(erro));
     } finally {

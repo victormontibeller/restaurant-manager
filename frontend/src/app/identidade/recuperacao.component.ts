@@ -1,4 +1,5 @@
-import { Component, ElementRef, ViewChild, inject, output, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject, input, output, signal } from '@angular/core';
+import { estilosFormularioAcesso } from './formularios-acesso.estilos';
 import { ApiFailure, SessaoService } from './sessao.service';
 import { senhaEmBranco } from './senha';
 
@@ -6,7 +7,11 @@ import { senhaEmBranco } from './senha';
   selector: 'app-recuperacao',
   template: `
     <section aria-labelledby="recuperacao-titulo" [attr.aria-busy]="ocupado()">
-      <h2 id="recuperacao-titulo" tabindex="-1">Recuperar senha</h2>
+      @if (apresentacaoCliente()) {
+        <h1 id="recuperacao-titulo" tabindex="-1">Recuperar senha</h1>
+      } @else {
+        <h2 id="recuperacao-titulo" tabindex="-1">Recuperar senha</h2>
+      }
       <p>Solicite um código para a conta desta empresa. Neste ambiente fictício, as mensagens são capturadas localmente; nenhum e-mail real é enviado.</p>
       <form (submit)="solicitar($event, email.value)">
         <label for="email-recuperacao">E-mail da recuperação</label>
@@ -21,7 +26,11 @@ import { senhaEmBranco } from './senha';
         >
         <button type="submit" [disabled]="ocupado()">Solicitar código</button>
       </form>
-      <h3>Já recebeu o código?</h3>
+      @if (apresentacaoCliente()) {
+        <h2 class="etapa-acesso">Já recebeu o código?</h2>
+      } @else {
+        <h3>Já recebeu o código?</h3>
+      }
       <p>O código só funciona nesta empresa, expira em quinze minutos após a solicitação e pode ser usado uma vez. A alteração encerra todas as sessões anteriores.</p>
       <form (submit)="confirmar($event, codigo, nova, confirmacao)">
         <label for="codigo-recuperacao">Código de recuperação</label>
@@ -71,36 +80,16 @@ import { senhaEmBranco } from './senha';
         <p #alerta id="erro-recuperacao" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
       }
       @if (aviso()) {
-        <p #resultado role="status" tabindex="-1">{{ aviso() }}</p>
+        <p #resultado class="resultado-acesso" role="status" tabindex="-1">{{ aviso() }}</p>
       }
-      <button type="button" (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
+      <button class="voltar-acesso" type="button" (click)="voltar.emit()" [disabled]="ocupado()">Voltar ao login</button>
     </section>
   `,
-  styles: `
-    form {
-      display: grid;
-      gap: 0.5rem;
-      max-width: 28rem;
-      margin-bottom: 1.5rem;
-    }
-    input {
-      width: 100%;
-      min-height: 48px;
-      border: 1px solid #6b7a70;
-      border-radius: 0.4rem;
-      padding: 0.6rem;
-      font: inherit;
-    }
-    label {
-      font-weight: 650;
-    }
-    .erro {
-      color: #9d2424;
-      font-weight: 600;
-    }
-  `,
+  styles: estilosFormularioAcesso,
+  host: { '[class.formulario-cliente]': 'apresentacaoCliente()' },
 })
 export class RecuperacaoComponent {
+  readonly apresentacaoCliente = input(false);
   private readonly sessao = inject(SessaoService);
   readonly voltar = output<void>();
   readonly ocupado = signal(false);

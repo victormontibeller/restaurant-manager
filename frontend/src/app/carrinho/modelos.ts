@@ -23,6 +23,15 @@ export interface LinhaCarrinho {
 export interface ItemCarrinho {
   linha: LinhaCarrinho;
   nome: string;
+  descricao: string;
+  midiaId: string | null;
+  adicionais: DetalheSelecao[];
+  escolhas: (DetalheSelecao & { grupo: string; adicionais: DetalheSelecao[] })[];
+}
+
+interface DetalheSelecao {
+  nome: string;
+  quantidade: number;
 }
 
 export interface SnapshotAdicional extends SelecaoAdicional {

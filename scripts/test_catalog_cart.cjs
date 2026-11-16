@@ -55,6 +55,7 @@ function fixture(source = 'carrinho/carrinho.service.ts', classe = 'CarrinhoServ
         ? {
             Injectable: () => (value) => value,
             signal,
+            computed: (fn) => fn,
             DestroyRef,
             inject: (token) =>
               token === DestroyRef ? { onDestroy: (fn) => destroy.push(fn) } : api,
@@ -133,13 +134,30 @@ function preparar(carrinho) {
         },
       ],
     },
-    'Combo A',
+    {
+      nome: 'Combo A',
+      descricao: 'Sanduíche com acompanhamento',
+      midiaId: 'foto-a',
+      adicionais: [],
+      grupos: [
+        {
+          id: 'grupo-a',
+          nome: 'Principal',
+          opcoes: [
+            { id: 'opcao-a', nome: 'Sanduíche', adicionais: [{ id: 'extra-a', nome: 'Bacon' }] },
+          ],
+        },
+      ],
+    },
   );
 }
 
 async function confirmacaoExigeRevisaoVigenteSemPrecoNoPayload() {
   const { carrinho, calls, responder } = fixture();
   preparar(carrinho);
+  assert.equal(carrinho.quantidadeItens(), 1);
+  assert.equal(carrinho.itens()[0].midiaId, 'foto-a');
+  assert.equal(carrinho.itens()[0].escolhas[0].adicionais[0].nome, 'Bacon');
   await carrinho.calcular();
   assert.equal(carrinho.confirmado(), false);
   assert.equal(calls[0][2].revisaoAnterior, null);
@@ -149,7 +167,13 @@ async function confirmacaoExigeRevisaoVigenteSemPrecoNoPayload() {
     'revisaoAnterior',
     'unidadeId',
   ]);
-  assert.equal(JSON.stringify(calls[0][2]).includes('preco'), false);
+  assert.deepEqual(Object.keys(calls[0][2].linhas[0]).sort(), [
+    'adicionais',
+    'escolhas',
+    'id',
+    'produtoId',
+    'quantidade',
+  ]);
 
   responder(async () => quote('r2', true));
   await carrinho.calcular(true);
@@ -162,6 +186,7 @@ async function confirmacaoExigeRevisaoVigenteSemPrecoNoPayload() {
   assert.equal(carrinho.confirmado(), true);
   assert.equal(calls[2][2].revisaoAnterior, 'r2');
   carrinho.alterarQuantidade('linha-a', 2);
+  assert.equal(carrinho.quantidadeItens(), 2);
   assert.equal(carrinho.confirmado(), false);
   assert.equal(carrinho.resumo(), null);
 }
@@ -182,6 +207,7 @@ async function respostasAtrasadasNaoRevalidamOutraUnidadeOuRede() {
   await pendente;
   assert.equal(carrinho.contexto().unidadeId, 'b');
   assert.equal(carrinho.itens().length, 0);
+  assert.equal(carrinho.quantidadeItens(), 0);
   assert.equal(carrinho.resumo(), null);
   assert.equal(calls[0][3].aborted, true);
 

@@ -1,17 +1,20 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { SessaoMesaService } from '../mesas/sessao-mesa.service';
 import { mensagemErro } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
+import { IconeComponent } from '../rotas/icone.component';
+import { HlmButton } from '../ui/button';
 import { PaginaPedidos, Pedido } from './modelos';
 import { PedidoDetalheComponent } from './pedido-detalhe.component';
 import { PedidoEnvioService } from './pedido-envio.service';
 
 @Component({
   selector: 'app-meus-pedidos',
-  imports: [PedidoDetalheComponent],
+  imports: [RouterLink, IconeComponent, HlmButton, PedidoDetalheComponent],
   templateUrl: './meus-pedidos.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './meus-pedidos.component.css'],
 })
 export class MeusPedidosComponent {
   readonly mesa = input(false);

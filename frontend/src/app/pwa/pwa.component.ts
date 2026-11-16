@@ -1,4 +1,4 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, computed, input, signal } from '@angular/core';
 
 interface PedidoInstalacao extends Event {
   prompt(): Promise<void>;
@@ -7,43 +7,82 @@ interface PedidoInstalacao extends Event {
 
 @Component({
   selector: 'app-pwa',
+  host: { '[class.pwa-com-acoes]': 'visivel()' },
   template: `
-    @if (!online()) { <p class="offline-notice" role="status">Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.</p> }
-    <details [open]="atualizacao()">
-      <summary id="aplicativo">{{ atualizacao() ? 'Nova versão disponível' : 'Aplicativo e conexão' }}</summary>
-      <p role="status" aria-live="polite">
-        @if (online()) {
-          Rede disponível. Consultas e cálculos dependem da conexão com o restaurante.
-        } @else {
-          Você está offline. Somente a estrutura do aplicativo está disponível. Reconecte para
-          consultar o catálogo ou recalcular o carrinho; nenhuma operação foi confirmada.
-        }
-      </p>
-      @if (instalado()) {
-        <p>Aplicativo aberto em modo instalado.</p>
-      } @else if (instalavel()) {
-        <button (click)="instalar()" [disabled]="ocupado()">Instalar aplicativo</button>
-      } @else {
-        <p>Para instalar, use “Instalar aplicativo” ou “Adicionar à Tela de Início” no menu do
-          navegador, quando disponível.</p>
-      }
-      @if (atualizacao()) {
-        <p>Uma nova versão está pronta. Atualizar recarrega esta aba e descarta o carrinho e
-          formulários ainda não salvos. As outras abas mantêm seus dados em memória.</p>
-        <button (click)="atualizar()" [disabled]="ocupado()">Atualizar aplicativo</button>
-      }
-      <p role="status" aria-live="polite">{{ mensagem() }}</p>
-    </details>
+    <p class="offline-notice" role="status">@if (!online()) { Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada. }</p>
+    @if (atualizacao()) {
+      <div class="pwa-atualizacao">
+        <p><strong>Nova versão disponível.</strong> Atualizar recarrega esta aba e descarta o carrinho e formulários ainda não salvos.</p>
+        <button type="button" (click)="atualizar()" [disabled]="ocupado()">Atualizar aplicativo</button>
+      </div>
+    }
+    @if (podeInstalar()) {
+      <div class="pwa-instalacao">
+        <button type="button" (click)="instalar()" [disabled]="ocupado()">Instalar aplicativo</button>
+      </div>
+    }
+    <p class="pwa-retorno" role="status">{{ mensagem() }}</p>
+    @if (diagnostico() && mensagemTecnica()) {
+      <p class="pwa-retorno" role="status">{{ mensagemTecnica() }}</p>
+    }
   `,
-  styles: `:host{display:block;max-width:520px}summary{min-height:44px;align-content:center;cursor:pointer;list-style:none}details p{line-height:1.6}button{margin:.5rem .5rem .5rem 0}.offline-notice{max-width:640px;margin:0 0 1rem;padding:1rem;border-radius:12px;background:#fff1d7;color:#694d1a;box-shadow:0 8px 32px #0002;font-size:.85rem}`,
+  styles: `
+    :host { display: block; font-size: 0.875rem; }
+    :host(:not(.pwa-com-acoes)) { height: 0; }
+    :is(.offline-notice, .pwa-retorno):empty {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .offline-notice {
+      margin: 0 0 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #fff1d7;
+      color: #694d1a;
+    }
+    .pwa-atualizacao {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      padding-block: 8px;
+    }
+    .pwa-atualizacao p { flex: 1 1 18rem; margin: 0; }
+    .pwa-instalacao { display: flex; justify-content: flex-end; }
+    .pwa-instalacao button {
+      padding: 0 8px;
+      background: transparent;
+      color: var(--primary);
+      font-size: inherit;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .pwa-retorno { margin: 0; color: var(--muted-foreground); }
+  `,
 })
 export class PwaComponent implements OnDestroy {
+  readonly diagnostico = input(false);
   readonly online = signal(navigator.onLine);
   readonly instalado = signal(matchMedia('(display-mode: standalone)').matches);
   readonly instalavel = signal(false);
   readonly atualizacao = signal(false);
   readonly ocupado = signal(false);
   readonly mensagem = signal('');
+  readonly mensagemTecnica = signal('');
+  readonly podeInstalar = computed(() => this.online() && !this.instalado() && this.instalavel());
+  readonly visivel = computed(
+    () =>
+      !this.online() ||
+      this.atualizacao() ||
+      this.podeInstalar() ||
+      !!this.mensagem() ||
+      (this.diagnostico() && !!this.mensagemTecnica()),
+  );
   private pedido?: PedidoInstalacao;
   private registro?: ServiceWorkerRegistration;
   private recarregar = false;
@@ -73,7 +112,7 @@ export class PwaComponent implements OnDestroy {
       navigator.serviceWorker.addEventListener('controllerchange', this.controlador);
       void this.preparar();
     } else {
-      this.mensagem.set('Instalação e estrutura offline indisponíveis neste navegador.');
+      this.mensagemTecnica.set('Instalação e estrutura offline indisponíveis neste navegador.');
     }
   }
 
@@ -126,7 +165,7 @@ export class PwaComponent implements OnDestroy {
         });
       });
     } catch {
-      this.mensagem.set(
+      this.mensagemTecnica.set(
         'A estrutura offline não pôde ser preparada. O aplicativo continua disponível com conexão.',
       );
     }

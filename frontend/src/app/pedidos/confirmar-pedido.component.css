@@ -1,0 +1,80 @@
+:host(.finalizacao-cliente) .cartao-formulario {
+  margin: 0;
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: none;
+  line-height: 1.45;
+}
+
+:host(.finalizacao-cliente) .cartao-formulario[hidden] {
+  display: none;
+}
+
+:host(.finalizacao-cliente) .cabecalho-painel {
+  margin: 0 0 16px;
+}
+
+:host(.finalizacao-cliente) .cabecalho-painel h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--fonte-editorial);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 16px;
+}
+
+:host(.finalizacao-cliente) label {
+  margin: 16px 0 6px;
+  font-size: 0.875rem;
+}
+
+:host(.finalizacao-cliente) textarea,
+:host(.finalizacao-cliente) select {
+  background: var(--card);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+:host(.finalizacao-cliente) textarea {
+  min-height: 64px;
+  padding: 8px 12px;
+  font-size: 1rem;
+}
+
+:host(.finalizacao-cliente) select {
+  height: auto;
+  padding: 8px 12px;
+}
+
+:host(.finalizacao-cliente) p {
+  margin: 12px 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+:host(.finalizacao-cliente) .confirmacao-acao,
+:host(.finalizacao-cliente) .acoes-envio button {
+  border-radius: var(--radius);
+}
+
+:host(.finalizacao-cliente) :is(button, a, textarea, select):focus-visible {
+  scroll-margin-block-end: calc(var(--cliente-nav-altura, 65px) + 12px);
+}
+
+:host(.finalizacao-cliente) .acoes-envio {
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+@media (max-width: 600px) {
+  :host(.finalizacao-cliente) .cartao-formulario {
+    padding: 16px;
+  }
+
+  :host(.finalizacao-cliente) .confirmacao-acao,
+  :host(.finalizacao-cliente) .acoes-envio button {
+    width: 100%;
+  }
+}

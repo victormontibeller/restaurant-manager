@@ -1,5 +1,58 @@
 # Checkpoint de execução
 
+## Revisão da área do cliente — 2026-11-16
+
+A branch `codex/revisao-frontend-clientes` partiu da `main` em `1f3feb6`
+em clone isolado. A [PR #15](https://github.com/victormontibeller/restaurant-manager/pull/15)
+inclui o redesign da jornada do cliente e o 404 público. A preparação preservou
+o checkout original, inclusive os 36 arquivos ainda não rastreados.
+
+A contagem de itens vem do serviço de carrinho. A prévia conserva a quantidade
+de configurações excedentes. O configurador recebe o controle de origem para
+restaurar o foco. O detalhe usa o contexto para selecionar a apresentação,
+reaproveita o corpo operacional e calcula etapas e orientação a partir do
+pedido. O relógio usa a frequência correspondente ao prazo e ao tempo exibidos.
+Saíram o aviso duplicado do carrinho, as variantes legadas de pagamento pessoal,
+o input redundante do detalhe e o seletor de rótulo oculto substituído por
+`sr-only`. Tipografia, superfícies e espaçamento comuns usam os estilos do
+cliente. [Diretrizes](09_UI_GUIDELINES.md#cardapio-do-cliente).
+
+A versão da PWA validada foi `3bd5494f83d653cd7065`. Código e testes estão no
+commit `1f1ca3a`. O JAR usado nas jornadas tem SHA-256
+`a78ce6c36368d26924c4d43b6f1d0f20b207ebe8722c62f3994b8c63a08c1842`.
+Formatação, tipos, lógica, build e verificação do repositório passaram.
+Templates passaram no Chromium, Firefox e WebKit. Rotas, fundação e convites
+passaram em 76 testes de backend com PostgreSQL 18 isolado.
+
+| Jornadas dirigidas | Combinações aprovadas |
+| --- | ---: |
+| Fundação e diagnóstico | 9 |
+| Catálogo, favoritos e carrinho | 10 |
+| Horários públicos | 5 |
+| Cadastro, recuperação, verificação e convites | 16 |
+| Pedidos, Minha mesa, atendimento assistido e cozinha | 25 |
+| Endereços e checkout com provedor simulado | 10 |
+| PWA, abertura e 404 | 23 |
+| **Total** | **98** |
+
+Os cinco projetos cobriram Chromium em 360 × 800, 768 × 1024 e 1280 × 900,
+Firefox desktop e WebKit desktop conforme cada jornada. O service worker
+offline foi verificado no Chromium. A inspeção de 21 combinações de rota
+e largura passou a 200% de zoom sem rolagem horizontal. A medição de contraste
+de texto passou em 20 combinações. O filtro recebeu foco por teclado, em
+seguida devolveu o foco ao botão ao fechar com Escape.
+
+Na primeira rodada, o probe de horários precisava carregar o catálogo real
+após a consolidação dos nomes de canal. A lógica passou depois desse ajuste.
+A asserção do aviso offline foi vinculada à região da PWA e o catálogo foi
+reexecutado nos cinco projetos. A tecla de navegação no 404 do WebKit foi
+ajustada à configuração do macOS. A conta fictícia de verificação foi renovada
+e a jornada voltou a passar. Os relatórios locais mantêm as rodadas iniciais e
+as reexecuções.
+
+Homologação integrada, validação com provedor real e instalação em aparelho
+físico seguem pendentes.
+
 ## Depuração no VS Code no Mac — 2026-11-12
 
 O F5 iniciou o Spring Boot em Java 21 com o `.env` local e, em sequência,

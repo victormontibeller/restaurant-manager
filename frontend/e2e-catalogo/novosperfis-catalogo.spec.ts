@@ -2,6 +2,7 @@ import { abrirConta, navegarUi, nomePerfil } from '../e2e-identidade/apoio';
 import { APIRequestContext, Page, expect, test } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { fixture, loginApi, loginUi } from './apoio';
+import { aplicarContextoCardapio } from '../e2e/cardapio';
 
 interface Matriz {
   versao: number;
@@ -163,9 +164,9 @@ async function localizarOferta(page: Page, nome: string): Promise<void> {
 
 async function procurarNoCardapio(page: Page, produto: ProdutoPreparado): Promise<void> {
   await navegarUi(page, '/cardapio');
-  await page.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
-  await expect(page.getByLabel('Buscar produtos', { exact: true })).toBeVisible();
-  await page.getByLabel('Buscar produtos', { exact: true }).fill(produto.nome);
+  const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
+  await aplicarContextoCardapio(vitrine, fixture().unidadeA);
+  await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(produto.nome);
   const consulta = page.waitForResponse(
     (item) => item.url().includes('/api/v1/catalogo?') && item.url().includes('busca='),
   );
@@ -408,12 +409,23 @@ test('S02-UI-PERFIS-CLIENTES: favoritos pessoais de duas contas e gestão negada
   const cardapio = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
   const buscaPorDescricao = 'Produto fictício da matriz de acessos';
   expect(produto.nome).not.toContain(buscaPorDescricao);
+  const categoria = cardapio
+    .getByRole('navigation', { name: 'Categorias do cardápio', exact: true })
+    .getByRole('button', { name: 'Categoria ' + produto.categoriaId, exact: true });
+  const buscaComCategoria = page.waitForResponse((item) => {
+    const url = new URL(item.url());
+    return (
+      item.request().method() === 'GET' &&
+      url.pathname === '/api/v1/catalogo' &&
+      url.searchParams.get('busca') === buscaPorDescricao &&
+      url.searchParams.get('categoriaId') === produto.categoriaId
+    );
+  });
   await cardapio.getByLabel('Buscar produtos', { exact: true }).fill(buscaPorDescricao);
-  await cardapio
-    .getByLabel('Categoria do cardápio', { exact: true })
-    .selectOption(produto.categoriaId);
-  await cardapio.getByRole('button', { name: 'Buscar no cardápio', exact: true }).click();
+  await categoria.click();
+  expect((await buscaComCategoria).status()).toBe(200);
   await expect(cardapio).toHaveAttribute('aria-busy', 'false');
+  await expect(categoria).toHaveAttribute('aria-pressed', 'true');
   await expect(cardapio.getByRole('article', { name: produto.nome, exact: true })).toBeVisible();
   await cardapio.getByRole('button', { name: 'Meus favoritos', exact: true }).click();
   await expect(cardapio).toHaveAttribute('aria-busy', 'false');

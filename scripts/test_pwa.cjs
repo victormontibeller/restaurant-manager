@@ -148,8 +148,10 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
   for (const url of [
     '/cardapio',
     '/carrinho',
-    '/pedidos/pedido-ficticio',
-    '/mesa/mesa-ficticia',
+    '/pedidos',
+    '/pedidos/01234567-89ab-cdef-0123-456789abcdef',
+    '/mesa',
+    '/mesa/01234567-89AB-CDEF-0123-456789ABCDEF',
     '/gestao/pedidos',
     '/gestao/pedidos/novo',
     '/gestao/entrar?retorno=privado',
@@ -169,7 +171,14 @@ const fetchEvent = (url, method = 'GET', mode = 'cors', auth = false) => {
       'Rota usa somente shell público: ' + url,
     );
   }
-  for (const url of ['/api/v1/me/pedidos', '/gestao/arquivo-privado', '/nao-autorizado'])
+  for (const url of [
+    '/api/v1/me/pedidos',
+    '/gestao/arquivo-privado',
+    '/nao-autorizado',
+    '/pedidos/id-invalido',
+    '/mesa/codigo-invalido',
+    '/mesa/01234567-89ab-cdef-0123-456789abcdef12',
+  ])
     assert.equal(
       fetchEvent(url, 'GET', 'navigate'),
       undefined,

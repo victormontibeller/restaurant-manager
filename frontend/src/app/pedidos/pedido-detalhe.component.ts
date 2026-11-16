@@ -1,19 +1,41 @@
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { IconeComponent } from '../rotas/icone.component';
+import { HlmButton } from '../ui/button';
+import { andamentoPedido, orientacaoPedido } from './andamento-pedido';
 import { PagamentoPedidoComponent } from '../pagamentos/pagamento-pedido.component';
 import { FinanceiroComponent } from '../financeiro/financeiro.component';
-import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
-import { mensagemErro, moeda } from '../catalogo/modelos';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { mensagemErro, moeda, nomeCanal } from '../catalogo/modelos';
 import { Pedido, UnidadeProducao, horario, nomeEstado } from './modelos';
 import { PedidoComandoService } from './pedido-comando.service';
 
 @Component({
-  imports: [FinanceiroComponent, PagamentoPedidoComponent],
+  imports: [
+    FinanceiroComponent,
+    PagamentoPedidoComponent,
+    NgTemplateOutlet,
+    RouterLink,
+    IconeComponent,
+    HlmButton,
+  ],
   selector: 'app-pedido-detalhe',
   templateUrl: './pedido-detalhe.component.html',
-  styleUrls: ['../operacao.css', './pedido-detalhe.component.css'],
+  styleUrls: ['../operacao.css', './pedido-detalhe.component.css', './pedido-acompanhamento.css'],
 })
 export class PedidoDetalheComponent {
   readonly pedido = input.required<Pedido>();
   readonly contexto = input<'cliente' | 'mesa' | 'operacao' | 'cozinha'>('cliente');
+  readonly linkAcompanhamento = input(false);
   readonly acoes = input<string[]>([]);
   readonly atualizar = output<void>();
   readonly comandos = inject(PedidoComandoService);
@@ -26,6 +48,15 @@ export class PedidoDetalheComponent {
   readonly nomeEstado = nomeEstado;
   readonly horario = horario;
   readonly moeda = moeda;
+  protected readonly etapas = computed(() => andamentoPedido(this.pedido()));
+  protected readonly orientacao = computed(() => orientacaoPedido(this.pedido()));
+  private readonly prazoAceite = computed(() => {
+    const { estado, expirarEm } = this.pedido();
+    if (estado !== 'AGUARDANDO_ACEITE' || !expirarEm) return null;
+    const prazo = Date.parse(expirarEm);
+    return Number.isFinite(prazo) ? prazo : null;
+  });
+  private readonly criadoEm = computed(() => Date.parse(this.pedido().criadoEm));
   motivo = '';
   private versaoSelecao = '';
 
@@ -41,9 +72,26 @@ export class PedidoDetalheComponent {
     const rede = () => this.online.set(navigator.onLine);
     window.addEventListener('online', rede);
     window.addEventListener('offline', rede);
-    const timer = setInterval(() => this.agora.set(Date.now()), 1000);
+    effect((onCleanup) => {
+      const mostraTempoDecorrido = !this.pessoal();
+      const prazo = this.prazoAceite();
+      if (prazo === null && !mostraTempoDecorrido) return;
+      const criadoEm = mostraTempoDecorrido ? this.criadoEm() : 0;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const atualizarRelogio = () => {
+        const instante = Date.now();
+        this.agora.set(instante);
+        if (prazo !== null && instante < prazo) {
+          timer = setTimeout(atualizarRelogio, Math.min(1000, prazo - instante));
+        } else if (mostraTempoDecorrido && Number.isFinite(criadoEm)) {
+          const decorrido = Math.max(0, instante - criadoEm);
+          timer = setTimeout(atualizarRelogio, 60000 - (decorrido % 60000));
+        }
+      };
+      atualizarRelogio();
+      onCleanup(() => clearTimeout(timer));
+    });
     inject(DestroyRef).onDestroy(() => {
-      clearInterval(timer);
       window.removeEventListener('online', rede);
       window.removeEventListener('offline', rede);
     });
@@ -62,7 +110,7 @@ export class PedidoDetalheComponent {
     return this.pedido().id.slice(0, 8).toUpperCase();
   }
   canal(): string {
-    return { MESA: 'Mesa', RETIRADA: 'Retirada', DELIVERY: 'Delivery' }[this.pedido().canal];
+    return nomeCanal(this.pedido().canal);
   }
   horaCriacao(): string {
     return new Date(this.pedido().criadoEm).toLocaleTimeString('pt-BR', {
@@ -71,10 +119,7 @@ export class PedidoDetalheComponent {
     });
   }
   tempoDecorrido(): string {
-    const minutos = Math.max(
-      0,
-      Math.floor((this.agora() - Date.parse(this.pedido().criadoEm)) / 60000),
-    );
+    const minutos = Math.max(0, Math.floor((this.agora() - this.criadoEm()) / 60000));
     if (minutos < 1) return 'Agora';
     return minutos < 60
       ? minutos + ' min'
@@ -130,9 +175,9 @@ export class PedidoDetalheComponent {
   }
 
   prazo(): string {
-    const pedido = this.pedido();
-    if (pedido.estado !== 'AGUARDANDO_ACEITE' || !pedido.expirarEm) return '';
-    const segundos = Math.max(0, Math.ceil((Date.parse(pedido.expirarEm) - this.agora()) / 1000));
+    const prazo = this.prazoAceite();
+    if (prazo === null) return '';
+    const segundos = Math.max(0, Math.ceil((prazo - this.agora()) / 1000));
     return segundos
       ? 'Aceite em até ' + Math.floor(segundos / 60) + ' min ' + (segundos % 60) + ' s.'
       : 'Prazo vencido. Aguarde a atualização do servidor.';

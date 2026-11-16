@@ -374,8 +374,27 @@ dialog::backdrop {
   }
 }
 
+app-cliente-layout {
+  --fonte-editorial: Georgia, 'Times New Roman', serif;
+  --superficie-cliente: #fffdf9;
+  --raio-painel-cliente: 16px;
+  --espaco-acao-cliente: 8px;
+}
+
+app-cliente-layout .titulo-cliente {
+  margin: 0;
+  font: 400 clamp(2rem, 4.5vw, 3.5rem) / 1.05 var(--fonte-editorial);
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 800px) {
   html {
     scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+
+  app-root:has(> app-cliente-layout) {
+    display: block;
+    padding-bottom: var(--cliente-nav-altura, calc(75px + env(safe-area-inset-bottom)));
   }
 }

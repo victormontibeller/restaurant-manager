@@ -8,6 +8,8 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { MeusPedidosComponent } from '../pedidos/meus-pedidos.component';
@@ -16,12 +18,13 @@ import { Comanda, SolicitacaoMesa } from './modelos';
 import { SessaoMesaService } from './sessao-mesa.service';
 import { PendenciasMesaService, SolicitacaoMesaPendente } from './pendencias-mesa.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 
 @Component({
   selector: 'app-participante-mesa',
-  imports: [MeusPedidosComponent],
+  imports: [HlmButton, MeusPedidosComponent, NgTemplateOutlet, RouterLink],
   templateUrl: './participante-mesa.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './participante-mesa.component.css'],
 })
 export class ParticipanteMesaComponent {
   readonly mesaInicial = input<string | undefined>(undefined);
@@ -88,7 +91,7 @@ export class ParticipanteMesaComponent {
       );
   }
 
-  async entrar(event: Event, codigo: HTMLInputElement): Promise<void> {
+  async entrar(event: Event, codigo: HTMLInputElement, titulo?: HTMLElement): Promise<void> {
     event.preventDefault();
     if (this.ocupado() || this.encerramentoPendente()) return;
     this.ocupado.set(true);
@@ -97,6 +100,7 @@ export class ParticipanteMesaComponent {
       await this.sessao.autorizar(this.mesaId.trim(), codigo.value);
       codigo.value = '';
       this.aviso.set('Participação autorizada pelo servidor.');
+      setTimeout(() => titulo?.focus());
     } catch (error) {
       this.erroAcao.set(mensagemErro(error));
     } finally {
@@ -163,7 +167,7 @@ export class ParticipanteMesaComponent {
     }
   }
 
-  async sair(): Promise<void> {
+  async sair(titulo?: HTMLElement): Promise<void> {
     if (this.ocupado()) return;
     this.ocupado.set(true);
     this.erroAcao.set('');
@@ -171,6 +175,7 @@ export class ParticipanteMesaComponent {
       await this.sessao.sair();
       this.encerramentoPendente.set(false);
       this.aviso.set('Participação encerrada.');
+      setTimeout(() => titulo?.focus());
     } catch {
       this.encerramentoPendente.set(true);
       this.erroAcao.set(

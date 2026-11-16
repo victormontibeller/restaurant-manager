@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 
-type Canal = 'DELIVERY' | 'RETIRADA' | 'MESA';
+import { Canal, nomeCanal } from '../catalogo/modelos';
 
 interface UnidadePublica {
   id: string;
@@ -26,101 +26,8 @@ interface FuncionamentoPublico {
 
 @Component({
   selector: 'app-disponibilidade',
-  template: `
-    <section aria-labelledby="disponibilidade-titulo" [attr.aria-busy]="carregando()">
-      <h2 id="disponibilidade-titulo">Unidades e horários</h2>
-      <p>Escolha a unidade para consultar os canais e horários de atendimento.</p>
-      <button type="button" (click)="carregar()" [disabled]="carregandoLista()">Atualizar lista de unidades</button>
-      <label for="unidade-publica">Unidade</label>
-      <select
-        id="unidade-publica"
-        #seletor
-        [value]="selecionada()"
-        [disabled]="carregandoLista()"
-        (change)="selecionar(seletor.value)"
-      >
-        <option value="">Selecione uma unidade</option>
-        @for (unidade of unidades(); track unidade.id) {
-          <option [value]="unidade.id">{{ unidade.nome }}</option>
-        }
-      </select>
-      <button type="button" (click)="selecionar(selecionada())" [disabled]="!selecionada() || carregando()">Atualizar horários</button>
-      <p role="status">{{ estado() }}</p>
-      @if (erro()) {
-        <p role="alert" class="erro">{{ erro() }}</p>
-      }
-      @if (atual(); as unidade) {
-        <h3>{{ unidade.nome }}</h3>
-        <p>Fuso da unidade: {{ unidade.fuso }}. Consulta confirmada: {{ confirmado() }}.</p>
-        <p>A situação corresponde ao horário consultado. A disponibilidade é conferida novamente ao enviar o pedido.</p>
-        <div class="canais">
-          @for (canal of unidade.canais; track canal.canal) {
-            <article>
-              <h4>{{ nomeCanal(canal.canal) }}</h4>
-              <p><strong>{{ !canal.habilitado ? 'Canal desabilitado' : canal.aberto ? 'Aberto no horário consultado' : 'Fechado no horário consultado' }}</strong></p>
-              @if (canal.habilitado) {
-                <ul [attr.aria-label]="'Horários de ' + nomeCanal(canal.canal)">
-                  @for (horario of horariosDo(canal.canal); track $index) {
-                    <li>{{ nomeDia(horario.diaSemana) }}: {{ horario.inicio }} às {{ horario.fim }}{{ madrugada(horario) ? ' do dia seguinte' : '' }}</li>
-                  } @empty {
-                    <li>Sem horários configurados; atendimento fechado.</li>
-                  }
-                </ul>
-              }
-            </article>
-          }
-        </div>
-      }
-    </section>
-  `,
-  styles: `
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    label,
-    select {
-      display: block;
-      margin-top: 0.8rem;
-    }
-    select {
-      width: 100%;
-      max-width: 32rem;
-      min-height: 48px;
-      font: inherit;
-      margin-bottom: 0.8rem;
-    }
-    .canais {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-    }
-    article {
-      border: 1px solid #6b7a70;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      min-width: 0;
-    }
-    h4 {
-      margin-top: 0;
-    }
-    ul {
-      padding-left: 1.2rem;
-    }
-    p,
-    h3,
-    li,
-    button {
-      overflow-wrap: anywhere;
-    }
-    button {
-      max-width: 100%;
-      white-space: normal;
-    }
-    .erro {
-      color: #9d2424;
-    }
-  `,
+  templateUrl: './disponibilidade.component.html',
+  styleUrl: './disponibilidade.component.css',
 })
 export class DisponibilidadeComponent implements OnInit, OnDestroy {
   readonly unidades = signal<UnidadePublica[]>([]);
@@ -228,9 +135,7 @@ export class DisponibilidadeComponent implements OnInit, OnDestroy {
     }
   }
 
-  nomeCanal(canal: Canal): string {
-    return { DELIVERY: 'Delivery', RETIRADA: 'Retirada', MESA: 'Mesa' }[canal];
-  }
+  readonly nomeCanal = nomeCanal;
 
   nomeDia(dia: number): string {
     return [

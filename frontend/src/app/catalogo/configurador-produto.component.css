@@ -1,0 +1,208 @@
+:host:not(.configurador-cliente) .configurador-quantidade {
+  display: contents;
+}
+
+:host(.configurador-cliente) {
+  --espaco-configurador: 24px;
+}
+
+:host(.configurador-cliente) form {
+  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
+  gap: 0;
+  max-block-size: calc(var(--altura-configurador) - 2px);
+}
+
+:host(.configurador-cliente) .configurador-corpo {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--espaco-configurador);
+  scroll-padding-block: 12px;
+}
+
+.configurador-cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.configurador-cabecalho:has(.configurador-foto) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.configurador-titulo h3 {
+  margin: 4px 0;
+  font-family: var(--fonte-editorial);
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  font-weight: 600;
+}
+
+.configurador-preco {
+  margin: 4px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.configurador-preco strong {
+  color: var(--primary);
+}
+
+.configurador-foto {
+  grid-row: 1;
+  grid-column: 1;
+  inline-size: 112px;
+  block-size: 112px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.configurador-cabecalho:has(.configurador-foto) .configurador-titulo {
+  grid-column: 2;
+}
+
+.configurador-cabecalho button {
+  grid-column: -2;
+}
+
+.configurador-descricao {
+  grid-column: 1 / -1;
+  margin: 0;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+:host(.configurador-cliente) .configurador-composicao {
+  padding: 0;
+  margin: 16px 0 0;
+  border: 0;
+}
+
+:host(.configurador-cliente) legend {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+:host(.configurador-cliente) .configurador-composicao > legend {
+  margin-bottom: 4px;
+  font-size: 1.125rem;
+}
+
+:host(.configurador-cliente) .configurador-quantidade {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+:host(.configurador-cliente) .configurador-quantidade input {
+  width: 5rem;
+}
+
+:host(.configurador-cliente) :is(input, select, button) {
+  border-radius: 8px;
+}
+
+:host(.configurador-cliente)
+  :is(.configurador-grupo, .configurador-escolha, .configurador-adicionais) {
+  padding: 8px 12px 12px;
+  margin: 0;
+  border-color: var(--border);
+  border-radius: 12px;
+}
+
+:host(.configurador-cliente) :is(.configurador-grupo, .configurador-adicionais) p {
+  margin: 4px 0;
+  color: var(--muted-foreground);
+}
+
+:host(.configurador-cliente) .configurador-escolha {
+  background: var(--muted);
+}
+
+:host(.configurador-cliente) .configurador-adicionais {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem;
+  align-items: center;
+  gap: 8px;
+}
+
+:host(.configurador-cliente) .configurador-adicionais p {
+  grid-column: 1 / -1;
+}
+
+.configurador-opcoes {
+  padding: 0 8px;
+  border-color: var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.configurador-opcoes summary {
+  display: list-item;
+  min-height: 48px;
+  align-content: center;
+  overflow-wrap: anywhere;
+}
+
+.configurador-opcoes ul {
+  margin: 0 0 12px;
+}
+
+:host(.configurador-cliente) .configurador-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 12px var(--espaco-configurador);
+  padding-block-end: max(12px, env(safe-area-inset-bottom));
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--card);
+}
+
+.configurador-acoes button {
+  flex: 1 1 13rem;
+}
+
+.configurador-retorno:empty {
+  display: none;
+}
+
+.configurador-retorno div[role='status'],
+.configurador-retorno .erro {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--muted);
+  font-size: 0.875rem;
+}
+
+.configurador-retorno div p {
+  margin: 0 0 4px;
+}
+
+@media (max-width: 600px) {
+  :host(.configurador-cliente) {
+    --espaco-configurador: 16px;
+  }
+
+  .configurador-foto {
+    inline-size: 72px;
+    block-size: 72px;
+  }
+}
+
+@media (max-height: 420px) {
+  :host(.configurador-cliente) form {
+    max-block-size: none;
+  }
+
+  :host(.configurador-cliente) .configurador-corpo {
+    overflow-y: visible;
+  }
+}

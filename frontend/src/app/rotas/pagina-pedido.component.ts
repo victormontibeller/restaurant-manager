@@ -9,8 +9,8 @@ import { HlmButton } from '../ui/button';
 @Component({
   selector: 'app-pagina-pedido',
   imports: [RouterLink, PedidoDetalheComponent, HlmButton],
-  template: `<a hlmBtn variant="ghost" routerLink="/pedidos">← Meus pedidos</a><h1>Acompanhe seu pedido</h1>@if(erro()){<p role="alert">{{erro()}}</p>}@if(pedido();as atual){<app-pedido-detalhe [pedido]="atual" contexto="cliente" (atualizar)="carregar()"/>}@else if(carregando()){<p role="status">Buscando seu pedido…</p>}<button hlmBtn variant="outline" (click)="carregar()" [disabled]="carregando()">Atualizar pedido</button>`,
-  styles: `h1{font-size:2rem;letter-spacing:-.03em;margin:1rem 0 2rem}[role=alert]{padding:1rem;border-radius:12px;background:#fff1ed;color:#9d2424}`,
+  templateUrl: './pagina-pedido.component.html',
+  styleUrl: './pagina-pedido.component.css',
 })
 export class PaginaPedidoComponent {
   private readonly sessao = inject(SessaoService);

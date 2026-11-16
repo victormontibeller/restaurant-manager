@@ -45,6 +45,11 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
   const enviado = await enviarUi(page);
   expect(enviado.estado).toBe('AGUARDANDO_ACEITE');
   expect(enviado.unidades).toHaveLength(3);
+  const pedidoCliente = page.getByRole('article', { name: 'Pedido ' + enviado.id, exact: true });
+  await pedidoCliente.getByRole('link', { name: /^Acompanhar pedido #/ }).click();
+  await expect(page).toHaveURL((url) => url.pathname === '/pedidos/' + enviado.id);
+  const andamento = pedidoCliente.getByRole('list', { name: 'Etapas do pedido' });
+  await expect(andamento.locator('[aria-current="step"]')).toContainText('Aceite');
   const atendimento = await contexto(browser);
   const cozinha = await contexto(browser);
   try {
@@ -111,11 +116,14 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     expect(JSON.stringify(dto)).not.toMatch(
       /"(?:precoUnitario|subtotal|saldo|endereco|email|pagoConfirmado)"/,
     );
-    const selecao = preparo.locator('label.selecao').first();
+    const selecao = preparo.locator('.selecao label').first();
+    await expect(selecao).toBeVisible();
     const toque = await selecao.boundingBox();
     expect(toque!.height).toBeGreaterThanOrEqual(48);
     expect(toque!.width).toBeGreaterThanOrEqual(200);
-    expect((await selecao.locator('span').boundingBox())!.width).toBeGreaterThanOrEqual(140);
+    const rotulo = selecao.locator('span');
+    await expect(rotulo).toHaveText(/Unidade \d+ · (Na fila|Em preparo)/);
+    expect(await rotulo.evaluate((texto) => texto.scrollWidth <= texto.clientWidth)).toBe(true);
     await capturar(cozinha.page, preparo, 's03-cozinha-estados-mistos');
     const remanescentes = misto.unidades
       .filter((item) => item.estado === 'NA_FILA')
@@ -137,13 +145,9 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
       '/api/v1/cozinha/pedidos',
     );
     expect(atual.estado).toBe('PRONTO');
-    await page.getByRole('button', { name: 'Atualizar pedidos', exact: true }).click();
-    await expect(
-      page
-        .getByRole('article', { name: 'Pedido ' + enviado.id, exact: true })
-        .getByText('Pronto', { exact: true })
-        .first(),
-    ).toBeVisible();
+    await page.getByRole('button', { name: 'Atualizar pedido', exact: true }).click();
+    await expect(pedidoCliente.getByText('Pronto', { exact: true }).first()).toBeVisible();
+    await expect(andamento.locator('[aria-current="step"]')).toContainText('Para retirar');
   } finally {
     await atendimento.context.close();
     await cozinha.context.close();

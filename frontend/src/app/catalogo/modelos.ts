@@ -6,6 +6,10 @@ export const CANAIS: { valor: Canal; nome: string }[] = [
   { valor: 'MESA', nome: 'Mesa' },
 ];
 
+export function nomeCanal(canal: string | null | undefined, fallback = ''): string {
+  return CANAIS.find(({ valor }) => valor === canal)?.nome ?? fallback;
+}
+
 export interface Pagina<T> {
   itens: T[];
   temMais: boolean;

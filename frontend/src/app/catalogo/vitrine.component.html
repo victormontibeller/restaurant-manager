@@ -1,4 +1,4 @@
-@if (modo === 'cardapio') {
+@if (modo === 'cardapio' && !cardapioCliente()) {
   <div class="bistro-hero">
     <div>
       <p class="eyebrow">BEM-VINDO À MESA</p>
@@ -8,9 +8,41 @@
     </div>
   </div>
 }
+<ng-template #listaCategorias>
+  <nav class="categorias" aria-label="Categorias do cardápio">
+    <button
+      hlmBtn
+      variant="outline"
+      type="button"
+      [attr.aria-pressed]="!categoriaId"
+      (click)="escolherCategoria('')"
+      [disabled]="ocupado() || !carrinho.online()"
+    >
+      Todos
+    </button>
+    @for (categoria of categorias(); track categoria.id) {
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        [attr.aria-pressed]="categoriaId === categoria.id"
+        (click)="escolherCategoria(categoria.id)"
+        [disabled]="ocupado() || !carrinho.online()"
+      >
+        {{ categoria.nome }}
+      </button>
+    }
+  </nav>
+</ng-template>
 @if (selecionado(); as produto) {
-  <dialog #configuracao aria-label="Configurar produto" (cancel)="fecharConfiguracao()">
+  <dialog
+    #configuracao
+    aria-label="Configurar produto"
+    [class.produto-dialogo]="cardapioCliente() || modo === 'carrinho'"
+    (cancel)="fecharConfiguracao()"
+  >
     <app-configurador-produto
+      [apresentacaoCliente]="cardapioCliente() || modo === 'carrinho'"
       [produto]="produto"
       [linha]="linhaEditada()"
       [contexto]="carrinho.contexto()"
@@ -23,59 +55,128 @@
 <div class="experiencia-cardapio" [class.somente-carrinho]="modo === 'carrinho'">
   @if (modo === 'cardapio') {
     <section class="vitrine-painel" aria-labelledby="vitrine-titulo" [attr.aria-busy]="ocupado()">
-      <div class="vitrine-cabecalho">
-        <div>
-          <p class="eyebrow">ESCOLHA O SEU FAVORITO</p>
-          <h2 id="vitrine-titulo">Nosso cardápio</h2>
+      @if (cardapioCliente()) {
+        <header class="bistro-hero">
+          <div>
+            <h1 id="vitrine-titulo">Nosso cardápio</h1>
+            <span>Imagem ilustrativa</span>
+          </div>
+        </header>
+      } @else {
+        <div class="vitrine-cabecalho">
+          <div>
+            <p class="eyebrow">ESCOLHA O SEU FAVORITO</p>
+            <h2 id="vitrine-titulo">Nosso cardápio</h2>
+          </div>
+          <span class="badge">Preparado na sua unidade</span>
         </div>
-        <span class="badge">Preparado na sua unidade</span>
-      </div>
-      <div class="linha">
-        <div>
-          <label for="vitrine-unidade">Unidade do cardápio</label>
-          <select
-            #unidade
-            id="vitrine-unidade"
-            [value]="unidadeId()"
-            [disabled]="ocupado() || !!trocaPendente() || !!unidadeExterna()"
-            (change)="selecionarUnidade(unidade)"
-          >
-            <option value="">Selecione a unidade</option>
-            @for (item of unidades(); track item.id) {
-              <option [value]="item.id" [selected]="item.id === unidadeId()">
-                {{ item.nome }}
-              </option>
+      }
+      @if (cardapioCliente()) {
+        <dialog
+          #filtros
+          id="vitrine-filtros"
+          class="painel-filtros-cardapio"
+          aria-labelledby="vitrine-filtros-titulo"
+          (close)="devolverFocoDosFiltros()"
+        >
+          <form class="formulario-filtros-cardapio" (submit)="aplicarFiltros($event)">
+            <h2 id="vitrine-filtros-titulo">Filtros do cardápio</h2>
+            <div>
+              <label for="filtros-unidade">Unidade do cardápio</label>
+              <select
+                #unidade
+                id="filtros-unidade"
+                autofocus
+                required
+                [value]="filtrosUnidade()"
+                (change)="filtrosUnidade.set(unidade.value)"
+              >
+                @for (item of unidades(); track item.id) {
+                  <option [value]="item.id" [selected]="item.id === filtrosUnidade()">
+                    {{ item.nome }}
+                  </option>
+                }
+              </select>
+            </div>
+            <div>
+              <label for="filtros-canal">Canal do cardápio</label>
+              <select
+                #canal
+                id="filtros-canal"
+                [value]="filtrosCanal()"
+                (change)="escolherCanalDosFiltros(canal.value)"
+              >
+                @for (item of canais; track item.valor) {
+                  <option [value]="item.valor" [selected]="item.valor === filtrosCanal()">
+                    {{ item.nome }}
+                  </option>
+                }
+              </select>
+            </div>
+            @if (!carrinho.online()) {
+              <p class="aviso" role="status">Conecte-se para aplicar os filtros.</p>
             }
-          </select>
+            <div class="acoes-filtros-cardapio">
+              <button hlmBtn variant="outline" type="button" (click)="filtros.close()">
+                Cancelar
+              </button>
+              <button hlmBtn type="submit" [disabled]="bloqueiaFiltros()">Aplicar filtros</button>
+            </div>
+          </form>
+        </dialog>
+      } @else {
+        <div class="linha">
+          <div>
+            <label for="vitrine-unidade">Unidade do cardápio</label>
+            <select
+              #unidade
+              id="vitrine-unidade"
+              [value]="unidadeId()"
+              [disabled]="ocupado() || !!trocaPendente() || !!unidadeExterna()"
+              (change)="selecionarUnidade(unidade)"
+            >
+              <option value="">Selecione a unidade</option>
+              @for (item of unidades(); track item.id) {
+                <option [value]="item.id" [selected]="item.id === unidadeId()">
+                  {{ item.nome }}
+                </option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="vitrine-canal">Canal do cardápio</label>
+            <select
+              #canal
+              id="vitrine-canal"
+              [value]="canalSelecionado()"
+              [disabled]="ocupado() || !!trocaPendente()"
+              (change)="selecionarCanal(canal)"
+            >
+              @for (item of canais; track item.valor) {
+                <option [value]="item.valor" [selected]="item.valor === canalSelecionado()">
+                  {{ item.nome }}
+                </option>
+              }
+            </select>
+          </div>
         </div>
-        <div>
-          <label for="vitrine-canal">Canal do cardápio</label>
-          <select
-            #canal
-            id="vitrine-canal"
-            [value]="canalSelecionado()"
-            [disabled]="ocupado() || !!trocaPendente()"
-            (change)="selecionarCanal(canal)"
-          >
-            @for (item of canais; track item.valor) {
-              <option [value]="item.valor" [selected]="item.valor === canalSelecionado()">
-                {{ item.nome }}
-              </option>
-            }
-          </select>
-        </div>
-      </div>
+      }
       @if (trocaPendente()) {
-        <div class="aviso">
+        <div #avisoTroca class="aviso" tabindex="-1">
           <p>
             Trocar de unidade ou canal esvazia o carrinho e consulta as ofertas do novo contexto.
             Deseja continuar?
           </p>
           <div class="acoes">
-            <button hlmBtn type="button" (click)="confirmarTroca()">
+            <button
+              hlmBtn
+              type="button"
+              (click)="confirmarTroca()"
+              [disabled]="cardapioCliente() && !carrinho.online()"
+            >
               Trocar e esvaziar carrinho
             </button>
-            <button class="secundario" type="button" (click)="trocaPendente.set(null)">
+            <button class="secundario" type="button" (click)="manterContexto()">
               Manter unidade, canal e carrinho
             </button>
           </div>
@@ -100,123 +201,169 @@
         </button>
       }
       @if (unidadeId()) {
-        <form (submit)="filtrar($event)" aria-label="Busca do cardápio">
-          <div class="linha">
-            <div>
-              <label for="vitrine-busca">Buscar produtos</label>
+        @if (cardapioCliente()) {
+          <div class="barra-filtros-cardapio">
+            <form
+              class="busca-publica-cardapio"
+              (submit)="filtrar($event)"
+              aria-label="Busca do cardápio"
+            >
+              <label for="vitrine-busca" class="sr-only">Buscar produtos</label>
               <input
                 #busca
                 id="vitrine-busca"
                 type="search"
+                enterkeyhint="search"
                 maxlength="120"
+                placeholder="Buscar produtos"
                 [value]="termo"
                 (input)="termo = busca.value"
               />
-            </div>
-            <div>
-              <label for="vitrine-categoria">Categoria do cardápio</label>
-              <select
-                #categoria
-                id="vitrine-categoria"
-                [value]="categoriaId"
-                (change)="categoriaId = categoria.value"
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon"
+                type="submit"
+                aria-label="Buscar no cardápio"
+                [disabled]="ocupado() || !carrinho.online()"
               >
-                <option value="">Todas as categorias</option>
-                @for (item of categorias(); track item.id) {
-                  <option [value]="item.id" [selected]="item.id === categoriaId">
-                    {{ item.nome }}
-                  </option>
-                }
-              </select>
-            </div>
+                <app-icone nome="lupa" />
+              </button>
+            </form>
+            <button
+              #abrirFiltros
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="abrir-filtros-cardapio"
+              aria-haspopup="dialog"
+              aria-controls="vitrine-filtros"
+              [attr.aria-disabled]="bloqueiaFiltros() ? 'true' : null"
+              (click)="abrirPainelFiltros()"
+            >
+              <app-icone nome="filtros" /> Filtros
+            </button>
           </div>
-          <button [disabled]="ocupado() || !carrinho.online()">Buscar no cardápio</button>
-        </form>
-        <div class="acoes">
-          <button
-            hlmBtn
-            class="secundario"
-            type="button"
-            (click)="abrirFavoritos(false)"
-            [attr.aria-pressed]="!somenteFavoritos()"
-            [disabled]="ocupado() || !carrinho.online()"
-          >
-            Todos os produtos
-          </button>
-          @if (favoritos.cliente()) {
-            <button
-              hlmBtn
-              class="secundario"
-              type="button"
-              (click)="abrirFavoritos(true)"
-              [attr.aria-pressed]="somenteFavoritos()"
-              [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
-            >
-              Meus favoritos
-            </button>
-            <button
-              hlmBtn
-              class="secundario"
-              type="button"
-              (click)="consultarFavoritos()"
-              [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
-            >
-              Consultar favoritos no servidor
-            </button>
-          }
-          <button
-            hlmBtn
-            class="secundario"
-            type="button"
-            (click)="carregar(0)"
-            [disabled]="ocupado() || !carrinho.online()"
-          >
-            Atualizar cardápio
-          </button>
-        </div>
-        @if (!favoritos.cliente()) {
+          <p class="contexto-publico-cardapio">
+            {{ unidadeAtual()?.nome }} <span aria-hidden="true">·</span> {{ nomeCanalAtual() }}
+          </p>
+          <ng-container [ngTemplateOutlet]="listaCategorias" />
+        } @else {
+          <form (submit)="filtrar($event)" aria-label="Busca do cardápio">
+            <div class="linha">
+              <div>
+                <label for="vitrine-busca">Buscar produtos</label>
+                <input
+                  #busca
+                  id="vitrine-busca"
+                  type="search"
+                  maxlength="120"
+                  [value]="termo"
+                  (input)="termo = busca.value"
+                />
+              </div>
+              <div>
+                <label for="vitrine-categoria">Categoria do cardápio</label>
+                <select
+                  #categoria
+                  id="vitrine-categoria"
+                  aria-label="Categoria do cardápio"
+                  [value]="categoriaId"
+                  (change)="categoriaId = categoria.value"
+                >
+                  <option value="">Todas as categorias</option>
+                  @for (item of categorias(); track item.id) {
+                    <option [value]="item.id" [selected]="item.id === categoriaId">
+                      {{ item.nome }}
+                    </option>
+                  }
+                </select>
+              </div>
+            </div>
+            <button [disabled]="ocupado() || !carrinho.online()">Buscar no cardápio</button>
+          </form>
+        }
+        @if (!cardapioCliente() || favoritos.cliente()) {
+          <div class="acoes modos-cardapio">
+            @if (!cardapioCliente()) {
+              <button
+                hlmBtn
+                class="secundario"
+                type="button"
+                (click)="abrirFavoritos(false)"
+                [attr.aria-pressed]="!somenteFavoritos()"
+                [disabled]="ocupado() || !carrinho.online()"
+              >
+                Todos os produtos
+              </button>
+            }
+            @if (favoritos.cliente()) {
+              <button
+                hlmBtn
+                class="secundario"
+                type="button"
+                (click)="abrirFavoritos(!cardapioCliente() || !somenteFavoritos())"
+                [attr.aria-pressed]="somenteFavoritos()"
+                [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+              >
+                Meus favoritos
+              </button>
+              @if (!cardapioCliente() || favoritos.erro() || favoritos.incerto()) {
+                <button
+                  hlmBtn
+                  class="secundario"
+                  type="button"
+                  (click)="consultarFavoritos()"
+                  [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                >
+                  Consultar favoritos no servidor
+                </button>
+              }
+            }
+            @if (!cardapioCliente()) {
+              <ng-container [ngTemplateOutlet]="atualizarCardapio" />
+            }
+          </div>
+        }
+        @if (!cardapioCliente() && !favoritos.cliente()) {
           <p>Entre em uma conta de cliente para guardar seus favoritos pessoais.</p>
         }
         @if (favoritos.erro()) {
           <p role="alert" class="erro">{{ favoritos.erro() }}</p>
         }
         @if (consultadoEm()) {
-          <p role="status">
-            {{
-          aberto()
-            ? 'Canal aberto para montar o carrinho.'
-            : 'Canal fechado ou consulta expirada. Você pode consultar o cardápio; o carrinho exige uma nova validação durante o atendimento.'
-            }}
-          </p>
-          <p>Horário da unidade: {{ horarioConsulta() }} · Fuso {{ unidadeAtual()?.fuso }}.</p>
-        }
-        <nav class="categorias" aria-label="Categorias do cardápio">
-          <button
-            hlmBtn
-            variant="outline"
-            type="button"
-            [attr.aria-pressed]="!categoriaId"
-            (click)="escolherCategoria('')"
-            [disabled]="ocupado()"
+          <p
+            role="status"
+            class="estado-cardapio"
+            [class.aviso]="cardapioCliente() && !aberto() && carrinho.online()"
           >
-            Todos
-          </button>
-          @for (categoria of categorias(); track categoria.id) {
-            <button
-              hlmBtn
-              variant="outline"
-              type="button"
-              [attr.aria-pressed]="categoriaId === categoria.id"
-              (click)="escolherCategoria(categoria.id)"
-              [disabled]="ocupado()"
-            >
-              {{ categoria.nome }}
-            </button>
+            @if (aberto()) {
+              {{ cardapioCliente() ? 'Aberto para pedidos' : 'Canal aberto para montar o carrinho.' }}
+            } @else if (cardapioCliente()) {
+              Canal fechado ou disponibilidade desatualizada. Você pode consultar os pratos e
+              atualizar o cardápio para verificar o atendimento.
+            } @else {
+              Canal fechado ou consulta expirada. Você pode consultar o cardápio; o carrinho exige
+              uma nova validação durante o atendimento.
+            }
+          </p>
+          @if (!cardapioCliente()) {
+            <p>Horário da unidade: {{ horarioConsulta() }} · Fuso {{ unidadeAtual()?.fuso }}.</p>
           }
-        </nav>
+        }
+        @if (cardapioCliente() && !aberto() && consultadoEm()) {
+          <ng-container [ngTemplateOutlet]="atualizarCardapio" />
+        }
+        @if (!cardapioCliente()) {
+          <ng-container [ngTemplateOutlet]="listaCategorias" />
+        }
         <div class="grade produtos">
           @for (produto of produtos(); track produto.id) {
-            <article class="item produto-card" [attr.aria-label]="produto.nome">
+            <article
+              class="item produto-card"
+              [class.produto-com-foto]="produto.midiaId"
+              [attr.aria-label]="produto.nome"
+            >
               @if (produto.midiaId) {
                 <img
                   [src]="'/api/v1/midias/' + produto.midiaId"
@@ -224,7 +371,7 @@
                   loading="lazy"
                 />
               }
-              @if (!produto.midiaId) {
+              @if (!produto.midiaId && !cardapioCliente()) {
                 <div class="produto-sem-foto" aria-hidden="true">
                   <svg viewBox="0 0 80 80" fill="none">
                     <circle cx="40" cy="42" r="23" stroke="currentColor" stroke-width="2" />
@@ -239,20 +386,22 @@
                 </div>
               }
               <div class="produto-corpo">
+                <ng-template #precoProduto>
+                  <p class="produto-preco">
+                    {{ (produto.tipo === 'COMBO' ? 'Combo a partir de ' : 'A partir de ') + moeda(produto.preco) }}
+                  </p>
+                </ng-template>
                 <h3>{{ produto.nome }}</h3>
+                @if (cardapioCliente()) {
+                  <ng-container [ngTemplateOutlet]="precoProduto" />
+                }
                 @if (produto.sugerido) {
                   <p><strong>Sugestão da casa</strong></p>
                 }
-                <p>{{ produto.descricao }}</p>
-                <p class="produto-preco">
-                  {{ produto.tipo === 'COMBO' ? 'Combo a partir de ' : 'A partir de '
-
-
-
-
-
-                  }}{{ moeda(produto.preco) }}
-                </p>
+                <p class="produto-descricao">{{ produto.descricao }}</p>
+                @if (!cardapioCliente()) {
+                  <ng-container [ngTemplateOutlet]="precoProduto" />
+                }
                 @if (!produto.disponivel) {
                   <p>Indisponível neste canal e unidade.</p>
                 }
@@ -260,10 +409,12 @@
                   <button
                     hlmBtn
                     type="button"
-                    (click)="configurar(produto.id, null, $event.currentTarget)"
+                    [attr.aria-label]="'Ver opções de ' + produto.nome"
+                    #origemConfiguracao
+                    (click)="configurar(produto.id, null, origemConfiguracao)"
                     [disabled]="ocupado() || !carrinho.online()"
                   >
-                    Ver opções de {{ produto.nome }}
+                    {{ cardapioCliente() ? 'Ver opções' : 'Ver opções de ' + produto.nome }}
                   </button>
                   @if (favoritos.cliente()) {
                     <button
@@ -274,13 +425,7 @@
                       [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
                       [disabled]="favoritos.ocupado() || favoritos.incerto() || !carrinho.online()"
                     >
-                      {{ favoritos.ids().includes(produto.id) ? 'Remover dos favoritos: ' : 'Favoritar: '
-
-
-
-
-
-                      }}{{ produto.nome }}
+                      {{ (favoritos.ids().includes(produto.id) ? 'Remover dos favoritos: ' : 'Favoritar: ') + produto.nome }}
                     </button>
                   }
                 </div>
@@ -298,37 +443,65 @@
             }
           }
         </div>
-        <nav class="acoes" aria-label="Páginas do cardápio">
-          <button
-            hlmBtn
-            type="button"
-            (click)="carregar(pagina() - 1)"
-            [disabled]="ocupado() || pagina() === 0 || !carrinho.online()"
-          >
-            Página anterior do cardápio
-          </button>
-          <span>Página {{ pagina() + 1 }}</span>
-          <button
-            hlmBtn
-            type="button"
-            (click)="carregar(pagina() + 1)"
-            [disabled]="ocupado() || !temMais() || !carrinho.online()"
-          >
-            Próxima página do cardápio
-          </button>
-        </nav>
+        @if (!cardapioCliente() || temMais() || pagina() > 0) {
+          <nav class="acoes" aria-label="Páginas do cardápio">
+            <button
+              hlmBtn
+              type="button"
+              (click)="carregar(pagina() - 1)"
+              [disabled]="ocupado() || pagina() === 0 || !carrinho.online()"
+            >
+              Página anterior do cardápio
+            </button>
+            <span>Página {{ pagina() + 1 }}</span>
+            <button
+              hlmBtn
+              type="button"
+              (click)="carregar(pagina() + 1)"
+              [disabled]="ocupado() || !temMais() || !carrinho.online()"
+            >
+              Próxima página do cardápio
+            </button>
+          </nav>
+        }
+        @if (cardapioCliente() && aberto()) {
+          <div class="rodape-cardapio">
+            <ng-container [ngTemplateOutlet]="atualizarCardapio" />
+            <p>Horário da unidade: {{ horarioConsulta() }} · Fuso {{ unidadeAtual()?.fuso }}.</p>
+          </div>
+        }
       }
     </section>
   }
   <aside class="carrinho-lateral" aria-label="Resumo do carrinho">
-    <app-carrinho (editar)="editarItem($event)" />
+    @if (cardapioCliente() && modo === 'cardapio') {
+      <app-carrinho-previa />
+    } @else {
+      <app-carrinho
+        [apresentacaoCliente]="modo === 'carrinho'"
+        [consultandoCatalogo]="ocupado()"
+        (editar)="configurar($event.item.linha.produtoId, $event.item.linha, $event.acionador)"
+      />
+    }
   </aside>
 </div>
-@if (modo === 'cardapio' && quantidadeItens() > 0) {
+@if (modo === 'cardapio' && carrinho.quantidadeItens() > 0) {
   <a hlmBtn routerLink="/carrinho" class="carrinho-movel"
     ><span>Ver meu carrinho</span
     ><span class="carrinho-contagem"
-      >{{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }}</span
+      >{{ carrinho.quantidadeItens() }}
+      {{ carrinho.quantidadeItens() === 1 ? 'item' : 'itens' }}</span
     ></a
   >
 }
+<ng-template #atualizarCardapio>
+  <button
+    hlmBtn
+    [variant]="cardapioCliente() ? 'outline' : 'secondary'"
+    type="button"
+    (click)="carregar(0)"
+    [disabled]="ocupado() || !carrinho.online()"
+  >
+    Atualizar cardápio
+  </button>
+</ng-template>
