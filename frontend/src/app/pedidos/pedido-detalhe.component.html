@@ -1,20 +1,90 @@
 <article
   class="cartao-pedido"
   [class.cartao-cozinha]="contexto() === 'cozinha'"
+  [class.pedido-cliente]="pessoal()"
   [attr.data-estado]="pedido().estado"
   [attr.aria-label]="'Pedido ' + pedido().id"
 >
-  <header class="cabecalho-pedido">
-    <div>
-      <span class="sobretitulo">{{ canal() }}</span>
-      <h3>Pedido #{{ referencia() }}</h3>
+  @if (pessoal()) {
+    <header class="resumo-pedido">
+      <div class="cabecalho-pedido">
+        <div class="referencia-pedido">
+          @if (contexto() === 'mesa') {
+            <h3>Pedido #{{ referencia() }}</h3>
+          } @else {
+            <h2>Pedido #{{ referencia() }}</h2>
+          }
+          <span class="canal-cliente">{{ canal() }}</span>
+        </div>
+        <div class="tempo-pedido">
+          <time [attr.datetime]="pedido().criadoEm">{{ horario(pedido().criadoEm) }}</time>
+        </div>
+      </div>
+      <div class="estado-e-prazo">
+        <ng-container [ngTemplateOutlet]="estadoPedido" />
+      </div>
+      @if (etapas().length) {
+        <ol class="andamento-pedido" role="list" aria-label="Etapas do pedido">
+          @for (etapa of etapas(); track etapa.id; let indice = $index) {
+            <li
+              [attr.aria-current]="etapa.atual ? 'step' : null"
+              [class.andamento-concluido]="etapa.concluida"
+            >
+              <span class="marcador-andamento" aria-hidden="true">
+                {{ etapa.concluida ? '✓' : indice + 1 }}
+              </span>
+              <span class="etapa-andamento">{{ etapa.nome }}</span>
+              @if (etapa.concluida && !etapa.atual) {
+                <span class="sr-only"> · concluída</span>
+              }
+            </li>
+          }
+        </ol>
+      }
+      @if (linkAcompanhamento()) {
+        <a
+          hlmBtn
+          variant="outline"
+          class="link-andamento"
+          [routerLink]="['/pedidos', pedido().id]"
+          [attr.aria-label]="'Acompanhar pedido #' + referencia()"
+        >
+          Acompanhar pedido <app-icone nome="seta" />
+        </a>
+      }
+    </header>
+    <div class="detalhes-pedido">
+      @if (contexto() === 'cliente' && pedido().pagoOnline) {
+        <app-pagamento-pedido
+          [pedidoId]="pedido().id"
+          [aguardando]="pedido().estado === 'AGUARDANDO_PAGAMENTO'"
+          [prazo]="
+            pedido().estado === 'AGUARDANDO_PAGAMENTO' && pedido().pagamentoExpiraEm
+              ? horario(pedido().pagamentoExpiraEm!)
+              : null
+          "
+        />
+      }
+      <ng-container [ngTemplateOutlet]="detalhes" />
     </div>
-    <div class="tempo-pedido">
-      <strong>{{ tempoDecorrido() }}</strong>
-      <span [attr.title]="horario(pedido().criadoEm)">às {{ horaCriacao() }}</span>
-    </div>
-  </header>
-  <div class="estado-pedido">
+  } @else {
+    <header class="cabecalho-pedido">
+      <div>
+        <span class="sobretitulo">{{ canal() }}</span>
+        <h3>Pedido #{{ referencia() }}</h3>
+      </div>
+      <div class="tempo-pedido">
+        <strong>{{ tempoDecorrido() }}</strong>
+        <span [attr.title]="horario(pedido().criadoEm)">às {{ horaCriacao() }}</span>
+      </div>
+    </header>
+    <ng-container [ngTemplateOutlet]="estadoPedido" />
+    <ng-container [ngTemplateOutlet]="detalhes" />
+  }
+</article>
+
+<ng-template #estadoPedido>
+  <div class="estado-pedido" [attr.aria-live]="pessoal() ? 'polite' : null">
     <span
       class="etiqueta"
       [attr.data-estado]="pedido().estado"
@@ -24,9 +94,20 @@
       <span class="etiqueta" data-estado="AGUARDANDO_ACEITE">Cancelamento em avaliação</span>
     }
   </div>
-  @if (prazo()) {
-    <p class="prazo-pedido" [class.aviso]="alertaPrazo()">{{ prazo() }}</p>
+  @if (pessoal()) {
+    @if (!online()) {
+      <p role="status" class="aviso atualizacao-pedido">Sem conexão. Status da última consulta.</p>
+    }
+    @if (orientacao(); as texto) {
+      <p class="orientacao-pedido">{{ texto }}</p>
+    }
   }
+  @if (prazo(); as prazoAtual) {
+    <p class="prazo-pedido" [class.aviso]="alertaPrazo()">{{ prazoAtual }}</p>
+  }
+</ng-template>
+
+<ng-template #detalhes>
   @if (pedido().primeiroPreparoEm) {
     <p class="texto-secundario">
       Primeiro preparo: {{ horario(pedido().primeiroPreparoEm) }}. Cancelamento exige avaliação da
@@ -45,6 +126,9 @@
         {{ quantidadeEstado('PRONTO') === 1 ? 'pronta' : 'prontas' }}</span
       >
     </div>
+  }
+  @if (pessoal() && pedido().linhas.length) {
+    <h3 class="titulo-itens-pedido">Itens do pedido</h3>
   }
   @for (linha of pedido().linhas; track linha.id) {
     <section class="linha-pedido" [attr.aria-label]="linha.nome">
@@ -250,14 +334,4 @@
       }
     </details>
   }
-
-  @if (contexto() === 'cliente' && pedido().pagoOnline) {
-    @if (pedido().estado === 'AGUARDANDO_PAGAMENTO' && pedido().pagamentoExpiraEm) {
-      <p>Pague até {{ horario(pedido().pagamentoExpiraEm!) }}.</p>
-    }
-    <app-pagamento-pedido
-      [pedidoId]="pedido().id"
-      [aguardando]="pedido().estado === 'AGUARDANDO_PAGAMENTO'"
-    />
-  }
-</article>
+</ng-template>

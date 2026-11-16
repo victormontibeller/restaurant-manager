@@ -1,6 +1,11 @@
 import { expect, test, APIRequestContext, Locator, Page } from '@playwright/test';
 import { ContaCatalogo, fixture, loginUi } from './apoio';
 import { abrirConta, navegarUi } from '../e2e-identidade/apoio';
+import {
+  abrirCarrinhoPelaVitrine,
+  abrirFiltrosCardapio,
+  aplicarContextoCardapio,
+} from '../e2e/cardapio';
 
 interface ProdutoCriado {
   id: string;
@@ -313,16 +318,21 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   context,
 }) => {
   const chamadasPedido: string[] = [];
+  const consultasCatalogo: URL[] = [];
+  const documentosCarregados: string[] = [];
   page.on('request', (req) => {
-    if (/\/api\/v1\/(pedidos|pagamentos)/.test(new URL(req.url()).pathname))
-      chamadasPedido.push(req.method());
+    const url = new URL(req.url());
+    if (/\/api\/v1\/(pedidos|pagamentos)/.test(url.pathname)) chamadasPedido.push(req.method());
+    if (req.method() === 'GET' && url.pathname === '/api/v1/catalogo') consultasCatalogo.push(url);
+    if (req.resourceType() === 'document') documentosCarregados.push(url.pathname);
   });
   const token = await loginUi(page);
   await navegarUi(page, '/gestao/catalogo');
   const gestao = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
   await expect(gestao).toHaveAttribute('aria-busy', 'false');
   const sufixo = crypto.randomUUID().slice(0, 8);
-  const categoriaId = await criarCategoria(page, gestao, 'S02 categoria ' + sufixo);
+  const nomeCategoria = 'S02 categoria ' + sufixo;
+  const categoriaId = await criarCategoria(page, gestao, nomeCategoria);
   const simplesEditor = await abrirProduto(gestao, 'S02 componente ' + sufixo, categoriaId);
   await simplesEditor.getByRole('button', { name: 'Adicionar adicional', exact: true }).click();
   const adicional = simplesEditor.getByRole('group', { name: 'Adicional 1', exact: true });
@@ -411,29 +421,66 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
 
   await navegarUi(page, '/cardapio');
   const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
-  await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeA);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
-  await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
-    fixture().unidadeA,
-  );
-  const canal = vitrine.getByLabel('Canal do cardápio', { exact: true });
-  if ((await canal.inputValue()) !== 'DELIVERY') {
-    const trocaCanal = page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return (
-        response.request().method() === 'GET' &&
-        url.pathname === '/api/v1/catalogo' &&
-        url.searchParams.get('unidadeId') === fixture().unidadeA &&
-        url.searchParams.get('canal') === 'DELIVERY'
-      );
-    });
-    await canal.selectOption('DELIVERY');
-    expect((await trocaCanal).status()).toBe(200);
+  const previa = page.getByRole('complementary', { name: 'Resumo do carrinho', exact: true });
+  const desktop = page.viewportSize()!.width > 800;
+  if (desktop) {
+    await expect(previa.getByText('Seu carrinho está vazio.', { exact: true })).toBeVisible();
+    await expect(previa.getByRole('status')).toHaveText('0 itens');
+    await expect(previa.getByRole('link', { name: 'Ver carrinho', exact: true })).toHaveCount(0);
+  } else {
+    await expect(previa).toBeHidden();
   }
-  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
-  await expect(canal).toHaveValue('DELIVERY');
-  await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(combo.nome);
-  await vitrine.getByLabel('Categoria do cardápio', { exact: true }).selectOption(categoriaId);
+  const abrirFiltros = vitrine.getByRole('button', { name: 'Filtros', exact: true });
+  const campoBusca = vitrine.getByLabel('Buscar produtos', { exact: true });
+  await verificarAlvoDeToque(abrirFiltros);
+  await verificarAlvoDeToque(campoBusca);
+  await verificarAlvoDeToque(
+    vitrine.getByRole('button', { name: 'Buscar no cardápio', exact: true }),
+  );
+  await expect(vitrine.getByLabel('Categoria do cardápio', { exact: true })).toHaveCount(0);
+  const filtros = await abrirFiltrosCardapio(vitrine);
+  const unidade = filtros.getByLabel('Unidade do cardápio', { exact: true });
+  const canal = filtros.getByLabel('Canal do cardápio', { exact: true });
+  const aplicar = filtros.getByRole('button', { name: 'Aplicar filtros', exact: true });
+  const cancelarFiltros = filtros.getByRole('button', { name: 'Cancelar', exact: true });
+  const unidadeOriginal = await unidade.inputValue();
+  const canalOriginal = await canal.inputValue();
+  const antesDeEditar = consultasCatalogo.length;
+  await unidade.selectOption(
+    unidadeOriginal === fixture().unidadeB ? fixture().unidadeA : fixture().unidadeB,
+  );
+  await canal.selectOption(canalOriginal === 'MESA' ? 'RETIRADA' : 'MESA');
+  await page.keyboard.press('Escape');
+  await expect(filtros).toBeHidden();
+  await expect(abrirFiltros).toBeFocused();
+  expect(consultasCatalogo).toHaveLength(antesDeEditar);
+  await abrirFiltrosCardapio(vitrine);
+  await expect(unidade).toHaveValue(unidadeOriginal);
+  await expect(canal).toHaveValue(canalOriginal);
+  await canal.selectOption(canalOriginal === 'DELIVERY' ? 'RETIRADA' : 'DELIVERY');
+  await context.setOffline(true);
+  await expect(aplicar).toBeDisabled();
+  await expect(filtros.getByRole('status')).toHaveText('Conecte-se para aplicar os filtros.');
+  await cancelarFiltros.click();
+  await expect(filtros).toBeHidden();
+  await expect(abrirFiltros).toBeFocused();
+  await expect(abrirFiltros).toBeDisabled();
+  const avisoOffline = page.locator('app-pwa .offline-notice');
+  await expect(avisoOffline).toBeVisible();
+  await expect(avisoOffline).toContainText('Você está offline. Reconecte para consultar');
+  expect(consultasCatalogo).toHaveLength(antesDeEditar);
+  await context.setOffline(false);
+  await expect(abrirFiltros).toBeEnabled();
+  await aplicarContextoCardapio(vitrine, fixture().unidadeA, 'DELIVERY');
+  expect(consultasCatalogo.at(-1)?.searchParams.get('unidadeId')).toBe(fixture().unidadeA);
+  expect(consultasCatalogo.at(-1)?.searchParams.get('canal')).toBe('DELIVERY');
+  const categorias = vitrine.getByRole('navigation', {
+    name: 'Categorias do cardápio',
+    exact: true,
+  });
+  const categoria = categorias.getByRole('button', { name: nomeCategoria, exact: true });
+  await campoBusca.fill(combo.nome);
   const busca = page.waitForResponse((response) => {
     const url = new URL(response.url());
     return (
@@ -445,7 +492,7 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
       url.searchParams.get('unidadeId') === fixture().unidadeA
     );
   });
-  await vitrine.getByRole('button', { name: 'Buscar no cardápio', exact: true }).click();
+  await categoria.click();
   const resultadoBusca = await busca;
   expect(resultadoBusca.status()).toBe(200);
   const catalogo = await resultadoBusca.json();
@@ -453,14 +500,41 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
   expect(catalogo.itens.map((item: { id: string }) => item.id)).toEqual([combo.id]);
   expect(catalogo.temMais).toBe(false);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(categoria).toHaveAttribute('aria-pressed', 'true');
   await expect(vitrine.getByRole('article')).toHaveCount(1);
   const comboEncontrado = vitrine.getByRole('article', { name: combo.nome, exact: true });
   await expect(comboEncontrado).toBeVisible();
   await expect(comboEncontrado.getByText('Sugestão da casa', { exact: true })).toBeVisible();
   await configurarCombo(page, combo, '2', '2', true);
   await configurarCombo(page, combo, '1', '1', false);
-  await navegarUi(page, '/carrinho');
+  if (desktop) {
+    await expect(previa.getByRole('status')).toHaveText('3 itens');
+    const linhas = previa.getByRole('listitem');
+    await expect(linhas).toHaveCount(2);
+    await expect(linhas.nth(0).getByText('2 ×', { exact: true })).toBeVisible();
+    await expect(linhas.nth(1).getByText('1 ×', { exact: true })).toBeVisible();
+    await expect(previa.getByText(combo.nome, { exact: true })).toHaveCount(2);
+    await expect(previa.getByText(/R\$/)).toHaveCount(0);
+  }
+  const carregamentosAntesDoCarrinho = documentosCarregados.length;
+  await abrirCarrinhoPelaVitrine(page);
   const carrinho = page.getByRole('region', { name: 'Meu carrinho', exact: true });
+  await expect(carrinho.getByRole('article')).toHaveCount(2);
+  expect(documentosCarregados).toHaveLength(carregamentosAntesDoCarrinho);
+  const editarComposicao = carrinho.getByRole('button', {
+    name: 'Editar composição do item 2',
+    exact: true,
+  });
+  const configurador = page.getByRole('dialog', { name: 'Configurar produto', exact: true });
+  await editarComposicao.click();
+  await expect(configurador.getByLabel('Quantidade do produto')).toHaveValue('1');
+  await page.keyboard.press('Escape');
+  await expect(configurador).toBeHidden();
+  await expect(editarComposicao).toBeFocused();
+  await editarComposicao.click();
+  await configurador.getByRole('button', { name: 'Atualizar composição no carrinho' }).click();
+  await expect(configurador).toBeHidden();
+  await expect(editarComposicao).toBeFocused();
   let calculo = resposta(page, '/api/v1/carrinho/calcular', 'POST');
   await carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }).click();
   const cotacao = await calculo;
@@ -528,18 +602,49 @@ test('S02-UI03: gestão real, mídia, combo, valores reconfirmados e rede nos ci
     carrinho.getByRole('button', { name: 'Revisar meu pedido', exact: true }),
   ).toBeEnabled();
   await navegarUi(page, '/cardapio');
-  await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeB);
-  await expect(
-    vitrine.getByRole('button', { name: 'Trocar e esvaziar carrinho', exact: true }),
-  ).toBeVisible();
+  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  const antesDaTrocaRecusada = consultasCatalogo.length;
+  await aplicarContextoCardapio(vitrine, fixture().unidadeB, 'RETIRADA');
+  const trocar = vitrine.getByRole('button', { name: 'Trocar e esvaziar carrinho', exact: true });
+  await expect(trocar).toBeVisible();
+  expect(consultasCatalogo).toHaveLength(antesDaTrocaRecusada);
   await vitrine
     .getByRole('button', { name: 'Manter unidade, canal e carrinho', exact: true })
     .click();
-  await navegarUi(page, '/carrinho');
+  await expect(abrirFiltros).toBeFocused();
+  expect(consultasCatalogo).toHaveLength(antesDaTrocaRecusada);
+  await abrirFiltrosCardapio(vitrine);
+  await expect(unidade).toHaveValue(fixture().unidadeA);
+  await expect(canal).toHaveValue('DELIVERY');
+  await cancelarFiltros.click();
+  await abrirCarrinhoPelaVitrine(page);
   await expect(carrinho.getByRole('article')).toHaveCount(2);
   await navegarUi(page, '/cardapio');
-  await vitrine.getByLabel('Unidade do cardápio', { exact: true }).selectOption(fixture().unidadeB);
-  await vitrine.getByRole('button', { name: 'Trocar e esvaziar carrinho', exact: true }).click();
+  await campoBusca.fill(combo.nome);
+  await categoria.click();
+  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+  await expect(categoria).toHaveAttribute('aria-pressed', 'true');
+  const antesDaTrocaAceita = consultasCatalogo.length;
+  await aplicarContextoCardapio(vitrine, fixture().unidadeB, 'RETIRADA');
+  await expect(trocar).toBeVisible();
+  expect(consultasCatalogo).toHaveLength(antesDaTrocaAceita);
+  const novoContexto = resposta(page, '/api/v1/catalogo', 'GET');
+  await trocar.click();
+  const resultadoNovoContexto = await novoContexto;
+  expect(resultadoNovoContexto.status()).toBe(200);
+  expect(Object.fromEntries(new URL(resultadoNovoContexto.url()).searchParams)).toEqual({
+    unidadeId: fixture().unidadeB,
+    canal: 'RETIRADA',
+    pagina: '0',
+    busca: combo.nome,
+  });
+  await expect(campoBusca).toHaveValue(combo.nome);
+  await expect(categorias.getByRole('button', { name: 'Todos', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  if (desktop) await expect(previa.getByRole('status')).toHaveText('0 itens');
+  await expect(abrirFiltros).toBeFocused();
   await navegarUi(page, '/carrinho');
   await expect(carrinho.getByText('Seu carrinho está vazio.', { exact: true })).toBeVisible();
   expect(chamadasPedido).toEqual([]);

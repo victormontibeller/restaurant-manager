@@ -1,0 +1,140 @@
+.pedidos-cliente {
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.cabecalho-meus-pedidos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: var(--raio-painel-cliente);
+  background: var(--superficie-cliente);
+}
+
+.rodadas-mesa .cabecalho-meus-pedidos h2 {
+  min-width: 0;
+  margin: 0;
+  font: 600 clamp(1.375rem, 2.5vw, 1.75rem) / 1.2 var(--fonte-editorial);
+  overflow-wrap: anywhere;
+}
+
+.cabecalho-meus-pedidos button {
+  min-height: 48px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  color: var(--primary);
+  font-size: 0.875rem;
+}
+
+.conexao-meus-pedidos {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.conexao-meus-pedidos p {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.indicador-conexao {
+  display: inline-block;
+  flex: 0 0 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-foreground);
+  transform: translateY(-2px);
+}
+
+.indicador-conexao.conectado {
+  background: var(--accent-foreground);
+}
+
+.horario-atualizacao {
+  margin-inline-start: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pedidos-cliente .frequencia-atualizacao,
+.carregamento-pedidos {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.pedidos-cliente .grade-pedidos {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pedidos-cliente .vazio {
+  padding: 24px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+}
+
+.pedidos-cliente .vazio :is(h2, h3) {
+  margin: 8px 0 0;
+  font: 600 1.375rem / 1.2 var(--fonte-editorial);
+  color: var(--foreground);
+}
+
+.pedidos-cliente .vazio p {
+  margin: 6px 0 12px;
+}
+
+.icone-vazio {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f6ebe4;
+  color: var(--primary);
+}
+
+.pedidos-cliente .paginacao button {
+  min-height: 48px;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .cabecalho-meus-pedidos {
+    padding: 12px;
+  }
+
+  .cabecalho-meus-pedidos button {
+    padding-inline: 10px;
+  }
+
+  .pedidos-cliente .paginacao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .pedidos-cliente .paginacao span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+}

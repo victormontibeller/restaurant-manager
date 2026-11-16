@@ -1,83 +1,128 @@
-<section aria-label="Endereço de entrega">
-  <h3>{{ unidadeId() ? 'Entrega e endereço' : 'Meus endereços' }}</h3>
-  @if (cliente()) {
-    <ul>
-      @for (e of lista(); track e.id) {
-        <li>
-          <strong>{{ e.descricao }}</strong> · {{ e.endereco.logradouro }}, {{ e.endereco.numero }}
-          <button
-            type="button"
-            (click)="usar(e)"
-            [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
-          >
-            Usar endereço {{ e.descricao }}
-          </button>
-          <button
-            type="button"
-            (click)="remover(e)"
-            [disabled]="store.ocupado() || !!store.pendente() || bloqueado()"
-          >
-            Remover {{ e.descricao }}
-          </button>
-        </li>
-      }
-    </ul>
-    <div class="acoes">
-      <button
-        type="button"
-        (click)="carregar(pagina()-1)"
-        [disabled]="consultando() || pagina() === 0"
-      >
-        Endereços anteriores</button
-      ><span>Página {{ pagina()+1 }}</span
-      ><button
-        type="button"
-        (click)="carregar(pagina()+1)"
-        [disabled]="consultando() || lista().length < 50"
-      >
-        Próximos endereços
-      </button>
-    </div>
+<section [attr.aria-label]="modoConta() ? 'Meus endereços' : 'Endereço de entrega'">
+  @if (modoConta()) {
+    <h2>Meus endereços</h2>
+  } @else {
+    <h3>{{ unidadeId() ? 'Entrega e endereço' : 'Meus endereços' }}</h3>
   }
-  <form #form="ngForm" (ngSubmit)="salvar()">
-    <fieldset [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()">
-      <legend>Dados do endereço</legend>
-      @if (cliente()) {
-        <label
-          >Nome deste endereço<input
-            name="descricaoEndereco"
-            [(ngModel)]="descricao"
-            maxlength="100"
-            placeholder="Casa, trabalho…"
-        /></label>
-      }
-      @for (campo of campos; track campo.chave) {
-        <label
-          ><span>{{ campo.rotulo }}</span
-          ><input
-            [name]="'endereco-'+campo.chave"
-            [(ngModel)]="endereco[campo.chave]"
-            (ngModelChange)="alterar()"
-            [required]="!campo.opcional"
-            [maxlength]="campo.max"
-            [attr.autocomplete]="campo.autocomplete"
-        /></label>
-      }
-      <div class="acoes">
-        @if (cliente()) {
-          <button type="submit" [disabled]="!form.valid">Salvar endereço na minha conta</button>
+  <div class="paineis-enderecos">
+    @if (cliente()) {
+      <div class="lista-enderecos">
+        @if (modoConta()) {
+          <h3>Endereços salvos</h3>
         }
-        <button type="button" (click)="novo()">Novo endereço</button>
-        @if (unidadeId()) {
-          <button type="button" (click)="calcular()" [disabled]="!form.valid">
-            Calcular e confirmar entrega
+        <ul>
+          @for (e of lista(); track e.id) {
+            <li>
+              <span class="logradouro-endereco">
+                <strong>{{ e.descricao }}</strong> · {{ e.endereco.logradouro }},
+                {{ e.endereco.numero }}
+                @if (modoConta()) {
+                  <span class="localidade-endereco"
+                    >{{ e.endereco.bairro }}, {{ e.endereco.cidade }} · {{ e.endereco.uf }}</span
+                  >
+                }
+              </span>
+              <div class="acoes-endereco">
+                <button
+                  type="button"
+                  [class.secundario]="apresentacaoCliente()"
+                  [attr.aria-label]="modoConta() ? 'Editar endereço ' + e.descricao : null"
+                  (click)="usar(e, true)"
+                  [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()"
+                >
+                  {{ modoConta() ? 'Editar' : 'Usar endereço ' + e.descricao }}
+                </button>
+                <button
+                  type="button"
+                  [class.secundario]="apresentacaoCliente()"
+                  [attr.aria-label]="modoConta() ? 'Remover ' + e.descricao : null"
+                  (click)="remover(e)"
+                  [disabled]="store.ocupado() || !!store.pendente() || bloqueado()"
+                >
+                  {{ modoConta() ? 'Remover' : 'Remover ' + e.descricao }}
+                </button>
+              </div>
+            </li>
+          } @empty {
+            @if (modoConta()) {
+              <li class="lista-enderecos-estado">
+                {{ consultando() ? 'Consultando endereços…' : erro() ? 'Os endereços não puderam ser carregados.' : 'Nenhum endereço salvo.' }}
+              </li>
+            }
+          }
+        </ul>
+        <div
+          class="acoes paginas-enderecos"
+          [hidden]="apresentacaoCliente() && !consultando() && pagina() === 0 && lista().length < 50"
+        >
+          <button
+            type="button"
+            [class.secundario]="apresentacaoCliente()"
+            (click)="carregar(pagina()-1)"
+            [disabled]="consultando() || pagina() === 0"
+          >
+            Endereços anteriores</button
+          ><span>Página {{ pagina()+1 }}</span
+          ><button
+            type="button"
+            [class.secundario]="apresentacaoCliente()"
+            (click)="carregar(pagina()+1)"
+            [disabled]="consultando() || lista().length < 50"
+          >
+            Próximos endereços
           </button>
-        }
+        </div>
       </div>
-    </fieldset>
-  </form>
+    }
+    <form #form="ngForm" (ngSubmit)="salvar()">
+      <fieldset [disabled]="store.ocupado() || !!store.pendente() || bloqueado() || consultando()">
+        <legend>{{ modoConta() && versao > 0 ? 'Editar endereço' : 'Dados do endereço' }}</legend>
+        @if (cliente()) {
+          <label
+            >Nome deste endereço<input
+              #campoDescricao
+              name="descricaoEndereco"
+              [(ngModel)]="descricao"
+              maxlength="100"
+              placeholder="Casa, trabalho…"
+          /></label>
+        }
+        @for (campo of campos; track campo.chave) {
+          <label
+            ><span>{{ campo.rotulo }}</span
+            ><input
+              [name]="'endereco-'+campo.chave"
+              [(ngModel)]="endereco[campo.chave]"
+              (ngModelChange)="alterar()"
+              [required]="!campo.opcional"
+              [maxlength]="campo.max"
+              [attr.autocomplete]="campo.autocomplete"
+          /></label>
+        }
+        <div class="acoes">
+          @if (cliente()) {
+            <button
+              type="submit"
+              [class.secundario]="apresentacaoCliente() && !modoConta()"
+              [disabled]="!form.valid"
+            >
+              Salvar endereço na minha conta
+            </button>
+          }
+          <button type="button" [class.secundario]="apresentacaoCliente()" (click)="novo(true)">
+            Novo endereço
+          </button>
+          @if (unidadeId()) {
+            <button type="button" (click)="calcular()" [disabled]="!form.valid">
+              Calcular e confirmar entrega
+            </button>
+          }
+        </div>
+      </fieldset>
+    </form>
+  </div>
   @if (cotacao(); as c) {
-    <p role="status">
+    <p class="cotacao-entrega" role="status">
       {{ c.regiao }} · Entrega {{ moeda(c.taxa) }} · mínimo de itens {{ moeda(c.minimo) }} · total
       com entrega {{ moeda(c.total) }}.
     </p>

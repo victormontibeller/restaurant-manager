@@ -1,17 +1,41 @@
 <section
   class="cartao-formulario"
   aria-labelledby="enviar-pedido-titulo"
-  [attr.aria-busy]="carregandoMesas()"
+  [hidden]="!mostrarFinalizacao()"
+  [attr.aria-busy]="carregandoMesas() || (apresentacaoCliente() && envio.ocupado())"
 >
   <header class="cabecalho-painel">
     <div>
-      <span class="sobretitulo">Confirmação</span>
-      <h3 id="enviar-pedido-titulo">Enviar pedido</h3>
+      @if (apresentacaoCliente()) {
+        <h2 id="enviar-pedido-titulo" tabindex="-1">Enviar pedido</h2>
+      } @else {
+        <span class="sobretitulo">Confirmação</span>
+        <h3 id="enviar-pedido-titulo">Enviar pedido</h3>
+      }
     </div>
   </header>
-  @if (!sessao.identidade() && !sessaoMesa.participante()) {
-    <p>Entre em sua conta para delivery/retirada ou autorize sua participação na mesa.</p>
-  } @else {
+  @if (
+    (!apresentacaoCliente() || !confirmado()) && !sessao.identidade() && !sessaoMesa.participante()
+  ) {
+    @if (apresentacaoCliente() && navegacaoDisponivel) {
+      @if (carrinho.contexto()?.canal === 'MESA') {
+        <p>Use o código fornecido pela equipe para autorizar sua participação.</p>
+        <a hlmBtn class="confirmacao-acao" routerLink="/mesa">Acessar minha mesa</a>
+      } @else {
+        <p>Entre em sua conta para enviar o pedido.</p>
+        <a
+          hlmBtn
+          class="confirmacao-acao"
+          routerLink="/entrar"
+          [queryParams]="{ retorno: '/carrinho' }"
+        >
+          Entrar para continuar
+        </a>
+      }
+    } @else {
+      <p>Entre em sua conta para delivery/retirada ou autorize sua participação na mesa.</p>
+    }
+  } @else if (!apresentacaoCliente() || !confirmado()) {
     @if (assistido() && !acoes().includes('pedido.criar_assistido')) {
       <p>Sua política atual não permite criar pedidos assistidos.</p>
     }
@@ -74,6 +98,7 @@
         [unidadeId]="carrinho.contexto()!.unidadeId"
         [subtotal]="carrinho.resumo()?.subtotal ?? '0.00'"
         [bloqueado]="envio.ocupado() || !!envio.pendente(tipoMesa())"
+        [apresentacaoCliente]="apresentacaoCliente()"
         (entrega)="entrega.set($event)"
       />
     }
@@ -86,7 +111,7 @@
         (change)="pagamento = meio.value === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL'"
         [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
       >
-        <option value="PRESENCIAL">Pagar presencialmente ao restaurante</option>
+        <option value="PRESENCIAL">{{ rotuloPagamentoPresencial() }}</option>
         <option value="ONLINE">Pagar online com Mercado Pago</option>
       </select>
       @if (pagamento === 'ONLINE') {
@@ -106,26 +131,43 @@
       [disabled]="envio.ocupado() || !!envio.pendente(tipoMesa())"
     ></textarea>
     <p class="texto-secundario">
-      O envio depende da confirmação do servidor. Pedidos de delivery/retirada aguardam aceite; mesa
-      autorizada segue para a cozinha.
+      @if (apresentacaoCliente()) {
+        @if (tipoMesa()) {
+          A rodada segue para a cozinha após a confirmação do servidor.
+        } @else {
+          O pedido fica sujeito ao aceite do restaurante.
+        }
+      } @else {
+        O envio depende da confirmação do servidor. Pedidos de delivery/retirada aguardam aceite;
+        mesa autorizada segue para a cozinha.
+      }
     </p>
-    @if (envio.pendente(tipoMesa())) {
+    @if (envio.pendente(tipoMesa()) && (!apresentacaoCliente() || !enviando())) {
       <p class="aviso" role="status">
         Envio sem confirmação. Os dados originais foram preservados nesta aba. Consulte antes de
         repetir; recarregar a página perde este rascunho.
       </p>
-      <div class="acoes">
-        <button (click)="reconciliar()" [disabled]="envio.ocupado() || !carrinho.online()">
+      <div class="acoes acoes-envio">
+        <button
+          type="button"
+          (click)="reconciliar()"
+          [disabled]="envio.ocupado() || !carrinho.online()"
+        >
           Consultar resultado do envio
         </button>
         @if (podeReenviar()) {
-          <button (click)="reenviar()" [disabled]="envio.ocupado() || !carrinho.online()">
+          <button
+            type="button"
+            [class.secundario]="apresentacaoCliente()"
+            (click)="reenviar()"
+            [disabled]="envio.ocupado() || !carrinho.online()"
+          >
             Reenviar a mesma intenção
           </button>
         }
       </div>
     } @else {
-      <button (click)="enviar()" [disabled]="!podeEnviar()">
+      <button class="confirmacao-acao" type="button" (click)="enviar()" [disabled]="!podeEnviar()">
         {{ envio.ocupado() ? 'Confirmando envio…' : assistido() ? 'Enviar pedido assistido' : tipoMesa() ? 'Enviar rodada para a cozinha' : 'Enviar pedido para aceite' }}
       </button>
     }
@@ -138,7 +180,11 @@
       Pedido confirmado: {{ pedido.id }}. {{ nomeEstado(pedido.estado) }}.
     </p>
     @if (navegacaoDisponivel) {
-      <a hlmBtn [routerLink]="tipoMesa() ? '/mesa' : assistido() ? '/gestao/pedidos' : '/pedidos'">
+      <a
+        hlmBtn
+        class="confirmacao-acao"
+        [routerLink]="tipoMesa() ? '/mesa' : assistido() ? '/gestao/pedidos' : '/pedidos'"
+      >
         Acompanhar pedido
       </a>
     }

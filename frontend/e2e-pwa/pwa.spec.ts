@@ -18,6 +18,7 @@ test('S02-PWA01: shell integrado abre offline sem armazenar API ou dados de sess
   await expect
     .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)))
     .toBe(true);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#a53e2b');
   const manifest = await request.get('/manifest.webmanifest');
   expect(manifest.status()).toBe(200);
   const data = await manifest.json();
@@ -27,6 +28,8 @@ test('S02-PWA01: shell integrado abre offline sem armazenar API ou dados de sess
     scope: '/',
     display: 'standalone',
     lang: 'pt-BR',
+    theme_color: '#a53e2b',
+    background_color: '#a53e2b',
   });
   expect(data.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(['192x192', '512x512']);
   for (const icon of data.icons) {
@@ -34,6 +37,24 @@ test('S02-PWA01: shell integrado abre offline sem armazenar API ou dados de sess
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('image/png');
   }
+  for (const rota of ['/mesa/codigo-invalido', '/pedidos/id-invalido']) {
+    const resposta = await page.goto(rota);
+    expect(resposta?.status(), rota).toBe(404);
+    expect(resposta?.fromServiceWorker()).toBe(false);
+    await expect(
+      page.getByRole('heading', { name: 'Essa página saiu do cardápio.' }),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ver cardápio' })).toHaveAttribute(
+      'href',
+      '/cardapio',
+    );
+    await expect(page.getByRole('link', { name: 'Minha mesa' })).toHaveAttribute('href', '/mesa');
+  }
+  await page.goto('/cardapio');
+  await expect(page.locator('.app-utilities > details')).toHaveCount(0);
+  await expect(page.getByText('Aplicativo e conexão', { exact: true })).toHaveCount(0);
+  const avisoOffline = page.locator('app-pwa .offline-notice');
+  await expect(avisoOffline).toBeEmpty();
   expect((await request.get('/api/v1/unidades')).status()).toBe(200);
   // O GET percorre o navegador controlado pelo worker; nenhuma API pode entrar no cache.
   await page.evaluate(async () => {
@@ -51,30 +72,29 @@ test('S02-PWA01: shell integrado abre offline sem armazenar API ou dados de sess
   });
   expect(urls.length).toBeGreaterThan(4);
   expect(urls.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true);
-  expect(urls.some((url) => /api\/|actuator|marcador|retorno=/.test(url))).toBe(false);
+  expect(
+    urls.some((url) => /api\/|actuator|marcador|retorno=|codigo-invalido|id-invalido/.test(url)),
+  ).toBe(false);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.locator('app-pwa summary').click();
-  await expect(page.locator('app-pwa')).toContainText('Você está offline');
-  await page.locator('.app-utilities > details > summary').click();
-  await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
-    'Sem conexão',
-  );
-  await page.locator('app-pwa details').scrollIntoViewIfNeeded();
+  await expect(avisoOffline).toHaveAttribute('role', 'status');
+  await expect(avisoOffline).toHaveText(/Você está offline/);
+  await expect(avisoOffline).toBeVisible();
+  await avisoOffline.scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
   await page.screenshot({ path: test.info().outputPath('pwa-offline.png'), fullPage: false });
   await context.setOffline(false);
-  await page.getByRole('button', { name: 'Verificar conexão' }).click();
-  await expect(page.locator('.app-utilities > details').getByRole('status')).toContainText(
-    'Sistema conectado',
-  );
+  await expect(avisoOffline).toBeEmpty();
+  await expect(page.locator('.app-utilities > details')).toHaveCount(0);
   await context.setOffline(true);
   try {
     for (const rota of [
+      '/mesa/01234567-89AB-CDEF-0123-456789ABCDEF',
+      '/pedidos/01234567-89ab-cdef-0123-456789abcdef',
       '/gestao/configuracoes/delivery',
       '/gestao/expedicao',
       '/gestao/relatorios',
@@ -161,6 +181,22 @@ test('S02-PWA02: atualização do shell espera consentimento e preserva outras a
     await expect
       .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)))
       .toBe(true);
+    // A oferta é do navegador. Simula somente o evento, sem instalar nada no perfil de teste.
+    await page.evaluate(() => {
+      const oferta = new Event('beforeinstallprompt', { cancelable: true });
+      Object.assign(oferta, {
+        prompt: async () => {
+          document.body.dataset['instalacaoSolicitada'] = 'sim';
+        },
+        userChoice: Promise.resolve({ outcome: 'dismissed' }),
+      });
+      window.dispatchEvent(oferta);
+    });
+    const instalar = page.getByRole('button', { name: 'Instalar aplicativo', exact: true });
+    await expect(instalar).toBeVisible();
+    await instalar.click();
+    await expect(page.locator('body')).toHaveAttribute('data-instalacao-solicitada', 'sim');
+    await expect(instalar).toHaveCount(0);
     const other = await context.newPage();
     await other.goto(origin);
     await other.evaluate(() => {

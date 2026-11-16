@@ -1,0 +1,66 @@
+<section aria-labelledby="disponibilidade-titulo" [attr.aria-busy]="carregando()">
+  <header>
+    <h2 id="disponibilidade-titulo">Unidades e horários</h2>
+    <button class="secundario" type="button" (click)="carregar()" [disabled]="carregandoLista()">
+      Atualizar lista de unidades
+    </button>
+  </header>
+  <div class="consulta-horarios">
+    <div>
+      <label for="unidade-publica">Unidade</label>
+      <select
+        id="unidade-publica"
+        #seletor
+        [value]="selecionada()"
+        [disabled]="carregandoLista()"
+        (change)="selecionar(seletor.value)"
+      >
+        <option value="">Selecione uma unidade</option>
+        @for (unidade of unidades(); track unidade.id) {
+          <option [value]="unidade.id">{{ unidade.nome }}</option>
+        }
+      </select>
+    </div>
+    <button
+      class="secundario"
+      type="button"
+      (click)="selecionar(selecionada())"
+      [disabled]="!selecionada() || carregando()"
+    >
+      Atualizar horários
+    </button>
+  </div>
+  <p class="estado-consulta" role="status">{{ estado() }}</p>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (atual(); as unidade) {
+    <h3>{{ unidade.nome }}</h3>
+    <p class="estado-consulta">
+      Fuso da unidade: {{ unidade.fuso }}. Consulta confirmada: {{ confirmado() }}.
+    </p>
+    <div class="canais">
+      @for (canal of unidade.canais; track canal.canal) {
+        <article>
+          <h4>{{ nomeCanal(canal.canal) }}</h4>
+          <p class="estado-canal" [class.aberto]="canal.habilitado && canal.aberto">
+            {{ !canal.habilitado ? 'Canal desabilitado' : canal.aberto ? 'Aberto no horário consultado' : 'Fechado no horário consultado' }}
+          </p>
+          @if (canal.habilitado) {
+            <ul [attr.aria-label]="'Horários de ' + nomeCanal(canal.canal)">
+              @for (horario of horariosDo(canal.canal); track $index) {
+                <li>
+                  {{ nomeDia(horario.diaSemana) }}: {{ horario.inicio }} às
+                  {{ horario.fim + (madrugada(horario) ? ' do dia seguinte' : '') }}
+                </li>
+              } @empty {
+                <li>Sem horários configurados; atendimento fechado.</li>
+              }
+            </ul>
+          }
+        </article>
+      }
+    </div>
+    <p class="estado-consulta">A disponibilidade é conferida novamente ao enviar o pedido.</p>
+  }
+</section>

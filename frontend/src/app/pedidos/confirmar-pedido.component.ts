@@ -1,8 +1,9 @@
 import { EnderecosComponent } from '../delivery/enderecos.component';
 import { EntregaConfirmada } from '../delivery/modelos';
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { ROUTES, RouterLink } from '@angular/router';
 import { CarrinhoService } from '../carrinho/carrinho.service';
+import { ContextoCarrinho } from '../carrinho/modelos';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 import { Mesa } from '../mesas/modelos';
@@ -15,9 +16,11 @@ import { AcessosOperacao, EnvioPedido, Pedido, nomeEstado } from './modelos';
   selector: 'app-confirmar-pedido',
   imports: [RouterLink, HlmButton, EnderecosComponent],
   templateUrl: './confirmar-pedido.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './confirmar-pedido.component.css'],
+  host: { '[class.finalizacao-cliente]': 'apresentacaoCliente()' },
 })
 export class ConfirmarPedidoComponent {
+  readonly apresentacaoCliente = input(false);
   readonly carrinho = inject(CarrinhoService);
   readonly sessao = inject(SessaoService);
   readonly sessaoMesa = inject(SessaoMesaService);
@@ -31,6 +34,7 @@ export class ConfirmarPedidoComponent {
   pagamento: 'PRESENCIAL' | 'ONLINE' = 'PRESENCIAL';
   readonly erro = signal('');
   readonly confirmado = signal<Pedido | null>(null);
+  protected readonly enviando = signal(false);
   readonly podeReenviar = signal(false);
   readonly acoes = signal<string[]>([]);
   readonly nomeEstado = nomeEstado;
@@ -54,8 +58,13 @@ export class ConfirmarPedidoComponent {
   private consulta = 0;
   private consultaMesas = 0;
   private carregamentoMesas: Promise<void> | null = null;
+  private readonly contextoRevisado = signal<ContextoCarrinho | null>(null);
 
   constructor() {
+    effect(() => {
+      if (this.apresentacaoCliente() && this.carrinho.confirmado())
+        this.contextoRevisado.set(this.carrinho.contexto());
+    });
     effect(() => {
       const contexto = this.carrinho.contexto();
       const identidade = this.sessao.identidade();
@@ -88,6 +97,24 @@ export class ConfirmarPedidoComponent {
       this.consulta++;
       this.consultaMesas++;
     });
+  }
+
+  protected mostrarFinalizacao(): boolean {
+    const contexto = this.carrinho.contexto();
+    return (
+      !this.apresentacaoCliente() ||
+      !!this.envio.pendente(this.tipoMesa()) ||
+      !!this.confirmado() ||
+      (this.carrinho.itens().length > 0 &&
+        (this.carrinho.confirmado() || (!!contexto && this.contextoRevisado() === contexto)))
+    );
+  }
+
+  protected rotuloPagamentoPresencial(): string {
+    if (!this.apresentacaoCliente()) return 'Pagar presencialmente ao restaurante';
+    return this.carrinho.contexto()?.canal === 'DELIVERY'
+      ? 'Pagar na entrega'
+      : 'Pagar na retirada';
   }
 
   async carregarMesas(pagina: number): Promise<void> {
@@ -188,7 +215,12 @@ export class ConfirmarPedidoComponent {
       revisaoDelivery: resumo.canal === 'DELIVERY' ? this.entrega()!.orcamento.revisao : null,
       pagamento: resumo.canal === 'MESA' || this.assistido() ? 'PRESENCIAL' : this.pagamento,
     };
-    await this.executar(corpo);
+    this.enviando.set(true);
+    try {
+      await this.executar(corpo);
+    } finally {
+      this.enviando.set(false);
+    }
   }
 
   async reenviar(): Promise<void> {

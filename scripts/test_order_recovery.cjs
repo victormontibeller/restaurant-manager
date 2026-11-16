@@ -174,29 +174,52 @@ async function comandoIncertoReutilizaMesmasUnidadesEVersao() {
   assert.equal(f.service.pendente('pedido-a', false), null);
 }
 
-async function selecaoSobreviveSnapshotDaMesmaVersao() {
+function prepararDetalhePedido() {
   const efeitos = [];
-  const pedido = { id: 'pedido-a', versao: 3, unidades: [{ id: 'unidade-a', estado: 'NA_FILA' }] };
+  const timers = new Map();
+  let contador = 0;
+  let agora = Date.parse('2026-11-16T12:00:00Z');
+  const pedido = {
+    id: 'pedido-a',
+    versao: 3,
+    criadoEm: new Date(agora).toISOString(),
+    unidades: [{ id: 'unidade-a', estado: 'NA_FILA' }],
+  };
   const input = Object.assign((initial) => signal(initial), { required: () => signal(pedido) });
   class DestroyRef {}
   const context = {
     exports: {},
-    Date,
+    Date: class extends Date {
+      static now() {
+        return agora;
+      }
+    },
     navigator: { onLine: true },
     window: { addEventListener() {}, removeEventListener() {} },
-    setInterval: () => 1,
-    clearInterval() {},
+    setTimeout: (fn, demora) => {
+      const id = ++contador;
+      timers.set(id, { fn, instante: agora + demora });
+      return id;
+    },
+    clearTimeout: (id) => timers.delete(id),
     require: (name) => {
       if (name === '@angular/core')
         return {
           Component: () => (value) => value,
           DestroyRef,
           signal,
+          computed: (fn) => fn,
           input,
           output: () => ({ emit() {} }),
           effect: (fn) => {
-            efeitos.push(fn);
-            fn();
+            let limpar;
+            const executar = () => {
+              limpar?.();
+              limpar = undefined;
+              fn((callback) => (limpar = callback));
+            };
+            efeitos.push(executar);
+            executar();
           },
           inject: (type) => (type === DestroyRef ? { onDestroy() {} } : {}),
         };
@@ -216,17 +239,34 @@ async function selecaoSobreviveSnapshotDaMesmaVersao() {
     ).outputText,
     context,
   );
-  const componente = new context.exports.PedidoDetalheComponent();
+  return {
+    componente: new context.exports.PedidoDetalheComponent(),
+    pedido,
+    atualizar: () => efeitos.forEach((fn) => fn()),
+    proximoIntervalo: () => timers.values().next().value?.instante - agora,
+    avancar: () => {
+      assert.equal(timers.size, 1);
+      const [id, { fn, instante }] = timers.entries().next().value;
+      timers.delete(id);
+      agora = instante;
+      fn();
+    },
+    agendamentos: () => timers.size,
+  };
+}
+
+async function selecaoSobreviveSnapshotDaMesmaVersao() {
+  const { componente, pedido, atualizar } = prepararDetalhePedido();
   componente.selecionar('unidade-a', true);
   componente.pedido.set(structuredClone(pedido));
-  efeitos.forEach((fn) => fn());
+  atualizar();
   assert.equal(
     componente.selecionadas().length,
     1,
     'Reconexão/heartbeat não pode apagar seleção vigente.',
   );
   componente.pedido.set({ ...pedido, versao: 4 });
-  efeitos.forEach((fn) => fn());
+  atualizar();
   assert.equal(componente.selecionadas().length, 0, 'Mudança real do pedido exige nova seleção.');
   let comandos = 0;
   Object.assign(componente.comandos, {
@@ -255,6 +295,34 @@ async function selecaoSobreviveSnapshotDaMesmaVersao() {
   assert.equal(componente.cancelamentoPendente(), false);
 }
 
+function relogioDePedidoSoAtualizaHorarioVisivel() {
+  const { componente, pedido, atualizar, proximoIntervalo, avancar, agendamentos } =
+    prepararDetalhePedido();
+  assert.equal(agendamentos(), 0, 'Cliente sem prazo não precisa de temporizador.');
+  componente.pedido.set({
+    ...pedido,
+    estado: 'AGUARDANDO_ACEITE',
+    expirarEm: '2026-11-16T12:00:02.500Z',
+  });
+  atualizar();
+  assert.equal(proximoIntervalo(), 1000);
+  assert.match(componente.prazo(), /3 s/);
+  avancar();
+  avancar();
+  assert.equal(proximoIntervalo(), 500);
+  avancar();
+  assert.match(componente.prazo(), /Prazo vencido/);
+  assert.equal(agendamentos(), 0, 'Prazo vencido permanece estável até atualização da API.');
+
+  componente.contexto.set('operacao');
+  componente.pedido.set({ ...pedido, estado: 'NA_FILA' });
+  atualizar();
+  assert.equal(componente.tempoDecorrido(), 'Agora');
+  assert.equal(proximoIntervalo(), 57500);
+  avancar();
+  assert.equal(componente.tempoDecorrido(), '1 min');
+}
+
 async function rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal() {
   const f = preparar('pedido-envio.service.ts', 'PedidoEnvioService');
   const original = f.service.rascunho(false, 'unidade-a', 'MESA');
@@ -279,6 +347,7 @@ async function rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal() {
     respostaDeOutraContaNaoApareceNaSessaoAtual,
     comandoIncertoReutilizaMesmasUnidadesEVersao,
     selecaoSobreviveSnapshotDaMesmaVersao,
+    relogioDePedidoSoAtualizaHorarioVisivel,
     rascunhoDeCheckoutPermaneceSegregadoPorContaUnidadeECanal,
   ]) {
     await test();

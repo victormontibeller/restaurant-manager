@@ -317,8 +317,9 @@ test('S02-UI02: consulta pública limpa disponibilidade offline e revalida após
   expect((await consulta).status()).toBe(200);
   await expect(painel.getByText('Aberto no horário consultado', { exact: true })).toBeVisible();
   await expect(painel.getByText('Canal desabilitado', { exact: true })).toHaveCount(2);
+  await expect(painel.getByText(/Consulta confirmada:/)).toBeVisible();
   const orientacao = painel.getByText(
-    'A situação corresponde ao horário consultado. A disponibilidade é conferida novamente ao enviar o pedido.',
+    'A disponibilidade é conferida novamente ao enviar o pedido.',
     { exact: true },
   );
   await expect(orientacao).toBeVisible();

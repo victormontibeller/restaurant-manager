@@ -6,6 +6,18 @@ const path = require('node:path');
 const repo = path.resolve(__dirname, '..');
 const ts = require(repo + '/frontend/node_modules/typescript');
 const signal = (value) => Object.assign(() => value, { set: (next) => (value = next) });
+
+const transpilar = (arquivo) =>
+  ts.transpileModule(fs.readFileSync(path.join(repo, 'frontend/src/app', arquivo), 'utf8'), {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.CommonJS,
+      experimentalDecorators: true,
+    },
+  }).outputText;
+const modelos = { exports: {} };
+vm.runInNewContext(transpilar('catalogo/modelos.ts'), modelos);
+
 const units = [
   { id: 'A', nome: 'Unidade A', fuso: 'America/Sao_Paulo' },
   { id: 'B', nome: 'Unidade B', fuso: 'UTC' },
@@ -43,7 +55,11 @@ function fixture() {
   };
   const context = {
     exports: {},
-    require: () => ({ Component: () => (component) => component, signal }),
+    require: (modulo) => {
+      if (modulo === '../catalogo/modelos') return modelos.exports;
+      assert.equal(modulo, '@angular/core');
+      return { Component: () => (component) => component, signal };
+    },
     window: events,
     document: events,
     fetch: async (url, options) => {
@@ -60,19 +76,7 @@ function fixture() {
     },
     clearTimeout: (id) => timers.delete(id),
   };
-  vm.runInNewContext(
-    ts.transpileModule(
-      fs.readFileSync(repo + '/frontend/src/app/unidades/disponibilidade.component.ts', 'utf8'),
-      {
-        compilerOptions: {
-          target: ts.ScriptTarget.ES2022,
-          module: ts.ModuleKind.CommonJS,
-          experimentalDecorators: true,
-        },
-      },
-    ).outputText,
-    context,
-  );
+  vm.runInNewContext(transpilar('unidades/disponibilidade.component.ts'), context);
   return {
     c: new context.exports.DisponibilidadeComponent(),
     requests,

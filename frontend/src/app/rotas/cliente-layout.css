@@ -117,6 +117,27 @@
 .mobile-nav {
   display: none;
 }
+.client-header.vitrine-cliente {
+  background: var(--rm-surface);
+  padding-block: 12px;
+}
+.client-header.cabecalho-convite {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.cabecalho-convite .restaurant-brand {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vitrine-cliente .restaurant-brand small {
+  display: none;
+}
+.vitrine-cliente :is(.brand-mark, .cart-link) {
+  border-radius: 8px;
+}
+.client-main.vitrine-cliente {
+  padding-block-start: 16px;
+}
 @media (max-width: 800px) {
   .client-header {
     padding: 1rem;
@@ -168,11 +189,29 @@
     color: var(--rm-primary, #285139);
     font-weight: 750;
   }
-  .client-footer {
-    margin-bottom: 75px;
-  }
   .client-main {
     padding: 1.25rem 1rem;
+  }
+  .client-header.vitrine-cliente {
+    gap: 16px;
+    padding-block: 8px;
+  }
+  .vitrine-cliente .restaurant-brand {
+    gap: 12px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .vitrine-cliente .brand-mark,
+  .vitrine-cliente .header-actions {
+    flex: 0 0 auto;
+  }
+  .vitrine-cliente .cart-link {
+    padding-inline: 12px;
+  }
+  :host:has(.client-main.vitrine-cliente) .mobile-nav a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
   }
   .client-footer {
     align-items: flex-start;

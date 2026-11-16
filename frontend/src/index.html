@@ -5,10 +5,70 @@
     <title>Restaurant Manager — Catálogo</title>
     <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#245636">
+    <meta name="theme-color" content="#a53e2b">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" type="image/png" href="/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <style>
+      .falha-abertura {
+        box-sizing: border-box;
+        display: grid;
+        min-height: 100vh;
+        min-height: 100dvh;
+        place-items: center;
+        padding: 24px 16px;
+        background: #faf7f2;
+        color: #292521;
+        font: 1rem/1.55 system-ui, sans-serif;
+      }
+      .falha-abertura section {
+        box-sizing: border-box;
+        width: min(100%, 33rem);
+        padding: clamp(20px, 5vw, 36px);
+        overflow-wrap: anywhere;
+        border: 1px solid #e5ded3;
+        border-radius: 16px;
+        background: #fffdf9;
+      }
+      .falha-abertura h1 {
+        margin: 0;
+        font: 400 clamp(1.875rem, 5vw, 2.5rem)/1.15 Georgia, serif;
+      }
+      .falha-abertura p {
+        margin: 12px 0 20px;
+        color: #6e6259;
+      }
+      .falha-abertura button {
+        min-height: 48px;
+        max-width: 100%;
+        padding: 8px 16px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: #a53e2b;
+        color: #fff;
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      .falha-abertura :focus-visible {
+        outline: 2px solid #a53e2b;
+        outline-offset: 4px;
+      }
+      body:has(> .falha-abertura) {
+        margin: 0;
+      }
+    </style>
   </head>
-  <body><app-root></app-root></body>
+  <body>
+    <app-root></app-root>
+    <template id="falha-abertura">
+      <main class="falha-abertura">
+        <section aria-labelledby="falha-abertura-titulo">
+          <h1 id="falha-abertura-titulo" tabindex="-1">Não foi possível abrir o aplicativo</h1>
+          <p>Recarregue a página para tentar novamente.</p>
+          <button type="button">Recarregar página</button>
+        </section>
+      </main>
+    </template>
+  </body>
 </html>

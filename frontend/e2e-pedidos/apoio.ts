@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { EnvioPedido, Pedido } from '../src/app/pedidos/modelos';
+import { abrirCarrinhoPelaVitrine, aplicarContextoCardapio } from '../e2e/cardapio';
 
 export interface Conta {
   email: string;
@@ -374,13 +375,11 @@ export async function montarCarrinho(
     await expect(vitrine.getByLabel('Unidade do cardápio', { exact: true })).toHaveValue(
       fixture().unidadeA,
     );
+    await expect(vitrine).toHaveAttribute('aria-busy', 'false');
+    await vitrine.getByLabel('Canal do cardápio', { exact: true }).selectOption(canal);
   } else {
-    await vitrine
-      .getByLabel('Unidade do cardápio', { exact: true })
-      .selectOption(fixture().unidadeA);
+    await aplicarContextoCardapio(vitrine, fixture().unidadeA, canal);
   }
-  await expect(vitrine).toHaveAttribute('aria-busy', 'false');
-  await vitrine.getByLabel('Canal do cardápio', { exact: true }).selectOption(canal);
   await expect(vitrine).toHaveAttribute('aria-busy', 'false');
   await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(produto.nome);
   await vitrine.getByRole('button', { name: 'Buscar no cardápio', exact: true }).click();
@@ -404,15 +403,15 @@ export async function montarCarrinho(
   if (capturaConfigurador) await capturar(page, configurador, capturaConfigurador);
   await configurador.getByRole('button', { name: 'Adicionar ao carrinho', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Configurar produto', exact: true })).toBeHidden();
+  if (!equipe) await abrirCarrinhoPelaVitrine(page);
   const revisar = page.getByRole('button', {
     name: 'Revisar meu pedido',
     exact: true,
     includeHidden: true,
   });
-  // O clique fecha o diálogo antes do Angular renderizar o novo item. Aguarde
-  // o carrinho também no mobile, onde seu resumo lateral fica oculto por CSS.
+  // O carrinho assistido fica oculto na lateral das telas menores.
   await expect(revisar).toBeAttached();
-  if (!(await revisar.isVisible())) await navegarUi(page, '/carrinho');
+  if (equipe && !(await revisar.isVisible())) await navegarUi(page, '/carrinho');
   await revisar.click();
   await page.getByRole('button', { name: 'Confirmar composição e valores', exact: true }).click();
   await expect(

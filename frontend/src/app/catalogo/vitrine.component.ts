@@ -10,12 +10,15 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '../ui/button';
 import { ApiFailure } from '../identidade/sessao.service';
+import { IconeComponent } from '../rotas/icone.component';
 import { CarrinhoComponent } from '../carrinho/carrinho.component';
+import { CarrinhoPreviaComponent } from '../carrinho/carrinho-previa.component';
 import { CarrinhoService } from '../carrinho/carrinho.service';
-import { ContextoCarrinho, ItemCarrinho, LinhaCarrinho } from '../carrinho/modelos';
+import { ContextoCarrinho, LinhaCarrinho } from '../carrinho/modelos';
 import { CatalogoApiService } from './catalogo-api.service';
 import { ConfiguradorProdutoComponent } from './configurador-produto.component';
 import { FavoritosService } from './favoritos.service';
@@ -28,20 +31,34 @@ import {
   Unidade,
   mensagemErro,
   moeda,
+  nomeCanal,
 } from './modelos';
 
 @Component({
   selector: 'app-vitrine',
-  imports: [ConfiguradorProdutoComponent, CarrinhoComponent, RouterLink, HlmButton],
+  imports: [
+    ConfiguradorProdutoComponent,
+    CarrinhoComponent,
+    CarrinhoPreviaComponent,
+    RouterLink,
+    HlmButton,
+    NgTemplateOutlet,
+    IconeComponent,
+  ],
   templateUrl: './vitrine.component.html',
-  styleUrls: ['./catalogo.css', './vitrine.css'],
+  styleUrls: ['./catalogo.css', './vitrine.css', './vitrine-filtros.css'],
+  host: { '[class.cardapio-cliente]': 'cardapioCliente()' },
 })
 export class VitrineComponent {
   @Input() modo: 'cardapio' | 'carrinho' = 'cardapio';
+  readonly cardapioCliente = input(false);
   readonly unidadeExterna = input<string | undefined>();
   private focoAnterior: HTMLElement | null = null;
   @ViewChild('configuracao') private configuracao?: ElementRef<HTMLDialogElement>;
   @ViewChild('alerta') private alerta?: ElementRef<HTMLElement>;
+  @ViewChild('filtros') private filtros?: ElementRef<HTMLDialogElement>;
+  @ViewChild('abrirFiltros') private botaoFiltros?: ElementRef<HTMLButtonElement>;
+  @ViewChild('avisoTroca') private avisoTroca?: ElementRef<HTMLElement>;
   private readonly api = inject(CatalogoApiService);
   readonly carrinho = inject(CarrinhoService);
   readonly favoritos = inject(FavoritosService);
@@ -52,6 +69,8 @@ export class VitrineComponent {
   readonly unidadeId = signal('');
   readonly canalSelecionado = signal<Canal>('RETIRADA');
   readonly trocaPendente = signal<ContextoCarrinho | null>(null);
+  readonly filtrosUnidade = signal('');
+  readonly filtrosCanal = signal<Canal>('RETIRADA');
   readonly produtos = signal<ProdutoPublico[]>([]);
   readonly categorias = signal<Categoria[]>([]);
   readonly selecionado = signal<ProdutoPublico | null>(null);
@@ -113,6 +132,49 @@ export class VitrineComponent {
     return this.unidades().find((item) => item.id === this.unidadeId());
   }
 
+  nomeCanalAtual(): string {
+    return nomeCanal(this.canalSelecionado());
+  }
+
+  bloqueiaFiltros(): boolean {
+    return (
+      this.ocupado() || !this.carrinho.online() || !this.unidades().length || !!this.trocaPendente()
+    );
+  }
+
+  abrirPainelFiltros(): void {
+    const dialogo = this.filtros?.nativeElement;
+    if (!dialogo || dialogo.open || this.bloqueiaFiltros() || this.selecionado()) return;
+    this.filtrosUnidade.set(this.unidadeId());
+    this.filtrosCanal.set(this.canalSelecionado());
+    dialogo.showModal();
+  }
+
+  escolherCanalDosFiltros(valor: string): void {
+    const canal = this.canais.find((item) => item.valor === valor);
+    if (canal) this.filtrosCanal.set(canal.valor);
+  }
+
+  aplicarFiltros(event: Event): void {
+    event.preventDefault();
+    const unidade = this.unidades().find((item) => item.id === this.filtrosUnidade());
+    if (!unidade || this.bloqueiaFiltros()) return;
+    this.solicitarTroca({
+      unidadeId: unidade.id,
+      unidadeNome: unidade.nome,
+      canal: this.filtrosCanal(),
+    });
+    this.filtros?.nativeElement.close();
+  }
+
+  devolverFocoDosFiltros(): void {
+    requestAnimationFrame(() => {
+      if (this.destruido || this.filtros?.nativeElement.open) return;
+      const destino = this.trocaPendente() ? this.avisoTroca : this.botaoFiltros;
+      destino?.nativeElement.focus();
+    });
+  }
+
   horarioConsulta(): string {
     if (!this.consultadoEm()) return '';
     return new Intl.DateTimeFormat('pt-BR', {
@@ -140,9 +202,6 @@ export class VitrineComponent {
     }
   }
 
-  quantidadeItens(): number {
-    return this.carrinho.itens().reduce((total, item) => total + item.linha.quantidade, 0);
-  }
   escolherCategoria(id: string): void {
     this.categoriaId = id;
     void this.carregar(0);
@@ -168,8 +227,15 @@ export class VitrineComponent {
   }
 
   confirmarTroca(): void {
+    if (this.cardapioCliente() && !this.carrinho.online()) return;
     const contexto = this.trocaPendente();
     if (contexto) this.aplicarContexto(contexto);
+    if (this.cardapioCliente()) this.devolverFocoDosFiltros();
+  }
+
+  manterContexto(): void {
+    this.trocaPendente.set(null);
+    if (this.cardapioCliente()) this.devolverFocoDosFiltros();
   }
 
   filtrar(event: Event): void {
@@ -191,28 +257,31 @@ export class VitrineComponent {
   async carregar(pagina: number): Promise<void> {
     if (!this.unidadeId() || pagina < 0 || this.ocupado() || !this.carrinho.online()) return;
     this.fecharConfiguracao();
+    const termo = this.termo.trim();
+    const categoriaId = this.categoriaId;
+    const somenteFavoritos = this.somenteFavoritos();
     await this.executar(async (signal) => {
       const filtros = new URLSearchParams({
         unidadeId: this.unidadeId(),
         canal: this.canalSelecionado(),
         pagina: String(pagina),
       });
-      if (this.termo.trim()) filtros.set('busca', this.termo.trim());
-      if (this.categoriaId) filtros.set('categoriaId', this.categoriaId);
+      if (termo) filtros.set('busca', termo);
+      if (categoriaId) filtros.set('categoriaId', categoriaId);
       const resultado = await this.api.consultar<CatalogoPublico>(
         '/api/v1/catalogo?' + filtros,
         signal,
       );
       let produtos = resultado.itens;
       let temMais = resultado.temMais;
-      if (this.somenteFavoritos()) {
+      if (somenteFavoritos) {
         const favoritos = await this.consultarProdutosFavoritos(signal);
         const filtrados = favoritos.filter(
           (item) =>
-            (!this.categoriaId || item.categoriaId === this.categoriaId) &&
+            (!categoriaId || item.categoriaId === categoriaId) &&
             (item.nome + ' ' + item.descricao)
               .toLocaleLowerCase('pt-BR')
-              .includes(this.termo.trim().toLocaleLowerCase('pt-BR')),
+              .includes(termo.toLocaleLowerCase('pt-BR')),
         );
         produtos = filtrados.slice(pagina * 50, (pagina + 1) * 50);
         temMais = filtrados.length > (pagina + 1) * 50;
@@ -229,16 +298,14 @@ export class VitrineComponent {
 
   async configurar(
     id: string,
-    linha: LinhaCarrinho | null = null,
-    acionador: EventTarget | null = document.activeElement,
+    linha: LinhaCarrinho | null,
+    acionador: HTMLButtonElement,
   ): Promise<void> {
     if (this.ocupado() || !this.carrinho.online()) return;
-    // O carregamento desabilita o botão e o navegador pode retirar seu foco.
-    const origem = acionador instanceof HTMLElement ? acionador : null;
     await this.executar(async (signal) => {
       const produto = await this.api.consultar<ProdutoPublico>(this.rotaProduto(id), signal);
       if (signal.aborted || this.destruido) return;
-      this.focoAnterior = origem;
+      this.focoAnterior = acionador;
       this.selecionado.set(produto);
       this.linhaEditada.set(linha ? structuredClone(linha) : null);
       setTimeout(() => {
@@ -248,21 +315,22 @@ export class VitrineComponent {
     });
   }
 
-  editarItem(item: ItemCarrinho): void {
-    void this.configurar(item.linha.produtoId, item.linha);
-  }
-
   guardar(linha: LinhaCarrinho): void {
     const produto = this.selecionado();
-    if (produto && this.carrinho.guardar(linha, produto.nome)) {
+    if (produto && this.carrinho.guardar(linha, produto)) {
       this.fecharConfiguracao();
-      this.aviso.set('Composição adicionada ao carrinho. Confira o resumo abaixo.');
+      this.aviso.set(
+        this.cardapioCliente()
+          ? 'Item adicionado ao carrinho.'
+          : 'Composição adicionada ao carrinho. Confira o resumo abaixo.',
+      );
     }
   }
 
   fecharConfiguracao(): void {
     this.configuracao?.nativeElement.close();
-    if (this.selecionado()) this.focoAnterior?.focus();
+    if (this.selecionado() && this.focoAnterior?.isConnected) this.focoAnterior.focus();
+    this.focoAnterior = null;
     this.selecionado.set(null);
     this.linhaEditada.set(null);
   }
@@ -285,6 +353,8 @@ export class VitrineComponent {
     this.aberto.set(false);
     this.consultadoEm.set('');
     this.categoriaId = '';
+    this.pagina.set(0);
+    this.temMais.set(false);
     this.fecharConfiguracao();
     void this.carregar(0);
   }

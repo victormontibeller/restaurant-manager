@@ -112,16 +112,40 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
 
   await page.getByRole('button', { name: 'Sair da conta', exact: true }).click();
   await abrirAceite(page);
+  const aceitar = page.getByRole('button', { name: 'Verificar e aceitar convite', exact: true });
+  const voltar = page.getByRole('button', { name: 'Voltar ao login', exact: true });
+  await expect(aceitar).toHaveAttribute('data-variant', 'default');
+  await expect(voltar).toHaveAttribute('data-variant', 'outline');
+  const acaoPrimaria = (await aceitar.boundingBox())!;
+  const acaoSecundaria = (await voltar.boundingBox())!;
+  expect(acaoPrimaria.height).toBeGreaterThanOrEqual(48);
+  expect(acaoSecundaria.height).toBeGreaterThanOrEqual(48);
+  if (page.viewportSize()!.width <= 600) {
+    expect(acaoSecundaria.y).toBeGreaterThanOrEqual(acaoPrimaria.y + acaoPrimaria.height);
+  } else {
+    expect(acaoSecundaria.x).toBeGreaterThanOrEqual(acaoPrimaria.x + acaoPrimaria.width);
+  }
+  await page.locator('html').evaluate((html) => (html.style.zoom = '2'));
+  const dimensoes = await page.evaluate(() => ({
+    conteudo: document.documentElement.scrollWidth,
+    janela: document.documentElement.clientWidth,
+  }));
+  expect(dimensoes.conteudo).toBeLessThanOrEqual(dimensoes.janela + 1);
+  await page.locator('html').evaluate((html) => html.style.removeProperty('zoom'));
+
   await preencher(page, codigo, senha);
   const r = page.waitForResponse((r) => r.url().endsWith('/convites/aceitar'));
-  await page.getByRole('button', { name: 'Verificar e aceitar convite', exact: true }).click();
+  await page.getByLabel('Confirmar senha de funcionário', { exact: true }).focus();
+  await page.keyboard.press('Tab');
+  await expect(aceitar).toBeFocused();
+  await page.keyboard.press('Enter');
   expect((await r).status()).toBe(204);
   await expect(
     page.getByRole('status').filter({ hasText: 'Convite aceito e e-mail verificado' }),
   ).toBeVisible();
   await expect(page.getByLabel('Senha da conta de funcionário', { exact: true })).toHaveValue('');
 
-  await page.getByRole('button', { name: 'Voltar ao login', exact: true }).click();
+  await voltar.click();
   await entrar(page, email, senha);
   await expect(page.getByText('Equipe da cozinha', { exact: true })).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();

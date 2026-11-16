@@ -1,18 +1,50 @@
-<section aria-label="Pagamento online">
-  <h4>Pagamento online</h4>
-  <p>O retorno do checkout não confirma pagamento. Acompanhe a confirmação do servidor.</p>
+<section class="pagamento-pedido" aria-label="Pagamento online">
+  <header>
+    <h3>Pagamento online</h3>
+    @if (prazo()) {
+      <p class="prazo-pagamento">Pague até {{ prazo() }}.</p>
+    }
+  </header>
+  @if (aguardando()) {
+    <p class="orientacao-pagamento">Aguarde a confirmação do servidor ao voltar do checkout.</p>
+  }
+
   <!-- A API lista as tentativas por criado_em desc, id. -->
   @if (tentativas()[0]; as atual) {
-    <section aria-label="Tentativa mais recente">
-      <p><strong>Tentativa mais recente</strong></p>
-      <p>{{ estado(atual.estado) }}</p>
+    <section class="tentativa-pagamento" aria-label="Tentativa mais recente">
+      <p class="titulo-tentativa"><strong>Tentativa mais recente</strong></p>
+      <p class="estado-tentativa" [attr.data-estado]="atual.estado" aria-live="polite">
+        {{ estado(atual.estado) }}
+      </p>
       @if (
         atual.checkoutUrl && ['AGUARDANDO','SOLICITADO'].includes(atual.estado) && aguardando()
       ) {
-        <a class="botao" [href]="atual.checkoutUrl">Abrir checkout do Mercado Pago</a>
+        <a hlmBtn class="botao" [href]="atual.checkoutUrl"> Abrir checkout do Mercado Pago </a>
       }
     </section>
+  } @else if (aguardando() && !erro()) {
+    <p role="status">
+      {{ consultando() ? 'Consultando pagamento…' : 'Aguardando dados do checkout.' }}
+    </p>
   }
+
+  <div class="acoes-pagamento">
+    <button
+      type="button"
+      hlmBtn
+      variant="secondary"
+      (click)="carregar()"
+      [disabled]="consultando()"
+    >
+      Conferir pagamento
+    </button>
+    @if (aguardando() && tentativas().length && podeTentar()) {
+      <button hlmBtn type="button" (click)="tentar()" [disabled]="consultando()">
+        Tentar pagamento novamente
+      </button>
+    }
+  </div>
+
   @if (tentativas().length > 1) {
     <details>
       <summary>Histórico de tentativas anteriores</summary>
@@ -23,13 +55,7 @@
       </ol>
     </details>
   }
-  <button type="button" (click)="carregar()" [disabled]="consultando()">Conferir pagamento</button>
-  @if (aguardando() && tentativas().length && podeTentar()) {
-    <button type="button" (click)="tentar()" [disabled]="consultando()">
-      Tentar pagamento novamente
-    </button>
-  }
   @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
+    <p role="alert" class="erro">{{ erro() }}</p>
   }
 </section>

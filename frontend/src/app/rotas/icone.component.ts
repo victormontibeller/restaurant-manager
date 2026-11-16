@@ -27,6 +27,8 @@ export class IconeComponent {
           seta: 'M5 12h14M14 7l5 5-5 5',
           sair: 'M9 3H4v18h5M10 12h11M17 8l4 4-4 4',
           menu: 'M4 6h16M4 12h16M4 18h16',
+          lupa: 'M16.5 10a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0zM15 15l5 5',
+          filtros: 'M3 6h5m4 0h9M3 12h12m4 0h2M3 18h3m4 0h11M8 4v4m7 2v4m-9 2v4',
           fechar: 'M6 6l12 12M18 6 6 18',
         } as Record<string, string>
       )[this.nome()] ?? 'M4 6h16M4 12h16M4 18h16'
