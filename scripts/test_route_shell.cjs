@@ -10,7 +10,7 @@ const signal = (initial) => {
   let value = initial;
   return Object.assign(() => value, { set: (next) => (value = next) });
 };
-function fixture(cozinha = false) {
+function fixture(cozinha = false, storage = new Map()) {
   const identity = signal({ usuarioId: 'ficticio', perfil: cozinha ? 'COZINHA' : 'ADMINISTRADOR' });
   const permissions = signal(['pedido.consultar', 'cozinha.iniciar']);
   const route = {
@@ -83,6 +83,10 @@ function fixture(cozinha = false) {
   const context = {
     exports: {},
     setTimeout,
+    localStorage: {
+      getItem: (chave) => storage.get(chave),
+      setItem: (chave, valor) => storage.set(chave, valor),
+    },
     require: (nome) =>
       nome === '@angular/core'
         ? core
@@ -150,6 +154,20 @@ assert.equal(expedicao.layout.autorizado(), true);
 expedicao.permissions.set(['pedido.consultar']);
 assert.equal(expedicao.layout.autorizado(), false, 'Revogação remove a página já aberta.');
 expedicao.terminar();
+
+const preferencia = new Map();
+const gestao = fixture(false, preferencia);
+assert.equal(gestao.layout.tema(), 'claro');
+assert.equal(preferencia.size, 0);
+gestao.layout.alternarTema();
+assert.equal(gestao.layout.tema(), 'escuro');
+gestao.terminar();
+const gestaoReaberta = fixture(false, preferencia);
+assert.equal(gestaoReaberta.layout.tema(), 'escuro');
+gestaoReaberta.layout.alternarTema();
+assert.equal(gestaoReaberta.layout.tema(), 'claro');
+gestaoReaberta.terminar();
+
 console.log(
-  'Layout: ativação antes do snapshot do filho, navegação, permissão, logout e limpeza aprovados; injeções fictícias.',
+  'Layout: ativação antes do snapshot do filho, navegação, permissão, logout, limpeza e preferência de tema aprovados; injeções fictícias.',
 );

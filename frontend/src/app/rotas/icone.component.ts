@@ -30,6 +30,8 @@ export class IconeComponent {
           lupa: 'M16.5 10a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0zM15 15l5 5',
           filtros: 'M3 6h5m4 0h9M3 12h12m4 0h2M3 18h3m4 0h11M8 4v4m7 2v4m-9 2v4',
           fechar: 'M6 6l12 12M18 6 6 18',
+          sol: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5',
+          lua: 'M20.9 13.35A8.8 8.8 0 0 1 10.65 3.1 9 9 0 1 0 20.9 13.35Z',
         } as Record<string, string>
       )[this.nome()] ?? 'M4 6h16M4 12h16M4 18h16'
     );

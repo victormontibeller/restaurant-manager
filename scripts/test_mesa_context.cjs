@@ -26,6 +26,7 @@ class SessaoService {}
 class SessaoMesaService {}
 class PendenciasMesaService {}
 class NavegacaoProtegidaService {}
+class FormularioRotaDirective {}
 class DestroyRef {}
 class AcompanhamentoEventos {
   iniciar() {}
@@ -66,30 +67,34 @@ function carregar(arquivo, nome, services = {}, adicionais = {}) {
           signal,
           computed: (fn) => fn,
           input,
+          output: () => ({ emit() {} }),
           effect: (fn) => efeitos.push(fn),
           untracked: (fn) => fn(),
           DestroyRef,
           inject: (type) =>
-            type === DestroyRef
-              ? { onDestroy: (fn) => destruidores.push(fn) }
-              : type === SessaoService
-                ? services.sessao
-                : type === PendenciasMesaService
-                  ? (services.pendencias ??= servicoReal(
-                      'mesas/pendencias-mesa.service.ts',
-                      'PendenciasMesaService',
-                    ))
-                  : type === NavegacaoProtegidaService
-                    ? (services.navegacao ??= servicoReal(
-                        'rotas/navegacao-protegida.service.ts',
-                        'NavegacaoProtegidaService',
+            type === FormularioRotaDirective
+              ? null
+              : type === DestroyRef
+                ? { onDestroy: (fn) => destruidores.push(fn) }
+                : type === SessaoService
+                  ? services.sessao
+                  : type === PendenciasMesaService
+                    ? (services.pendencias ??= servicoReal(
+                        'mesas/pendencias-mesa.service.ts',
+                        'PendenciasMesaService',
                       ))
-                    : services.mesa,
+                    : type === NavegacaoProtegidaService
+                      ? (services.navegacao ??= servicoReal(
+                          'rotas/navegacao-protegida.service.ts',
+                          'NavegacaoProtegidaService',
+                        ))
+                      : services.mesa,
         };
       if (name.includes('sessao-mesa')) return { SessaoMesaService };
       if (name.includes('sessao.service')) return { SessaoService, ApiFailure };
       if (name.includes('pendencias-mesa.service')) return { PendenciasMesaService };
       if (name.includes('navegacao-protegida.service')) return { NavegacaoProtegidaService };
+      if (name.includes('formulario-rota.directive')) return { FormularioRotaDirective };
       if (name.includes('acompanhamento')) return { AcompanhamentoEventos };
       if (name.includes('catalogo/modelos'))
         return { mensagemErro: (error) => error.message, moeda: (value) => value };

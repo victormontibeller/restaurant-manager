@@ -1,20 +1,26 @@
-<section class="painel-interno" aria-labelledby="operacao-pedidos-titulo">
-  <header class="cabecalho-painel">
-    <div>
-      <span class="sobretitulo">Atendimento</span>
-      <h2 id="operacao-pedidos-titulo">
-        {{ navegacaoInterna() ? 'Operação de pedidos e mesas' : 'Fila de pedidos' }}
-      </h2>
-      <p class="texto-secundario">
-        Acompanhe cada pedido, confirme o aceite e mantenha a equipe em sintonia.
-      </p>
-    </div>
-    @if (unidadeExterna() === undefined) {
-      <button class="secundario" (click)="carregarAcessos()" [disabled]="carregandoAcessos()">
-        Revalidar acesso operacional
-      </button>
-    }
-  </header>
+<section
+  class="painel-interno"
+  [class.fila-pedidos-compacta]="filaCompacta()"
+  [attr.aria-labelledby]="filaCompacta() ? 'gestao-titulo' : 'operacao-pedidos-titulo'"
+>
+  @if (!filaCompacta()) {
+    <header class="cabecalho-painel">
+      <div>
+        <span class="sobretitulo">Atendimento</span>
+        <h2 id="operacao-pedidos-titulo">
+          {{ navegacaoInterna() ? 'Operação de pedidos e mesas' : 'Fila de pedidos' }}
+        </h2>
+        <p class="texto-secundario">
+          Acompanhe cada pedido, confirme o aceite e mantenha a equipe em sintonia.
+        </p>
+      </div>
+      @if (unidadeExterna() === undefined) {
+        <button class="secundario" (click)="carregarAcessos()" [disabled]="carregandoAcessos()">
+          Revalidar acesso operacional
+        </button>
+      }
+    </header>
+  }
   @if (tem('pedido.consultar')) {
     @if (unidadeExterna() === undefined) {
       <div class="filtros">
@@ -63,7 +69,7 @@
           </nav>
         }
         @if (area() === 'pedidos') {
-          <div class="filtros" aria-label="Filtros da fila de pedidos">
+          <div class="filtros" role="group" aria-label="Filtros da fila de pedidos">
             <div class="campo-filtro">
               <label for="pedidos-estado">Estado dos pedidos</label>
               <select
@@ -74,8 +80,12 @@
               >
                 <option value="AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO">Em andamento</option>
                 <option value="">Todos os estados</option>
-                <option value="CONCLUIDO,CANCELADO">Concluídos e cancelados</option>
-                <option value="AGUARDANDO_ACEITE">Aguardando aceite</option>
+                <option value="CONCLUIDO,CANCELADO">
+                  {{ filaCompacta() ? 'Encerrados' : 'Concluídos e cancelados' }}
+                </option>
+                <option value="AGUARDANDO_ACEITE">
+                  {{ filaCompacta() ? 'Aguardam aceite' : 'Aguardando aceite' }}
+                </option>
                 <option value="NA_FILA">Na fila</option>
                 <option value="EM_PREPARO">Em preparo</option>
                 <option value="PRONTO">Prontos</option>
@@ -91,7 +101,7 @@
                 [value]="filtroCanal()"
                 (change)="filtrar('canal', canal.value)"
               >
-                <option value="">Todos os canais</option>
+                <option value="">{{ filaCompacta() ? 'Todos' : 'Todos os canais' }}</option>
                 <option value="MESA">Mesa</option>
                 <option value="RETIRADA">Retirada</option>
                 <option value="DELIVERY">Delivery</option>
@@ -105,12 +115,28 @@
                 [value]="ordenacao()"
                 (change)="filtrar('ordem', ordem.value)"
               >
-                <option value="ANTIGOS">Mais antigos primeiro</option>
-                <option value="RECENTES">Mais recentes primeiro</option>
+                <option value="ANTIGOS">
+                  {{ filaCompacta() ? 'Mais antigos' : 'Mais antigos primeiro' }}
+                </option>
+                <option value="RECENTES">
+                  {{ filaCompacta() ? 'Mais recentes' : 'Mais recentes primeiro' }}
+                </option>
               </select>
             </div>
+            @if (filaCompacta()) {
+              <button
+                type="button"
+                class="atualizar-fila"
+                data-variant="outline"
+                aria-label="Atualizar fila de pedidos"
+                [attr.aria-disabled]="ocupado() || null"
+                (click)="carregarPedidos(pagina())"
+              >
+                Atualizar
+              </button>
+            }
           </div>
-          <div class="barra-conexao">
+          <div class="barra-conexao" [class.conectada]="acompanhamento.conectado()">
             <p role="status" class="status-consulta">
               <span class="status-reserva" aria-hidden="true"
                 >Sem conexão. Os dados podem estar desatualizados. Nenhuma operação foi confirmada.
@@ -121,21 +147,53 @@
                 {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
               >
             </p>
-            <button class="secundario" (click)="carregarPedidos(pagina())" [disabled]="ocupado()">
-              Atualizar fila de pedidos
-            </button>
+            @if (!filaCompacta()) {
+              <button class="secundario" (click)="carregarPedidos(pagina())" [disabled]="ocupado()">
+                Atualizar fila de pedidos
+              </button>
+            }
           </div>
+          @if (filaCompacta() && erro()) {
+            <p role="alert" class="erro">{{ erro() }}</p>
+          }
+          @if (filaCompacta()) {
+            @for (id of pendenciasForaDaPagina(); track id) {
+              <div class="aviso pendencia-fila">
+                <span role="status">
+                  Pedido #{{ id.slice(0, 8).toUpperCase() }}: resultado ainda não confirmado.
+                </span>
+                <button
+                  type="button"
+                  (click)="recuperar(id)"
+                  [disabled]="!online() || comandos.ocupado()"
+                >
+                  Recuperar resultado da mesma ação
+                </button>
+              </div>
+            }
+            @if (erroRecuperacao()) {
+              <p role="alert" class="erro">{{ erroRecuperacao() }}</p>
+            }
+            @if (avisoRecuperacao()) {
+              <p role="status">{{ avisoRecuperacao() }}</p>
+            }
+          }
           <div class="resumo-listagem">
             <span
               >{{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
               página</span
-            ><span>Página {{ pagina() + 1 }}</span>
+            >
+            @if (!filaCompacta()) {
+              <span>Página {{ pagina() + 1 }}</span>
+            }
           </div>
           <div class="grade-pedidos" [attr.aria-busy]="ocupado()">
             @for (pedido of pedidos(); track pedido.id) {
               <app-pedido-detalhe
                 [pedido]="pedido"
                 contexto="operacao"
+                [compacto]="filaCompacta()"
+                [unidadeDaFila]="filaCompacta() ? unidadeAtual : ''"
                 [acoes]="acoes()"
                 (atualizar)="carregarPedidos(pagina())"
               />
@@ -184,7 +242,7 @@
   } @else {
     <p class="aviso">Sua política atual não permite consultar pedidos.</p>
   }
-  @if (erro()) {
+  @if (!filaCompacta() && erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>
   }
 </section>

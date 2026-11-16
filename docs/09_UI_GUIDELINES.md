@@ -173,6 +173,34 @@ A implementação e a validação desse incremento ficam no
 [registro do painel](evidencias/painel-cozinha-2026-11-10.md); pendências globais
 continuam no checkpoint.
 
+## Densidade da gestão
+
+Pedidos, Cardápio, Mesas e comandas, Unidades e horários, Equipe e acessos e
+Convites usam o tema claro da gestão. Superfícies claras, texto escuro, bordas
+discretas e cantos de 8 px acompanham a referência visual do Airbnb claro. Os
+filtros têm rótulo visível e texto de 14 px, com espaçamento inspirado no Notion.
+O terracota `#a53e2b` identifica a ação primária e o foco. A escala de espaçamento
+é 4, 8, 12, 16, 24 e 32 px. Controles compactos usam 38 px no desktop com
+ponteiro preciso e pelo menos 48 px em telas de toque. O catálogo interno
+`/design-system` demonstra filtros, resumo expansível, estado e formulário.
+O cabeçalho da gestão oferece um botão para alternar entre tema claro e escuro.
+A preferência é guardada no navegador e o claro é o padrão da primeira visita.
+O menu lateral conserva a estrutura e as proporções da versão anterior.
+
+A fila usa um resumo por pedido. Referência, canal, horário, tempo decorrido,
+estado e prazo de aceite aplicável ficam visíveis junto das ações imediatas.
+Itens, observações, histórico, ações que exigem motivo e financeiro ficam no
+painel expansível. Atualizações preservam o painel e o rascunho do pedido
+identificado. A versão vigente continua determinando a validade da seleção de
+unidades de produção. A recuperação reutiliza a intenção original e fica
+disponível na unidade da operação mesmo quando o filtro oculta o pedido.
+
+Os cadastros apresentam dados resumidos em listas e abrem um editor por vez.
+Ao abrir, movem o foco para o editor. Ao fechar, devolvem o foco ao controle
+que o abriu. Mudanças locais pedem confirmação de descarte e operações incertas
+mantêm seu fluxo de reconciliação. A edição de oferta continua vinculada à
+unidade escolhida, e horários e canais têm controles próprios dentro da unidade.
+
 ## Cardápio do cliente
 
 A vitrine pública usa superfícies claras, títulos serifados e terracota nas

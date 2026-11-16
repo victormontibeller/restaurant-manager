@@ -48,15 +48,13 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     'Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões de entrega em Regiões e checkout.',
     { exact: true },
   );
-  const inativacao = page.getByText(
-    'Somente o Administrador configura unidades. Inativar bloqueia novas vendas e remove a unidade da lista pública, preservando o cadastro, os vínculos e a resolução de operações existentes por usuários autorizados.',
-    { exact: true },
-  );
   await expect(orientacao).toBeVisible();
-  await expect(inativacao).toBeVisible();
   await orientacao.screenshot({ path: test.info().outputPath('s03-texto-prazos-unidade.png') });
-  await inativacao.screenshot({ path: test.info().outputPath('s03-texto-inativacao-unidade.png') });
   const nome = 'Unidade ' + crypto.randomUUID().slice(0, 8);
+  const nova = page.getByRole('button', { name: 'Nova unidade', exact: true });
+  await nova.click();
+  const novoEditor = page.getByRole('region', { name: 'Nova unidade', exact: true });
+  await expect(novoEditor.getByRole('heading')).toBeFocused();
   await page.getByLabel('Nome da nova unidade').fill(nome);
   await page.getByRole('button', { name: 'Criar unidade', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveText('Confirme sua senha antes de alterar acessos.');
@@ -75,6 +73,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     'Informe um fuso IANA válido, como America/Sao_Paulo.',
   );
   await page.getByLabel('Fuso da nova unidade').fill('America/Manaus');
+  await novoEditor.screenshot({ path: test.info().outputPath('unidades.png') });
   const created = page.waitForResponse(
     (r) => r.url().endsWith('/configuracoes/unidades') && r.request().method() === 'POST',
   );
@@ -86,6 +85,12 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     .getByRole('article')
     .filter({ has: page.getByRole('heading', { name: nome, exact: true }) });
   await expect(row).toBeVisible();
+  await expect(nova).toBeFocused();
+  const editar = row.getByRole('button', { name: 'Editar unidade', exact: true });
+  await editar.click();
+  const inativacao = row.getByText('Inativar bloqueia novas vendas', { exact: false });
+  await expect(inativacao).toBeVisible();
+  await inativacao.screenshot({ path: test.info().outputPath('s03-texto-inativacao-unidade.png') });
   const concorrente = await page.request.put('/api/v1/configuracoes/unidades/' + unidade.id, {
     headers: { Authorization: 'Bearer ' + access },
     data: { versao: unidade.versao, nome, fuso: 'UTC', ativa: true },
@@ -96,6 +101,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     'A unidade foi alterada. Recarregue antes de salvar.',
   );
   await recarregarELocalizar(nome);
+  await editar.click();
   await expect(row.getByLabel('Fuso da unidade')).toHaveValue('UTC');
   await row.getByLabel('Nome da unidade', { exact: true }).fill(nome + ' editada');
   await row.getByLabel('Unidade ativa').uncheck();
@@ -105,6 +111,8 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   const editada = page
     .getByRole('article')
     .filter({ has: page.getByRole('heading', { name: nome + ' editada', exact: true }) });
+  await expect(editada.getByText('Inativa', { exact: true })).toBeVisible();
+  await editada.getByRole('button', { name: 'Editar unidade', exact: true }).click();
   await expect(editada.getByLabel('Unidade ativa')).not.toBeChecked();
   const publico = await page.request.get('/api/v1/unidades');
   expect((await publico.json()).map((u: { id: string }) => u.id)).not.toContain(unidade.id);
@@ -112,10 +120,6 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     page.viewportSize()!.width,
   );
   await editada.screenshot({ path: test.info().outputPath('unidade-editada.png') });
-  await page
-    .locator('app-unidades > section > form')
-    .nth(1)
-    .screenshot({ path: test.info().outputPath('unidades.png') });
   await page
     .getByRole('navigation', { name: 'Páginas de unidades', exact: true })
     .screenshot({ path: test.info().outputPath('paginacao-unidades.png') });

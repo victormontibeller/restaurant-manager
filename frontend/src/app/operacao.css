@@ -27,10 +27,10 @@ div {
 }
 .sucesso {
   padding: 1rem;
-  border: 1px solid #b7d7be;
+  border: 1px solid var(--gestao-sucesso-borda, #b7d7be);
   border-radius: 0.7rem;
-  background: #edf7ee;
-  color: #28623e;
+  background: var(--gestao-sucesso-bg, #edf7ee);
+  color: var(--gestao-sucesso-fg, #28623e);
 }
 .cabecalho-painel {
   display: flex;
@@ -203,9 +203,9 @@ button {
   border: 1px solid var(--border, #dedfd8);
 }
 .perigo {
-  color: #a02d29;
-  background: #fff6f4;
-  border-color: #ecd1ca;
+  color: var(--gestao-erro-fg, #a02d29);
+  background: var(--gestao-erro-bg, #fff6f4);
+  border-color: var(--gestao-erro-borda, #ecd1ca);
 }
 .navegacao-operacao {
   padding: 0.35rem;
@@ -238,18 +238,18 @@ button {
 }
 .erro {
   padding: 0.9rem 1rem;
-  border: 1px solid #ebc9c4;
+  border: 1px solid var(--gestao-erro-borda, #ebc9c4);
   border-radius: 0.65rem;
-  color: #922c24;
-  background: #fff5f3;
+  color: var(--gestao-erro-fg, #922c24);
+  background: var(--gestao-erro-bg, #fff5f3);
   font-weight: 600;
 }
 .aviso {
-  border-left: 3px solid #b56c22;
+  border-left: 3px solid var(--gestao-alerta-borda, #b56c22);
   padding: 0.8rem 1rem;
   border-radius: 0 0.6rem 0.6rem 0;
-  background: #fff5e6;
-  color: #784512;
+  background: var(--gestao-alerta-bg, #fff5e6);
+  color: var(--gestao-alerta-fg, #784512);
 }
 .status-consulta {
   display: grid;
@@ -276,26 +276,26 @@ button {
 }
 .etiqueta[data-estado='AGUARDANDO_ACEITE'],
 .etiqueta[data-estado='EM_FECHAMENTO'] {
-  background: #fff0d8;
-  color: #925314;
+  background: var(--gestao-alerta-bg, #fff0d8);
+  color: var(--gestao-alerta-fg, #925314);
 }
 .etiqueta[data-estado='NA_FILA'] {
-  background: #edf0ff;
-  color: #425299;
+  background: var(--gestao-info-bg, #edf0ff);
+  color: var(--gestao-info-fg, #425299);
 }
 .etiqueta[data-estado='EM_PREPARO'] {
-  background: #fff0df;
-  color: #945010;
+  background: var(--gestao-alerta-bg, #fff0df);
+  color: var(--gestao-alerta-fg, #945010);
 }
 .etiqueta[data-estado='PRONTO'],
 .etiqueta[data-estado='ABERTA'] {
-  background: #e6f3e9;
-  color: #28623e;
+  background: var(--gestao-sucesso-bg, #e6f3e9);
+  color: var(--gestao-sucesso-fg, #28623e);
 }
 .etiqueta[data-estado='CANCELADO'],
 .etiqueta[data-estado='INATIVA'] {
-  background: #fae9e6;
-  color: #9d3a32;
+  background: var(--gestao-erro-bg, #fae9e6);
+  color: var(--gestao-erro-fg, #9d3a32);
 }
 details {
   margin: 1rem 0;

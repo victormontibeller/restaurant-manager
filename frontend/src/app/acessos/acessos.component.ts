@@ -1,5 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
+import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 
 interface Acao {
   codigo: string;
@@ -30,197 +33,167 @@ interface Funcionario {
 
 @Component({
   selector: 'app-acessos',
+  imports: [RouterLink],
   template: `
     <section aria-labelledby="acessos-titulo" [attr.aria-busy]="ocupado()">
-      <h2 id="acessos-titulo">Configurações de acessos</h2>
-      <p>Administrador é protegido e cobre todas as unidades. Alterações valem na próxima operação, sem novo login.</p>
-      <p>As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.</p>
-      <button type="button" (click)="carregar()" [disabled]="ocupado()">Recarregar acessos</button>
-      <form (submit)="confirmar($event, senha)">
-        <label for="confirmar-senha">Confirme sua senha</label>
-        <input
-          #senha
-          id="confirmar-senha"
-          type="password"
-          autocomplete="current-password"
-          required
-          maxlength="72"
-          [attr.aria-describedby]="senhaInvalida() ? 'erro-acessos' : null"
-          [attr.aria-invalid]="senhaInvalida() ? true : null"
-          [disabled]="ocupado()"
-        >
-        <button [disabled]="ocupado()">Confirmar identidade</button>
+      <div class="gestao-toolbar">
+        <h2 id="acessos-titulo">Configurações de acessos</h2>
+        <div class="gestao-acoes">
+          <a class="spartan-button" routerLink="/gestao/equipe/convites">Gerenciar convites</a>
+          <button #matrizBotao type="button" data-variant="outline" (click)="abrirMatriz(matrizBotao)"
+            [attr.aria-expanded]="matrizAberta()" [disabled]="ocupado() || !matriz()">Matriz de permissões</button>
+          <button type="button" data-variant="ghost" (click)="carregar()" [disabled]="ocupado()">Recarregar acessos</button>
+        </div>
+      </div>
+      <form class="gestao-toolbar confirmacao" (submit)="confirmar($event, senha)">
+        <div>
+          <label for="confirmar-senha">Confirme sua senha</label>
+          <input #senha id="confirmar-senha" type="password" autocomplete="current-password"
+            required maxlength="72" [attr.aria-describedby]="senhaInvalida() ? 'erro-acessos' : null"
+            [attr.aria-invalid]="senhaInvalida() ? true : null" [disabled]="ocupado()">
+        </div>
+        <button data-variant="outline" [disabled]="ocupado()">Confirmar identidade</button>
       </form>
       @if (erro()) {
         <p #alerta id="erro-acessos" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
       }
       @if (aviso()) {
-        <p aria-live="polite">{{ aviso() }}</p>
+        <p role="status">{{ aviso() }}</p>
       }
       @if (matriz(); as m) {
-        <label for="perfil-acesso">Perfil operacional</label>
-        <select
-          id="perfil-acesso"
-          (change)="selecionar($any($event.target).value)"
-          [disabled]="ocupado()"
-        >
-          @for (p of perfis; track p) {
-            <option [value]="p" [selected]="perfil() === p">{{ p }}</option>
-          }
-        </select>
-        <label for="buscar-acao">Buscar ação</label>
-        <input id="buscar-acao" type="search" (input)="busca.set($any($event.target).value)">
-        <fieldset data-rascunho="matriz" [disabled]="ocupado()">
-          <legend>Permissões de {{ perfil() }} · versão {{ m.versao }}</legend>
-          @for (a of acoesFiltradas(); track a.codigo) {
-            <div class="acao">
-              <label><input
-                type="checkbox"
-                [checked]="escolhidas().has(a.codigo)"
-                [disabled]="dependenciaObrigatoria(a.codigo)"
-                (change)="marcar(a, $any($event.target).checked)"
-              >{{ a.descricao }}</label>
-              <small>{{ a.escopo === 'EMPRESA' ? 'Afeta toda a empresa' : 'Restrita às unidades atribuídas' }} @if (a.dependencia) {· Inclui consulta mínima: {{ a.dependencia }}} </small>
-            </div>
-          }
-        </fieldset>
-        <button type="button" (click)="salvarMatriz()" [disabled]="ocupado()">Salvar permissões</button>
-        <h3>Funcionários existentes</h3>
-        <p>Para cadastrar um funcionário novo, use Gerenciar convites. Clientes não aparecem nesta lista.</p>
-        @for (f of equipe(); track f.id) {
-          <article [attr.data-rascunho]="'funcionario-' + f.id">
-            <h4>{{ f.email }}</h4>
-            <label [for]="'perfil-' + f.id">Perfil do funcionário</label>
-            <select
-              [id]="'perfil-' + f.id"
-              (change)="mudarPerfil(f, $any($event.target).value)"
-              [disabled]="ocupado()"
-            >
-              <option value="ADMINISTRADOR" [selected]="f.perfil === 'ADMINISTRADOR'">ADMINISTRADOR</option>
-              @for (p of perfis; track p) {
-                <option [value]="p" [selected]="f.perfil === p">{{ p }}</option>
-              }
-            </select>
-            <label><input
-              type="checkbox"
-              [checked]="f.ativo"
-              (change)="f.ativo = $any($event.target).checked"
-              [disabled]="ocupado()"
-            >Ativo</label>
-            @if (f.perfil !== 'ADMINISTRADOR') {
-              <p>Vínculos nesta edição: {{ f.unidades.length }}. Alterações só valem após salvar o funcionário.</p>
-              <button
-                type="button"
-                style="margin-bottom:.5rem;max-width:100%"
-                (click)="alternarUnidades(f.id)"
-                [disabled]="ocupado()"
-                [attr.aria-expanded]="funcionarioExpandido() === f.id"
-                [attr.aria-controls]="'unidades-' + f.id"
-              >Editar unidades atribuídas</button>
-              <div [id]="'unidades-' + f.id">
-                @if (funcionarioExpandido() === f.id) {
-                  <fieldset [disabled]="ocupado()">
-                    <legend>Unidades atribuídas</legend>
-                    @for (u of unidades(); track u.id) {
-                      <label><input
-                        type="checkbox"
-                        [checked]="f.unidades.includes(u.id)"
-                        (change)="vincular(f, u.id, $any($event.target).checked)"
-                      >{{ u.nome }}</label>
-                    }
-                    @for (id of unidadesInativas(f); track id) {
-                      <label><input
-                        type="checkbox"
-                        [checked]="f.unidades.includes(id)"
-                        (change)="vincular(f, id, $any($event.target).checked)"
-                      >Vínculo em unidade inativa · <span style="overflow-wrap:anywhere">{{ id }}</span></label>
-                    }
-                    @if (unidadesInativas(f).length) {
-                      <p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>
-                    }
-                  </fieldset>
-                }
+        @if (matrizAberta()) {
+          <section class="gestao-editor" aria-labelledby="matriz-titulo">
+            <h3 id="matriz-titulo" tabindex="-1" data-gestao-foco>Matriz de permissões</h3>
+            <p>Administrador é protegido e cobre todas as unidades. Alterações valem na próxima operação, sem novo login.</p>
+            <p>As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.</p>
+            <div class="gestao-campos" data-sem-rascunho>
+              <div>
+                <label for="perfil-acesso">Perfil operacional</label>
+                <select #perfilSelect id="perfil-acesso" [value]="perfil()"
+                  (change)="selecionarPerfil(perfilSelect)" [disabled]="ocupado()">
+                  @for (p of perfis; track p) {
+                    <option [value]="p" [selected]="perfil() === p">{{ p }}</option>
+                  }
+                </select>
               </div>
-            } @else {
-              <p>Cobertura integral da empresa.</p>
-            }
-            <button type="button" (click)="salvarFuncionario(f)" [disabled]="ocupado()">Salvar funcionário</button>
-          </article>
-        } @empty {
-          <p>Nenhum funcionário nesta página.</p>
+              <div>
+                <label for="buscar-acao">Buscar ação</label>
+                <input id="buscar-acao" type="search" [value]="busca()" (input)="busca.set($any($event.target).value)">
+              </div>
+            </div>
+            <fieldset data-rascunho="matriz" [disabled]="ocupado()">
+              <legend>Permissões de {{ perfil() }} · versão {{ m.versao }}</legend>
+              @for (a of acoesFiltradas(); track a.codigo) {
+                <div class="acao">
+                  <label class="gestao-opcao"><input type="checkbox" [checked]="escolhidas().has(a.codigo)"
+                    [disabled]="dependenciaObrigatoria(a.codigo)" (change)="marcar(a, $any($event.target).checked)"
+                    [attr.aria-describedby]="'escopo-' + a.codigo">{{ a.descricao }}</label>
+                  <small [id]="'escopo-' + a.codigo">{{ a.escopo === 'EMPRESA' ? 'Afeta toda a empresa' : 'Restrita às unidades atribuídas' }} @if (a.dependencia) {· Inclui consulta mínima: {{ a.dependencia }} }</small>
+                </div>
+              }
+            </fieldset>
+            <div class="gestao-acoes">
+              <button type="button" (click)="salvarMatriz()" [disabled]="ocupado()">Salvar permissões</button>
+              <button type="button" data-variant="ghost" (click)="cancelar(matrizBotao)" [disabled]="ocupado()">Fechar matriz</button>
+            </div>
+          </section>
         }
-        <nav aria-label="Páginas de funcionários">
-          <button (click)="paginaAnterior()" [disabled]="ocupado() || pagina() === 0">Página anterior</button>
+        <div class="gestao-lista" aria-label="Funcionários existentes">
+          @for (f of equipe(); track f.id) {
+            <article>
+              <header class="gestao-linha">
+                <div>
+                  <h3>{{ f.email }}</h3>
+                  <span>{{ f.perfil }} · {{ f.perfil === 'ADMINISTRADOR' ? 'Todas as unidades' : f.unidades.length + (f.unidades.length === 1 ? ' unidade' : ' unidades') }}</span>
+                </div>
+                <span class="gestao-estado" [attr.data-estado]="f.ativo ? 'ativo' : 'inativo'">{{ f.ativo ? 'Ativo' : 'Inativo' }}</span>
+                <button #editar type="button" data-variant="outline"
+                  (click)="abrirFuncionario(f, editar)" [disabled]="ocupado()"
+                  [attr.aria-expanded]="rascunhoFuncionario()?.id === f.id">Editar funcionário</button>
+              </header>
+              @if (rascunhoFuncionario(); as rascunho) {
+                @if (rascunho.id === f.id) {
+                  <section class="gestao-editor" [attr.aria-labelledby]="'editar-funcionario-' + f.id"
+                    [attr.data-rascunho]="'funcionario-' + f.id">
+                    <h4 [id]="'editar-funcionario-' + f.id" tabindex="-1" data-gestao-foco>Editar funcionário</h4>
+                    <div class="gestao-campos">
+                      <div>
+                        <label [for]="'perfil-' + f.id">Perfil do funcionário</label>
+                        <select [id]="'perfil-' + f.id" [value]="rascunho.perfil"
+                          (change)="mudarPerfil(rascunho, $any($event.target).value)" [disabled]="ocupado()">
+                          <option value="ADMINISTRADOR" [selected]="rascunho.perfil === 'ADMINISTRADOR'">ADMINISTRADOR</option>
+                          @for (p of perfis; track p) {
+                            <option [value]="p" [selected]="rascunho.perfil === p">{{ p }}</option>
+                          }
+                        </select>
+                      </div>
+                      <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.ativo"
+                        (change)="rascunho.ativo = $any($event.target).checked" [disabled]="ocupado()">Ativo</label>
+                    </div>
+                    @if (rascunho.perfil !== 'ADMINISTRADOR') {
+                      <p>Vínculos nesta edição: {{ rascunho.unidades.length }}. Alterações só valem após salvar o funcionário.</p>
+                      <button type="button" data-variant="outline" (click)="alternarUnidades(f.id)"
+                        [disabled]="ocupado()" [attr.aria-expanded]="funcionarioExpandido() === f.id"
+                        [attr.aria-controls]="'unidades-' + f.id">Editar unidades atribuídas</button>
+                      <div [id]="'unidades-' + f.id">
+                        @if (funcionarioExpandido() === f.id) {
+                          <fieldset [disabled]="ocupado()">
+                            <legend>Unidades atribuídas</legend>
+                            @for (u of unidades(); track u.id) {
+                              <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.unidades.includes(u.id)"
+                                (change)="vincular(rascunho, u.id, $any($event.target).checked)">{{ u.nome }}</label>
+                            }
+                            @for (id of unidadesInativas(f); track id) {
+                              <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.unidades.includes(id)"
+                                (change)="vincular(rascunho, id, $any($event.target).checked)">Vínculo em unidade inativa · {{ id }}</label>
+                            }
+                            @if (unidadesInativas(f).length) {
+                              <p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>
+                            }
+                          </fieldset>
+                        }
+                      </div>
+                    } @else {
+                      <p>Cobertura integral da empresa.</p>
+                    }
+                    <div class="gestao-acoes acoes-editor">
+                      <button type="button" (click)="salvarFuncionario(rascunho)" [disabled]="ocupado()">Salvar funcionário</button>
+                      <button type="button" data-variant="ghost" (click)="cancelar(matrizBotao)" [disabled]="ocupado()">Cancelar</button>
+                    </div>
+                  </section>
+                }
+              }
+            </article>
+          } @empty {
+            <p class="vazio">Nenhum funcionário nesta página.</p>
+          }
+        </div>
+        <nav class="gestao-acoes" aria-label="Páginas de funcionários">
+          <button data-variant="outline" (click)="paginaAnterior()" [disabled]="ocupado() || pagina() === 0">Página anterior</button>
           <span>Página {{ pagina() + 1 }}</span>
-          <button (click)="proximaPagina()" [disabled]="ocupado() || equipe().length < 50">Próxima página</button>
+          <button data-variant="outline" (click)="proximaPagina()" [disabled]="ocupado() || equipe().length < 50">Próxima página</button>
         </nav>
       }
     </section>
   `,
   styles: `
-    :host {
-      display: block;
-    }
-    form {
-      display: grid;
-      gap: 0.5rem;
-      margin: 1rem 0;
-      max-width: 28rem;
-    }
-    input:not([type='checkbox']),
-    select {
-      max-width: 100%;
-      width: 100%;
-      min-height: 48px;
-      font: inherit;
-      padding: 0.5rem;
-      margin-bottom: 0.7rem;
-    }
-    label {
-      display: block;
-    }
-    input[type='checkbox'] {
-      width: 22px;
-      height: 22px;
-      margin: 0.7rem;
-      vertical-align: middle;
-    }
-    fieldset {
-      min-width: 0;
-      margin: 1rem 0;
-      border: 1px solid #6b7a70;
-      border-radius: 0.5rem;
-    }
-    .acao {
-      padding: 0.5rem;
-      border-bottom: 1px solid #d9e2dc;
-    }
-    .acao small {
-      display: block;
-      overflow-wrap: anywhere;
-    }
-    article {
-      padding: 1rem;
-      border: 1px solid #6b7a70;
-      border-radius: 0.5rem;
-      margin: 1rem 0;
-    }
-    h4 {
-      overflow-wrap: anywhere;
-    }
-    .erro {
-      color: #9d2424;
-    }
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-    }
+    :host { display: block; }
+    .confirmacao { justify-content: start; align-items: end; }
+    .gestao-linha h3 { margin: 0; }
+    .gestao-lista + nav { margin-top: var(--gestao-espaco-3, 12px); }
+    .acoes-editor { margin-top: var(--gestao-espaco-2, 8px); }
+    .acao { border-bottom: 1px solid var(--rm-border); padding-bottom: var(--gestao-espaco-2, 8px); }
+    .acao:last-child { border-bottom: 0; }
+    .acao small { display: block; overflow-wrap: anywhere; }
   `,
 })
 export class AcessosComponent implements OnInit {
   private readonly sessao = inject(SessaoService);
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
+  private readonly host = inject(ElementRef<HTMLElement>).nativeElement;
+  private origem: HTMLElement | null = null;
+  readonly matrizAberta = signal(false);
+  readonly rascunhoFuncionario = signal<Funcionario | null>(null);
   readonly perfis = ['GERENTE', 'ATENDIMENTO', 'CAIXA', 'COZINHA', 'EXPEDICAO'];
   readonly matriz = signal<Matriz | null>(null);
   readonly equipe = signal<Funcionario[]>([]);
@@ -238,24 +211,109 @@ export class AcessosComponent implements OnInit {
   readonly bloqueio = output<boolean>();
   readonly salvo = output<string>();
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
+  @ViewChild('matrizBotao') matrizBotao?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
     void this.carregar();
   }
 
+  abrirMatriz(origem: HTMLElement): void {
+    if (this.ocupado() || !this.matriz()) return;
+    if (this.matrizAberta()) {
+      this.cancelar(origem);
+      return;
+    }
+    if (!this.confirmarDescarte()) return;
+    this.limparFeedback();
+    this.origem = origem;
+    this.fecharFuncionario();
+    this.matrizAberta.set(true);
+    focarEditor(this.host);
+  }
+
+  abrirFuncionario(funcionario: Funcionario, origem: HTMLElement): void {
+    if (this.ocupado()) return;
+    if (this.rascunhoFuncionario()?.id === funcionario.id) {
+      this.cancelar(origem);
+      return;
+    }
+    if (!this.confirmarDescarte()) return;
+    this.limparFeedback();
+    this.origem = origem;
+    this.matrizAberta.set(false);
+    this.selecionar(this.perfil());
+    this.funcionarioExpandido.set(null);
+    this.rascunhoFuncionario.set(this.copiarFuncionario(funcionario));
+    focarEditor(this.host);
+  }
+
+  cancelar(alternativa?: HTMLElement): void {
+    if (this.ocupado() || !this.confirmarDescarte()) return;
+    this.limparFeedback();
+    this.matrizAberta.set(false);
+    this.selecionar(this.perfil());
+    this.fecharFuncionario();
+    restaurarFoco(this.origem, alternativa);
+    this.origem = null;
+  }
+
   async carregar(pagina = this.pagina()): Promise<void> {
+    if (this.ocupado()) return;
+    const chave = this.chaveEditor();
+    const alterado = chave && this.formulario?.temRascunho(chave);
+    if (!this.confirmarDescarte()) return;
     await this.executar(async () => {
-      const m = await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
-      const e = await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina=' + pagina);
-      const u = await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
-      this.matriz.set(m);
-      this.equipe.set(e);
-      this.vinculosOriginais.set(Object.fromEntries(e.map((f) => [f.id, [...f.unidades]])));
-      this.unidades.set(u);
-      this.pagina.set(pagina);
-      this.funcionarioExpandido.set(null);
-      this.selecionar(this.perfil());
+      try {
+        const m = await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
+        const e = await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina=' + pagina);
+        const u = await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
+        this.matriz.set(m);
+        this.equipe.set(e);
+        this.vinculosOriginais.set(Object.fromEntries(e.map((f) => [f.id, [...f.unidades]])));
+        this.unidades.set(u);
+        this.pagina.set(pagina);
+        this.selecionar(this.perfil());
+        this.fecharFuncionario();
+        if (!this.matrizAberta()) this.origem = null;
+      } catch (erro) {
+        if (alterado) this.formulario?.marcarAlterado(chave);
+        throw erro;
+      }
     });
+  }
+
+  selecionarPerfil(campo: HTMLSelectElement): void {
+    if (!this.confirmarDescarte()) {
+      campo.value = this.perfil();
+      return;
+    }
+    this.selecionar(campo.value);
+  }
+
+  private chaveEditor(): string | undefined {
+    if (this.matrizAberta()) return 'matriz';
+    const rascunho = this.rascunhoFuncionario();
+    return rascunho ? 'funcionario-' + rascunho.id : undefined;
+  }
+
+  private confirmarDescarte(): boolean {
+    const chave = this.chaveEditor();
+    return !chave || (this.formulario?.confirmarDescarte(chave) ?? true);
+  }
+
+  private copiarFuncionario(funcionario: Funcionario): Funcionario {
+    return { ...funcionario, unidades: [...funcionario.unidades] };
+  }
+
+  private fecharFuncionario(): void {
+    this.funcionarioExpandido.set(null);
+    this.rascunhoFuncionario.set(null);
+  }
+
+  private limparFeedback(): void {
+    this.erro.set('');
+    this.aviso.set('');
+    this.senhaInvalida.set(false);
   }
 
   selecionar(perfil: string): void {
@@ -336,6 +394,7 @@ export class AcessosComponent implements OnInit {
   }
 
   async salvarFuncionario(f: Funcionario): Promise<void> {
+    let confirmado = false;
     await this.executar(async () => {
       const result = await this.sessao.api<Funcionario>('/api/v1/equipe/' + f.id, 'PUT', {
         versao: f.versao,
@@ -347,8 +406,12 @@ export class AcessosComponent implements OnInit {
       this.vinculosOriginais.update((rows) => ({ ...rows, [result.id]: [...result.unidades] }));
       this.aviso.set('Funcionário atualizado no servidor.');
       this.salvo.emit('funcionario-' + result.id);
+      confirmado = true;
+      this.fecharFuncionario();
       await this.sessao.atualizarIdentidade();
     });
+    if (confirmado && !this.erro()) restaurarFoco(this.origem, this.matrizBotao?.nativeElement);
+    if (confirmado) this.origem = null;
   }
 
   paginaAnterior(): void {
@@ -363,9 +426,7 @@ export class AcessosComponent implements OnInit {
     if (this.ocupado()) return;
     this.ocupado.set(true);
     this.bloqueio.emit(true);
-    this.erro.set('');
-    this.aviso.set('');
-    this.senhaInvalida.set(false);
+    this.limparFeedback();
     try {
       await action();
     } catch (error) {

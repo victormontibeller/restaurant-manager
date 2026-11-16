@@ -36,11 +36,14 @@ export class PedidoDetalheComponent {
   readonly pedido = input.required<Pedido>();
   readonly contexto = input<'cliente' | 'mesa' | 'operacao' | 'cozinha'>('cliente');
   readonly linkAcompanhamento = input(false);
+  readonly compacto = input(false);
+  readonly unidadeDaFila = input('');
   readonly acoes = input<string[]>([]);
   readonly atualizar = output<void>();
   readonly comandos = inject(PedidoComandoService);
   readonly selecionadas = signal<string[]>([]);
   readonly financeiroAberto = signal(false);
+  readonly detalhesAbertos = signal(false);
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly agora = signal(Date.now());
@@ -197,6 +200,10 @@ export class PedidoDetalheComponent {
     );
   }
 
+  alternarDetalhes(): void {
+    this.detalhesAbertos.update((abertos) => !abertos);
+  }
+
   async comandar(acao: string, solicitacaoId?: string): Promise<void> {
     if (this.bloqueado()) return;
     if (acao === 'servir' && this.cancelamentoPendente()) {
@@ -231,13 +238,14 @@ export class PedidoDetalheComponent {
             : '/api/v1/operacao/pedidos';
     const rota =
       base + '/' + pedido.id + (solicitacaoId ? '/solicitacoes/' + solicitacaoId : '') + '/' + acao;
+    const usaSelecao = !this.pessoal() && (!this.compacto() || acao === 'cancelar');
     await this.executar({
       rota,
       corpo: {
         intencaoId: crypto.randomUUID(),
         versao: pedido.versao,
-        motivo: this.motivo.trim(),
-        unidades: this.pessoal() ? [] : [...this.selecionadas()],
+        motivo: !this.compacto() || precisaMotivo ? this.motivo.trim() : '',
+        unidades: usaSelecao ? [...this.selecionadas()] : [],
       },
     });
   }
@@ -253,7 +261,12 @@ export class PedidoDetalheComponent {
     this.erro.set('');
     this.aviso.set('');
     try {
-      await this.comandos.executar(this.pedido().id, this.contexto() === 'mesa', intencao);
+      await this.comandos.executar(
+        this.pedido().id,
+        this.contexto() === 'mesa',
+        intencao,
+        this.unidadeDaFila(),
+      );
       this.motivo = '';
       this.selecionadas.set([]);
       this.aviso.set('Ação confirmada pelo servidor.');

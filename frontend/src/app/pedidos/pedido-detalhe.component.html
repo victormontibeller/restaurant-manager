@@ -2,6 +2,7 @@
   class="cartao-pedido"
   [class.cartao-cozinha]="contexto() === 'cozinha'"
   [class.pedido-cliente]="pessoal()"
+  [class.pedido-compacto]="compacto()"
   [attr.data-estado]="pedido().estado"
   [attr.aria-label]="'Pedido ' + pedido().id"
 >
@@ -67,6 +68,49 @@
       }
       <ng-container [ngTemplateOutlet]="detalhes" />
     </div>
+  } @else if (compacto()) {
+    <header class="resumo-pedido">
+      <div class="cabecalho-pedido">
+        <div class="referencia-pedido">
+          <h2>Pedido #{{ referencia() }}</h2>
+          <span class="sobretitulo">{{ canal() }}</span>
+        </div>
+        <div class="tempo-pedido">
+          <strong>{{ tempoDecorrido() }}</strong>
+          <time [attr.datetime]="pedido().criadoEm" [attr.title]="horario(pedido().criadoEm)">
+            às {{ horaCriacao() }}
+          </time>
+        </div>
+      </div>
+      <div class="estado-e-prazo">
+        <ng-container [ngTemplateOutlet]="estadoPedido" />
+      </div>
+      <div class="acoes-resumo-pedido">
+        <ng-container [ngTemplateOutlet]="aceitarPedido" />
+        <ng-container [ngTemplateOutlet]="servirPedido" />
+        <button
+          type="button"
+          class="alternar-detalhes"
+          data-variant="outline"
+          [attr.aria-label]="'Detalhes do pedido #' + referencia()"
+          [attr.aria-expanded]="detalhesAbertos()"
+          [attr.aria-controls]="'detalhes-pedido-' + pedido().id"
+          (click)="alternarDetalhes()"
+        >
+          Detalhes
+          <span class="indicador-detalhes" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+    <ng-container [ngTemplateOutlet]="pendenciaAcao" />
+    <ng-container [ngTemplateOutlet]="retornoAcao" />
+    <div
+      class="detalhes-pedido"
+      [id]="'detalhes-pedido-' + pedido().id"
+      [hidden]="!detalhesAbertos()"
+    >
+      <ng-container [ngTemplateOutlet]="detalhes" />
+    </div>
   } @else {
     <header class="cabecalho-pedido">
       <div>
@@ -75,7 +119,9 @@
       </div>
       <div class="tempo-pedido">
         <strong>{{ tempoDecorrido() }}</strong>
-        <span [attr.title]="horario(pedido().criadoEm)">às {{ horaCriacao() }}</span>
+        <time [attr.datetime]="pedido().criadoEm" [attr.title]="horario(pedido().criadoEm)">
+          às {{ horaCriacao() }}
+        </time>
       </div>
     </header>
     <ng-container [ngTemplateOutlet]="estadoPedido" />
@@ -104,6 +150,41 @@
   }
   @if (prazo(); as prazoAtual) {
     <p class="prazo-pedido" [class.aviso]="alertaPrazo()">{{ prazoAtual }}</p>
+  }
+</ng-template>
+
+<ng-template #aceitarPedido>
+  @if (
+    contexto() === 'operacao' && pedido().estado === 'AGUARDANDO_ACEITE' && tem('pedido.aceitar')
+  ) {
+    <button
+      type="button"
+      (click)="comandar('aceitar')"
+      [disabled]="!compacto() && bloqueado()"
+      [attr.aria-disabled]="(compacto() && bloqueado()) || null"
+    >
+      Aceitar pedido
+    </button>
+  }
+</ng-template>
+
+<ng-template #servirPedido>
+  @if (
+    contexto() === 'operacao' && pedido().canal === 'MESA' && pedido().estado === 'PRONTO' && tem('pedido.servir')
+  ) {
+    <button
+      type="button"
+      (click)="!cancelamentoPendente() && comandar('servir')"
+      [disabled]="!compacto() && (bloqueado() || cancelamentoPendente())"
+      [attr.aria-disabled]="(compacto() && (bloqueado() || cancelamentoPendente())) || null"
+    >
+      Marcar servido na mesa
+    </button>
+    @if (cancelamentoPendente()) {
+      <p [class.texto-secundario]="compacto()" role="status">
+        Aguarde a decisão sobre o cancelamento antes de marcar o pedido como servido.
+      </p>
+    }
   }
 </ng-template>
 
@@ -221,8 +302,8 @@
   }
   <div class="acoes acoes-pedido">
     @if (contexto() === 'operacao' && pedido().estado === 'AGUARDANDO_ACEITE') {
-      @if (tem('pedido.aceitar')) {
-        <button (click)="comandar('aceitar')" [disabled]="bloqueado()">Aceitar pedido</button>
+      @if (!compacto()) {
+        <ng-container [ngTemplateOutlet]="aceitarPedido" />
       }
       @if (tem('pedido.recusar')) {
         <button class="perigo" (click)="comandar('recusar')" [disabled]="bloqueado()">
@@ -263,15 +344,8 @@
           {{ selecionadas().length ? 'Cancelar unidades selecionadas' : 'Cancelar todas as unidades remanescentes' }}
         </button>
       }
-      @if (pedido().canal === 'MESA' && pedido().estado === 'PRONTO' && tem('pedido.servir')) {
-        <button (click)="comandar('servir')" [disabled]="bloqueado() || cancelamentoPendente()">
-          Marcar servido na mesa
-        </button>
-        @if (cancelamentoPendente()) {
-          <p role="status">
-            Aguarde a decisão sobre o cancelamento antes de marcar o pedido como servido.
-          </p>
-        }
+      @if (!compacto()) {
+        <ng-container [ngTemplateOutlet]="servirPedido" />
       }
     }
   </div>
@@ -293,13 +367,8 @@
       </div>
     }
   }
-  @if (pendente()) {
-    <p class="aviso">
-      Resultado da ação ainda não confirmado. O reenvio usa o mesmo identificador e os mesmos dados.
-    </p>
-    <button (click)="repetir()" [disabled]="comandos.ocupado() || !online()">
-      Recuperar resultado da mesma ação
-    </button>
+  @if (!compacto()) {
+    <ng-container [ngTemplateOutlet]="pendenciaAcao" />
   }
   @if (pedido().historico?.length) {
     <details class="historico-pedido">
@@ -312,11 +381,8 @@
       </ol>
     </details>
   }
-  @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+  @if (!compacto()) {
+    <ng-container [ngTemplateOutlet]="retornoAcao" />
   }
 
   @if (
@@ -333,5 +399,28 @@
         />
       }
     </details>
+  }
+</ng-template>
+
+<ng-template #pendenciaAcao>
+  @if (pendente()) {
+    <div class="recuperacao-pedido">
+      <p class="aviso">
+        Resultado da ação ainda não confirmado. O reenvio usa o mesmo identificador e os mesmos
+        dados.
+      </p>
+      <button type="button" (click)="repetir()" [disabled]="comandos.ocupado() || !online()">
+        Recuperar resultado da mesma ação
+      </button>
+    </div>
+  }
+</ng-template>
+
+<ng-template #retornoAcao>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status" [class.retorno-pedido]="compacto()">{{ aviso() }}</p>
   }
 </ng-template>

@@ -2,6 +2,7 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
+@import './app/ui/gestao.css';
 
 /* Tokens do bistrô; componentes Helm adaptados são mantidos em app/ui. */
 :root {

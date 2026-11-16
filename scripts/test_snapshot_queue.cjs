@@ -49,6 +49,7 @@ async function verificar(arquivo, nome, metodo) {
   const context = {
     exports: {},
     navigator: { onLine: true },
+    document: { activeElement: null },
     matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
     window: { addEventListener() {}, removeEventListener() {} },
     setInterval: () => 1,
@@ -66,6 +67,7 @@ async function verificar(arquivo, nome, metodo) {
       if (name === '@angular/core')
         return {
           Component: () => (value) => value,
+          computed: (fn) => fn,
           signal,
           input,
           effect: (fn) => efeitos.push(fn),

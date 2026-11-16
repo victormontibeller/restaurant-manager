@@ -1,0 +1,55 @@
+.catalogo-titulo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.catalogo-abas button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--rm-text);
+}
+
+:host-context(.gestao-compacta) :is(button, select) {
+  min-height: var(--gestao-controle);
+}
+
+:host-context(.gestao-compacta) select {
+  height: var(--gestao-controle);
+}
+
+.catalogo-abas button[aria-pressed='true'] {
+  border-color: var(--rm-border);
+  background: var(--rm-surface);
+  color: var(--ring);
+}
+
+.catalogo-linha {
+  justify-content: space-between;
+}
+
+.catalogo-dados {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--gestao-espaco-2, 8px) var(--gestao-espaco-3, 12px);
+  color: var(--rm-muted);
+}
+
+.catalogo-dados h3 {
+  margin: 0;
+  color: var(--rm-text);
+  font-size: 1rem;
+}
+
+@media (max-width: 540px) {
+  .catalogo-linha .gestao-acoes {
+    width: 100%;
+  }
+}

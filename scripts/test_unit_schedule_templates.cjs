@@ -81,10 +81,16 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       ? { executablePath: process.env.RM_WEBKIT_EXECUTABLE }
       : {},
   );
-  const styles = fs.readFileSync(repo + '/frontend/src/styles.css', 'utf8');
+  const styles =
+    fs.readFileSync(repo + '/frontend/src/styles.css', 'utf8') +
+    fs.readFileSync(repo + '/frontend/src/app/ui/gestao.css', 'utf8');
   const server = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end('<style>' + styles + '</style><main><app-unidades></app-unidades></main>');
+    res.end(
+      '<style>' +
+        styles +
+        '</style><main class="gestao-compacta"><app-unidades></app-unidades></main>',
+    );
   });
   try {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -105,15 +111,18 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       0,
     );
     const editor = page.locator('app-funcionamento-unidade').first();
-    const outroEditor = page.locator('app-funcionamento-unidade').nth(1);
-    const abrir = editor.getByRole('button', { name: 'Configurar horários e canais', exact: true });
+    const abrir = page
+      .getByRole('button', { name: 'Configurar horários e canais', exact: true })
+      .first();
+    const outroEditor = page.getByRole('article').nth(1);
     await abrir.focus();
     await page.keyboard.press('Enter');
-    await expect(
-      editor.getByRole('button', { name: 'Consultar funcionamento no servidor' }),
-    ).toHaveAttribute('aria-expanded', 'true');
+    await expect(abrir).toHaveAttribute('aria-expanded', 'true');
+    await expect(editor.getByRole('heading')).toBeFocused();
     await expect(editor.getByRole('status')).toContainText('Funcionamento consultado no servidor');
-    await expect(page.locator('#fuso-A')).toHaveValue('America/Sao_Paulo');
+    await expect(
+      page.getByRole('article').first().getByText('America/Sao_Paulo', { exact: true }),
+    ).toBeVisible();
     await expect(editor.getByText('Horários no fuso UTC.', { exact: false })).toBeVisible();
     await expect(
       editor.getByText('Horários no fuso America/Sao_Paulo.', { exact: false }),
@@ -190,7 +199,9 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await expect(
       editor.getByText('Horários no fuso America/Manaus.', { exact: false }),
     ).toBeVisible();
-    await expect(page.locator('#fuso-A')).toHaveValue('America/Sao_Paulo');
+    await expect(
+      page.getByRole('article').first().getByText('America/Sao_Paulo', { exact: true }),
+    ).toBeVisible();
 
     // A confirmação existente no pai libera o fluxo sem perder o rascunho.
     await horario.getByLabel('Fim (HH:mm ou 24:00)', { exact: true }).fill('01:00');
@@ -218,7 +229,13 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         'Editor excede viewport',
       );
       const box = await salvar.boundingBox();
-      assert(box && box.height >= 48, 'Salvar precisa de alvo de toque de 48 px');
+      assert(
+        box &&
+          (width <= 768
+            ? Math.round(box.height) >= 48
+            : Math.round(box.height) >= 36 && Math.round(box.height) <= 40),
+        `Salvar deve ter alvo de toque de 48 px e controle compacto a ${width}px: ${JSON.stringify(box)}`,
+      );
       const directory = process.env.RM_TEMPLATE_REPORT_DIR;
       if (directory) {
         assert(path.isAbsolute(directory) && !path.resolve(directory).startsWith(repo + path.sep));

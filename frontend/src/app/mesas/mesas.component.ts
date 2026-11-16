@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
 } from '@angular/core';
@@ -16,6 +17,8 @@ import { nomeEstado } from '../pedidos/modelos';
 import { AberturaAtendimento, Comanda, Mesa, SolicitacaoMesa } from './modelos';
 import { PendenciasMesaService } from './pendencias-mesa.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
+import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 
 @Component({
   imports: [FinanceiroComponent],
@@ -27,9 +30,11 @@ export class MesasComponent {
   readonly unidadeId = input.required<string>();
   readonly acoes = input<string[]>([]);
   readonly administrador = input(false);
+  readonly salvo = output<void>();
   private readonly sessao = inject(SessaoService);
   private readonly pendencias = inject(PendenciasMesaService);
   private readonly navegacao = inject(NavegacaoProtegidaService);
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
   private readonly chaveNavegacao = 'mesas:' + crypto.randomUUID();
   readonly mesas = signal<Mesa[]>([]);
   readonly solicitacoes = signal<SolicitacaoMesa[]>([]);
@@ -49,6 +54,7 @@ export class MesasComponent {
       .join(' '),
   );
   readonly aviso = signal('');
+  readonly erroCadastro = signal<'nome' | 'senha' | null>(null);
   readonly acompanhamento = new AcompanhamentoEventos();
   readonly nomeEstado = nomeEstado;
   readonly moeda = moeda;
@@ -90,6 +96,7 @@ export class MesasComponent {
       this.nome = criacao?.nome ?? '';
       this.erroAcao.set('');
       this.erroConsulta.set('');
+      this.erroCadastro.set(null);
       this.aviso.set('');
       this.ocupado.set(false);
       untracked(() =>
@@ -247,8 +254,37 @@ export class MesasComponent {
     }
   }
 
-  async criar(event: Event): Promise<void> {
+  alternarCadastro(evento: Event, cadastro: HTMLDetailsElement, origem: HTMLElement): void {
+    evento.preventDefault();
+    if (cadastro.open) {
+      this.cancelarCadastro(cadastro, origem);
+      return;
+    }
+    cadastro.open = true;
+    focarEditor(cadastro);
+  }
+
+  cancelarCadastro(cadastro: HTMLDetailsElement, origem: HTMLElement): void {
+    if (
+      this.ocupado() ||
+      this.criacaoPendente() ||
+      this.formulario?.confirmarDescarte('nova-mesa') === false
+    )
+      return;
+    this.nome = '';
+    this.erroCadastro.set(null);
+    this.fecharCadastro(cadastro, origem);
+  }
+
+  private fecharCadastro(cadastro: HTMLDetailsElement, origem?: HTMLElement): void {
+    cadastro.querySelectorAll('form').forEach((form) => form.reset());
+    cadastro.open = false;
+    restaurarFoco(origem);
+  }
+
+  async criar(event: Event, cadastro?: HTMLDetailsElement, origem?: HTMLElement): Promise<void> {
     event.preventDefault();
+    this.erroCadastro.set(null);
     const contexto = this.contexto();
     const repeticao = !!this.criacaoPendente();
     const corpo = this.criacaoPendente() ?? {
@@ -272,11 +308,22 @@ export class MesasComponent {
         ) {
           this.pendencias.concluirCriacao(contexto);
         }
+        if (vigente()) {
+          // A intenção já preserva o corpo. A navegação pode retomá-la pela mesma unidade.
+          if (this.criacaoPendente()) this.salvo.emit();
+          if (
+            error instanceof ApiFailure &&
+            (error.codigo === 'REGRA_MESA' || error.message.startsWith('Já existe uma mesa'))
+          )
+            this.erroCadastro.set('nome');
+        }
         throw error;
       }
       this.pendencias.concluirCriacao(contexto);
       if (!vigente()) return;
       this.nome = '';
+      this.salvo.emit();
+      if (cadastro) this.fecharCadastro(cadastro, origem);
       this.aviso.set(
         'Mesa ' + corpo.nome + ' cadastrada. Use as páginas de mesas para localizar o cadastro.',
       );
@@ -284,10 +331,17 @@ export class MesasComponent {
   }
 
   async confirmarSenha(senha: HTMLInputElement): Promise<void> {
+    this.erroCadastro.set(null);
     await this.executar(async (vigente) => {
       const valor = senha.value;
       senha.value = '';
-      await this.sessao.api('/api/v1/auth/reautenticar', 'POST', { senha: valor });
+      try {
+        await this.sessao.api('/api/v1/auth/reautenticar', 'POST', { senha: valor });
+      } catch (error) {
+        if (vigente() && error instanceof ApiFailure && error.codigo === 'CONFIRMACAO_INVALIDA')
+          this.erroCadastro.set('senha');
+        throw error;
+      }
       if (!vigente()) return;
       this.aviso.set('Senha confirmada para configuração administrativa.');
     });

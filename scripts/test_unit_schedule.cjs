@@ -54,8 +54,13 @@ function fixture() {
     DestroyRef: destroy,
     signal,
     effect: (callback) => effects.push(callback),
-    inject: (token) =>
-      token === destroy ? { onDestroy: (callback) => callbacks.push(callback) } : sessao,
+    afterNextRender: () => {},
+    inject: (token, options) =>
+      options?.optional
+        ? null
+        : token === destroy
+          ? { onDestroy: (callback) => callbacks.push(callback) }
+          : sessao,
   };
   const context = {
     exports: {},

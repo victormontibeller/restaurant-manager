@@ -72,6 +72,11 @@ async function capturar(email: string): Promise<string> {
 }
 
 async function criar(page: Page, email: string): Promise<{ id: string; codigo: string }> {
+  const novo = page.getByRole('button', { name: 'Novo convite', exact: true });
+  if ((await novo.getAttribute('aria-expanded')) === 'false') {
+    await novo.click();
+    await expect(page.getByRole('heading', { name: 'Novo convite', exact: true })).toBeFocused();
+  }
   await page.getByLabel('E-mail do funcionário convidado').fill(email);
   const resposta = page.waitForResponse(
     (r) => r.url().endsWith('/equipe/convites') && r.request().method() === 'POST',
@@ -158,6 +163,7 @@ test('S01-UI17: administrador convida, funcionário verifica e entra sem privil�
 
 test('S01-UI41: seleção do perfil de convite persiste até aceite e login', async ({ page }) => {
   await admin(page);
+  await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
   await expect(page.getByLabel('Perfil do convite')).toHaveValue('COZINHA');
   await page.getByLabel('Perfil do convite').selectOption('EXPEDICAO');
   const email = crypto.randomUUID() + '@example.invalid',
@@ -205,6 +211,7 @@ test.describe('Fronteira de rede S01-UI18', () => {
   }) => {
     await admin(page);
     const email = crypto.randomUUID() + '@example.invalid';
+    await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
     await page.getByLabel('E-mail do funcionário convidado').fill(email);
 
     // Perde a resposta depois de confirmar a criação no servidor.
@@ -283,7 +290,8 @@ test.describe('Fronteira de rede S01-UI18', () => {
       .locator('form')
       .first()
       .screenshot({ path: test.info().outputPath('convites-reautenticacao.png') });
-    // Mesmo já visível, centralizar o campo inclui perfil/início das unidades no desktop.
+    await page.getByRole('button', { name: 'Novo convite', exact: true }).click();
+    // Centralizar o campo inclui perfil e início das unidades no desktop.
     await page
       .getByLabel('E-mail do funcionário convidado')
       .evaluate((element) => element.scrollIntoView({ block: 'center' }));
