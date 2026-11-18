@@ -1,6 +1,6 @@
 # Sprint 07 — Cozinha e expedição
 
-A cozinha usa as três etapas confirmadas pelo servidor e a expedição usa a linha expansível de Pedidos. O gesto de arrastar e os novos detalhes utilizam as APIs atuais. O tema escolhido no cabeçalho da equipe acompanha as duas telas.
+A cozinha usa as três etapas confirmadas pelo servidor e a expedição usa a linha expansível de Pedidos. O gesto de arrastar e os novos detalhes utilizam as APIs atuais. No menu Dia a dia, Cozinha aparece entre Mesas e comandas e Expedição para quem pode iniciar ou concluir preparo. A rota direta `/cozinha` compartilha a navegação e as cores da gestão nos dois temas.
 
 ## Operação e dados
 

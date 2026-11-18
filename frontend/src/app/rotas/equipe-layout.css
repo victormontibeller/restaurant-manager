@@ -30,8 +30,7 @@
   font-weight: 750;
   letter-spacing: -0.02em;
 }
-.workspace-brand small,
-.kitchen-brand small {
+.workspace-brand small {
   display: block;
   color: var(--rm-muted, #788175);
   font-size: 0.52rem;
@@ -51,7 +50,7 @@
 .nav-label {
   font-size: 0.61rem;
   letter-spacing: 0.12em;
-  color: #69786c;
+  color: var(--muted-foreground);
   font-weight: 650;
   margin: 1rem 0.9rem 0.6rem;
 }
@@ -68,21 +67,17 @@
   border-radius: 10px;
   min-height: 48px;
   text-decoration: none;
-  color: #5c6b60;
+  color: var(--muted-foreground);
   font-size: 0.83rem;
   font-weight: 550;
 }
 .sidebar nav a:hover {
-  background: #f5f7f2;
+  background: var(--muted);
 }
 .sidebar nav .active {
-  background: #eaf0e5;
-  color: #254d36;
+  background: var(--selecao-bg);
+  color: var(--primary);
   font-weight: 700;
-}
-.external-arrow {
-  margin-left: auto;
-  width: 15px;
 }
 .sidebar-bottom {
   margin-top: auto;
@@ -93,7 +88,7 @@
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  color: #344d3a;
+  color: var(--foreground);
   text-decoration: none;
   font-size: 0.73rem;
   padding: 0.8rem 0;
@@ -194,37 +189,6 @@ h1 {
   background: #fff;
   border-radius: 16px;
 }
-.kitchen-workplace {
-  display: block;
-  background: var(--background, #faf9f7);
-}
-.kitchen-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 750;
-  color: #254734;
-  text-decoration: none;
-}
-.kitchen-workplace .workspace-header {
-  background: #173e2c;
-  color: #fff;
-}
-.kitchen-workplace .kitchen-brand {
-  color: #fff;
-}
-.kitchen-workplace .kitchen-brand small {
-  color: #ccd9c4;
-}
-.kitchen-workplace .brand-mark {
-  background: #ffffff17;
-}
-.kitchen-workplace .unit-picker {
-  background: var(--card, #fff);
-}
-.kitchen-workplace .workspace-main {
-  margin: auto;
-}
 .open-menu,
 .close-menu,
 .sidebar-overlay {
@@ -279,7 +243,7 @@ h1 {
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: #102a2690;
+    background: rgb(27 22 20 / 55%);
     border: 0;
     width: 100%;
   }
@@ -315,53 +279,10 @@ h1 {
     margin-bottom: 1.2rem;
     align-items: flex-start;
   }
-  .kitchen-brand {
-    font-size: 0.8rem;
-  }
-  .kitchen-brand .brand-mark {
-    display: none;
-  }
-  .kitchen-workplace .workspace-header {
-    flex-wrap: wrap;
-  }
-  .kitchen-workplace .workspace-tools {
-    gap: 0.3rem;
-  }
-  .kitchen-workplace .unit-picker select {
-    max-width: 125px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .sidebar {
     transition: none;
-  }
-}
-
-.kitchen-workplace .workspace-tools > a[hlmBtn] {
-  white-space: nowrap;
-  padding-inline: 0.75rem;
-}
-
-.kitchen-workplace .workspace-tools > button[data-variant='ghost'] {
-  color: #ffffff;
-}
-
-.kitchen-workplace .page-heading {
-  display: none;
-}
-.kitchen-workplace .workspace-main {
-  max-width: none;
-  width: 100%;
-  padding: 16px 24px;
-}
-.kitchen-workplace .workspace-header {
-  min-height: 76px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-@media (max-width: 767px) {
-  .kitchen-workplace .workspace-main {
-    padding: 12px;
   }
 }
 
@@ -425,8 +346,8 @@ h1 {
   background: var(--muted);
 }
 .workplace[data-tema-gestao='escuro'] .sidebar nav a.active {
-  background: var(--accent);
-  color: var(--accent-foreground);
+  background: var(--selecao-bg);
+  color: var(--primary);
 }
 .workplace[data-tema-gestao='escuro'] :is(.user-avatar, .empty-access) {
   color: var(--foreground);
@@ -449,15 +370,4 @@ h1 {
   .gestao-compacta .unit-picker select {
     max-width: min(46vw, 215px);
   }
-}
-
-.kitchen-workplace[data-tema-gestao='escuro'] {
-  background: var(--background);
-}
-.kitchen-workplace[data-tema-gestao='escuro'] .unit-picker {
-  background: var(--card);
-}
-@media (max-width: 800px) {
-  .kitchen-workplace .workspace-header,
-  .kitchen-workplace .workspace-tools { flex-wrap: wrap; gap: 6px; }
 }

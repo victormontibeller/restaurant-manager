@@ -83,13 +83,7 @@ const equipes = new WeakMap<Page, boolean>();
 export async function navegarUi(page: Page, destino: string): Promise<void> {
   if (new URL(page.url()).pathname === destino) return;
   if (destino.startsWith('/gestao/') || destino === '/cozinha') {
-    if (new URL(page.url()).pathname === '/cozinha') {
-      await page.getByRole('link', { name: 'Gestão', exact: true }).click();
-      await expect(page).toHaveURL((url) => url.pathname === '/gestao/pedidos');
-    } else if (
-      !new URL(page.url()).pathname.startsWith('/gestao/') ||
-      new URL(page.url()).pathname === '/gestao/entrar'
-    ) {
+    if (!(await page.locator('app-equipe-layout').isVisible())) {
       const abrirEquipe = page.getByRole('link', { name: 'Abrir área da equipe', exact: true });
       if (!(await abrirEquipe.isVisible())) {
         await page.getByRole('link', { name: 'Área da equipe', exact: true }).click();
