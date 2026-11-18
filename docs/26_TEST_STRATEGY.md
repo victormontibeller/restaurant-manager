@@ -82,6 +82,8 @@ A tabela é o inventário inicial de superfícies. Durante a implementação, ca
 
 Para cada tela aplicável, verificar carregamento, vazio, sucesso, validação de entrada, erro recuperável, acesso negado, foco/teclado e responsividade. Testar as ações de negócio em sequência até o resultado, não somente o DOM inicial. Estados que não se aplicam precisam de justificativa; falha de implementação não é “não aplicável”.
 
+Na revisão das Sprints 06–09, a matriz inclui a consulta e edição da própria conta de cliente e equipe, alternância do tema ao navegar e recarregar, preparo integral e parcial por arraste ou teclado, leitura autorizada do detalhe da entrega, conferência do extrato por data/canal e comanda, filtros independentes de pendências/notificações e busca de produtos além da primeira página com ofertas distintas por unidade. Os campos verificáveis por tela estão nos documentos das [Sprints 06](28_SPRINT_06.md), [07](29_SPRINT_07.md), [08](30_SPRINT_08.md) e [09](31_SPRINT_09.md).
+
 ## Matriz de jornadas por ator
 
 | Ator | Percurso completo | Negativos mínimos |

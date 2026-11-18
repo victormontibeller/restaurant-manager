@@ -20,7 +20,7 @@ As sprints abaixo são incrementos de escopo, sem promessa de duração. Estimar
 | [Sprint 06](28_SPRINT_06.md) | Gestão compacta, conta e tema | Base integrada das sprints 01–04 | Perfil próprio completo e navegação entre gestão e cardápio no mesmo tema |
 | [Sprint 07](29_SPRINT_07.md) | Cozinha e expedição | Sprint 06 | Avanço por arraste e expedição com resumo por pedido |
 | [Sprint 08](30_SPRINT_08.md) | Vendas, movimentos e triagem | Sprint 06 | Evolução, extrato conciliável e filas independentes por unidade |
-| Sprint 09 | Catálogo e ofertas | Sprint 06 | Busca no catálogo inteiro, edição de produto e oferta no contexto de unidade |
+| [Sprint 09](31_SPRINT_09.md) | Catálogo e ofertas | Sprint 06 | Busca no catálogo inteiro, edição de produto e oferta no contexto de unidade |
 
 Para cada sprint: vincular requisitos a cenários, registrar testes executados/resultados, limitações e evidências da demonstração. Bugs que quebram isolamento, autorização, integridade financeira ou recuperação do fluxo entregue impedem aceite. Verificações fora do escopo implementado ficam explicitamente pendentes.
 

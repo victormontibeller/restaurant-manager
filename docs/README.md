@@ -54,7 +54,7 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 | [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | [PR #8 integrado](https://github.com/victormontibeller/restaurant-manager/pull/8) em `8888234`; [435 backend + 405 pares UI locais](evidencias/sprint-04-local-2026-11-09.md); Linux/homologação pendentes |
 | [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Preparação e [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md) concluídas; homologação Linux, serviços externos e piloto pendentes |
 
-O redesenho das Sprints 06–09 consta no [roadmap](13_ROADMAP.md). A [Sprint 06](28_SPRINT_06.md) registra quais dados ficam disponíveis nas telas por perfil.
+O redesenho das Sprints 06–09 consta no [roadmap](13_ROADMAP.md). As entregas detalham os dados disponíveis em [Conta e gestão](28_SPRINT_06.md), [Cozinha e expedição](29_SPRINT_07.md), [Vendas e pendências](30_SPRINT_08.md) e [Catálogo e ofertas](31_SPRINT_09.md).
 
 ## Decisões, evidências e manutenção
 
