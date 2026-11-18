@@ -285,7 +285,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .auth-casa-nome {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -300,7 +300,7 @@ import { HlmButton } from '../ui/button';
       gap: 0.7rem;
       padding: 0.72rem 0.85rem;
       border-radius: 14px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--background, #faf7f2);
       min-width: 0;
     }
@@ -314,7 +314,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--primary-deep, #7f2f20);
+      color: var(--primary-ink, #7f2f20);
       overflow-wrap: anywhere;
     }
     .mob-cracha-texto span {
@@ -335,7 +335,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     h2 {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -352,7 +352,7 @@ import { HlmButton } from '../ui/button';
       align-items: center;
       padding: 0.3rem 0.68rem;
       border-radius: 999px;
-      border: 1px solid #dfd3c3;
+      border: 1px solid var(--border, #dfd3c3);
       background: var(--secondary, #f0ebe3);
       color: var(--foreground, #292521);
       font-size: 0.76rem;
@@ -370,7 +370,7 @@ import { HlmButton } from '../ui/button';
     .cracha-picotado {
       padding: 1rem;
       border-radius: 16px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--card, #ffffff);
     }
     .cracha-kicker,
@@ -380,7 +380,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .ficha-lista {
       list-style: none;
@@ -432,12 +432,12 @@ import { HlmButton } from '../ui/button';
       font-size: 0.74rem;
       font-weight: 800;
       letter-spacing: 0.08em;
-      color: var(--primary-deep, #7f2f20);
+      color: var(--primary-ink, #7f2f20);
     }
     .passos-lista code {
       font-size: 0.8rem;
       font-weight: 700;
-      color: var(--primary-deep, #7f2f20);
+      color: var(--primary-ink, #7f2f20);
     }
     .etapa-bloco {
       min-width: 0;
@@ -459,7 +459,7 @@ import { HlmButton } from '../ui/button';
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.14em;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .etapa-meta {
       padding: 0.22rem 0.55rem;
@@ -504,7 +504,7 @@ import { HlmButton } from '../ui/button';
       min-width: 68px;
       padding: 0 0.65rem;
       border-radius: 12px;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       background: var(--secondary, #f0ebe3);
       color: var(--foreground, #292521);
       font-size: 0.82rem;
@@ -513,16 +513,16 @@ import { HlmButton } from '../ui/button';
       flex-shrink: 0;
     }
     button.pw-toggle:hover:not(:disabled) {
-      background: #e6dfd4;
-      border-color: var(--primary, #a53e2b);
-      color: var(--primary-deep, #7f2f20);
+      background: var(--muted, #e6dfd4);
+      border-color: var(--primary-ink, #a53e2b);
+      color: var(--primary-ink, #7f2f20);
       filter: none;
     }
     button.pw-toggle:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
@@ -530,7 +530,7 @@ import { HlmButton } from '../ui/button';
       width: 100%;
       min-width: 0;
       min-height: 48px;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       padding: 0.72rem 0.95rem;
       font: inherit;
@@ -544,16 +544,16 @@ import { HlmButton } from '../ui/button';
     input:focus-visible {
       outline: 3px solid var(--ring, #a53e2b);
       outline-offset: 2px;
-      border-color: var(--primary, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
     }
     input[aria-invalid='true'] {
-      border-color: #972626;
-      background: #fffbfa;
+      border-color: var(--danger-fg, #972626);
+      background: var(--danger-bg, #fffbfa);
     }
     .pw-medidor {
       height: 6px;
       border-radius: 999px;
-      background: #e5ded3;
+      background: var(--border, #e5ded3);
       overflow: hidden;
     }
     .pw-barra {
@@ -609,7 +609,7 @@ import { HlmButton } from '../ui/button';
       border: 1px solid var(--border, #e5ded3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     button[hlmBtn][data-variant='outline']:hover:not(:disabled) {
       background: var(--muted, #f3eee7);
@@ -617,26 +617,26 @@ import { HlmButton } from '../ui/button';
     }
     button[hlmBtn]:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
     .erro {
       margin: 0;
       padding: 0.85rem 1rem;
-      border: 1px solid #e8c7c1;
+      border: 1px solid var(--danger-border, #e8c7c1);
       border-radius: 12px;
-      background: #fff2f0;
-      color: #972626;
+      background: var(--danger-bg, #fff2f0);
+      color: var(--danger-fg, #972626);
       font-size: 0.9rem;
       font-weight: 600;
     }
     .sucesso-aviso {
       margin: 0;
       padding: 0.85rem 1rem;
-      border: 1px solid #c8d8c5;
+      border: 1px solid var(--accent-border, #c8d8c5);
       border-radius: 12px;
       background: var(--accent, #e8efe7);
       color: var(--accent-foreground, #30523b);

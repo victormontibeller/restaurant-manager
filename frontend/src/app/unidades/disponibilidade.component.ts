@@ -332,7 +332,7 @@ interface FuncionamentoPublico {
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     h2 {
       margin: 0.15rem 0 0.25rem;
@@ -417,12 +417,12 @@ interface FuncionamentoPublico {
       color: var(--accent-foreground, #30523b);
     }
     .canal-badge[data-aberto='fechado'] {
-      background: #fae9e6;
-      color: #9c2323;
+      background: var(--danger-bg, #fae9e6);
+      color: var(--danger-fg, #9c2323);
     }
     .canal-badge[data-aberto='desabilitado'] {
       background: var(--secondary, #f0ebe3);
-      color: #594e46;
+      color: var(--muted-foreground, #594e46);
     }
     .disp-lista {
       list-style: none;
@@ -459,10 +459,10 @@ interface FuncionamentoPublico {
     .erro {
       margin: 0;
       padding: 0.85rem 1rem;
-      border: 1px solid #ebc9c4;
+      border: 1px solid var(--danger-border, #ebc9c4);
       border-radius: 0.75rem;
-      background: #fff5f3;
-      color: var(--danger, #ad2929);
+      background: var(--danger-bg, #fff5f3);
+      color: var(--danger-fg, #ad2929);
       font-weight: 600;
     }
     .sr-select {
@@ -490,7 +490,7 @@ interface FuncionamentoPublico {
       min-height: 50px;
       padding: 0 44px 0 16px;
       border-radius: 999px;
-      border: 1px solid #ded5c8;
+      border: 1px solid var(--input, #ded5c8);
       background-color: var(--card, #ffffff);
       box-shadow: 0 3px 0 var(--border, #e5ded3);
       color: var(--foreground, #292521);
@@ -505,22 +505,22 @@ interface FuncionamentoPublico {
         background-color 0.15s ease;
     }
     .bistro-select-pill:hover {
-      border-color: var(--primary, #a53e2b);
-      background-color: #fffdfa;
+      border-color: var(--primary-ink, #a53e2b);
+      background-color: var(--popover, #fffdfa);
     }
     .bistro-select-pill.open,
     .bistro-select-pill:focus-within {
-      border-color: var(--primary, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
       box-shadow:
-        0 0 0 3px #fbefec,
-        0 3px 0 #e3bfb7;
+        0 0 0 3px var(--primary-soft, #fbefec),
+        0 3px 0 var(--primary-soft-border, #e3bfb7);
     }
     .bistro-select-pill.disabled {
       opacity: 0.65;
       cursor: not-allowed;
     }
     .bistro-select-pill.disabled:hover {
-      border-color: #ded5c8;
+      border-color: var(--input, #ded5c8);
       background-color: var(--card, #ffffff);
     }
     .bistro-select-pill select.sr-select {
@@ -530,7 +530,7 @@ interface FuncionamentoPublico {
       outline: none;
     }
     .bistro-select-ico {
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       flex: none;
     }
     .bistro-select-val {
@@ -544,7 +544,7 @@ interface FuncionamentoPublico {
     .bistro-select-chev {
       position: absolute;
       right: 16px;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       pointer-events: none;
       transition: transform 0.18s ease;
     }
@@ -562,8 +562,8 @@ interface FuncionamentoPublico {
       overflow-y: auto;
       padding: 8px;
       border-radius: 20px;
-      border: 1px solid #ded5c8;
-      background-color: var(--card, #ffffff);
+      border: 1px solid var(--border, #ded5c8);
+      background-color: var(--popover, var(--card, #ffffff));
       box-shadow:
         0 20px 44px -12px rgba(41, 37, 33, 0.2),
         0 4px 12px rgba(41, 37, 33, 0.08);
@@ -600,11 +600,11 @@ interface FuncionamentoPublico {
       cursor: pointer;
     }
     .bistro-select-opt:hover {
-      background-color: var(--background, #faf7f2) !important;
+      background-color: var(--secondary, #f0ebe3) !important;
     }
     .bistro-select-opt.on {
-      background-color: #fbefec !important;
-      color: var(--primary, #a53e2b) !important;
+      background-color: var(--primary-soft, #fbefec) !important;
+      color: var(--primary-ink, #a53e2b) !important;
       font-weight: 750 !important;
     }
     .bistro-select-opt-main {
@@ -614,7 +614,7 @@ interface FuncionamentoPublico {
       min-width: 0;
     }
     .bistro-select-opt-main svg {
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       flex: none;
     }
     .bistro-select-opt-check {

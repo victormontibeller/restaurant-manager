@@ -104,7 +104,7 @@ import { MarcaService } from './marca.service';
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
 
     h1 {
@@ -148,16 +148,16 @@ import { MarcaService } from './marca.service';
     }
 
     .barra-conexao-status app-icone {
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
 
     .erro {
       margin: 0;
       padding: 0.85rem 1rem;
       border-radius: 0.9rem;
-      background: #fae9e6;
-      border: 1px solid #ecc6bf;
-      color: #9c2323;
+      background: var(--danger-bg, #fae9e6);
+      border: 1px solid var(--danger-border, #ecc6bf);
+      color: var(--danger-fg, #9c2323);
       font-size: 0.92rem;
       font-weight: 600;
     }
@@ -185,7 +185,7 @@ import { MarcaService } from './marca.service';
       display: grid;
       place-items: center;
       background: var(--secondary, #f0ebe3);
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       flex: none;
     }
 

@@ -15,6 +15,7 @@ As entregas abaixo já seguem a paleta oficial (`#faf7f2` linho, `#292521` carv�
 - **Tokens globais & UI base:** [`styles.css`](../../../frontend/src/styles.css), [`ui/button.ts`](../../../frontend/src/app/ui/button.ts), [`ui/tabs.ts`](../../../frontend/src/app/ui/tabs.ts) e [`rotas/marca.service.ts`](../../../frontend/src/app/rotas/marca.service.ts).
 - **Área do Cliente (Vitrine & Comanda):** [`cliente-layout.component.ts`](../../../frontend/src/app/rotas/cliente-layout.component.ts), [`cliente-layout.css`](../../../frontend/src/app/rotas/cliente-layout.css), [`vitrine.component.html`](../../../frontend/src/app/catalogo/vitrine.component.html), [`vitrine.css`](../../../frontend/src/app/catalogo/vitrine.css), [`configurador-produto.component.ts`](../../../frontend/src/app/catalogo/configurador-produto.component.ts) e [`carrinho.component.ts`](../../../frontend/src/app/carrinho/carrinho.component.ts) / [`carrinho.css`](../../../frontend/src/app/carrinho/carrinho.css) — ver [relatório de `/cardapio`](2026-11-14-cardapio-vitrine-e-comanda.md).
 - **Identidade Principal & Endereços:** [`identidade.component.ts`](../../../frontend/src/app/identidade/identidade.component.ts) (`/entrar`, `/gestao/entrar`, `/conta`) e [`enderecos.component.html`](../../../frontend/src/app/delivery/enderecos.component.html) / [`enderecos.component.ts`](../../../frontend/src/app/delivery/enderecos.component.ts) — ver [relatório de `/conta` e `/entrar`](2026-11-14-conta-dossie-multi-tenant-e-seguranca.md).
+- **Tema Dark Global, Shell da Equipe & Painel KDS (Sprint 3 concluída):** [`ui/tema.ts`](../../../frontend/src/app/ui/tema.ts), [`equipe-layout.component.html`](../../../frontend/src/app/rotas/equipe-layout.component.html) / [`equipe-layout.css`](../../../frontend/src/app/rotas/equipe-layout.css), [`cozinha.component.html`](../../../frontend/src/app/cozinha/cozinha.component.html) / [`cozinha.component.css`](../../../frontend/src/app/cozinha/cozinha.component.css) e [`cartao-cozinha.component.ts`](../../../frontend/src/app/cozinha/cartao-cozinha.component.ts) / [`.html`](../../../frontend/src/app/cozinha/cartao-cozinha.component.html) / [`.css`](../../../frontend/src/app/cozinha/cartao-cozinha.component.css) — ver [relatório da Sprint 3](2026-11-18-sprint3-equipe-kds-e-tema-dark.md).
 
 ### 1.2 Diagnóstico das pendências restantes (varredura estática verificada)
 
@@ -52,11 +53,11 @@ flowchart LR
 | --- | --- | --- | --- |
 | **Sprint 1** | Fundação global, `styles.css`, shells utilitários e subtelas de auth | 10 arquivos (`styles.css`, `main.ts`, `pwa`, `pagina-informativa`, `paginas-cliente`, `ui/catalogo`, 4 subcomponentes de `identidade/`) | `test_identity_forms.cjs`, `test_pwa.cjs`, `e2e-cadastro`, `e2e-recuperacao`, `e2e-verificacao`, `e2e-convites` |
 | **Sprint 2** | Checkout, Checkout Pro, Meus Pedidos, Mesa Participante e Horários Públicos | 8 blocos (`operacao.css` base, `confirmar-pedido`, `meus-pedidos`, `pagina-pedido`, `pedido-detalhe` visão pessoal, `pagamento-pedido`, `participante-mesa`, `disponibilidade`) | `test_mesa_navigation_templates.cjs`, `test_order_recovery.cjs`, `test_pending_intentions.cjs`, `test_public_hours.cjs`, `test_mesa_context.cjs`, `e2e-pedidos`, `e2e-sprint04` |
-| **Sprint 3** | Shell da Equipe (`equipe-layout`) e Painel KDS da Cozinha (`/cozinha`) | 3 grupos / 9 arquivos (`equipe-layout.*`, `cozinha.component.*`, `cartao-cozinha.component.*`) | `test_route_shell.cjs`, `test_kitchen_templates.cjs`, `test_kitchen_board.cjs` |
-| **Sprint 4** | Gestão Operacional Diária: Pedidos, Salão/Mesas, Expedição, Financeiro, Pendências e Vendas | 7 componentes + `paginas-gestao.ts` (`operacao-pedidos`, `pedido-detalhe` operação, `mesas`, `expedicao`, `financeiro`, `pendencias`, `vendas`) | `test_mesa_navigation_templates.cjs`, `test_mesa_pagination.cjs`, `test_order_recovery.cjs`, `test_delivery_reports.cjs`, `test_snapshot_queue.cjs` |
-| **Sprint 5** | Gestão Comercial: Catálogo Admin, Mídia, Delivery Config, Prazos e Mercado Pago | 11 arquivos (`gestao-catalogo.*`, `catalogo.css` admin, 6 editores inline, `config-delivery`, `prazos-aceite`, `integracao`) | `test_catalog_media.cjs`, `test_catalog_recovery.cjs`, `test_catalog_cart.cjs`, `e2e-catalogo` |
-| **Sprint 6** | Gestão Corporativa (JIT estrito): Equipe/Permissões, Convites, Unidades, Funcionamento e Eventos | 5 componentes (`acessos`, `convites`, `unidades`, `funcionamento`, `eventos-unidade`) | `test_profile_selects.cjs`, `test_inactive_memberships.cjs`, `test_unit_schedule_templates.cjs`, `test_unit_schedule.cjs`, `test_unit_export.cjs`, `test_unit_events.cjs` |
-| **Sprint 7** | Console da Plataforma SaaS (`/plataforma`) e Auditoria Final Global (WCAG AA, 0 legado, PWA) | 3 arquivos (`plataforma-layout`, `plataforma`, `provisionamento`) + varredura transversal completa | `test_platform_session.cjs`, `test_profile_selects.cjs`, `check_contrast.cjs`, `check-repository.py`, `build-pwa.cjs` |
+| **Sprint 3** | **Tema Dark Global (Sprints 1–3)** + Shell da Equipe (`equipe-layout`) + Painel KDS (`/cozinha` por clique e arraste mouse/touch) | `styles.css`, `ui/tema.ts`, retrofit dark das Sprints 1–2.1 + `equipe-layout.*`, `cozinha.component.*`, `cartao-cozinha.component.*` | `test_route_shell.cjs`, `test_kitchen_templates.cjs`, `test_kitchen_board.cjs`, `check_contrast.cjs` |
+| **Sprint 4** | Gestão Operacional Diária (Light + Dark): Pedidos, Pedido Assistido, Salão/Mesas, Expedição, Financeiro, Pendências e Vendas | 7 componentes + `paginas-gestao.ts` (`operacao-pedidos`, `pedido-detalhe` operação, `mesas`, `expedicao`, `financeiro`, `pendencias`, `vendas`) | `test_mesa_navigation_templates.cjs`, `test_mesa_pagination.cjs`, `test_order_recovery.cjs`, `test_delivery_reports.cjs`, `test_snapshot_queue.cjs` |
+| **Sprint 5** | Gestão Comercial (Light + Dark): Catálogo Admin com fotos, Mídia, Delivery Config, Prazos SLA e Mercado Pago | 11 arquivos (`gestao-catalogo.*`, `catalogo.css` admin, 6 editores inline, `config-delivery`, `prazos-aceite`, `integracao`) | `test_catalog_media.cjs`, `test_catalog_recovery.cjs`, `test_catalog_cart.cjs`, `e2e-catalogo` |
+| **Sprint 6** | Gestão Corporativa JIT (Light + Dark): Equipe/Permissões, Convites, Unidades, Funcionamento e Eventos | 5 componentes (`acessos`, `convites`, `unidades`, `funcionamento`, `eventos-unidade`) | `test_profile_selects.cjs`, `test_inactive_memberships.cjs`, `test_unit_schedule_templates.cjs`, `test_unit_schedule.cjs`, `test_unit_export.cjs`, `test_unit_events.cjs` |
+| **Sprint 7** | Console da Plataforma SaaS (`/plataforma`) e Auditoria Final Global (Light + Dark WCAG AA, 0 legado, PWA) | 3 arquivos (`plataforma-layout`, `plataforma`, `provisionamento`) + varredura transversal completa | `test_platform_session.cjs`, `test_profile_selects.cjs`, `check_contrast.cjs`, `check-repository.py`, `build-pwa.cjs` |
 
 ---
 
@@ -65,33 +66,31 @@ flowchart LR
 0. **Gate Obrigatório de Abertura de Sprint — Planejamento + Representação Visual Pré-Código:**
    - Ao iniciar **qualquer Sprint**, **ANTES de modificar qualquer arquivo do sistema (`frontend/` ou código)**, o coordenador/agente deve:
      1. Inspecionar as telas reais atuais (se aplicável, gerar ou consultar as capturas `"Antes"`);
-     2. Apresentar ao usuário o **planejamento detalhado da Sprint acompanhado de uma representação visual clara** do resultado proposto (protótipo visual HTML interativo, mockup/esquema visual comparativo ou wireframe fiel aos tokens `#faf7f2`/`#292521`/`#a53e2b`/`#30523b` para Desktop `1280px`, Tablet `768px` e Celular `360px`);
+     2. Apresentar ao usuário o **planejamento detalhado da Sprint acompanhado de uma representação visual clara e interativa** do resultado proposto (com todos os menus/ações daquele escopo clicáveis, zero elementos cortados/espremidos e alternância **Tema Claro × Tema Dark** em Desktop `1280px`, Tablet `768px` e Celular `360px`);
      3. **Parar e aguardar a aprovação explícita do usuário** sobre a representação visual. **Somente após aprovada**, seguir para as alterações de código no repositório.
    - **Fluxo Git e PR:** os avanços aprovados de cada Sprint são salvos por meio de **commits locais** na branch `feat/frontend-bistro-sprints`; **o Pull Request será aberto uma única vez apenas após a conclusão de todas as sprints** (sem PRs intermediários por sprint).
 1. **Proibido alterar `backend/`:** Toda alteração deste roadmap ocorre somente em `frontend/` e `docs/`. Se surgir necessidade de novo campo, filtro ou endpoint, registrar/referenciar em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md) e implementar fallback visual resiliente no frontend.
 2. **Divisão estrita Coordenador × `artesao-ux-bistro`:**
    - O subagente especialista `artesao-ux-bistro` possui bloqueio determinístico por hook (`guardiao_frontend.cjs`) contra edições em `backend/`, `*.service.ts`, `modelos.ts`, `guardas.ts`, `*.routes.ts`, `scripts/`, `package.json`, `angular.json` e `service-worker.js`.
-   - **Coordenador (chat principal da Sprint)** executa primeiro eventuais ajustes leves de camada lógica/estrutura permitida no frontend (ex.: adicionar um computed puramente visual em componente se estritamente necessário, preparar chamada opcional tolerante a `404`/`405`/`501` em `.service.ts` apenas quando aplicável) **ou** conduz a integração e validação final.
-   - **`artesao-ux-bistro`** executa todo o trabalho visual (`.html`, `.css`, `template:`/`styles:` inline, `MarcaService`/`HlmButton` visuais), realiza auditoria em `360px × 800`, `768px × 1024` e `1280px × 900` e entrega o relatório obrigatório em `docs/evidencias/frontend/YYYY-MM-DD-<tela>-<melhoria>.md`.
-3. **Contrato crítico de compilação JIT (`esbuild`) — NÃO extrair templates para `.html` nos 11 componentes abaixo:**
-   Os scripts `scripts/test_profile_selects.cjs`, `scripts/test_identity_forms.cjs` e `scripts/test_unit_schedule_templates.cjs` compilam componentes via `esbuild` **sem** resolver `templateUrl`/`styleUrl`. Mantenha **`template:` e `styles:` inline** em:
-   - `frontend/src/app/identidade/identidade.component.ts`
-   - `frontend/src/app/identidade/cadastro.component.ts`
-   - `frontend/src/app/identidade/recuperacao.component.ts`
-   - `frontend/src/app/identidade/aceitar-convite.component.ts`
-   - `frontend/src/app/identidade/verificacao.component.ts`
-   - `frontend/src/app/acessos/acessos.component.ts`
-   - `frontend/src/app/acessos/convites.component.ts`
-   - `frontend/src/app/unidades/unidades.component.ts`
-   - `frontend/src/app/unidades/funcionamento.component.ts`
-   - `frontend/src/app/plataforma/plataforma.component.ts`
-   - `frontend/src/app/plataforma/provisionamento.component.ts`
-   *(Além disso, `test_kitchen_templates.cjs` e `test_mesa_navigation_templates.cjs` resolvem `templateUrl` via regex apenas para `(?:cozinha|cartao-cozinha)\.component\.ts$` e `(?:mesas|confirmar-pedido)\.component\.ts$` — portanto não importe novos subcomponentes com `.html` externo nesses arquivos.)*
-4. **Regra Multi-Tenant (White-Label):** Zero nomes fixos de demonstração (ex.: `"Bistrô Montibeller"`) e zero monogramas estáticos `'M'`. Usar sempre `MarcaService` (`marca.nome()`, `marca.iniciais()`, `marca.logoUrl()`) ou ícones/rótulos neutros aplicáveis a restaurantes, pizzarias e hamburguerias.
-5. **Orçamento PWA, Prettier e Node local:**
-   - Orçamento em [`frontend/angular.json`](../../../frontend/angular.json): `maximumWarning: 450kB`, `maximumError: 600kB` para chunk inicial. Prefira classes utilitárias enxutas e tokens CSS herdados de `styles.css` a duplicação pesada de CSS por componente.
-   - Escopo real do `npm --prefix frontend run format:check` (em [`frontend/package.json`](../../../frontend/package.json)): cobre `src/**/*.ts`, `{pedidos,mesas,cozinha,financeiro,delivery,pagamentos,relatorios}/**/*.{html,css}`, `unidades/prazos-aceite.component.{html,css}`, `operacao.css`, `e2e*/**/*.ts`, `playwright*.config.ts` e `../scripts/test*.cjs`. Para arquivos HTML/CSS fora desse glob (ex.: `rotas/`, `catalogo/`), rodar Prettier explicitamente neles também.
-   - Em ambiente Windows local com Node `v24.12.0` (onde `@angular/cli` pede `>= 26.0.0`), validar sempre: `typecheck`, `ngc.js -p frontend/tsconfig.app.json --noEmit`, `test:logic`, sondas JIT e build AOT via `ng.js build` + `build-pwa.cjs` com shim em memória ou runtime Node compatível, deixando explícita qualquer limitação de ambiente no relatório.
+   - **Coordenador (chat principal da Sprint)** executa primeiro eventuais ajustes leves de camada lógica/estrutura permitida no frontend (ex.: utilitário `ui/tema.ts` sem DI, handlers de drag/touch idempotentes no KDS, computed visual em componente) **ou** conduz a integração e validação final.
+   - **`artesao-ux-bistro`** executa todo o trabalho visual (`.html`, `.css`, `template:`/`styles:` inline, `MarcaService`/`HlmButton` visuais), realiza auditoria em `360px × 800`, `768px × 1024` e `1280px × 900` nos temas **Claro e Dark** e entrega o relatório obrigatório em `docs/evidencias/frontend/YYYY-MM-DD-<tela>-<melhoria>.md`.
+3. **Contrato crítico de compilação JIT (`esbuild`) e probes `vm.runInNewContext`:**
+   - Os scripts `scripts/test_profile_selects.cjs`, `scripts/test_identity_forms.cjs` e `scripts/test_unit_schedule_templates.cjs` compilam componentes via `esbuild` **sem** resolver `templateUrl`/`styleUrl`. Mantenha **`template:` e `styles:` inline** em:
+     - `frontend/src/app/identidade/{identidade,cadastro,recuperacao,aceitar-convite,verificacao}.component.ts`
+     - `frontend/src/app/acessos/{acessos,convites}.component.ts`
+     - `frontend/src/app/unidades/{unidades,funcionamento}.component.ts`
+     - `frontend/src/app/plataforma/{plataforma,provisionamento}.component.ts`
+   - `test_kitchen_templates.cjs` e `test_mesa_navigation_templates.cjs` resolvem `templateUrl` via regex apenas para `(?:cozinha|cartao-cozinha)\.component\.ts$` e `(?:mesas|confirmar-pedido)\.component\.ts$` — não importe novos subcomponentes com `.html` externo nesses arquivos.
+   - `test_route_shell.cjs` valida `inject()` com lista fechada de tokens em `equipe-layout.component.ts` — portanto o controle de tema (`Claro / Dark`) deve usar módulo utilitário reativo puro sem `inject()` (ex.: `frontend/src/app/ui/tema.ts`).
+4. **Regra Multi-Tenant (White-Label) & Limpeza de Poluição Visual:** Zero nomes fixos de demonstração e zero monogramas estáticos `'M'`. Remover de todas as telas: títulos `<h1>`/`<h2>` duplicados em cascata, frases decorativas sem função operacional, UUIDs de 36 caracteres em evidência principal, timestamps ISO crus (`2026-11-18T...Z`), enums internos em caixa alta (`PEDIDO_CRIADO`) e resumos redundantes.
+5. **Tema Claro & Tema Dark Bistrô Oficial (Todo o Frontend — Passado e Futuro):**
+   - **Claro (`:root`):** `--background: #faf7f2`, `--card: #ffffff`, `--secondary: #f0ebe3`, `--muted: #f3eee7`, `--foreground: #292521`, `--muted-foreground: #6e6259`, `--primary: #a53e2b`, `--accent: #e8efe7` / `--accent-foreground: #30523b`, `--border: #e5ded3`.
+   - **Dark (`:root[data-theme='dark']`):** `--background: #161311` (espresso profundo), `--card: #201c19` (carvão quente elevado), `--secondary: #2a2420`, `--muted: #26201d`, `--foreground: #f5efe6` (linho claro AA), `--muted-foreground: #b5a798` (taupe claro AA), `--primary: #d4563f` (botões primários `#b8432e` com texto `#ffffff` AA), `--accent: #1e3325` / `--accent-foreground: #86cfa0`, `--border: #362e29`, `--input: #4a3f38`.
+   - Persistência em `localStorage('rm-tema')` com fallback em `prefers-color-scheme` e botão acessível de alternância (`Claro / Escuro`) em Cliente, Gestão, Cozinha e Plataforma.
+6. **Orçamento PWA, Prettier e Node local:**
+   - Orçamento em [`frontend/angular.json`](../../../frontend/angular.json): `maximumWarning: 450kB`, `maximumError: 600kB` para chunk inicial.
+   - Escopo real do `npm --prefix frontend run format:check` (em [`frontend/package.json`](../../../frontend/package.json)): rodar Prettier explicitamente também nos arquivos `.html`/`.css` fora do glob padrão (ex.: `rotas/`, `catalogo/`).
+   - Em ambiente Windows local com Node `v24.12.0`, validar sempre `typecheck`, `ngc -p frontend/tsconfig.app.json --noEmit`, `test:logic`, sondas JIT e build AOT + `build-pwa.cjs`.
 
 ---
 
@@ -195,240 +194,226 @@ Finalize validando `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, to
 
 ---
 
-### Sprint 3 — Shell da Equipe (`equipe-layout`) & Painel KDS da Cozinha (`/cozinha`)
+### Sprint 3 — Tema Dark Global (Sprints 1–3), Shell da Equipe (`equipe-layout`) & Painel KDS (`/cozinha`) *(Concluída — [relatório](2026-11-18-sprint3-equipe-kds-e-tema-dark.md))*
 
-**Objetivo:** Migrar completamente o portal autenticado da equipe (`/gestao/*` e `/cozinha`) e o Painel KDS da Cozinha do esquema verde legado (`#173e2c`, `#285139`, `#263b30`, `#294b38`, `#f7f8f4`, foco azul `#2558ad`) para a identidade profissional bistrô em carvão, linho, terracota e sálvia (`#292521`, `#faf7f2`, `#a53e2b`, `#30523b`), removendo o texto fixo `"Restaurante /"` do breadcrumb.
+**Objetivo:** (1) Instituir o **Tema Dark Bistrô Editorial (`:root[data-theme='dark']`)** em todo o frontend já entregue (Sprints 1, 2 e 2.1) e nas novas áreas; (2) migrar o Shell da Equipe (`/gestao/*` e `/cozinha`) do verde legado para os tokens oficiais Claro + Dark, eliminando frases/títulos redundantes e mantendo os 13 menus organizados e claros; e (3) modernizar o **Painel KDS da Cozinha (`/cozinha`)** com botões empilhados de largura total (`100%`, zero corte/esmagamento em qualquer largura) e **avanço de status tanto por CLIQUE quanto ARRASTANDO o cartão com mouse (desktop) ou gesto touch/swipe (tablet e celular)**.
 
 #### Escopo de Arquivos
 | Arquivo | Intervenção planejada | Restrição |
 | --- | --- | --- |
-| [`frontend/src/app/rotas/equipe-layout.component.html`](../../../frontend/src/app/rotas/equipe-layout.component.html), [`.ts`](../../../frontend/src/app/rotas/equipe-layout.component.ts) & [`.css`](../../../frontend/src/app/rotas/equipe-layout.css) | Substituir **todas as 17 ocorrências** de hex verde por barra/gaveta em carvão (`#292521`), ativo em terracota/creme, área principal em linho (`#faf7f2`); trocar `"Restaurante /"` por referência multi-tenant via `marca.nome()`; melhorar seletor de unidade, badge SSE ao vivo e gaveta mobile `>= 48px` | Preservar 100% da lógica de ativação/roteamento verificada por `test_route_shell.cjs` e `ContextoOperacaoService` |
-| [`frontend/src/app/cozinha/cozinha.component.html`](../../../frontend/src/app/cozinha/cozinha.component.html), [`.css`](../../../frontend/src/app/cozinha/cozinha.component.css) & [`.ts`](../../../frontend/src/app/cozinha/cozinha.component.ts) | Converter topo, filtros, colunas `.coluna` e abas `@spartan-ng/brain/tabs` de `#263b30`/`#294b38`/`#e7ebe5` para linho/carvão de alto contraste; aprimorar barra compacta de áudio/atualização/SSE em `360px` | Preservar nomes exatos das abas `'Na fila (N)'`, `'Em preparo (N)'`, `'Prontos (N)'`, classe `.coluna`, combobox `'Canal'`, botões `'Atualizar'`, `'Ativar som'`/`'Desativar som'` e não adicionar subcomponentes externos |
-| [`frontend/src/app/cozinha/cartao-cozinha.component.html`](../../../frontend/src/app/cozinha/cartao-cozinha.component.html), [`.css`](../../../frontend/src/app/cozinha/cartao-cozinha.component.css) & [`.ts`](../../../frontend/src/app/cozinha/cartao-cozinha.component.ts) | Cartão estilo ficha de passe de cozinha (linho/papel branco, borda lateral de canal `MESA`/`RETIRADA`/`DELIVERY`, foco visível `--ring` `#a53e2b` em vez de `#2558ad`, observações destacadas em tarja quente, badge `'Novo'` de alta visibilidade, botões `>= 48px`) | Preservar rótulos exatos de `test_kitchen_templates.cjs`: `'Selecionar quantidades'`, `'Iniciar selecionadas (N)'`, `'Concluir em preparo (N)'`, `'Iniciar pedido (N)'`, `'Recuperar resultado da mesma ação'` e texto `'Unidade ... Na fila'` |
+| [`frontend/src/styles.css`](../../../frontend/src/styles.css), `frontend/src/app/ui/tema.ts` & retrofit dark (`vitrine.css`, `carrinho.css`, `operacao.css`, `pedido-detalhe.component.css`, `cliente-layout.*`, `identidade/*`) | Adicionar tokens `:root[data-theme='dark']`, utilitário reativo sem DI (`ui/tema.ts`, persistido em `localStorage('rm-tema')`), botão `Claro / Escuro` no header de Cliente e Equipe/Cozinha, e substituir fundos/textos claros hardcoded nas telas das Sprints 1–2.1 por variáveis semânticas | Módulo `tema.ts` **não deve usar `inject()`** em `equipe-layout` para preservar `test_route_shell.cjs` |
+| [`frontend/src/app/rotas/equipe-layout.component.html`](../../../frontend/src/app/rotas/equipe-layout.component.html), [`.ts`](../../../frontend/src/app/rotas/equipe-layout.component.ts) & [`.css`](../../../frontend/src/app/rotas/equipe-layout.css) | Substituir todas as ocorrências verdes por Claro/Dark Bistrô; trocar `"Restaurante /"` por `marca.nome()`; **suprimir `.page-heading` duplicado quando `cozinha === true`** (evitando empilhar `<h1>Cozinha</h1>` sobre `<h1>Produção</h1>`); remover frases decorativas (`"SEU RESTAURANTE, EM SINTONIA"`, `"Uma boa experiência começa nos detalhes."`); organizar todos os menus (`Dia a dia` e `Administração`) com ícones distintos e gaveta mobile `>= 48px` | Preservar 100% `test_route_shell.cjs`, `Abrir menu de gestão`, `.close-menu`, `Gestão do restaurante`, `Unidade da operação` e `Sair da conta` |
+| [`frontend/src/app/cozinha/cozinha.component.html`](../../../frontend/src/app/cozinha/cozinha.component.html), [`.css`](../../../frontend/src/app/cozinha/cozinha.component.css) & [`.ts`](../../../frontend/src/app/cozinha/cozinha.component.ts) | Barra enxuta de `Produção` + status SSE compacto `"Ao vivo"` + `Canal` + `Ativar/Desativar som` + `Tela cheia` + `Atualizar` + toggle `Claro/Dark`; zonas de **drop (`dragover`/`drop`) nas colunas `.coluna` (desktop) e nas abas/swipe (tablet e celular)** conectadas de forma idempotente ao avanço de etapa (`Na fila` → `Em preparo` → `Prontos`) | Preservar abas `'Na fila (N)'`, `'Em preparo (N)'`, `'Prontos (N)'`, `.coluna`, combobox `'Canal'` (`>= 300px` em `360px`), `'Atualizar'`, `'Ativar som'`/`'Desativar som'` e zero novos subcomponentes externos |
+| [`frontend/src/app/cozinha/cartao-cozinha.component.html`](../../../frontend/src/app/cozinha/cartao-cozinha.component.html), [`.css`](../../../frontend/src/app/cozinha/cartao-cozinha.component.css) & [`.ts`](../../../frontend/src/app/cozinha/cartao-cozinha.component.ts) | Ficha de passe KDS Claro/Dark; **botões empilhados em `width: 100%`** (primário `Iniciar pedido (N)` / `Concluir em preparo (N)` em destaque total na linha superior + secundário `Selecionar quantidades` abaixo, **nunca lado a lado espremidos**); suporte a `draggable` (mouse) + gesto horizontal touch com feedback visual (`Solte para avançar`); ocultar resumo redundante `"X na fila · 0 em preparo · 0 prontas"` quando 100% homogêneo (exibindo apenas em preparo parcial misto) e limpar textos burocráticos fixos dentro de `Histórico` | Preservar rótulos exatos de `test_kitchen_templates.cjs`: `'Selecionar quantidades'`, `'Iniciar selecionadas (N)'`, `'Concluir em preparo (N)'`, `'Iniciar pedido (N)'`, `'Concluir selecionadas (N)'`, `'Recuperar resultado da mesma ação'` e `'Unidade ... Na fila'` |
 
 #### Divisão Coordenador × `artesao-ux-bistro`
-- **Coordenador:** Validar se `EquipeLayoutComponent` ou `CozinhaComponent` exige ajuste em `.ts` para `HlmButton` / classes ou breadcrumb dinâmico mantendo `test_route_shell.cjs` verde; rodar bateria completa de cozinha.
-- **`artesao-ux-bistro`:** Migração integral de `equipe-layout.*` e `cozinha/*` + relatório em `docs/evidencias/frontend/`.
+- **Coordenador:** Criar `frontend/src/app/ui/tema.ts` (zero DI), expor helpers de tema em `ClienteLayoutComponent` e `EquipeLayoutComponent`, implementar handlers seguros/idempotentes de drag-and-drop mouse + swipe/touch entre etapas em `CozinhaComponent`/`CartaoCozinhaComponent` (respeitando `bloqueado()`, `tem('iniciar'|'concluir')` e `parcial()`), e conduzir a bateria completa de testes.
+- **`artesao-ux-bistro`:** Camada visual Light + Dark em `styles.css`, retrofit dark das Sprints 1–2.1, `equipe-layout.*` e `cozinha/*` + relatório nominal Antes × Depois em `docs/evidencias/frontend/`.
 
 #### Dependências de Backend
 - **Opcional (`BE-14`):** Contadores por unidade no menu lateral podem enriquecer futuramente a barra do `equipe-layout`, sem impedir a conclusão integral desta Sprint.
 
 #### Critérios de Aceite & Gates de Validação
 - Zero ocorrências de hex verdes/azuis legados (`#173e2c`, `#285139`, `#263b30`, `#294b38`, `#2558ad`, `#f7f8f4`) em `equipe-layout.css`, `cozinha.component.css` e `cartao-cozinha.component.css`.
-- Passar obrigatoriamente: `format:check` (incluindo prettier nos arquivos `rotas/equipe-layout.*`), `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_route_shell.cjs`, `node scripts/test_kitchen_templates.cjs`, `node scripts/test_kitchen_board.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` e `check-repository.py`.
+- Nenhum botão truncado ou espremido em `360px`, `768px`, `820px` (split-screen) ou `1280px`; avanço funcional por clique e por arraste (mouse e touch); contraste WCAG AA aprovado nos temas **Claro e Dark** (incluindo `/cardapio`, `/carrinho`, `/pedidos`, `/mesa`, `/gestao/*` e `/cozinha`).
+- Passar obrigatoriamente: `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_route_shell.cjs`, `node scripts/test_kitchen_templates.cjs`, `node scripts/test_kitchen_board.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` (Light + Dark) e `check-repository.py`.
 
 #### Prompt Pronto para Novo Chat — Sprint 3
 ```markdown
-Você está executando a **Sprint 3 — Shell da Equipe (`equipe-layout`) & Painel KDS da Cozinha (`/cozinha`)** do frontend de `SAAS Restaurante MB`.
+Você está executando a **Sprint 3 — Tema Dark Global (Sprints 1–3), Shell da Equipe (`equipe-layout`) & Painel KDS da Cozinha (`/cozinha`)** do frontend de `SAAS Restaurante MB`.
 
 ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
-- Leia os arquivos abaixo, inspecione o estado atual (incluindo `sprint3-antes-*` se disponíveis) e apresente ao usuário o planejamento da Sprint 3 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) das telas propostas.
+- Leia os arquivos abaixo, inspecione o estado atual e apresente ao usuário o planejamento da Sprint 3 com uma **representação visual interativa** (cobrindo Tema Claro + Tema Dark, KDS com avanço por clique e arraste mouse/touch sem botões espremidos, e navegação funcional pelos menus do Shell em `1280px`/`768px`/`360px`).
 - **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo de sistema em `frontend/`.
 
 Leia antes de planejar/editar:
-1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
+1. `AGENTS.md`, `.agents/rules/atelier-bistro-frontend.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 3) e `docs/evidencias/painel-cozinha-2026-11-10.md`.
-3. `scripts/test_route_shell.cjs`, `scripts/test_kitchen_templates.cjs` e `scripts/test_kitchen_board.cjs` (ATENÇÃO máxima aos rótulos exatos e seletores dos testes!).
+3. `scripts/test_route_shell.cjs`, `scripts/test_kitchen_templates.cjs` e `scripts/test_kitchen_board.cjs`.
 
 Regras invioláveis:
-- Zero alterações em `backend/` ou serviços/rotas (`equipe-layout` preserva intacto `ContextoOperacaoService` e `ActivatedRoute`).
-- Remova `"Restaurante /"` hardcoded em `equipe-layout.component.html`, usando `marca.nome()` (ou contexto do tenant).
-- Em `cozinha/` (`cozinha.component.*` e `cartao-cozinha.component.*`): substitua toda a paleta verde/azul (`#263b30`, `#294b38`, `#173e2c`, `#2558ad`) pela paleta oficial (`#faf7f2`, `#292521`, `#a53e2b`, `#30523b`), mantendo **exatamente** os nomes das abas (`Na fila (N)`, `Em preparo (N)`, `Prontos (N)`), botões (`Selecionar quantidades`, `Iniciar selecionadas (N)`, `Concluir em preparo (N)`, `Iniciar pedido (N)`, `Recuperar resultado da mesma ação`, `Ativar som`, `Desativar som`, `Atualizar`), classe `.coluna` e estrutura compatível com o filtro JIT de `test_kitchen_templates.cjs` (não introduzir novos subcomponentes com `.html` externo).
-- Delegue a execução visual ao subagente `artesao-ux-bistro` e gere o relatório nominal com prints `360/768/1280` em `docs/evidencias/frontend/`.
+- Zero alterações em `backend/` ou rotas/guardas (`equipe-layout` preserva `test_route_shell.cjs` sem novos `inject()`).
+- Entregue Tema Claro + Tema Dark (`styles.css` + `ui/tema.ts` + retrofit Sprints 1–2.1 + `equipe-layout` + `cozinha`).
+- Em `cozinha/`: botões empilhados em `width: 100%` (zero corte lateral), avanço por clique + drag mouse + swipe/drag touch, limpeza de resumos/textos redundantes e preservação estrita dos seletores e rótulos de `test_kitchen_templates.cjs`.
+- Delegue a camada visual ao `artesao-ux-bistro` e gere o relatório nominal com prints Light + Dark em `360/768/1280` em `docs/evidencias/frontend/`.
 
 Valide ao final `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `test_route_shell.cjs`, `test_kitchen_templates.cjs`, `test_kitchen_board.cjs`, build AOT (`< 450 kB`), `docs/evidencias/frontend/README.md` e `python scripts/check-repository.py`.
 ```
 
 ---
 
-### Sprint 4 — Gestão Operacional Diária: Pedidos, Salão/Mesas, Expedição, Financeiro, Pendências & Vendas
+### Sprint 4 — Gestão Operacional Diária (Light + Dark): Pedidos, Pedido Assistido, Salão/Mesas, Expedição, Financeiro, Pendências & Vendas
 
-**Objetivo:** Dotar as telas operacionais do salão, caixa e expedição de alta velocidade de leitura e segurança operacional contra cliques acidentais, substituindo tabelas/listas `<ul>`/`<dl>` cruas por cartões táticos padronizados, QR/código físico de mesa, extrato financeiro legível e painel visual de KPIs de vendas.
+**Objetivo:** Dotar as telas operacionais do salão, caixa e expedição de alta velocidade de leitura e limpeza visual (nos temas **Claro e Dark**), corrigindo a emissão assistida para mesas, eliminando duplicações/UUIDs/textos ruidosos e entregando cartões táticos, etiqueta de despacho, calculadora de troco e painel de KPIs de vendas.
 
-#### Escopo de Arquivos
-| Arquivo | Intervenção planejada | Restrição |
+#### Escopo de Arquivos, Melhorias & Limpeza de Excessos
+| Arquivo | O que manter + Melhorias + O que retirar de poluição | Restrição |
 | --- | --- | --- |
-| [`frontend/src/app/pedidos/operacao-pedidos.component.html`](../../../frontend/src/app/pedidos/operacao-pedidos.component.html) & [`.ts`](../../../frontend/src/app/pedidos/operacao-pedidos.component.ts) | Filtros de estado, canal e ordenação em barra compacta responsiva; sub-abas da operação integradas ao estilo bistrô; `[hlmBtn]` nos comandos de lista/paginação; polimento final da visão `operacao` em `pedido-detalhe` (alertas de atraso/expiração, ações de aceitar/recusar/preparar/entregar/cancelar bem hierarquizadas) | Preservar `test_order_recovery.cjs`, `test_snapshot_queue.cjs` |
-| [`frontend/src/app/rotas/paginas-gestao.ts`](../../../frontend/src/app/rotas/paginas-gestao.ts) | Ajustar apresentação de `PaginaPedidoAssistidoComponent` (`/gestao/pedidos/novo`) e cabeçalhos auxiliares em cartões limpos | Zero mudança em `gestao.routes.ts` ou guards |
-| [`frontend/src/app/mesas/mesas.component.html`](../../../frontend/src/app/mesas/mesas.component.html), [`.css`](../../../frontend/src/app/mesas/mesas.component.css) & [`.ts`](../../../frontend/src/app/mesas/mesas.component.ts) | Remover hex legados de `mesas.component.css`; cards de mesa com faixa superior terracota (ocupada) vs sálvia/neutro (livre); cartão destacado para **código de atendimento e QR Code** (sem exibir `ATENDIMENTO_ID` técnico cru sem utilidade, ou mantendo acesso claro); **talão de comanda aberta** e fila clara de solicitações do salão (`AJUDA`, `CONTA`) | **CRÍTICO (`test_mesa_navigation_templates.cjs`):** manter `<details><summary>` no cadastro de mesa, `<nav aria-label="Páginas de mesas">`, `<nav aria-label="Solicitações de atendimento">`, botão `'Atualizar mesas'` e zero novos subcomponentes externos |
-| [`frontend/src/app/delivery/expedicao.component.html`](../../../frontend/src/app/delivery/expedicao.component.html) & [`.ts`](../../../frontend/src/app/delivery/expedicao.component.ts) | Cards de saída para entrega destacando destinatário, endereço completo, taxa/contato, ocorrências em badge âmbar/vermelho e botões `[hlmBtn]` distintos para registrar entrega vs ocorrência/cancelamento | Preservar `test_delivery_reports.cjs` |
-| [`frontend/src/app/financeiro/financeiro.component.html`](../../../frontend/src/app/financeiro/financeiro.component.html) & [`.ts`](../../../frontend/src/app/financeiro/financeiro.component.ts) | Converter `<dl>`/`<ul>` em cartela financeira tipo extrato (resumo em 3 blocos: Recebido / A receber / Devolver ou Reservas), formulários compactos de lançamento/ajuste/devolução e separação visual entre criação de devolução vs confirmação | Atenção para manter peso e leitura dentro de `pedido-detalhe` e `mesas` |
-| [`frontend/src/app/pagamentos/pendencias.component.html`](../../../frontend/src/app/pagamentos/pendencias.component.html) & [`.ts`](../../../frontend/src/app/pagamentos/pendencias.component.ts) | Dois painéis claros: *Pendências Mercado Pago* (com CTA `[hlmBtn]` de reconciliação idempotente) e *Fila de notificações operacionais* (com contador de tentativas e status); informar limitação atual caso `BE-12` (marcar reconhecida / timestamp) ainda não exista | Preparado para evoluir com `BE-12` |
-| [`frontend/src/app/relatorios/vendas.component.html`](../../../frontend/src/app/relatorios/vendas.component.html) & [`.ts`](../../../frontend/src/app/relatorios/vendas.component.ts) | Barra de período + KPI grid editorial de 2–4 colunas (Pedidos criados / Cancelados, Faturamento cobrado & ajustado, Caixa confirmado & devolvido, Saldos pendentes/reservas) substituindo `<dl>` sem estilo | Preservar `test_delivery_reports.cjs` (`dados.set(null)` antes de nova consulta) |
+| [`operacao-pedidos.*`](../../../frontend/src/app/pedidos/operacao-pedidos.component.html) & [`pedido-detalhe.*`](../../../frontend/src/app/pedidos/pedido-detalhe.component.html) (`operacao`) | **Melhorar:** pílulas rápidas (`Aguardando aceite`, `Em andamento`, `Prontos`, `Concluídos`), busca rápida na página, hierarquia `[hlmBtn]` (Aceitar/Servir primário vs Recusar/Cancelar destrutivo) e `nomeEvento()` legível no histórico. **Retirar:** título `<h2>` duplicado, UUID completo em destaque e enums crus (`PEDIDO_CRIADO`) com ponto solto no histórico | Preservar `test_order_recovery.cjs`, `test_snapshot_queue.cjs`, largura das `<option>` (`S03-UI06`) e manter checkboxes/motivo visíveis no DOM quando `podeCancelarOperacional()`/`pedeMotivo()` (`S03-UI04`) |
+| [`paginas-gestao.ts`](../../../frontend/src/app/rotas/paginas-gestao.ts), [`vitrine.component.*`](../../../frontend/src/app/catalogo/vitrine.component.ts) & [`carrinho.component.ts`](../../../frontend/src/app/carrinho/carrinho.component.ts) (`/gestao/pedidos/novo`) | **Corrigir & Melhorar:** restaurar canal `'MESA'` em `VitrineComponent.canaisDisponiveis()` quando `!!unidadeExterna()` (pedido assistido de salão), restaurar texto literal `'Resumo confirmado. O envio do pedido exige confirmação separada.'` e modo PDV compacto. **Retirar:** hero B2C (`"Cardápio de sexta-feira..."`), corações de favoritos inúteis para equipe e saída acidental para `/carrinho` no mobile | Preservar `test_mesa_navigation_templates.cjs`, `test_mesa_pagination.cjs`, `S03-UI09` e `S03-UI12` |
+| [`mesas.component.*`](../../../frontend/src/app/mesas/mesas.component.html) | **Melhorar:** cards Claro/Dark por status (Livre, Ocupada, Em fechamento), botões `Fechar` e `Copiar código` / `Imprimir QR` nos painéis de QR e comanda, destaque para chamados `AJUDA`/`CONTA` pendentes com tempo de espera via `solicitacao.criadaEm`. **Retirar:** repetição do nome da mesa em 5 botões seguidos (usar rótulo curto + `<span class="sr-only">`), título duplicado e **saldos financeiros duplicados** acima de `<app-financeiro>` | **ARMADILHA `< 0.5px` (`test_mesa_navigation_templates.cjs`):** nunca alterar `x/y/width/height` de `summary`, `.barra-conexao > button` e dos 2 `<nav>` de paginação durante transições SSE! |
+| [`expedicao.component.*`](../../../frontend/src/app/delivery/expedicao.component.html) | **Melhorar:** pílulas client-side (`Todos`, `Retirada`, `Prontos p/ sair`, `Em rota`, `Com ocorrência`), `<address>` estilizado como **Etiqueta de Despacho** (destinatário, telefone clicável/copiável, endereço claro) e alerta visual de ocorrência. **Retirar:** título duplicado e borda/sombra duplicada de `<article>` envolvendo `<article>` | **Manter obrigatoriamente** `app-expedicao > section > article` contendo `<app-pedido-detalhe>` e `<address>`, e texto `/Ocorrência:.*PENDENTE/` (`S04-UI05`/`S04-UI10`) |
+| [`financeiro.component.*`](../../../frontend/src/app/financeiro/financeiro.component.html) | **Melhorar:** cartela tipo extrato (Light + Dark), botão rápido `"Usar saldo restante"`, **calculadora visual automática de troco** em Dinheiro e datas formatadas (`confirmadoEm`/`criadaEm`). **Retirar:** impressão inútil de `"entregue R$ X · troco R$ 0,00"` em pagamentos `PIX`, `CARTAO` e `ONLINE` | Manter `<dl><dt><dd>` adjacentes (`xpath=following-sibling::dd[1]`) e **não ocultar `Solicitar devolução` em `<details>` fechado** (`S04-UI03`/`S04-UI08`) |
+| [`pendencias.component.*`](../../../frontend/src/app/pagamentos/pendencias.component.html) | **Melhorar:** 2 painéis claros (*Reconciliação Mercado Pago* × *Fila de E-mails*), badges traduzidos, filtro rápido de falhas e link para `/gestao/pedidos`. **Retirar:** `<ul>` cru com bullets e códigos em caixa alta soltos | Manter heading `'Pendências financeiras e notificações'`, `/Capturado significa salvo localmente/` e `'Reconciliar a mesma operação'` (`S04-UI09`) |
+| [`vendas.component.*`](../../../frontend/src/app/relatorios/vendas.component.html) | **Melhorar:** atalhos rápidos (`Hoje`, `Ontem`, `7 dias`, `Este mês`), 3 blocos de **KPI Cards** (Operação + Ticket Médio; Caixa Confirmado; Saldos/Reservas) e botão `Imprimir`. **Retirar:** título duplicado, `<dl>` plano único de 9 linhas e timestamp `consultadoEm` em ISO cru | Preservar `test_delivery_reports.cjs` (`dados.set(null)` imediato) e textos de `S04-UI06` |
 
 #### Divisão Coordenador × `artesao-ux-bistro`
-- **Coordenador:** Se optar por preparar suporte opcional a `BE-12` (reconhecer notificação) ou apenas renderizar os dados já disponíveis sem tocar serviços, manter 100% compatível com backend atual; coordenar remoção de últimos hex legados de `mesas.component.css` e `operacao.css`.
-- **`artesao-ux-bistro`:** Redesign visual dos 7 componentes + capturas e relatório nominal em `docs/evidencias/frontend/`.
+- **Coordenador:** Corrigir `canaisDisponiveis()` para pedido assistido e texto de resumo no carrinho, preparar helpers de filtro rápido/troco/formatação sem adicionar novos `inject()` nos componentes testados em `vm`, e validar geometria `< 0.5px` em `test_mesa_navigation_templates.cjs`.
+- **`artesao-ux-bistro`:** Redesign visual Light + Dark dos 7 blocos + capturas e relatório nominal em `docs/evidencias/frontend/`.
 
 #### Dependências de Backend
-- Sprint funciona integralmente sobre as APIs já existentes. Melhorias futuras mapeadas para esta Sprint: **`BE-12`** (timestamp + reconhecer notificação), **`BE-13`** (quebra por canal/pagamento e CSV em `/relatorios/vendas`), **`BE-15`** (busca por código curto em `/operacao/pedidos` e filtro de status em `/operacao/mesas`).
+- Sprint funciona integralmente sobre as APIs já existentes. Evoluções mapeadas: **`BE-12`** (timestamps/reconhecer notificação), **`BE-13`** (quebra por canal/pagamento e CSV em `/relatorios/vendas`), **`BE-14`** (badges na sidebar), **`BE-15`** (busca/filtro server-side) e **`BE-21`** (`mesaNome` em `PedidoOperacional`).
 
 #### Critérios de Aceite & Gates de Validação
-- Executar: `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_mesa_navigation_templates.cjs`, `node scripts/test_mesa_pagination.cjs`, `node scripts/test_order_recovery.cjs`, `node scripts/test_delivery_reports.cjs`, `node scripts/test_snapshot_queue.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` e `check-repository.py`.
+- Executar: `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_mesa_navigation_templates.cjs`, `node scripts/test_mesa_pagination.cjs`, `node scripts/test_order_recovery.cjs`, `node scripts/test_delivery_reports.cjs`, `node scripts/test_snapshot_queue.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` (Light + Dark) e `check-repository.py`.
 
 #### Prompt Pronto para Novo Chat — Sprint 4
 ```markdown
-Você está executando a **Sprint 4 — Gestão Operacional Diária (Pedidos, Mesas/Salão, Expedição, Financeiro, Pendências & Relatórios de Vendas)** do frontend de `SAAS Restaurante MB`.
+Você está executando a **Sprint 4 — Gestão Operacional Diária (Pedidos, Pedido Assistido, Mesas/Salão, Expedição, Financeiro, Pendências & Relatórios de Vendas)** do frontend de `SAAS Restaurante MB` (Light + Dark).
 
 ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
-- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 4 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 4 com uma **representação visual interativa** (Light + Dark em `1280px`/`768px`/`360px`) antes de alterar o sistema.
 - **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
 
 Leia antes de planejar/editar:
-1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
+1. `AGENTS.md`, `.agents/rules/atelier-bistro-frontend.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 4).
 3. Leia obrigatoriamente `scripts/test_mesa_navigation_templates.cjs`, `scripts/test_mesa_pagination.cjs`, `scripts/test_order_recovery.cjs`, `scripts/test_delivery_reports.cjs` e `scripts/test_snapshot_queue.cjs`.
 
 Regras invioláveis:
-- Zero alterações em `backend/`.
-- Em `mesas.component.html`: preserve `<details><summary>` no cadastro de mesa, `<nav aria-label="Páginas de mesas">`, `<nav aria-label="Solicitações de atendimento">`, o botão `'Atualizar mesas'` e não adicione novos subcomponentes externos em `mesas.component.ts`.
-- Em `vendas.component.ts`: não altere a regra que limpa `dados` antes da nova consulta (`test_delivery_reports.cjs`).
-- Substitua todos os `<dl>` e `<ul>` crus de `expedicao`, `financeiro`, `pendencias`, `vendas` e `mesas` por cartelas, badges, talões e botões `[hlmBtn]` alinhados à paleta oficial (`#faf7f2`, `#292521`, `#a53e2b`, `#30523b`), zerando hex legados de `mesas.component.css`.
-- Delegue a etapa visual ao `artesao-ux-bistro` e gere o relatório nominal em `docs/evidencias/frontend/` com prints em `360px`, `768px` e `1280px`.
+- Zero alterações em `backend/`. Entregue todas as telas funcionando em **Tema Claro e Tema Dark**.
+- Corrija o canal `'MESA'` em `/gestao/pedidos/novo` (`unidadeExterna()`) e preserve estritamente a geometria `< 0.5px` de `test_mesa_navigation_templates.cjs`, a estrutura `app-expedicao > section > article` e os `<dt>/<dd>` adjacentes de `financeiro`.
+- Elimine títulos duplicados, UUIDs/ISOs crus, botões verbosos repetindo nome da mesa (use `.sr-only`) e saldos duplicados.
+- Delegue a etapa visual ao `artesao-ux-bistro` e gere o relatório nominal em `docs/evidencias/frontend/` com prints Light + Dark em `360px`, `768px` e `1280px`.
 
 Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todos os probes `test_*.cjs` desta Sprint, build AOT (`< 450 kB`), atualização de `docs/evidencias/frontend/README.md` e `python scripts/check-repository.py`.
 ```
 
 ---
 
-### Sprint 5 — Gestão Comercial & Operação de Loja: Catálogo Admin, Mídia, Delivery Config, Prazos & Mercado Pago
+### Sprint 5 — Gestão Comercial & Operação de Loja (Light + Dark): Catálogo Admin, Mídia, Delivery Config, Prazos & Mercado Pago
 
-**Objetivo:** Padronizar toda a gestão comercial do estabelecimento (cadastro de categorias, produtos, adicionais, grupos de combos, upload/prévia de mídia, oferta e disponibilidade por unidade, regiões de CEP/delivery, prazos de aceite automático e integração OAuth Mercado Pago), tornando formulários complexos claros em telas de tablet e celular (`360px`/`768px`).
+**Objetivo:** Padronizar toda a gestão comercial (Light + Dark), enriquecendo a listagem administrativa de produtos com fotos/preços/status, eliminando `<fieldset>` triplamente aninhados e inputs empilhados desnecessários, traduzindo segundos em minutos nos prazos de aceite e destacando a saúde da conexão Mercado Pago.
 
-#### Escopo de Arquivos
-| Arquivo | Intervenção planejada | Restrição |
+#### Escopo de Arquivos, Melhorias & Limpeza de Excessos
+| Arquivo | O que manter + Melhorias + O que retirar de poluição | Restrição |
 | --- | --- | --- |
-| [`frontend/src/app/catalogo/gestao-catalogo.component.html`](../../../frontend/src/app/catalogo/gestao-catalogo.component.html), [`.ts`](../../../frontend/src/app/catalogo/gestao-catalogo.component.ts) & [`catalogo.css`](../../../frontend/src/app/catalogo/catalogo.css) *(seção admin)* | Dividir claramente em painel de **Categorias** + **Catálogo de Produtos** + **Editor lateral/ficha ativa**, com aviso destacado de rascunho/recuperação pendente, busca e paginação limpas sem quebrar estilização da vitrine pública `/cardapio` | **Cuidado crítico:** `catalogo.css` também é importado por `vitrine.component.ts`! Não quebre `/cardapio` nem remova regras usadas pela vitrine |
-| [`categoria-editor.component.ts`](../../../frontend/src/app/catalogo/categoria-editor.component.ts), [`produto-editor.component.ts`](../../../frontend/src/app/catalogo/produto-editor.component.ts), [`adicionais-editor.component.ts`](../../../frontend/src/app/catalogo/adicionais-editor.component.ts), [`grupos-editor.component.ts`](../../../frontend/src/app/catalogo/grupos-editor.component.ts), [`midia-editor.component.ts`](../../../frontend/src/app/catalogo/midia-editor.component.ts) & [`oferta-unidade.component.ts`](../../../frontend/src/app/catalogo/oferta-unidade.component.ts) | Estilizar todos os `<fieldset class="campos">` em painéis hierárquicos com grid 2 colunas em desktop / 1 coluna em `<600px`, `[hlmBtn]` (ou classes `.btn-*` leves), `midia-editor` com dropzone/prévia em moldura e estado de upload pendente claro, `grupos-editor` com recuo visual limpo entre Grupo e Opções | Preservar `test_catalog_media.cjs`, `test_catalog_recovery.cjs`, `test_catalog_cart.cjs` |
-| [`frontend/src/app/delivery/config-delivery.component.html`](../../../frontend/src/app/delivery/config-delivery.component.html) & [`.ts`](../../../frontend/src/app/delivery/config-delivery.component.ts) | Transformar configuração de checkout online + lista de faixas de CEP em cards compactos com máscara/indicação clara de CEP inicial/final, taxa e pedido mínimo | — |
-| [`frontend/src/app/unidades/prazos-aceite.component.html`](../../../frontend/src/app/unidades/prazos-aceite.component.html), [`.css`](../../../frontend/src/app/unidades/prazos-aceite.component.css) & [`.ts`](../../../frontend/src/app/unidades/prazos-aceite.component.ts) | Cartelas separadas para *Padrão da empresa* vs *Exceção da unidade*, controles de minutos limpos e `[hlmBtn]` | `prazos-aceite` entra no `format:check` do `package.json` |
-| [`frontend/src/app/pagamentos/integracao.component.html`](../../../frontend/src/app/pagamentos/integracao.component.html) & [`.ts`](../../../frontend/src/app/pagamentos/integracao.component.ts) | Card de conexão Mercado Pago mostrando status (`Conectada`/`Desconectada`/`Reautorizar`), identificador do vendedor, expiração e formulário seguro de reautenticação; nota clara sobre desconexão se `BE-11` ainda pendente | Zero fluxo OAuth quebrado |
+| [`gestao-catalogo.*`](../../../frontend/src/app/catalogo/gestao-catalogo.component.html) & [`catalogo.css`](../../../frontend/src/app/catalogo/catalogo.css) *(admin)* | **Melhorar:** cards de produto com **miniatura `48×48`** (`/api/v1/midias/:id` ou monograma), categoria, badges (`Ativo`/`Inativo`, `Sugestão`, preço e disponibilidade na filial) e filtro rápido por nome/categoria/status. **Retirar:** título duplicado e repetição do nome do prato nos botões (usar `.sr-only`) | **Cuidado crítico:** `catalogo.css` é compartilhado com `/cardapio` — validar zero regressão na vitrine do cliente (Light + Dark)! |
+| [`categoria-editor`](../../../frontend/src/app/catalogo/categoria-editor.component.ts), [`produto-editor`](../../../frontend/src/app/catalogo/produto-editor.component.ts), [`adicionais-editor`](../../../frontend/src/app/catalogo/adicionais-editor.component.ts), [`grupos-editor`](../../../frontend/src/app/catalogo/grupos-editor.component.ts), [`midia-editor`](../../../frontend/src/app/catalogo/midia-editor.component.ts) & [`oferta-unidade`](../../../frontend/src/app/catalogo/oferta-unidade.component.ts) | **Melhorar:** painéis com pares de campos curtos lado a lado em desktop (Preço + Máximo, Mínimo + Máximo, Acréscimo + Limite) e moldura limpa de upload. **Retirar:** 3 níveis de `<fieldset>` encaixotados pesados e texto técnico excessivo de pixels/MiB em destaque | Preservar `test_catalog_media.cjs`, `test_catalog_recovery.cjs`, `test_catalog_cart.cjs` e todos os labels/mensagens de `e2e-catalogo` |
+| [`config-delivery.*`](../../../frontend/src/app/delivery/config-delivery.component.html) | **Melhorar:** resumo superior (regiões ativas + faixa de taxas + expiração online), cards horizontais compactos (`CEP inicial` + `CEP final`; `Taxa` + `Mínimo`) e aviso visual não-bloqueante de CEP sobreposto. **Retirar:** 5 inputs empilhados em coluna única por região e título duplicado | **Não desabilitar submit** em sobreposição de CEP (`S04-UI02` testa erro do servidor) |
+| [`prazos-aceite.*`](../../../frontend/src/app/unidades/prazos-aceite.component.html) | **Melhorar:** conversão visual automática ao lado do input (`300 s · 5 min`), pílulas de presets rápidos (`Ágil 2m/5m`, `Padrão 3m/8m`, `Pico 5m/15m`) e linha visual de SLA. **Retirar:** título `<h3>` duplicado e campos soltos sem agrupamento | Manter inputs aceitando segundos arbitrários (`'1'`, `'4'`) para `S03-UI05` |
+| [`integracao.*`](../../../frontend/src/app/pagamentos/integracao.component.html) | **Melhorar:** card OAuth com selo de estado, `vendedor`, validade formatada (`expiraEm` já retornado pela API!) e feedback para `?conexao=concluida`. **Retirar:** layout cru sem hierarquia | Manter heading `'Mercado Pago do restaurante'` e textos de `S04-UI07` |
 
 #### Divisão Coordenador × `artesao-ux-bistro`
-- **Coordenador:** Se `BE-02` (identidade visual da marca por tenant) ou `BE-11` (desconectar Mercado Pago) já tiverem sido entregues no backend até esta Sprint, integrar aqui; caso contrário, manter escopo 100% compatível com endpoints existentes.
-- **`artesao-ux-bistro`:** Redesign visual de todos os editores de catálogo, delivery config, prazos e Mercado Pago + relatório em `docs/evidencias/frontend/`. *(Lembrar de validar também `/cardapio` após tocar `catalogo.css`!)*
+- **Coordenador:** Preparar helpers visuais leves (busca client-side no catálogo, formatação de minutos em prazos e data de expiração OAuth) e validar sondas de catálogo.
+- **`artesao-ux-bistro`:** Redesign visual Light + Dark de todos os editores de catálogo, delivery config, prazos e Mercado Pago + relatório em `docs/evidencias/frontend/`.
 
 #### Dependências de Backend
-- **`BE-02` (Marca multi-tenant admin)** e **`BE-11` (Desconectar Mercado Pago)**: documentados em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md); opcionalmente acopláveis caso já implementados antes desta Sprint, ou tratados como futura microentrega pós-backend.
+- **`BE-02` (Marca multi-tenant admin)**, **`BE-11` (Desconectar Mercado Pago)** e **`BE-24` (`exigePontoCarne`/`aceitaObservacao` no cadastro de produto)**: documentados em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md).
 
 #### Critérios de Aceite & Gates de Validação
-- Executar: `format:check` (e prettier nos arquivos de `catalogo/`), `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_catalog_media.cjs`, `node scripts/test_catalog_recovery.cjs`, `node scripts/test_catalog_cart.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` (incluindo regressão zero em `/cardapio`), e `check-repository.py`.
+- Executar: `format:check` (e prettier em `catalogo/`), `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_catalog_media.cjs`, `node scripts/test_catalog_recovery.cjs`, `node scripts/test_catalog_cart.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` Light + Dark (incluindo `/cardapio`) e `check-repository.py`.
 
 #### Prompt Pronto para Novo Chat — Sprint 5
 ```markdown
-Você está executando a **Sprint 5 — Gestão Comercial & Configuração de Loja (Catálogo Admin, Mídia, Delivery, Prazos e Mercado Pago)** do frontend de `SAAS Restaurante MB`.
+Você está executando a **Sprint 5 — Gestão Comercial & Configuração de Loja (Catálogo Admin, Mídia, Delivery, Prazos e Mercado Pago)** do frontend de `SAAS Restaurante MB` (Light + Dark).
 
 ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
-- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 5 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 5 com uma **representação visual interativa** (Light + Dark em `1280px`/`768px`/`360px`) antes de alterar o sistema.
 - **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
 
 Leia antes de planejar/editar:
-1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
-2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 5) e `docs/evidencias/frontend/RELATORIO-PENDENCIAS-BACKEND.md` (`BE-02`, `BE-11`).
+1. `AGENTS.md`, `.agents/rules/atelier-bistro-frontend.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
+2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 5) e `docs/evidencias/frontend/RELATORIO-PENDENCIAS-BACKEND.md` (`BE-02`, `BE-11`, `BE-24`).
 3. Leia `scripts/test_catalog_media.cjs`, `scripts/test_catalog_recovery.cjs` e `scripts/test_catalog_cart.cjs`.
 
 Regras invioláveis:
-- Zero alterações em `backend/`. Verifique apenas se `BE-02`/`BE-11` já existem antes de propor UI conectada; se não existirem, entregue toda a Sprint sobre os contratos reais já existentes.
-- Atenção ao `frontend/src/app/catalogo/catalogo.css`: ele é compartilhado com `/cardapio` (`vitrine.component`). Após editar, valide também `/cardapio` em `360px`/`1280px` para garantir zero regressão visual.
-- Delegue a camada visual ao `artesao-ux-bistro` para `gestao-catalogo.*`, os 6 editores inline de `catalogo/`, `config-delivery.*`, `prazos-aceite.*` e `integracao.*`, gerando o relatório em `docs/evidencias/frontend/` com prints em `360px`, `768px` e `1280px`.
+- Zero alterações em `backend/`. Suporte completo a **Tema Claro e Tema Dark**.
+- Atenção ao `frontend/src/app/catalogo/catalogo.css`: valide `/cardapio` (Light + Dark) em `360px`/`1280px` após editar.
+- Enriquecer cards de produtos com miniatura/preço/status, compactar faixas de CEP em grid horizontal, traduzir segundos em minutos nos prazos e exibir `expiraEm` no Mercado Pago, preservando todos os contratos de `e2e-catalogo` e `S04-UI02`/`S04-UI07`.
 
 Valide `format:check` + prettier em `catalogo/`, `typecheck`, `ngc --noEmit`, `test:logic`, `test_catalog_media.cjs`, `test_catalog_recovery.cjs`, `test_catalog_cart.cjs`, build AOT (`< 450 kB`), atualização de `docs/evidencias/frontend/README.md` e `python scripts/check-repository.py`.
 ```
 
 ---
 
-### Sprint 6 — Gestão Corporativa & Segurança: Equipe/Acessos, Convites, Unidades, Horários & Auditoria
+### Sprint 6 — Gestão Corporativa & Segurança (Light + Dark): Equipe/Acessos, Convites, Unidades, Horários & Auditoria
 
-**Objetivo:** Modernizar as telas administrativas de governança (`/gestao/equipe`, `/gestao/equipe/convites`, `/gestao/unidades`, `/gestao/atualizacoes`) com clareza visual de alta densidade sem comprometer **nenhum contrato do compilador JIT `esbuild`** — pois quatro destes componentes são validados diretamente pelas sondas mais sensíveis do repositório.
+**Objetivo:** Modernizar as telas administrativas de governança (`/gestao/equipe`, `/gestao/equipe/convites`, `/gestao/unidades`, `/gestao/atualizacoes`) nos temas **Claro e Dark**, removendo UUIDs/ISOs crus do destaque visual e organizando a matriz de permissões e a grade horária sem quebrar nenhum contrato JIT `esbuild`.
 
-#### Escopo de Arquivos
-| Arquivo | Intervenção planejada | Restrição |
+#### Escopo de Arquivos, Melhorias & Limpeza de Excessos
+| Arquivo | O que manter + Melhorias + O que retirar de poluição | Restrição |
 | --- | --- | --- |
-| [`frontend/src/app/acessos/acessos.component.ts`](../../../frontend/src/app/acessos/acessos.component.ts) | Substituir `#6b7a70`/`#fff` e inputs/selects crus por cartela de reautenticação destacada, barra de seleção de perfil + busca, matriz de permissões em grid legível com badges de escopo (`EMPRESA` vs `UNIDADE`) e cards de funcionários (`article`) organizados | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar `test_profile_selects.cjs` e `test_inactive_memberships.cjs` (`article`, `fieldset` só aberto quando editando unidades, labels exatos `'Perfil do funcionário'`, `'Editar unidades atribuídas'`, `'Salvar funcionário'`, `'Perfil operacional'`, `'Salvar permissões'`, `'Confirmar identidade'`, `'Recarregar acessos'`) |
-| [`frontend/src/app/acessos/convites.component.ts`](../../../frontend/src/app/acessos/convites.component.ts) | Cartela limpa de emissão de convite, banner de intenção pendente e lista `article` com badge de estado (`PENDENTE`/`ACEITO`/`REVOGADO`) | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar labels de `test_profile_selects.cjs` (`'Perfil do convite'`, `'E-mail do funcionário convidado'`, `'Criar convite'`, `'Recarregar convites'`, `'Reenviar mesma intenção'`, heading com o e-mail) |
-| [`frontend/src/app/unidades/unidades.component.ts`](../../../frontend/src/app/unidades/unidades.component.ts) | Substituir `#6b7a70`/layout plano por cabeçalho corporativo de filiais, formulário de criação/edição e integração harmônica com `<app-funcionamento-unidade>` | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar `test_unit_schedule_templates.cjs` e `test_profile_selects.cjs` (`'Recarregar unidades'`) |
-| [`frontend/src/app/unidades/funcionamento.component.ts`](../../../frontend/src/app/unidades/funcionamento.component.ts) | Transformar checkboxes de canais e `Horário N` (`fieldset`) em grade semanal/turno organizada que não estoura em `360px`, com alerta claro para horários de madrugada (`termina no dia seguinte`) e banner de conflito `409` | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar labels exatos de `test_unit_schedule_templates.cjs` e `test_unit_schedule.cjs` (`'Configurar horários e canais'`, `'Consultar funcionamento no servidor'`, `#fuso-...`, `group` `'Horário N'`, `'Dia de início'`, `'Canal'`, `'Início (HH:mm)'`, `'Fim (HH:mm ou 24:00)'`, `'Salvar funcionamento'`, `'Versão do funcionamento: N.'`) |
-| [`frontend/src/app/unidades/eventos-unidade.component.ts`](../../../frontend/src/app/unidades/eventos-unidade.component.ts) | `/gestao/atualizacoes`: transformar trilha de auditoria e exportação em timeline limpa com filtros legíveis e cartão de exportação | Preservar `test_unit_export.cjs` e `test_unit_events.cjs` |
+| [`acessos.component.ts`](../../../frontend/src/app/acessos/acessos.component.ts) | **Melhorar:** layout em 2 colunas no desktop (Matriz de Permissões × Equipe Cadastrada), busca rápida de funcionário, contador de permissões ativas e link clicável para `/gestao/equipe/convites`. **Retirar:** bordas legadas `#6b7a70` e códigos técnicos soltos | **INLINE obrigatório!** Preservar `test_profile_selects.cjs` (apenas funcionários usam `<article>`, 1 checkbox/select por card fechado, `Salvar funcionário` abaixo de `Editar unidades atribuídas`) e `test_inactive_memberships.cjs` |
+| [`convites.component.ts`](../../../frontend/src/app/acessos/convites.component.ts) | **Melhorar:** cards Claro/Dark com e-mail, cargo, validade formatada em PT-BR, filtro rápido (`Pendentes` / `Todos`) e botão discreto `Copiar ID`. **Retirar:** **UUID de 36 caracteres** e timestamp ISO do destaque principal, aviso fixo de ambiente fictício e protagonismo excessivo da busca técnica por UUID | **INLINE obrigatório!** Preservar `test_profile_selects.cjs`, `test_pending_intentions.cjs` e `e2e-convites` (`form.first()` sendo reautenticação e form `Identificador do convite` acessível no DOM) |
+| [`unidades.component.ts`](../../../frontend/src/app/unidades/unidades.component.ts) & [`funcionamento.component.ts`](../../../frontend/src/app/unidades/funcionamento.component.ts) | **Melhorar:** cartela compacta de reautenticação/nova filial, presets/seleção rápida de fuso IANA e grade semanal de turnos legível em `360px` com destaque claro para virada de madrugada. **Retirar:** blocos extensos de texto repetitivo | **INLINE obrigatório!** Preservar `test_unit_schedule_templates.cjs`, `test_unit_schedule.cjs` e `test_profile_selects.cjs` |
+| [`eventos-unidade.component.ts`](../../../frontend/src/app/unidades/eventos-unidade.component.ts) | **Melhorar:** timeline visual limpa de auditoria cadastral (Light + Dark) com timestamps formatados em PT-BR e card de exportação JSON. **Retirar:** textos redundantes soltos | Preservar `test_unit_export.cjs`, `test_unit_events.cjs` e `data-testid="unidade-atual"` |
 
 #### Divisão Coordenador × `artesao-ux-bistro`
-- **Coordenador:** Garantir compatibilidade 100% JIT após edições (especialmente não adicionar imports externos com templates `.html` nos 4 componentes JIT nem alterar textos literais testados via `exact: true`); rodar toda a suíte `test_profile_selects.cjs` e `test_unit_schedule_templates.cjs`.
-- **`artesao-ux-bistro`:** Redesign visual inline em `acessos`, `convites`, `unidades`, `funcionamento` e `eventos-unidade` + relatório em `docs/evidencias/frontend/`.
+- **Coordenador:** Garantir compatibilidade 100% JIT após edições e rodar `test_profile_selects.cjs`, `test_unit_schedule_templates.cjs`, `test_inactive_memberships.cjs`, `test_unit_schedule.cjs`, `test_unit_export.cjs` e `test_unit_events.cjs`.
+- **`artesao-ux-bistro`:** Redesign visual inline Light + Dark nos 5 componentes + relatório em `docs/evidencias/frontend/`.
 
 #### Dependências de Backend
-- **`BE-10` (Nome do funcionário em `/api/v1/equipe`):** melhoria recomendada para exibir `nome + email` nos cards de equipe; enquanto não implementada, exibir apenas `email` com card limpo e fallback neutro.
+- **`BE-10` (Nome do funcionário em `/api/v1/equipe`):** melhoria futura para exibir `nome + email`.
 
 #### Critérios de Aceite & Gates de Validação
-- Executar com sucesso **sem falhar nenhum seletor**: `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, `node scripts/test_profile_selects.cjs`, `node scripts/test_inactive_memberships.cjs`, `node scripts/test_unit_schedule_templates.cjs`, `node scripts/test_unit_schedule.cjs`, `node scripts/test_unit_export.cjs`, `node scripts/test_unit_events.cjs`, build AOT (`< 450 kB`), inspeção `360/768/1280` e `check-repository.py`.
+- Executar: `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as sondas `test_*.cjs` da Sprint 6, build AOT (`< 450 kB`), inspeção `360/768/1280` (Light + Dark) e `check-repository.py`.
 
 #### Prompt Pronto para Novo Chat — Sprint 6
 ```markdown
-Você está executando a **Sprint 6 — Gestão Corporativa & Segurança (Equipe/Acessos, Convites, Unidades, Funcionamento e Eventos)** do frontend de `SAAS Restaurante MB`.
+Você está executando a **Sprint 6 — Gestão Corporativa & Segurança (Equipe/Acessos, Convites, Unidades, Funcionamento e Eventos)** do frontend de `SAAS Restaurante MB` (Light + Dark).
 
 ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
-- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 6 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 6 com uma **representação visual interativa** (Light + Dark em `1280px`/`768px`/`360px`) antes de alterar o sistema.
 - **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
 
 Leia antes de planejar/editar:
-1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
+1. `AGENTS.md`, `.agents/rules/atelier-bistro-frontend.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 6).
 3. Leia obrigatoriamente `scripts/test_profile_selects.cjs`, `scripts/test_inactive_memberships.cjs`, `scripts/test_unit_schedule_templates.cjs`, `scripts/test_unit_schedule.cjs`, `scripts/test_unit_export.cjs` e `scripts/test_unit_events.cjs`.
 
 Regras invioláveis (CRÍTICO — compilação JIT `esbuild`):
-- Zero alterações em `backend/`.
-- **MANTENHA `template:` e `styles:` INLINE** em `acessos.component.ts`, `convites.component.ts`, `unidades.component.ts` e `funcionamento.component.ts` (não crie `.html` nem `.css` externos para eles!).
-- Preserve **literalmente** todos os labels, `role`s, `fieldset`/`article`/`heading` e textos verificados por `exact: true` nas sondas `test_profile_selects.cjs` e `test_unit_schedule_templates.cjs`. Em `acessos.component.ts`, mantenha o `<fieldset>` de unidades montado apenas quando o card do funcionário estiver aberto para edição (`haveCount(0)` / `haveCount(1)`).
-- Remova todo legado `#6b7a70` / `#d9e2dc`, aplicando tokens oficiais, alvos `>= 48px` e grade responsiva `360/768/1280` via subagente `artesao-ux-bistro`, com relatório nominal em `docs/evidencias/frontend/`.
+- Zero alterações em `backend/`. Suporte completo a **Tema Claro e Tema Dark**.
+- **MANTENHA `template:` e `styles:` INLINE** em `acessos.component.ts`, `convites.component.ts`, `unidades.component.ts` e `funcionamento.component.ts`.
+- Preserve literalmente todos os seletores, contagens de `<article>`/`<fieldset>` e posições relativas exigidas por `test_profile_selects.cjs` e `test_unit_schedule_templates.cjs`, retirando UUIDs/ISOs crus do destaque visual.
 
-Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as 6 sondas `test_*.cjs` da Sprint 6, build AOT (`< 450 kB`), atualização de `docs/evidencias/frontend/README.md` e `python scripts/check-repository.py`.
+Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as sondas `test_*.cjs` da Sprint 6, build AOT (`< 450 kB`), atualização de `docs/evidencias/frontend/README.md` e `python scripts/check-repository.py`.
 ```
 
 ---
 
-### Sprint 7 — Console da Plataforma SaaS (`/plataforma`) & Auditoria Final Global (WCAG AA, Zero Legado e PWA)
+### Sprint 7 — Console da Plataforma SaaS (`/plataforma`) & Auditoria Final Global (Light + Dark WCAG AA, Zero Legado e PWA)
 
-**Objetivo:** Unificar a última área restante do sistema — o **Console do Operador SaaS** (`/plataforma`) — à linguagem visual coesa da plataforma e conduzir a **auditoria final ponta a ponta de todo o frontend**: varredura global de hex legados (meta `0`), conferência multi-tenant, matriz de contraste WCAG 2.2 AA, orçamento de bundle PWA e consistência documental.
+**Objetivo:** Unificar o **Console do Operador SaaS** (`/plataforma`) aos temas **Claro e Dark** da plataforma, limpando excessos visuais nos cards de tenants e provisionamento, e conduzir a **auditoria final ponta a ponta de todo o frontend** nos dois temas.
 
 #### Escopo de Arquivos
 | Arquivo | Intervenção planejada | Restrição |
 | --- | --- | --- |
-| [`frontend/src/app/rotas/plataforma-layout.component.ts`](../../../frontend/src/app/rotas/plataforma-layout.component.ts) | Substituir `--rm-bg:#f7f8f4`, `--rm-border:#e2e7df`, `--rm-primary:#285139`, `--rm-muted:#6b746c` por cabeçalho editorial sobrio em carvão/linho (`#292521` / `#faf7f2`), identificando explicitamente `Console SaaS · Operação da Plataforma` (sem confundir com tenant único) | — |
-| [`frontend/src/app/plataforma/plataforma.component.ts`](../../../frontend/src/app/plataforma/plataforma.component.ts) | Eliminar `#627367`, `#d4ddd5`, estilizar login do operador SaaS, reautenticação para bloqueio/ativação comercial e cards de empresas com badges comerciais legíveis | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar `test_platform_session.cjs` e `test_profile_selects.cjs` (`'Identificador da empresa'`, `'Consultar estado comercial'`) |
-| [`frontend/src/app/plataforma/provisionamento.component.ts`](../../../frontend/src/app/plataforma/provisionamento.component.ts) | Eliminar `#627367`, `#d4ddd5`, estilizar criação de novo restaurante (provisionamento multi-tenant), status da fila/worker e botão de retomada em cards limpos | **OBRIGATÓRIO manter `template:`/`styles:` inline!** Preservar contratos com `SolicitacaoProvisionamentoController` e `e2e-provisionamento` |
+| [`frontend/src/app/rotas/plataforma-layout.component.ts`](../../../frontend/src/app/rotas/plataforma-layout.component.ts) | Substituir tokens verdes legados por cabeçalho editorial Claro + Dark com seletor de tema e identificação `Console SaaS · Operação da Plataforma` | — |
+| [`frontend/src/app/plataforma/plataforma.component.ts`](../../../frontend/src/app/plataforma/plataforma.component.ts) | Eliminar `#627367`/`#d4ddd5`, estilizar login, reautenticação e cards de empresas (Light + Dark) com badges comerciais limpos e metadados secundários discretos | **INLINE obrigatório!** Preservar `test_platform_session.cjs` e `test_profile_selects.cjs` (`'Identificador da empresa'`, `'Consultar estado comercial'`) |
+| [`frontend/src/app/plataforma/provisionamento.component.ts`](../../../frontend/src/app/plataforma/provisionamento.component.ts) | Eliminar `#627367`/`#d4ddd5`, organizar formulário multi-tenant e status do worker em cards claros (Light + Dark) | **INLINE obrigatório!** Preservar contratos de `e2e-provisionamento` |
 
 #### Auditoria Transversal Obrigatória da Sprint 7 (Fechamento do Frontend Completo)
-1. **Varredura estática global (`0` resíduos verdes legados):** confirmar que nenhum `.ts`, `.html` ou `.css` em `frontend/src/` ainda contém cores do tema antigo (`#285139`, `#254d36`, `#263b30`, `#173e2c`, `#f7f8f4`, `#f8f8f3`, `#eaf0e5`, `#edf0e9`, `#edf1e8`, `#edf3e9`, `#d5ded7`, `#d4ddd5`, `#d9e2dc`, `#e2e7df`, `#dedfd8`, `#e7ebe5`, `#6b7a70`, `#6b746c`, `#69786c`, `#627367`, `#68736b`, `#233527`, `#243228`, `#2558ad`).
-2. **Varredura White-Label Multi-Tenant:** confirmar zero strings hardcoded de estabelecimentos demonstrativos ou iniciais fixas `'M'` em templates/SVGs.
-3. **Suite completa de sondas e qualidade:**
-   - `format:check` + prettier em todas as pastas `.html`/`.css`
-   - `typecheck` & `ngc --noEmit`
-   - `test:logic` (`node scripts/test-frontend.cjs`)
-   - Todas as sondas de template (`test_profile_selects`, `test_identity_forms`, `test_unit_schedule_templates`, `test_mesa_navigation_templates`, `test_kitchen_templates`, `test_route_shell`, `test_platform_session`)
-   - Build AOT + `scripts/build-pwa.cjs` dentro do orçamento (`< 450 kB` chunk inicial)
-   - `node scripts/check_contrast.cjs --self-test` (e `--config` se ambiente de contraste local estiver disponível)
-   - Revisão responsiva `360px`, `768px`, `1280px` (`scrollWidth <= clientWidth`) nas áreas Cliente, Equipe/Gestão, Cozinha e Plataforma
-   - `python scripts/check-repository.py`
-4. **Handoff para o Backend:** Atualizar o status final de fronteira em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md) deixando claro exatamente o que o backend precisa implementar para liberar os fluxos preparados no frontend.
+1. **Varredura estática global (`0` resíduos verdes legados)** em todo `frontend/src/`.
+2. **Varredura White-Label Multi-Tenant** (`0` marcas/iniciais fixas).
+3. **Validação completa Light + Dark WCAG 2.2 AA e Responsividade (`360px`, `768px`, `1280px`)** em todas as rotas de Cliente, Gestão, Cozinha e Plataforma, com bundle AOT + PWA `< 450 kB` e `python scripts/check-repository.py`.
+4. **Handoff para o Backend:** Atualizar o status final em [RELATORIO-PENDENCIAS-BACKEND.md](RELATORIO-PENDENCIAS-BACKEND.md) para execução posterior das pendências de servidor e abertura do Pull Request único final.
 
 #### Prompt Pronto para Novo Chat — Sprint 7
 ```markdown
-Você está executando a **Sprint 7 (Final) — Console da Plataforma SaaS (`/plataforma`) & Auditoria Global do Frontend** de `SAAS Restaurante MB`.
+Você está executando a **Sprint 7 (Final) — Console da Plataforma SaaS (`/plataforma`) & Auditoria Global do Frontend (Light + Dark)** de `SAAS Restaurante MB`.
 
 ETAPA 0 OBRIGATÓRIA (ANTES DE EDITAR QUALQUER CÓDIGO):
-- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 7 com uma **representação visual** (mockup/protótipo visual ou esquema comparativo em `1280px`/`768px`/`360px`) antes de alterar o sistema.
+- Leia os arquivos abaixo, inspecione o estado atual das telas e apresente ao usuário o planejamento da Sprint 7 com uma **representação visual interativa** (Light + Dark em `1280px`/`768px`/`360px`) antes de alterar o sistema.
 - **PARE e aguarde a aprovação explícita da representação visual pelo usuário** antes de editar qualquer arquivo em `frontend/`.
 
 Leia antes de planejar/editar:
-1. `AGENTS.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
+1. `AGENTS.md`, `.agents/rules/atelier-bistro-frontend.md`, `bistro-design-system-e-responsividade`, `bistro-auditoria-visual-e-relatorio`.
 2. `docs/evidencias/frontend/PLANO-SPRINTS-FRONTEND.md` (seção Sprint 7) e `docs/evidencias/frontend/RELATORIO-PENDENCIAS-BACKEND.md`.
 3. Leia `scripts/test_platform_session.cjs`, `scripts/test_profile_selects.cjs` e `scripts/check_contrast.cjs`.
 
 Regras invioláveis:
-- Zero alterações em `backend/`.
-- **MANTENHA `template:` e `styles:` INLINE** em `plataforma.component.ts` e `provisionamento.component.ts`. Preserve `'Identificador da empresa'` e `'Consultar estado comercial'` (`exact: true` em `test_profile_selects.cjs`).
-- Delegue ao `artesao-ux-bistro` a migração visual de `plataforma-layout.component.ts`, `plataforma.component.ts` e `provisionamento.component.ts` + relatório nominal final em `docs/evidencias/frontend/`.
-
-Após a etapa visual de `/plataforma`, conduza a auditoria transversal final em todo `frontend/src/`:
-1. Confirme `0` ocorrências restantes da paleta verde legada e `0` marcas hardcoded.
-2. Rode todas as validações (`format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as sondas `test_*.cjs`, build AOT + PWA dentro do orçamento `< 450 kB`, `check_contrast.cjs --self-test`, inspeção `360/768/1280` e `python scripts/check-repository.py`).
-3. Atualize `docs/evidencias/frontend/README.md` e sinalize que o frontend completo está pronto para a etapa de execução no backend conforme `RELATORIO-PENDENCIAS-BACKEND.md`.
+- Zero alterações em `backend/`. Suporte completo a **Tema Claro e Tema Dark**.
+- **MANTENHA `template:` e `styles:` INLINE** em `plataforma.component.ts` e `provisionamento.component.ts`. Preserve `'Identificador da empresa'` e `'Consultar estado comercial'`.
+- Após concluir `/plataforma`, execute a auditoria transversal completa (0 legado verde, 0 marcas fixas, todas as sondas `test_*.cjs`, contraste Light + Dark, responsividade `360/768/1280`, build AOT + PWA `< 450 kB` e `python scripts/check-repository.py`).
 ```

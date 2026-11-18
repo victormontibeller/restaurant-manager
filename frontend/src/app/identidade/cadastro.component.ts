@@ -299,7 +299,7 @@ import { HlmButton } from '../ui/button';
       border: 1px solid var(--border, #e5ded3);
       border-radius: 20px;
       padding: 1.3rem;
-      box-shadow: 0 3px 0 #e5ded3;
+      box-shadow: 0 3px 0 var(--border, #e5ded3);
     }
     .dossie-painel {
       display: grid;
@@ -308,7 +308,7 @@ import { HlmButton } from '../ui/button';
       border: 1px solid var(--border, #e5ded3);
       border-radius: 20px;
       padding: clamp(0.95rem, 2.5vw, 1.55rem);
-      box-shadow: 0 3px 0 #e5ded3;
+      box-shadow: 0 3px 0 var(--border, #e5ded3);
       min-width: 0;
     }
     .auth-marca-topo,
@@ -364,7 +364,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .auth-casa-nome {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -375,7 +375,7 @@ import { HlmButton } from '../ui/button';
     }
     .cartela-arco {
       background: var(--secondary, #f0ebe3);
-      border: 1px solid #dfd3c3;
+      border: 1px solid var(--border, #dfd3c3);
       border-radius: 130px 130px 16px 16px;
       padding: 1.5rem 1.05rem 1.1rem;
       text-align: center;
@@ -392,7 +392,7 @@ import { HlmButton } from '../ui/button';
     .mob-beneficios-slogan em {
       font-style: italic;
       font-weight: 500;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .cartela-arco-slogan {
       margin: 0;
@@ -475,7 +475,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     h2 {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -517,9 +517,9 @@ import { HlmButton } from '../ui/button';
       font-weight: 700;
     }
     .etapa-pill--ativa {
-      background: #fbefec;
-      border-color: #e3bfb7;
-      color: var(--primary-deep, #7f2f20);
+      background: var(--primary-soft, #fbefec);
+      border-color: var(--primary-soft-border, #e3bfb7);
+      color: var(--primary-ink, #7f2f20);
     }
     .mob-beneficios {
       border: 1px solid var(--border, #e5ded3);
@@ -582,7 +582,7 @@ import { HlmButton } from '../ui/button';
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.14em;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .etapa-topo .etapa-selo {
       margin: 0;
@@ -624,7 +624,7 @@ import { HlmButton } from '../ui/button';
       width: 100%;
       min-height: 48px;
       min-width: 0;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       padding: 0.7rem 0.9rem;
       font: inherit;
@@ -638,11 +638,11 @@ import { HlmButton } from '../ui/button';
     input:focus-visible {
       outline: 3px solid var(--ring, #a53e2b);
       outline-offset: 2px;
-      border-color: var(--primary, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
     }
     input[aria-invalid='true'] {
-      border-color: #972626;
-      background: #fffbfa;
+      border-color: var(--danger-fg, #972626);
+      background: var(--danger-bg, #fffbfa);
     }
     .pw-wrap {
       display: grid;
@@ -654,7 +654,7 @@ import { HlmButton } from '../ui/button';
       min-height: 48px;
       min-width: 68px;
       padding: 0 0.65rem;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       background: var(--secondary, #f0ebe3);
       color: var(--foreground, #292521);
@@ -663,13 +663,13 @@ import { HlmButton } from '../ui/button';
       box-shadow: none;
     }
     button.pw-toggle:hover:not(:disabled) {
-      background: #e6dfd4;
+      background: var(--muted, #e6dfd4);
       filter: none;
     }
     button.pw-toggle:disabled {
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       cursor: not-allowed;
     }
     .pw-meter {
@@ -735,7 +735,7 @@ import { HlmButton } from '../ui/button';
       border: 1px solid var(--border, #e5ded3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     button[hlmBtn][data-variant='outline']:hover:not(:disabled) {
       background: var(--muted, #f3eee7);
@@ -743,26 +743,26 @@ import { HlmButton } from '../ui/button';
     }
     button[hlmBtn]:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
     .erro {
       margin: 0;
       padding: 0.8rem 0.95rem;
-      border: 1px solid #e8c7c1;
+      border: 1px solid var(--danger-border, #e8c7c1);
       border-radius: 12px;
-      background: #fff2f0;
-      color: #972626;
+      background: var(--danger-bg, #fff2f0);
+      color: var(--danger-fg, #972626);
       font-size: 0.9rem;
       font-weight: 600;
     }
     .sucesso-aviso {
       margin: 0;
       padding: 0.8rem 0.95rem;
-      border: 1px solid #c8d8c5;
+      border: 1px solid var(--accent-border, #c8d8c5);
       border-radius: 12px;
       background: var(--accent, #e8efe7);
       color: var(--accent-foreground, #30523b);

@@ -1,12 +1,15 @@
 <article
   class="cartao"
   [class.novo]="novo()"
+  [class.pode-arrastar]="podeArrastar()"
+  [class.arrastando-origem]="arrastando()"
   [attr.data-estado]="pedido().estado"
   [attr.data-pedido-id]="pedido().id"
   [attr.aria-label]="'Pedido #' + referencia()"
+  (pointerdown)="iniciarArrastoCartao($event)"
 >
-  <header>
-    <div>
+  <header class="cartao-topo">
+    <div class="cartao-identificacao">
       <span
         class="canal"
         >{{ cartao().mesaNome || (pedido().canal === 'MESA' ? 'Mesa' : pedido().canal === 'RETIRADA' ? 'Retirada' : 'Delivery') }}</span
@@ -17,14 +20,19 @@
       <span class="selo">Novo</span>
     }
   </header>
+  @if (podeArrastar()) {
+    <p class="dica-arrasto" aria-hidden="true">⠿ Arraste ou deslize → para avançar</p>
+  }
   <div class="tempos">
     <span [title]="horario(pedido().criadoEm)"
       >Pedido há {{ decorrido(pedido().criadoEm, agora()) }}</span
     >
     @if (pedido().estado === 'PRONTO') {
-      <strong>Pronto há {{ decorrido(cartao().prontoEm, agora()) }}</strong>
+      <strong class="tempo-pronto">Pronto há {{ decorrido(cartao().prontoEm, agora()) }}</strong>
     } @else if (pedido().primeiroPreparoEm) {
-      <strong>Preparo iniciado há {{ decorrido(pedido().primeiroPreparoEm, agora()) }}</strong>
+      <strong class="tempo-preparo"
+        >Preparo iniciado há {{ decorrido(pedido().primeiroPreparoEm, agora()) }}</strong
+      >
     }
   </div>
   @if (pedido().observacao) {
@@ -35,13 +43,15 @@
       <strong>Cancelamento em avaliação.</strong> A produção continua até decisão da equipe.
     </p>
   }
-  <p class="resumo">
-    {{ quantidade('NA_FILA') }} na fila · {{ quantidade('EM_PREPARO') }} em preparo ·
-    {{ quantidade('PRONTO') }} {{ quantidade('PRONTO') === 1 ? 'pronta' : 'prontas' }}
-    @if (quantidade('CANCELADO')) {
-      · {{ quantidade('CANCELADO') }} canceladas
-    }
-  </p>
+  @if (temDivisaoUnidades()) {
+    <p class="resumo resumo-unidades">
+      {{ quantidade('NA_FILA') }} na fila · {{ quantidade('EM_PREPARO') }} em preparo ·
+      {{ quantidade('PRONTO') }} {{ quantidade('PRONTO') === 1 ? 'pronta' : 'prontas' }}
+      @if (quantidade('CANCELADO')) {
+        · {{ quantidade('CANCELADO') }} canceladas
+      }
+    </p>
+  }
   @for (linha of pedido().linhas; track linha.id) {
     <section class="linha">
       <h4>
@@ -51,14 +61,14 @@
         }
       </h4>
       @for (extra of linha.adicionais; track $index) {
-        <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+        <p class="detalhe-linha">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
       }
       @for (escolha of linha.escolhas; track $index) {
-        <p>
+        <p class="detalhe-linha">
           <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
         </p>
         @for (extra of escolha.adicionais ?? []; track $index) {
-          <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+          <p class="detalhe-linha detalhe-sub">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
         }
       }
       @if (parcial()) {
@@ -66,9 +76,10 @@
           @for (unidade of pedido().unidades; track unidade.id) {
             @if (unidade.linhaId === linha.id) {
               @if (
-                (unidade.estado === 'NA_FILA' && tem('iniciar')) || (unidade.estado === 'EM_PREPARO' && tem('concluir'))
+                (unidade.estado === 'NA_FILA' && tem('iniciar')) ||
+                (unidade.estado === 'EM_PREPARO' && tem('concluir'))
               ) {
-                <label
+                <label [class.marcada]="selecionadas().includes(unidade.id)"
                   ><input
                     type="checkbox"
                     #marcado
@@ -81,7 +92,7 @@
                   ></label
                 >
               } @else {
-                <span
+                <span class="unidade-fixa"
                   >Unidade {{ $index + 1 }} ·
                   {{ unidade.estado === 'PRONTO' ? 'Pronta' : unidade.estado === 'CANCELADO' ? 'Cancelada' : unidade.estado === 'NA_FILA' ? 'Na fila' : 'Em preparo' }}</span
                 >
@@ -96,6 +107,8 @@
     <div class="acoes">
       @if (tem('iniciar') && iniciar().length) {
         <button
+          type="button"
+          class="iniciar"
           (click)="comandar('iniciar', parcial())"
           [disabled]="bloqueado() || (parcial() && !selecionadasPara('iniciar').length)"
         >
@@ -105,6 +118,7 @@
       }
       @if (tem('concluir') && concluir().length) {
         <button
+          type="button"
           class="concluir"
           (click)="comandar('concluir', parcial())"
           [disabled]="bloqueado() || (parcial() && !selecionadasPara('concluir').length)"
@@ -114,6 +128,7 @@
         </button>
       }
       <button
+        type="button"
         class="secundario"
         (click)="parcial.set(!parcial())"
         [attr.aria-expanded]="parcial()"
@@ -124,26 +139,31 @@
     </div>
   }
   @if (pendente()) {
-    <p class="atencao" role="status">Resultado ainda não confirmado. Não repita a produção.</p>
-    <button (click)="repetir()" [disabled]="!online() || comandos.ocupado()">
-      Recuperar resultado da mesma ação
-    </button>
+    <div class="bloco-pendente">
+      <p class="atencao" role="status">Resultado ainda não confirmado. Não repita a produção.</p>
+      <button type="button" (click)="repetir()" [disabled]="!online() || comandos.ocupado()">
+        Recuperar resultado da mesma ação
+      </button>
+    </div>
   }
   @if (erro()) {
     <p class="erro" role="alert">{{ erro() }}</p>
   }
   @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+    <p class="feedback-cartao" role="status">{{ aviso() }}</p>
   }
-  <details>
+  <details class="referencia">
     <summary>Histórico e referência</summary>
-    <p class="referencia">{{ pedido().id }}</p>
+    <p class="referencia-id">{{ pedido().id }}</p>
     @for (evento of pedido().historico ?? []; track $index) {
-      <p>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</p>
+      <p class="evento-historico">
+        {{ horario(evento.ocorridoEm) }} · {{ evento.tipo }}
+        @if (evento.motivo) {
+          · {{ evento.motivo }}
+        }
+      </p>
+    } @empty {
+      <p class="sem-historico">Sem transições registradas.</p>
     }
-    @if (pedido().primeiroPreparoEm) {
-      <p>O preparo já iniciou; cancelamento depende de avaliação da equipe.</p>
-    }
-    <p>Cada unidade selecionada representa o produto ou combo completo.</p>
   </details>
 </article>

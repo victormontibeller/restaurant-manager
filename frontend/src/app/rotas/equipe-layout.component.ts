@@ -19,6 +19,7 @@ import {
 } from '@angular/router';
 import { SessaoNavegacaoService } from '../identidade/sessao-navegacao.service';
 import { HlmButton } from '../ui/button';
+import * as Tema from '../ui/tema';
 import { ContextoOperacaoService } from './contexto-operacao.service';
 import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
@@ -96,6 +97,14 @@ export class EquipeLayoutComponent {
 
   selecionarUnidade(id: string): void {
     if (!this.navegacao.impedirSaida()) this.contexto.selecionarUnidade(id);
+  }
+
+  temaEscuro(): boolean {
+    return Tema.temaEscuro?.() ?? false;
+  }
+
+  alternarTema(): void {
+    Tema.alternarTema?.();
   }
 
   async sair(): Promise<void> {

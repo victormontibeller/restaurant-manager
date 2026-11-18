@@ -268,7 +268,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .auth-casa-nome {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -291,7 +291,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     h2 {
       font-family: var(--font-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif);
@@ -312,7 +312,7 @@ import { HlmButton } from '../ui/button';
       align-items: center;
       padding: 0.3rem 0.68rem;
       border-radius: 999px;
-      border: 1px solid #dfd3c3;
+      border: 1px solid var(--border, #dfd3c3);
       background: var(--secondary, #f0ebe3);
       color: var(--foreground, #292521);
       font-size: 0.76rem;
@@ -328,7 +328,7 @@ import { HlmButton } from '../ui/button';
     .talao-cartao {
       padding: 1rem;
       border-radius: 16px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--card, #ffffff);
     }
     .talao-titulo {
@@ -337,7 +337,7 @@ import { HlmButton } from '../ui/button';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .ficha-lista {
       list-style: none;
@@ -378,7 +378,7 @@ import { HlmButton } from '../ui/button';
       line-height: 1.48;
     }
     .mob-resumo {
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       border-radius: 14px;
       background: var(--background, #faf7f2);
       padding: 0.15rem 0.85rem;
@@ -402,7 +402,7 @@ import { HlmButton } from '../ui/button';
       content: '+';
       font-size: 1rem;
       font-weight: 800;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .mob-resumo[open] summary::after {
       content: '−';
@@ -427,7 +427,7 @@ import { HlmButton } from '../ui/button';
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.14em;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .etapa-meta {
       padding: 0.22rem 0.55rem;
@@ -470,7 +470,7 @@ import { HlmButton } from '../ui/button';
       width: 100%;
       min-width: 0;
       min-height: 48px;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       padding: 0.72rem 0.95rem;
       font: inherit;
@@ -484,11 +484,11 @@ import { HlmButton } from '../ui/button';
     input:focus-visible {
       outline: 3px solid var(--ring, #a53e2b);
       outline-offset: 2px;
-      border-color: var(--primary, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
     }
     input[aria-invalid='true'] {
-      border-color: #972626;
-      background: #fffbfa;
+      border-color: var(--danger-fg, #972626);
+      background: var(--danger-bg, #fffbfa);
     }
     form button[hlmBtn] {
       margin-top: 0.25rem;
@@ -505,7 +505,7 @@ import { HlmButton } from '../ui/button';
     }
     button[hlmBtn]:not([data-variant]):hover:not(:disabled),
     button[hlmBtn][data-variant='default']:hover:not(:disabled) {
-      background: #933524;
+      background: var(--primary-hover, #933524);
       filter: none;
     }
     button[hlmBtn][data-variant='outline'] {
@@ -513,7 +513,7 @@ import { HlmButton } from '../ui/button';
       border: 1px solid var(--border, #e5ded3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     button[hlmBtn][data-variant='outline']:hover:not(:disabled) {
       background: var(--muted, #f3eee7);
@@ -521,26 +521,26 @@ import { HlmButton } from '../ui/button';
     }
     button[hlmBtn]:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
     .erro {
       margin: 0;
       padding: 0.85rem 1rem;
-      border: 1px solid #e8c7c1;
+      border: 1px solid var(--danger-border, #e8c7c1);
       border-radius: 12px;
-      background: #fff2f0;
-      color: #972626;
+      background: var(--danger-bg, #fff2f0);
+      color: var(--danger-fg, #972626);
       font-size: 0.9rem;
       font-weight: 600;
     }
     .sucesso-aviso {
       margin: 0;
       padding: 0.85rem 1rem;
-      border: 1px solid #c8d8c5;
+      border: 1px solid var(--accent-border, #c8d8c5);
       border-radius: 12px;
       background: var(--accent, #e8efe7);
       color: var(--accent-foreground, #30523b);

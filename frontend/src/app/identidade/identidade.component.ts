@@ -865,7 +865,7 @@ function formatarTelefoneEntrada(valor: string): string {
       border: 1px solid var(--border, #e5ded3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     .auth-card [hlmBtn][data-variant='outline']:hover:not(:disabled) {
       background: var(--muted, #f3eee7);
@@ -873,20 +873,20 @@ function formatarTelefoneEntrada(valor: string): string {
     }
     .auth-card [hlmBtn][data-variant='ghost'] {
       background: var(--muted, #f3eee7);
-      border: 1px solid #d7cec1;
+      border: 1px solid var(--border, #d7cec1);
       color: var(--secondary-foreground, #44372e);
       border-radius: 14px;
     }
     .auth-card [hlmBtn][data-variant='ghost']:hover:not(:disabled) {
-      background: #e9e1d6;
+      background: var(--secondary, #e9e1d6);
       filter: none;
     }
     .auth-card button:disabled,
     .auth-card [hlmBtn]:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
@@ -929,7 +929,7 @@ function formatarTelefoneEntrada(valor: string): string {
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     h1 {
       font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
@@ -952,7 +952,7 @@ function formatarTelefoneEntrada(valor: string): string {
     input:not([type='checkbox']) {
       width: 100%;
       min-height: 48px;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       padding: 0.72rem 0.95rem;
       font: inherit;
@@ -960,8 +960,8 @@ function formatarTelefoneEntrada(valor: string): string {
       color: var(--foreground, #292521);
     }
     input:not([type='checkbox']):focus-visible {
-      outline: 3px solid #a53e2b45;
-      border-color: var(--primary, #a53e2b);
+      outline: 3px solid var(--ring, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
     }
     label {
       font-size: 0.88rem;
@@ -980,7 +980,7 @@ function formatarTelefoneEntrada(valor: string): string {
       background: none;
       border: 0;
       padding: 0 0.25rem;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       font: inherit;
       font-size: 0.88rem;
       font-weight: 650;
@@ -997,7 +997,7 @@ function formatarTelefoneEntrada(valor: string): string {
     .text-action:disabled {
       background: transparent;
       border-color: transparent;
-      color: #594e46;
+      color: var(--disabled-fg, #594e46);
       opacity: 1;
     }
     .auth-card:not(.auth-card--conta) form button[type='submit'] {
@@ -1014,7 +1014,7 @@ function formatarTelefoneEntrada(valor: string): string {
       display: inline-flex;
       align-items: center;
       min-height: 48px;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       font-weight: 650;
     }
     .other-access {
@@ -1049,7 +1049,7 @@ function formatarTelefoneEntrada(valor: string): string {
       border: 1px solid var(--border, #e5ded3);
       border-radius: 20px;
       padding: clamp(1.1rem, 2.5vw, 1.55rem);
-      box-shadow: 0 3px 0 #e5ded3;
+      box-shadow: 0 3px 0 var(--border, #e5ded3);
     }
     .conta-marca {
       display: flex;
@@ -1101,7 +1101,7 @@ function formatarTelefoneEntrada(valor: string): string {
       flex: none;
       border-radius: 16px;
       background: var(--secondary, #f0ebe3);
-      border: 1px solid #d8cfc3;
+      border: 1px solid var(--border, #d8cfc3);
       color: var(--foreground, #292521);
       display: grid;
       place-items: center;
@@ -1151,13 +1151,13 @@ function formatarTelefoneEntrada(valor: string): string {
     }
     .conta-status-pill--ok {
       background: var(--accent, #e8efe7);
-      border: 1px solid #c2d4c2;
+      border: 1px solid var(--accent-border, #c2d4c2);
       color: var(--accent-foreground, #30523b);
     }
     .conta-status-pill--pendente {
-      background: #fdf6e9;
-      border: 1px solid #e2c598;
-      color: #6b4310;
+      background: var(--amber-bg, #fdf6e9);
+      border: 1px solid var(--amber-border, #e2c598);
+      color: var(--amber-fg, #6b4310);
     }
     .conta-ficha {
       margin: 0;
@@ -1182,7 +1182,7 @@ function formatarTelefoneEntrada(valor: string): string {
     .ficha-guia {
       flex: 1 1 12px;
       min-width: 12px;
-      border-bottom: 1.5px dotted #c7bcb0;
+      border-bottom: 1.5px dotted var(--input, #c7bcb0);
       transform: translateY(-3px);
     }
     .ficha-linha dd {
@@ -1222,13 +1222,13 @@ function formatarTelefoneEntrada(valor: string): string {
       border: 1px solid var(--border, #e5ded3);
       border-radius: 20px;
       padding: clamp(1.1rem, 2.5vw, 1.55rem);
-      box-shadow: 0 3px 0 #e5ded3;
+      box-shadow: 0 3px 0 var(--border, #e5ded3);
       min-width: 0;
     }
     .conta-modulo--alerta {
-      background: #fffaf2;
-      border-color: #dfbe89;
-      box-shadow: 0 3px 0 #e7d1aa;
+      background: var(--amber-bg, #fffaf2);
+      border-color: var(--amber-border, #dfbe89);
+      box-shadow: 0 3px 0 var(--amber-border, #e7d1aa);
     }
     .modulo-cabecalho {
       display: flex;
@@ -1256,9 +1256,9 @@ function formatarTelefoneEntrada(valor: string): string {
       flex: none;
     }
     .modulo-indice--alerta {
-      background: #fae8ca;
-      border-color: #d9ac66;
-      color: #6b4310;
+      background: var(--amber-bg, #fae8ca);
+      border-color: var(--amber-border, #d9ac66);
+      color: var(--amber-fg, #6b4310);
     }
     .modulo-eyebrow {
       margin: 0 0 0.2rem;
@@ -1266,7 +1266,7 @@ function formatarTelefoneEntrada(valor: string): string {
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .conta-modulo h2 {
       margin: 0;
@@ -1313,7 +1313,7 @@ function formatarTelefoneEntrada(valor: string): string {
       min-height: 48px;
       padding: 0.6rem 0.9rem;
       border-radius: 12px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--background, #faf7f2);
       color: var(--foreground, #292521);
       font-size: 0.9rem;
@@ -1346,8 +1346,8 @@ function formatarTelefoneEntrada(valor: string): string {
       background: var(--background, #faf7f2);
     }
     .seguranca-pagamentos {
-      background: #f8fbf8;
-      border-color: #c2d4c2;
+      background: var(--accent, #f8fbf8);
+      border-color: var(--accent-border, #c2d4c2);
     }
     .pagamento-cabecalho {
       display: flex;
@@ -1360,27 +1360,27 @@ function formatarTelefoneEntrada(valor: string): string {
       flex: none;
       border-radius: 12px;
       background: var(--accent, #e8efe7);
-      border: 1px solid #c2d4c2;
+      border: 1px solid var(--accent-border, #c2d4c2);
       color: var(--accent-foreground, #30523b);
       display: grid;
       place-items: center;
     }
     .seguranca-lgpd {
       border-style: dashed;
-      border-color: #dfc3be;
-      background: #fffaf9;
+      border-color: var(--danger-border, #dfc3be);
+      background: var(--danger-bg, #fffaf9);
     }
     .auth-card .conta-lgpd-toggle[hlmBtn][data-variant='ghost'] {
-      background: #fff8f7;
-      border-color: #e6c6c0;
-      color: #8f2d1f;
+      background: var(--danger-bg, #fff8f7);
+      border-color: var(--danger-border, #e6c6c0);
+      color: var(--danger-fg, #8f2d1f);
     }
     .auth-card .conta-lgpd-toggle[hlmBtn][data-variant='ghost']:hover:not(:disabled) {
-      background: #fcebe8;
+      background: var(--danger-bg, #fcebe8);
     }
     .conta-lgpd-form {
       padding-top: 0.35rem;
-      border-top: 1px dashed #e6c6c0;
+      border-top: 1px dashed var(--danger-border, #e6c6c0);
     }
     .auth-card .conta-btn-perigo[hlmBtn] {
       background: #96291c;
@@ -1395,9 +1395,9 @@ function formatarTelefoneEntrada(valor: string): string {
       margin: 0;
       padding: 0.75rem 0.9rem;
       border-radius: 12px;
-      background: #fdf1ef;
-      border: 1px solid #e6bfb8;
-      color: #8f2318;
+      background: var(--danger-bg, #fdf1ef);
+      border: 1px solid var(--danger-border, #e6bfb8);
+      color: var(--danger-fg, #8f2318);
       font-size: 0.9rem;
       font-weight: 600;
     }
@@ -1407,7 +1407,7 @@ function formatarTelefoneEntrada(valor: string): string {
       padding: 0.75rem 0.9rem;
       border-radius: 12px;
       background: var(--accent, #e8efe7);
-      border: 1px solid #c2d4c2;
+      border: 1px solid var(--accent-border, #c2d4c2);
       color: var(--accent-foreground, #30523b);
       font-size: 0.9rem;
       font-weight: 600;
@@ -1420,8 +1420,8 @@ function formatarTelefoneEntrada(valor: string): string {
       gap: 0.75rem 1rem;
       padding: 0.9rem 1.05rem;
       border-radius: 14px;
-      background: #f9f4eb;
-      border: 1px solid #dfd3c2;
+      background: var(--secondary, #f9f4eb);
+      border: 1px solid var(--border, #dfd3c2);
       color: var(--foreground, #292521);
     }
     .conta-aviso-rota p {

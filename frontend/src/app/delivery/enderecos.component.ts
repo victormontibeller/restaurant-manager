@@ -45,7 +45,7 @@ import { EnderecosService } from './enderecos.service';
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .enderecos-topo h3 {
       margin: 0;
@@ -81,13 +81,13 @@ import { EnderecosService } from './enderecos.service';
       background: var(--card, #ffffff);
       display: grid;
       gap: 0.8rem;
-      box-shadow: 0 2px 0 #e5ded3;
+      box-shadow: 0 2px 0 var(--border, #e5ded3);
     }
     .endereco-talao--principal {
       border-style: solid;
-      border-color: #b7cbb8;
-      background: #f8fbf8;
-      box-shadow: 0 2px 0 #c9dac9;
+      border-color: var(--accent-border, #b7cbb8);
+      background: var(--accent, #f8fbf8);
+      box-shadow: 0 2px 0 var(--accent-border, #c9dac9);
     }
     .talao-topo {
       display: grid;
@@ -160,7 +160,7 @@ import { EnderecosService } from './enderecos.service';
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
       transition:
         background-color 140ms ease,
         transform 140ms ease;
@@ -173,28 +173,28 @@ import { EnderecosService } from './enderecos.service';
     }
     .talao-btn--usar {
       background: var(--secondary, #f0ebe3);
-      border-color: #d7cec1;
+      border-color: var(--border, #d7cec1);
       color: var(--secondary-foreground, #44372e);
     }
     .talao-btn--usar:hover:not(:disabled) {
-      background: #e7dfd3;
+      background: var(--muted, #e7dfd3);
     }
     .talao-btn--principal {
       background: var(--accent, #e8efe7);
-      border-color: #c2d4c2;
+      border-color: var(--accent-border, #c2d4c2);
       color: var(--accent-foreground, #30523b);
     }
     .talao-btn--principal:hover:not(:disabled) {
-      background: #dbe6da;
+      background: var(--accent, #dbe6da);
     }
     .talao-btn--remover {
-      background: #fff8f7;
-      border-color: #e8c7c1;
-      color: #8f2d1f;
-      box-shadow: 0 2px 0 #e6cbc6;
+      background: var(--danger-bg, #fff8f7);
+      border-color: var(--danger-border, #e8c7c1);
+      color: var(--danger-fg, #8f2d1f);
+      box-shadow: 0 2px 0 var(--danger-border, #e6cbc6);
     }
     .talao-btn--remover:hover:not(:disabled) {
-      background: #fcebe8;
+      background: var(--danger-bg, #fcebe8);
     }
     .talao-btn--primario {
       background: var(--primary, #a53e2b);
@@ -204,23 +204,23 @@ import { EnderecosService } from './enderecos.service';
       box-shadow: 0 3px 0 var(--primary-deep, #7f2f20);
     }
     .talao-btn--primario:hover:not(:disabled) {
-      background: #933524;
+      background: var(--primary-hover, #933524);
     }
     .talao-btn--secundario {
-      background: var(--accent-foreground, #30523b);
-      border-color: #213a29;
+      background: var(--sage-solid, #30523b);
+      border-color: var(--sage-solid-deep, #213a29);
       color: #ffffff;
       font-weight: 700;
-      box-shadow: 0 3px 0 #213a29;
+      box-shadow: 0 3px 0 var(--sage-solid-deep, #213a29);
     }
     .talao-btn--secundario:hover:not(:disabled) {
-      background: #274431;
+      background: var(--sage-solid-hover, #274431);
     }
     .talao-btn:disabled {
       opacity: 1;
-      background: #efe9e0;
-      border-color: #d8cfc3;
-      color: #594e46;
+      background: var(--disabled-bg, #efe9e0);
+      border-color: var(--disabled-border, #d8cfc3);
+      color: var(--disabled-fg, #594e46);
       box-shadow: none;
       cursor: not-allowed;
     }
@@ -282,7 +282,7 @@ import { EnderecosService } from './enderecos.service';
     .endereco-campo input {
       width: 100%;
       min-height: 48px;
-      border: 1px solid #d5cbbd;
+      border: 1px solid var(--input, #d5cbbd);
       border-radius: 12px;
       padding: 0.7rem 0.9rem;
       font: inherit;
@@ -291,8 +291,8 @@ import { EnderecosService } from './enderecos.service';
       color: var(--foreground, #292521);
     }
     .endereco-campo input:focus-visible {
-      outline: 3px solid #a53e2b45;
-      border-color: var(--primary, #a53e2b);
+      outline: 3px solid var(--ring, #a53e2b);
+      border-color: var(--primary-ink, #a53e2b);
     }
     .endereco-check {
       display: inline-flex;
@@ -301,7 +301,7 @@ import { EnderecosService } from './enderecos.service';
       min-height: 48px;
       padding: 0.55rem 0.9rem;
       border-radius: 12px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--card, #ffffff);
       color: var(--foreground, #292521);
       font-size: 0.9rem;
@@ -326,7 +326,7 @@ import { EnderecosService } from './enderecos.service';
       margin: 0;
       padding: 0.85rem 1rem;
       border-radius: 14px;
-      border: 1px solid #c2d4c2;
+      border: 1px solid var(--accent-border, #c2d4c2);
       background: var(--accent, #e8efe7);
       color: var(--accent-foreground, #30523b);
       font-size: 0.9rem;
@@ -337,9 +337,9 @@ import { EnderecosService } from './enderecos.service';
       gap: 0.65rem;
       padding: 0.9rem 1rem;
       border-radius: 14px;
-      border: 1px solid #e2c598;
-      background: #fdf6e9;
-      color: #6b4310;
+      border: 1px solid var(--amber-border, #e2c598);
+      background: var(--amber-bg, #fdf6e9);
+      color: var(--amber-fg, #6b4310);
     }
     .endereco-recuperacao .aviso {
       margin: 0;
@@ -353,13 +353,13 @@ import { EnderecosService } from './enderecos.service';
       font-weight: 600;
     }
     .endereco-feedback--erro {
-      background: #fdf1ef;
-      border: 1px solid #e6bfb8;
-      color: #8f2318;
+      background: var(--danger-bg, #fdf1ef);
+      border: 1px solid var(--danger-border, #e6bfb8);
+      color: var(--danger-fg, #8f2318);
     }
     .endereco-feedback--aviso {
       background: var(--accent, #e8efe7);
-      border: 1px solid #c2d4c2;
+      border: 1px solid var(--accent-border, #c2d4c2);
       color: var(--accent-foreground, #30523b);
     }
     @container enderecos (min-width: 520px) {

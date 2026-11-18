@@ -215,8 +215,8 @@ import { MarcaService } from './marca.service';
       height: 60px;
       border-radius: 999px 999px 14px 14px;
       background: var(--secondary, #f0ebe3);
-      border: 1px solid #dfd3c3;
-      color: var(--primary, #a53e2b);
+      border: 1px solid var(--border, #dfd3c3);
+      color: var(--primary-ink, #a53e2b);
       flex-shrink: 0;
     }
     .info-ilustracao.acesso {
@@ -241,7 +241,7 @@ import { MarcaService } from './marca.service';
     }
     h1 em {
       font-style: italic;
-      color: var(--primary-deep, #7f2f20);
+      color: var(--primary-ink, #7f2f20);
     }
     .bistro-divider-dotted {
       margin: 0.2rem 0;
@@ -273,27 +273,27 @@ import { MarcaService } from './marca.service';
     }
     .info-acoes a[hlmBtn]:not([data-variant]):hover,
     .info-acoes a[hlmBtn][data-variant='default']:hover {
-      background: #933524;
+      background: var(--primary-hover, #933524);
     }
     .info-acoes a[hlmBtn][data-variant='outline'] {
       background: var(--card, #ffffff);
       border: 1px solid var(--border, #e5ded3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     .info-acoes a[hlmBtn][data-variant='outline']:hover {
       background: var(--muted, #f3eee7);
     }
     .info-acoes a[hlmBtn][data-variant='secondary'] {
       background: var(--secondary, #f0ebe3);
-      border: 1px solid #d8cfc3;
+      border: 1px solid var(--border, #d8cfc3);
       color: var(--foreground, #292521);
       border-radius: 14px;
-      box-shadow: 0 2px 0 #ddd4c7;
+      box-shadow: 0 2px 0 var(--border, #ddd4c7);
     }
     .info-acoes a[hlmBtn][data-variant='secondary']:hover {
-      background: #e7dfd3;
+      background: var(--muted, #e7dfd3);
     }
     .info-atalhos {
       display: grid;
@@ -302,7 +302,7 @@ import { MarcaService } from './marca.service';
       min-width: 0;
       padding: 1.1rem;
       border-radius: 16px;
-      border: 1px dashed #d5cbbd;
+      border: 1px dashed var(--input, #d5cbbd);
       background: var(--background, #faf7f2);
     }
     .atalhos-cabeca {
@@ -315,7 +315,7 @@ import { MarcaService } from './marca.service';
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .atalhos-sub {
       margin: 0;
@@ -347,12 +347,12 @@ import { MarcaService } from './marca.service';
     }
     .atalho-linha:hover,
     .atalho-linha:focus-visible {
-      border-color: var(--primary, #a53e2b);
-      background: #fffdfb;
+      border-color: var(--primary-ink, #a53e2b);
+      background: var(--popover, #fffdfb);
       outline: none;
     }
     .atalho-linha:focus-visible {
-      box-shadow: 0 0 0 3px #a53e2b33;
+      box-shadow: 0 0 0 3px var(--primary-soft, #a53e2b33);
     }
     .atalho-nome {
       display: inline-flex;
@@ -363,11 +363,11 @@ import { MarcaService } from './marca.service';
     .atalho-nome app-icone {
       width: 17px;
       height: 17px;
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
       flex-shrink: 0;
     }
     .atalho-pontos {
-      border-bottom: 1px dotted #cfc3b3;
+      border-bottom: 1px dotted var(--input, #cfc3b3);
       height: 1px;
       transform: translateY(2px);
     }
@@ -377,7 +377,7 @@ import { MarcaService } from './marca.service';
       gap: 0.3rem;
       font-size: 0.78rem;
       font-weight: 700;
-      color: var(--primary-deep, #7f2f20);
+      color: var(--primary-ink, #7f2f20);
     }
     .atalho-destino app-icone {
       width: 14px;

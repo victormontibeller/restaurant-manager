@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background-color: #faf7f2;
-  color: #292521;
+  background-color: var(--background, #faf7f2);
+  color: var(--foreground, #292521);
   font-family:
     'Segoe UI Variable Text',
     'Segoe UI',
@@ -17,7 +17,7 @@
   top: 0;
   z-index: 30;
   width: 100%;
-  background-color: #faf7f2;
+  background-color: var(--background, #faf7f2);
   backdrop-filter: none;
   border-bottom: 1px solid var(--border, #e5ded3);
   height: 68px;
@@ -50,7 +50,7 @@
   overflow: hidden;
   box-shadow:
     inset 0 0 0 3px var(--primary, #a53e2b),
-    inset 0 0 0 4px #f3d9d2;
+    inset 0 0 0 4px var(--primary-soft-border, #f3d9d2);
 }
 
 .brand-mark app-icone {
@@ -121,6 +121,35 @@
   flex: none;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 48px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5ded3);
+  background-color: var(--card, #ffffff);
+  color: var(--foreground, #292521);
+  font-size: 13.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  background-color: var(--muted, #f3eee7);
+  border-color: var(--input, #c6b9aa);
+  filter: none;
+}
+
+.theme-toggle app-icone {
+  width: 18px;
+  height: 18px;
+  color: var(--primary-ink, #a53e2b);
+}
+
 .account-link {
   display: inline-flex;
   align-items: center;
@@ -170,8 +199,8 @@
   min-width: 28px;
   height: 28px;
   border-radius: 999px;
-  background-color: #fbefec;
-  color: var(--primary, #a53e2b);
+  background-color: var(--primary-soft, #fbefec);
+  color: var(--primary-ink, #a53e2b);
   display: grid;
   place-items: center;
   font-size: 12.5px;
@@ -232,18 +261,33 @@
   .desktop-nav a {
     padding: 0 11px;
   }
+
+  .theme-toggle-label {
+    display: none;
+  }
+
+  .theme-toggle {
+    width: 48px;
+    min-width: 48px;
+    padding: 0;
+  }
 }
 
 @media (max-width: 680px) {
   .client-header {
     height: 64px;
-    padding: 0 16px;
-    gap: 12px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .header-actions {
+    gap: 6px;
   }
 
   .desktop-nav,
   .account-link span,
-  .cart-link span {
+  .cart-link span,
+  .theme-toggle-label {
     display: none;
   }
 
@@ -251,10 +295,13 @@
     min-width: 0;
     flex: 1 1 auto;
     min-height: 48px;
+    gap: 9px;
   }
 
+  .theme-toggle,
   .account-link {
     padding: 0;
+    width: 48px;
     min-width: 48px;
     min-height: 48px;
     justify-content: center;
@@ -263,7 +310,8 @@
 
   .cart-link {
     min-height: 48px;
-    padding: 0 10px 0 12px;
+    padding: 0 8px 0 10px;
+    gap: 6px;
   }
 
   .brand-mark {
@@ -272,7 +320,7 @@
   }
 
   .restaurant-brand > span:last-child {
-    font-size: 19px;
+    font-size: 18px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -303,7 +351,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
     padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
-    background-color: #ffffff;
+    background-color: var(--card, #ffffff);
     backdrop-filter: none;
     border-top: 1px solid var(--border, #e5ded3);
     box-shadow: 0 -8px 24px #2925210f;
@@ -324,7 +372,7 @@
   }
 
   .mobile-nav a.active {
-    background-color: #fbefec;
-    color: var(--primary, #a53e2b);
+    background-color: var(--primary-soft, #fbefec);
+    color: var(--primary-ink, #a53e2b);
   }
 }

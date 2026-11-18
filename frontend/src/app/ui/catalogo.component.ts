@@ -291,7 +291,7 @@ interface TokenPaleta {
       align-items: center;
       padding: 0.2rem 0.65rem;
       border-radius: 999px;
-      border: 1px solid #dfd3c3;
+      border: 1px solid var(--border, #dfd3c3);
       background: var(--secondary);
       color: var(--foreground);
       font-size: 0.74rem;
@@ -337,7 +337,7 @@ interface TokenPaleta {
       font-size: 0.72rem;
       font-weight: 750;
       letter-spacing: 0.14em;
-      color: var(--primary);
+      color: var(--primary-ink, var(--primary));
     }
     .paleta-grid {
       display: grid;
@@ -366,7 +366,7 @@ interface TokenPaleta {
     }
     .swatch-info code {
       font-size: 0.78rem;
-      color: var(--primary-deep);
+      color: var(--primary-ink, var(--primary-deep));
       font-weight: 700;
     }
     .swatch-info span {
@@ -399,7 +399,7 @@ interface TokenPaleta {
       margin: 0.9rem 0 0;
       padding: 0.75rem 1rem;
       border-radius: var(--radius-md);
-      border: 1px solid #b7d2be;
+      border: 1px solid var(--accent-border, #b7d2be);
       background: var(--accent, #e8efe7);
       color: var(--accent-foreground, #30523b);
       font-size: 0.9rem;

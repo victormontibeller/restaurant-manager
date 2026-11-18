@@ -35,6 +35,7 @@ Referências canônicas obrigatórias:
 | 2026-11-15 | Sprint 2.1 · Correções da Jornada do Cliente | [2026-11-15-sprint2-1-correcoes-cliente.md](2026-11-15-sprint2-1-correcoes-cliente.md) | Cardápio em 3 colunas + abas horizontais + carrossel, ponto da carne sem botão redundante, revisão/checkout em modal, cotação automática Delivery, `/pedidos` compactos, `/mesa` responsiva sem canal fixo fora da mesa, `/entrar`/`/cadastro`/`/conta` e `/design-system` |
 | 2026-11-15 | Pós-Sprint 2.1 · Carrinho & Pedidos | [2026-11-15-carrinho-e-pedidos-polimento.md](2026-11-15-carrinho-e-pedidos-polimento.md) | Miniaturas em `/carrinho` e modal de revisão (comanda lateral enxuta mantida), simetria de **Ver resumo** / **Acompanhar detalhe** em `/pedidos`, e cabeçalho, prioridade de pagamento e fotos de itens em `/pedidos/:id` |
 | 2026-11-16 | Pós-Sprint 2.1 · Fluxo único em Meus Pedidos (`/pedidos`) | [2026-11-16-meus-pedidos-fluxo-unico.md](2026-11-16-meus-pedidos-fluxo-unico.md) | Remoção de `"Ver resumo"` e `<app-pedido-detalhe>` inline em `/pedidos` (`!mesa()`), resumo rico com miniaturas `36×36` / monograma, alertas de pagamento/cancelamento e CTA único `>= 48px` para `/pedidos/:id` |
+| 2026-11-18 | Sprint 3 · Tema Dark Global, Shell da Equipe e KDS (`/cozinha`) | [2026-11-18-sprint3-equipe-kds-e-tema-dark.md](2026-11-18-sprint3-equipe-kds-e-tema-dark.md) | Tokens `:root[data-theme='dark']` WCAG AA + retrofit Dark das Sprints 1–2.1, migração white-label e sem verde legado de `equipe-layout`, botão Claro/Escuro nas topbars e KDS (`cozinha` + `cartao-cozinha`) por clique e arrasto/deslize |
 
 ## Planejamento de Sprints e Fronteira com o Backend
 
@@ -46,8 +47,8 @@ Referências canônicas obrigatórias:
 | Sprint 1 | Fundação global (`styles.css`, `main.ts`, PWA, `/sem-acesso`, `/mesa` header, `/design-system`) e auth secundária (`cadastro`, `recuperacao`, `verificacao`, `aceitar-convite`) | Concluída |
 | Sprint 2 | Jornada do cliente pós-carrinho (`confirmar-pedido`, `/pedidos`, `/pedidos/:id`, Checkout Pro, `/mesa`, disponibilidade) | Concluída |
 | Sprint 2.1 | Correções pós-inspeção de toda a jornada do cliente (`/cardapio`, configurador, `/carrinho`, `/pedidos`, `/mesa`, `/entrar`, `/cadastro`, `/conta`, `/design-system`, `BE-23`–`BE-25`) + polimento de miniaturas e fluxo único em `/pedidos` | Concluída |
-| Sprint 3 | Shell da equipe (`equipe-layout`) e Painel KDS (`/cozinha`) na paleta bistrô de alto contraste | Planejada |
-| Sprint 4 | Gestão operacional diária (Pedidos, Mesas/Salão, Expedição, Financeiro, Pendências e Vendas) | Planejada |
-| Sprint 5 | Gestão comercial e configurações (Catálogo admin, Mídia, Delivery, Prazos e Mercado Pago) | Planejada |
-| Sprint 6 | Gestão corporativa JIT (`acessos`, `convites`, `unidades`, `funcionamento`, `eventos-unidade`) | Planejada |
-| Sprint 7 | Console SaaS (`/plataforma`) e auditoria transversal final (WCAG AA, 0 legado, PWA) | Planejada |
+| Sprint 3 | **Tema Dark Global (Sprints 1–3)** + Shell da equipe (`equipe-layout`) + Painel KDS (`/cozinha` por clique e arraste mouse/touch) | Concluída |
+| Sprint 4 | Gestão operacional diária em Light + Dark (Pedidos, Pedido Assistido, Mesas/Salão, Expedição, Financeiro, Pendências e Vendas) | Planejada |
+| Sprint 5 | Gestão comercial e configurações em Light + Dark (Catálogo admin com fotos, Mídia, Delivery, Prazos SLA e Mercado Pago) | Planejada |
+| Sprint 6 | Gestão corporativa JIT em Light + Dark (`acessos`, `convites`, `unidades`, `funcionamento`, `eventos-unidade`) | Planejada |
+| Sprint 7 | Console SaaS (`/plataforma`) e auditoria transversal final (Light + Dark WCAG AA, 0 legado, PWA) | Planejada |

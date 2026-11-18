@@ -75,7 +75,7 @@ interface PedidoInstalacao extends Event {
       box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
     }
     .pwa-card.has-update {
-      border-color: #d8a99f;
+      border-color: var(--primary-soft-border, #d8a99f);
     }
     summary {
       display: flex;
@@ -108,7 +108,7 @@ interface PedidoInstalacao extends Event {
       color: var(--muted-foreground, #6e6259);
     }
     .pwa-icone.update {
-      color: var(--primary, #a53e2b);
+      color: var(--primary-ink, #a53e2b);
     }
     .pwa-body {
       border-top: 1px dashed var(--border, #e5ded3);
@@ -154,10 +154,10 @@ interface PedidoInstalacao extends Event {
       max-width: 480px;
       margin: 0 0 0.85rem;
       padding: 0.9rem 1rem;
-      border: 1px solid #e6cf9e;
+      border: 1px solid var(--amber-border, #e6cf9e);
       border-radius: var(--radius-lg, 1.05rem);
-      background: #fff8e8;
-      color: #684614;
+      background: var(--amber-bg, #fff8e8);
+      color: var(--amber-fg, #684614);
       box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
       font-size: 0.85rem;
       line-height: 1.5;

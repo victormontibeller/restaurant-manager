@@ -13,6 +13,9 @@ import { SessaoNavegacaoService } from './app/identidade/sessao-navegacao.servic
 import { SessaoMesaService } from './app/mesas/sessao-mesa.service';
 import { PwaComponent } from './app/pwa/pwa.component';
 import { HlmButton } from './app/ui/button';
+import { inicializarTema } from './app/ui/tema';
+
+inicializarTema();
 
 @Component({
   selector: 'app-root',

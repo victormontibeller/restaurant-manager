@@ -41,7 +41,7 @@
   display: grid;
   place-items: center;
   background: var(--card, #ffffff);
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
   font-style: italic;
   font-size: 1.25rem;
@@ -74,7 +74,7 @@
 }
 .talao-resumo-dl dt {
   font-size: 0.88rem;
-  color: #594e46;
+  color: var(--muted-foreground, #594e46);
 }
 .talao-resumo-dl dd {
   color: var(--foreground, #292521);
@@ -154,7 +154,7 @@
   padding-left: 0.7rem;
   border-left: 2px solid var(--border, #e5ded3);
   font-size: 0.86rem;
-  color: #594e46;
+  color: var(--muted-foreground, #594e46);
 }
 .componente-sub {
   margin-left: 0.65rem;
@@ -176,11 +176,11 @@
   margin: 0.9rem 0 0;
   padding: 0.65rem 0.9rem;
   border-radius: 0.75rem;
-  background: #fff9f2;
-  border: 1px solid #ead8c3;
+  background: var(--amber-bg, #fff9f2);
+  border: 1px solid var(--amber-border, #ead8c3);
   font-size: 0.84rem;
   font-weight: 650;
-  color: #7a440d;
+  color: var(--amber-fg, #7a440d);
 }
 .pedido-pagamento-prioritario {
   margin-top: 0.95rem;
@@ -319,9 +319,9 @@
   font-size: 0.85rem;
 }
 .selecao.marcada {
-  border-color: var(--primary, #a53e2b);
-  background: #fbefec;
-  box-shadow: inset 0 0 0 1px var(--primary, #a53e2b);
+  border-color: var(--primary-ink, #a53e2b);
+  background: var(--primary-soft, #fbefec);
+  box-shadow: inset 0 0 0 1px var(--primary-ink, #a53e2b);
 }
 .selecao input {
   flex: 0 0 1.4rem;

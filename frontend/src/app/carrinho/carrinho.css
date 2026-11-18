@@ -31,7 +31,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   margin: 0 0 2px;
   white-space: nowrap;
 }
@@ -40,7 +40,7 @@
   content: '';
   width: 18px;
   height: 2px;
-  background-color: var(--primary, #a53e2b);
+  background-color: var(--primary-ink, #a53e2b);
 }
 
 .t-head h2 {
@@ -67,9 +67,9 @@
   margin: 10px 0 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background-color: var(--warning-soft, #f9f1e2);
-  border: 1px solid #ead8b8;
-  color: var(--warning-foreground, #694d1a);
+  background-color: var(--amber-bg, #f9f1e2);
+  border: 1px solid var(--amber-border, #ead8b8);
+  color: var(--amber-fg, #694d1a);
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -128,7 +128,7 @@
   display: grid;
   place-items: center;
   background-color: var(--secondary, #f0ebe3);
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
   font-style: italic;
   font-size: 22px;
@@ -159,7 +159,7 @@
 
 .t-qty {
   font-weight: 800;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
@@ -293,7 +293,7 @@
 }
 
 .link:hover:not(:disabled) {
-  color: var(--primary, #a53e2b) !important;
+  color: var(--primary-ink, #a53e2b) !important;
   background-color: var(--muted, #f3eee7) !important;
 }
 
@@ -352,12 +352,12 @@
   gap: 12px;
   font-size: 15px !important;
   font-weight: 700 !important;
-  box-shadow: 0 3px 0 #7f2f20 !important;
+  box-shadow: 0 3px 0 var(--primary-deep, #7f2f20) !important;
   cursor: pointer;
 }
 
 .cta:hover:not(:disabled) {
-  background-color: #933524 !important;
+  background-color: var(--primary-hover, #933524) !important;
 }
 
 .cta .amount {
@@ -517,7 +517,7 @@ dialog.revisao-dlg::backdrop {
   font-weight: 750;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 
 .revisao-modal-topo h2 {
@@ -549,8 +549,8 @@ dialog.revisao-dlg::backdrop {
 }
 
 .revisao-modal-fechar:hover {
-  border-color: var(--primary, #a53e2b) !important;
-  color: var(--primary, #a53e2b) !important;
+  border-color: var(--primary-ink, #a53e2b) !important;
+  color: var(--primary-ink, #a53e2b) !important;
 }
 
 .revisao-modal-corpo {

@@ -6,10 +6,12 @@
   overflow-wrap: anywhere;
 }
 .cartao-mesa {
-  border-top: 3px solid #a8b5a3;
+  border-top: 3px solid var(--input, #c6b9aa);
+  background: var(--card, #ffffff);
+  color: var(--foreground, #292521);
 }
 .cartao-mesa.mesa-ocupada {
-  border-top-color: var(--primary, #8c4824);
+  border-top-color: var(--primary, #a53e2b);
 }
 .mesa-cabecalho {
   display: flex;
@@ -38,8 +40,9 @@
   margin: 1.25rem 0;
 }
 .codigo-atendimento {
-  background: #fff5e8;
-  border-color: #e9cba3;
+  background: var(--amber-bg, #fff5e8);
+  border-color: var(--amber-border, #e9cba3);
+  color: var(--amber-fg, #684614);
 }
 .codigo-atendimento .codigo {
   margin: 1rem 0;

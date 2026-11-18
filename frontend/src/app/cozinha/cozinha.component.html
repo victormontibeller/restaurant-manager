@@ -7,23 +7,46 @@
   (brnTabsChange)="aba.set($event || 'fila')"
 >
   <header class="ferramentas">
-    <h1 id="cozinha-titulo">Produção</h1>
+    <div class="titulo-bloco">
+      <span class="kds-kicker">OPERAÇÃO EM TEMPO REAL</span>
+      <h1 id="cozinha-titulo">Produção</h1>
+    </div>
     <div class="controles">
-      <label for="cozinha-canal">Canal</label
-      ><select id="cozinha-canal" #filtro [value]="canal()" (change)="filtrar(filtro.value)">
-        <option value="">Todos os canais</option>
-        <option value="MESA">Mesa</option>
-        <option value="RETIRADA">Retirada</option>
-        <option value="DELIVERY">Delivery</option></select
-      ><button (click)="alternarSom()" [attr.aria-pressed]="som()" [disabled]="somOcupado()">
+      <div class="filtro">
+        <label for="cozinha-canal">Canal</label
+        ><select id="cozinha-canal" #filtro [value]="canal()" (change)="filtrar(filtro.value)">
+          <option value="">Todos os canais</option>
+          <option value="MESA">Mesa</option>
+          <option value="RETIRADA">Retirada</option>
+          <option value="DELIVERY">Delivery</option>
+        </select>
+      </div>
+      <button
+        type="button"
+        class="btn-ferramenta"
+        [class.ativo]="som()"
+        (click)="alternarSom()"
+        [attr.aria-pressed]="som()"
+        [disabled]="somOcupado()"
+      >
         {{ som() ? 'Desativar som' : 'Ativar som' }}</button
-      ><button (click)="telaCheia()">Tela cheia</button
-      ><button (click)="carregar()" [disabled]="ocupado()">Atualizar</button>
+      ><button type="button" class="btn-ferramenta" (click)="telaCheia()">Tela cheia</button
+      ><button
+        type="button"
+        class="btn-ferramenta btn-atualizar"
+        (click)="carregar()"
+        [disabled]="ocupado()"
+      >
+        Atualizar
+      </button>
     </div>
   </header>
   <div class="conexao" role="status">
-    <span [class.offline]="!acompanhamento.conectado()">{{ acompanhamento.estado() }}</span
-    ><span>Última atualização: {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}</span>
+    <span class="conexao-estado" [class.offline]="!acompanhamento.conectado()">
+      <span class="conexao-ponto" aria-hidden="true"></span>{{ acompanhamento.estado() }}</span
+    ><span class="conexao-horario"
+      >Última atualização: {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}</span
+    >
   </div>
   @if (erro()) {
     <p class="erro" role="alert">{{ erro() }}</p>
@@ -32,18 +55,18 @@
     <p class="aviso" role="status">{{ aviso() }}</p>
   }
   @for (id of pendencias(); track id) {
-    <div class="aviso" role="status">
-      Pedido #{{ id.slice(0,8).toUpperCase() }}: resultado ainda não confirmado.<button
-        (click)="recuperar(id)"
-        [disabled]="!online() || comandos.ocupado()"
-      >
+    <div class="aviso aviso-pendencia" role="status">
+      <span>Pedido #{{ id.slice(0, 8).toUpperCase() }}: resultado ainda não confirmado.</span>
+      <button type="button" (click)="recuperar(id)" [disabled]="!online() || comandos.ocupado()">
         Recuperar resultado da mesma ação
       </button>
     </div>
   }
   <div class="abas rm-tabs-list" brnTabsList aria-label="Etapas da cozinha">
     @for (etapa of etapas; track etapa.id) {
-      <button [brnTabsTrigger]="etapa.id">{{ etapa.nome }} ({{ totalEtapa(etapa.id) }})</button>
+      <button type="button" [brnTabsTrigger]="etapa.id" [attr.data-drop-etapa]="etapa.id">
+        {{ etapa.nome }} ({{ totalEtapa(etapa.id) }})
+      </button>
     }
   </div>
   @if (painel(); as dados) {
@@ -51,6 +74,8 @@
       @for (etapa of etapas; track etapa.id) {
         <section
           class="coluna"
+          [attr.data-etapa]="etapa.id"
+          [attr.data-drop-etapa]="etapa.id"
           [class.mobile-oculta]="aba() !== etapa.id"
           [id]="'brn-tabs-content-' + etapa.id"
           [attr.role]="compacta() ? 'tabpanel' : 'region'"
@@ -67,10 +92,6 @@
           @if (etapa.id === 'prontos') {
             <details class="anteriores">
               <summary>Prontos de dias anteriores ({{ dados.anteriores.total }})</summary>
-              <p>
-                Continuam aguardando retirada ou serviço. Sem conclusão informada também aparecem
-                aqui.
-              </p>
               <ng-container *ngTemplateOutlet="lista; context: { $implicit: 'anteriores' }" />
             </details>
           }
@@ -81,6 +102,7 @@
       @for (cartao of grupo(chave).itens; track cartao.pedido.id) {
         <app-cartao-cozinha
           [cartao]="cartao"
+          [etapa]="chave"
           [fuso]="dados.fuso"
           [agora]="agora()"
           [online]="online()"
@@ -97,13 +119,15 @@
       @if (grupo(chave).mais || paginaDo(chave) > 0) {
         <nav class="paginacao" [attr.aria-label]="'Páginas de ' + chave">
           <button
-            (click)="navegar(chave, paginaDo(chave)-1)"
+            type="button"
+            (click)="navegar(chave, paginaDo(chave) - 1)"
             [disabled]="ocupado() || paginaDo(chave) === 0"
           >
             Anterior</button
           ><span>Página {{ paginaDo(chave) + 1 }}</span
           ><button
-            (click)="navegar(chave, paginaDo(chave)+1)"
+            type="button"
+            (click)="navegar(chave, paginaDo(chave) + 1)"
             [disabled]="ocupado() || !grupo(chave).mais"
           >
             Próxima

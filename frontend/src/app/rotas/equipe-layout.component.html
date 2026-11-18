@@ -1,20 +1,33 @@
 <div class="workplace" [class.kitchen-workplace]="cozinha">
   @if (!cozinha) {
     @if (menuAberto()) {
-      <button class="sidebar-overlay" aria-label="Fechar menu" (click)="fecharMenu()"></button>
+      <button
+        type="button"
+        class="sidebar-overlay"
+        aria-label="Fechar menu"
+        (click)="fecharMenu()"
+      ></button>
     }
     <aside class="sidebar" [class.open]="menuAberto()">
       <a routerLink="/gestao" class="workspace-brand"
-        ><span class="brand-mark"
-          >@if (marca.logoUrl() && !marca.erroLogo()) {<img
-            class="brand-logo"
-            [src]="marca.logoUrl()!"
-            [alt]="'Logo de ' + marca.nome()"
-            (error)="marca.marcarErroLogo()"
-          />} @else {<app-icone nome="marca" />}</span
-        ><span>{{ marca.nome() }}<small>GESTÃO DO RESTAURANTE</small></span></a
+        ><span class="brand-mark">
+          @if (marca.logoUrl() && !marca.erroLogo()) {
+            <img
+              class="brand-logo"
+              [src]="marca.logoUrl()!"
+              [alt]="'Logo de ' + marca.nome()"
+              width="40"
+              height="40"
+              decoding="async"
+              (error)="marca.marcarErroLogo()"
+            />
+          } @else {
+            <app-icone nome="marca" />
+          }</span
+        ><span class="brand-copy">{{ marca.nome() }}<small>GESTÃO DA CASA</small></span></a
       >
       <button
+        type="button"
         class="close-menu"
         hlmBtn
         variant="ghost"
@@ -30,16 +43,28 @@
           <a
             routerLink="/gestao/pedidos"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact:true}"
+            [routerLinkActiveOptions]="{ exact: true }"
             ><app-icone nome="pedidos" />Pedidos</a
           >
           <a routerLink="/gestao/mesas" routerLinkActive="active"
             ><app-icone nome="mesas" />Mesas e comandas</a
           >
         }
-        @if (contexto.podeExpedicao()) {<a routerLink="/gestao/expedicao" routerLinkActive="active"><app-icone nome="pedidos" />Expedição</a>}
-        @if (contexto.tem('relatorio.consultar')) {<a routerLink="/gestao/relatorios" routerLinkActive="active"><app-icone nome="atualizacoes" />Vendas e movimentos</a>}
-        @if (contexto.tem('pagamento.reconciliar')) {<a routerLink="/gestao/pendencias" routerLinkActive="active"><app-icone nome="relogio" />Pendências e notificações</a>}
+        @if (contexto.podeExpedicao()) {
+          <a routerLink="/gestao/expedicao" routerLinkActive="active"
+            ><app-icone nome="pedidos" />Expedição</a
+          >
+        }
+        @if (contexto.tem('relatorio.consultar')) {
+          <a routerLink="/gestao/relatorios" routerLinkActive="active"
+            ><app-icone nome="atualizacoes" />Vendas e movimentos</a
+          >
+        }
+        @if (contexto.tem('pagamento.reconciliar')) {
+          <a routerLink="/gestao/pendencias" routerLinkActive="active"
+            ><app-icone nome="relogio" />Pendências e notificações</a
+          >
+        }
         @if (contexto.tem('catalogo.consultar')) {
           <a routerLink="/gestao/catalogo" routerLinkActive="active"
             ><app-icone nome="cardapio" />Cardápio</a
@@ -52,12 +77,16 @@
         }
         @if (contexto.administrador()) {
           <p class="nav-label">ADMINISTRAÇÃO</p>
-          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"><app-icone nome="unidade" />Regiões e checkout</a>
-          <a routerLink="/gestao/integracoes" routerLinkActive="active"><app-icone nome="conta" />Mercado Pago</a>
+          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"
+            ><app-icone nome="unidade" />Regiões e checkout</a
+          >
+          <a routerLink="/gestao/integracoes" routerLinkActive="active"
+            ><app-icone nome="conta" />Mercado Pago</a
+          >
           <a
             routerLink="/gestao/equipe"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact:true}"
+            [routerLinkActiveOptions]="{ exact: true }"
             ><app-icone nome="equipe" />Equipe e acessos</a
           >
           <a routerLink="/gestao/equipe/convites" routerLinkActive="active"
@@ -79,15 +108,18 @@
       <div class="sidebar-bottom">
         <a routerLink="/conta"><app-icone nome="conta" />Minha conta</a>
         <a routerLink="/cardapio"
-          ><app-icone nome="cardapio" />Ver cardápio do cliente<app-icone nome="seta" /></a
-        ><small>Uma boa experiência começa nos detalhes.</small>
+          ><app-icone nome="cardapio" />Ver cardápio do cliente<app-icone
+            class="external-arrow"
+            nome="seta"
+        /></a>
       </div>
     </aside>
   }
   <div class="workspace-body">
-    <header class="workspace-header">
+    <header class="workspace-header topbar">
       @if (!cozinha) {
         <button
+          type="button"
           class="open-menu"
           #abrirMenu
           hlmBtn
@@ -102,26 +134,36 @@
       }
       @if (cozinha) {
         <a routerLink="/cozinha" class="kitchen-brand"
-          ><span class="brand-mark"
-            >@if (marca.logoUrl() && !marca.erroLogo()) {<img
-              class="brand-logo"
-              [src]="marca.logoUrl()!"
-              [alt]="'Logo de ' + marca.nome()"
-              (error)="marca.marcarErroLogo()"
-            />} @else {<app-icone nome="cozinha" />}</span
-          ><span>{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
+          ><span class="brand-mark">
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <img
+                class="brand-logo"
+                [src]="marca.logoUrl()!"
+                [alt]="'Logo de ' + marca.nome()"
+                width="40"
+                height="40"
+                decoding="async"
+                (error)="marca.marcarErroLogo()"
+              />
+            } @else {
+              <app-icone nome="cozinha" />
+            }</span
+          ><span class="brand-copy">{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
         >
       } @else {
-        <div class="breadcrumb">
-          Restaurante <span>/</span> <strong>{{ titulo() }}</strong>
+        <div class="breadcrumb crumbs">
+          <span>{{ marca.nome() }}</span>
+          <span class="crumb-sep" aria-hidden="true">/</span>
+          <strong>{{ titulo() }}</strong>
         </div>
       }
-      <div class="workspace-tools">
+      <div class="workspace-tools topbar-controls">
         @if (cozinha || pagina()['unidade']) {
-          <label class="unit-picker"
+          <label class="unit-picker" for="unidade-operacao"
             ><app-icone nome="unidade" /><span class="sr-only">Unidade da operação</span
             ><select
-              id="unidade-area"
+              id="unidade-operacao"
+              aria-label="Unidade da operação"
               #unidade
               [value]="contexto.unidadeId()"
               (change)="selecionarUnidade(unidade.value); unidade.value = contexto.unidadeId()"
@@ -133,16 +175,28 @@
             </select></label
           >
         }
+        <button
+          type="button"
+          class="theme-toggle"
+          (click)="alternarTema()"
+          [attr.aria-pressed]="temaEscuro()"
+          [attr.aria-label]="temaEscuro() ? 'Ativar tema claro' : 'Ativar tema escuro'"
+        >
+          <app-icone [nome]="temaEscuro() ? 'sol' : 'lua'" />
+          <span class="theme-toggle-label">{{ temaEscuro() ? 'Claro' : 'Escuro' }}</span>
+        </button>
         @if (cozinha) {
-          <a hlmBtn variant="outline" routerLink="/gestao/pedidos">Gestão</a>
+          <a hlmBtn variant="outline" class="kitchen-gestao-link" routerLink="/gestao">Gestão</a>
         }
         <a class="user-avatar" routerLink="/conta" aria-label="Minha conta"
           ><app-icone nome="conta"
         /></a>
         <button
+          type="button"
           hlmBtn
           variant="ghost"
           size="icon"
+          class="logout-btn"
           aria-label="Sair da conta"
           [disabled]="coordenacao.encerrando()"
           (click)="sair()"
@@ -152,23 +206,24 @@
       </div>
     </header>
     <main id="conteudo" class="workspace-main" tabindex="-1">
-      <div class="page-heading">
-        <div>
-          <p class="eyebrow">
-            {{ cozinha ? 'PREPARO E EXPEDIÇÃO' : 'SEU RESTAURANTE, EM SINTONIA' }}
-          </p>
-          <h1>{{ titulo() }}</h1>
+      @if (!cozinha) {
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">GESTÃO DA CASA</p>
+            <h1>{{ titulo() }}</h1>
+          </div>
+          @if (contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
+            <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
+          }
         </div>
-        @if (!cozinha && contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
-          <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
-        }
-      </div>
+      }
       @if (contexto.erro()) {
         <p class="context-error" role="alert">
-          {{ contexto.erro() }}
+          <span>{{ contexto.erro() }}</span>
           <button
+            type="button"
             hlmBtn
-            variant="ghost"
+            variant="outline"
             (click)="contexto.carregar()"
             [disabled]="contexto.carregando()"
           >
@@ -179,8 +234,8 @@
       @if (autorizado()) {
         <router-outlet />
       } @else {
-        <section class="empty-access" role="status">
-          <app-icone nome="conta" />
+        <section class="empty-access access-gate" role="status">
+          <span class="access-gate-icon" aria-hidden="true"><app-icone nome="conta" /></span>
           <h2>Seu acesso foi atualizado</h2>
           <p>Escolha uma área disponível no menu ou entre novamente.</p>
           <a hlmBtn routerLink="/conta">Ver minha conta</a>

@@ -4,6 +4,7 @@ import { CarrinhoService } from '../carrinho/carrinho.service';
 import { SessaoService } from '../identidade/sessao.service';
 import { SessaoMesaService } from '../mesas/sessao-mesa.service';
 import { HlmButton } from '../ui/button';
+import * as Tema from '../ui/tema';
 import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
 
@@ -17,7 +18,7 @@ import { MarcaService } from './marca.service';
         <a routerLink="/cardapio" routerLinkActive="active">Cardápio</a>
         <a [routerLink]="mesa.participante() ? ['/mesa'] : ['/pedidos']" routerLinkActive="active">{{ mesa.participante() ? 'Minha mesa' : 'Meus pedidos' }}</a>
       </nav>
-      <div class="header-actions"><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
+      <div class="header-actions"><button type="button" class="theme-toggle" (click)="alternarTema()" [attr.aria-pressed]="temaEscuro()" [attr.aria-label]="temaEscuro() ? 'Ativar tema claro' : 'Ativar tema escuro'"><app-icone [nome]="temaEscuro() ? 'sol' : 'lua'"/><span class="theme-toggle-label">{{ temaEscuro() ? 'Claro' : 'Escuro' }}</span></button><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
     </header>
     <main id="conteudo" class="client-main" tabindex="-1"><router-outlet/></main>
     <footer class="client-footer"><span><strong>{{ marca.nome() }}</strong><br>Feito para bons momentos à mesa.</span><a routerLink="/gestao/entrar">Área da equipe <app-icone nome="seta"/></a></footer>
@@ -38,4 +39,10 @@ export class ClienteLayoutComponent {
   readonly quantidade = computed(() =>
     this.carrinho.itens().reduce((total, item) => total + item.linha.quantidade, 0),
   );
+  temaEscuro(): boolean {
+    return Tema.temaEscuro?.() ?? false;
+  }
+  alternarTema(): void {
+    Tema.alternarTema?.();
+  }
 }

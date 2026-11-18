@@ -28,7 +28,7 @@ div {
 }
 .sucesso {
   padding: 0.95rem 1.1rem;
-  border: 1px solid #c3d5c5;
+  border: 1px solid var(--accent-border, #c3d5c5);
   border-radius: 0.85rem;
   background: var(--accent, #e8efe7);
   color: var(--accent-foreground, #30523b);
@@ -59,7 +59,7 @@ div {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 .texto-secundario {
   color: var(--muted-foreground, #6e6259);
@@ -191,7 +191,7 @@ div {
   align-items: center;
   justify-content: center;
   background: var(--muted, #f3eee7);
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   margin-bottom: 0.25rem;
 }
 .vazio h3,
@@ -240,7 +240,7 @@ textarea {
   border-radius: 0.75rem;
   padding: 0.7rem 0.9rem;
   color: var(--foreground, #292521);
-  background: var(--card, #fff);
+  background-color: var(--card, #fff);
 }
 select:not(.sr-only) {
   height: 48px;
@@ -279,18 +279,18 @@ button {
   border: 1px solid var(--border, #e5ded3);
 }
 .perigo {
-  color: var(--danger, #ad2929);
-  background: #fff5f3;
-  border-color: #ebc9c4;
+  color: var(--danger-fg, #ad2929);
+  background: var(--danger-bg, #fff5f3);
+  border-color: var(--danger-border, #ebc9c4);
 }
 .btn-cancelar-outline {
-  color: var(--danger, #ad2929);
-  border-color: #e4b7b2;
-  background: #fffbfa;
+  color: var(--danger-fg, #ad2929);
+  border-color: var(--danger-border, #e4b7b2);
+  background: var(--card, #fffbfa);
 }
 .btn-cancelar-outline:hover:not(:disabled) {
-  background: #fff5f3;
-  border-color: var(--danger, #ad2929);
+  background: var(--danger-bg, #fff5f3);
+  border-color: var(--danger-fg, #ad2929);
 }
 .navegacao-operacao {
   padding: 0.35rem;
@@ -323,18 +323,18 @@ button {
 }
 .erro {
   padding: 0.9rem 1rem;
-  border: 1px solid #ebc9c4;
+  border: 1px solid var(--danger-border, #ebc9c4);
   border-radius: 0.75rem;
-  color: var(--danger, #ad2929);
-  background: #fff5f3;
+  color: var(--danger-fg, #ad2929);
+  background: var(--danger-bg, #fff5f3);
   font-weight: 600;
 }
 .aviso {
-  border-left: 3px solid #b56c22;
+  border-left: 3px solid var(--amber-border, #b56c22);
   padding: 0.85rem 1rem;
   border-radius: 0 0.7rem 0.7rem 0;
-  background: #fff6ea;
-  color: #733f0d;
+  background: var(--amber-bg, #fff6ea);
+  color: var(--amber-fg, #733f0d);
 }
 .status-consulta {
   display: grid;
@@ -367,17 +367,17 @@ button {
 .etiqueta[data-estado='AGUARDANDO_PAGAMENTO'],
 .etiqueta[data-estado='AGUARDANDO_ACEITE'],
 .etiqueta[data-estado='EM_FECHAMENTO'] {
-  background: #fdf1df;
-  color: #7a440d;
+  background: var(--amber-bg, #fdf1df);
+  color: var(--amber-fg, #7a440d);
 }
 .etiqueta[data-estado='NA_FILA'],
 .etiqueta[data-estado='EM_ENTREGA'] {
-  background: #edf0f8;
-  color: #36457d;
+  background: var(--info-bg, #edf0f8);
+  color: var(--info-fg, #36457d);
 }
 .etiqueta[data-estado='EM_PREPARO'] {
-  background: #faecdc;
-  color: #82410a;
+  background: var(--primary-soft, #faecdc);
+  color: var(--primary-ink, #82410a);
 }
 .etiqueta[data-estado='PRONTO'],
 .etiqueta[data-estado='CONCLUIDO'],
@@ -387,8 +387,8 @@ button {
 }
 .etiqueta[data-estado='CANCELADO'],
 .etiqueta[data-estado='INATIVA'] {
-  background: #fae9e6;
-  color: #9c2323;
+  background: var(--danger-bg, #fae9e6);
+  color: var(--danger-fg, #9c2323);
 }
 .talao-pedido {
   margin: 0.9rem 0;
@@ -400,7 +400,7 @@ button {
   gap: 0.5rem;
 }
 .talao-pedido--salvia {
-  border-color: #9ec0a6;
+  border-color: var(--accent-border, #9ec0a6);
   background: var(--accent, #e8efe7);
   color: var(--accent-foreground, #30523b);
 }
@@ -437,7 +437,7 @@ button {
 .talao-guia {
   flex: 1 1 1rem;
   min-width: 0.75rem;
-  border-bottom: 1.5px dotted #b4a595;
+  border-bottom: 1.5px dotted var(--input, #b4a595);
   transform: translateY(-0.22rem);
 }
 .talao-valor {
@@ -458,20 +458,20 @@ button {
   border-radius: 0.75rem;
   border: 1px solid var(--border, #e5ded3);
   background: var(--muted, #f3eee7);
-  color: #594e46;
+  color: var(--muted-foreground, #594e46);
   display: grid;
   gap: 0.15rem;
 }
 .timeline-etapa[data-estado='done'] {
   background: var(--accent, #e8efe7);
-  border-color: #b7d2be;
+  border-color: var(--accent-border, #b7d2be);
   color: var(--accent-foreground, #30523b);
 }
 .timeline-etapa[data-estado='current'] {
-  background: #fbefec;
-  border-color: var(--primary, #a53e2b);
-  color: var(--primary-deep, #7f2f20);
-  box-shadow: inset 0 2px 0 var(--primary, #a53e2b);
+  background: var(--primary-soft, #fbefec);
+  border-color: var(--primary-ink, #a53e2b);
+  color: var(--primary-ink, #7f2f20);
+  box-shadow: inset 0 2px 0 var(--primary-ink, #a53e2b);
 }
 .timeline-numero {
   font-size: 0.68rem;
@@ -495,11 +495,11 @@ button {
 }
 .mp-caixa[data-estado='CONFIRMADO'] {
   background: var(--accent, #e8efe7);
-  border-color: #9ec0a6;
+  border-color: var(--accent-border, #9ec0a6);
 }
 .mp-caixa[data-estado='RECUSADO'] {
-  background: #fff5f3;
-  border-color: #ebc9c4;
+  background: var(--danger-bg, #fff5f3);
+  border-color: var(--danger-border, #ebc9c4);
 }
 .mp-caixa h4 {
   margin: 0;
@@ -516,8 +516,8 @@ button {
   padding: 0.65rem 0.8rem;
   border-radius: 0.65rem;
   background: var(--card, #fff);
-  border: 1px solid #ebc9c4;
-  color: var(--danger, #ad2929);
+  border: 1px solid var(--danger-border, #ebc9c4);
+  color: var(--danger-fg, #ad2929);
   font-size: 0.85rem;
 }
 .mp-tentativa {
@@ -589,7 +589,7 @@ button {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 .pedido-resumo-id {
   font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
@@ -642,7 +642,7 @@ button {
   display: grid;
   place-items: center;
   background: var(--secondary, #f0ebe3);
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
   font-style: italic;
   font-size: 1rem;
@@ -669,7 +669,7 @@ button {
 }
 .pedido-resumo-item-qtd {
   font-weight: 800;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
   font-variant-numeric: tabular-nums;
 }
 .pedido-resumo-mais {
@@ -721,8 +721,8 @@ button {
   gap: 0.3rem;
   padding: 0.14rem 0.55rem;
   border-radius: 999px;
-  background: #fdf1df;
-  color: #7a440d;
+  background: var(--amber-bg, #fdf1df);
+  color: var(--amber-fg, #7a440d);
   font-size: 0.74rem;
   font-weight: 700;
   line-height: 1.3;
@@ -732,7 +732,7 @@ button {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #b56c22;
+  background: var(--amber-fg, #b56c22);
   flex: none;
 }
 .pedido-resumo-total {
@@ -791,7 +791,7 @@ button {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 .canal-checkout-unidade {
   font-size: 0.82rem;
@@ -828,14 +828,14 @@ button {
 }
 .canal-opcao.ativo,
 .canal-opcao[aria-pressed='true'] {
-  border-color: var(--primary, #a53e2b);
-  background: #fbefec;
-  color: var(--primary-deep, #7f2f20);
-  box-shadow: 0 0 0 2px #f5d8d2;
+  border-color: var(--primary-ink, #a53e2b);
+  background: var(--primary-soft, #fbefec);
+  color: var(--primary-ink, #7f2f20);
+  box-shadow: 0 0 0 2px var(--primary-soft-border, #f5d8d2);
 }
 .canal-opcao.ativo small,
 .canal-opcao[aria-pressed='true'] small {
-  color: var(--primary-deep, #7f2f20);
+  color: var(--secondary-foreground, #7f2f20);
 }
 .resumo-itens-checkout {
   display: grid;
@@ -885,7 +885,7 @@ button {
   padding: 0.85rem 1rem;
   border-radius: 0.85rem;
   background: var(--accent, #e8efe7);
-  border: 1px solid #9ec0a6;
+  border: 1px solid var(--accent-border, #9ec0a6);
   color: var(--accent-foreground, #30523b);
 }
 .aviso-mesa-ativa strong,
@@ -903,17 +903,17 @@ button {
   gap: 0.25rem;
   padding: 0.85rem 1rem;
   border-radius: 0.85rem;
-  background: #fff8ed;
-  border: 1px solid #e6cfa9;
-  color: #6f420f;
+  background: var(--amber-bg, #fff8ed);
+  border: 1px solid var(--amber-border, #e6cfa9);
+  color: var(--amber-fg, #6f420f);
 }
 .aviso-bloqueio-envio {
   margin: 0.25rem 0 0;
   padding: 0.8rem 0.95rem;
   border-radius: 0.8rem;
-  border-left: 3px solid var(--primary, #a53e2b);
-  background: #fdf3f0;
-  color: var(--primary-deep, #7f2f20);
+  border-left: 3px solid var(--primary-ink, #a53e2b);
+  background: var(--primary-soft, #fdf3f0);
+  color: var(--primary-ink, #7f2f20);
   font-size: 0.88rem;
   font-weight: 650;
 }
@@ -964,7 +964,7 @@ button {
   flex: 1 1 11rem;
 }
 .comanda-identificacao app-icone {
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 .comanda-identificacao h3 {
   margin: 0;
@@ -1069,7 +1069,7 @@ button {
   font-style: italic;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--primary, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
 }
 .mesa-guia-etapas strong {
   display: block;
@@ -1100,16 +1100,16 @@ button {
 }
 .mesa-callout--sucesso {
   background: var(--accent, #e8efe7);
-  border: 1px solid #8ab494;
+  border: 1px solid var(--accent-border, #8ab494);
   border-left: 4px solid var(--accent-foreground, #30523b);
-  color: #213c29;
+  color: var(--accent-foreground, #213c29);
   box-shadow: 0 6px 18px rgb(48 82 59 / 12%);
 }
 .mesa-callout--erro {
-  background: #fff3f1;
-  border: 1px solid #e7b5ae;
-  border-left: 4px solid var(--primary, #a53e2b);
-  color: #8f2318;
+  background: var(--danger-bg, #fff3f1);
+  border: 1px solid var(--danger-border, #e7b5ae);
+  border-left: 4px solid var(--danger-fg, #a53e2b);
+  color: var(--danger-fg, #8f2318);
   box-shadow: 0 6px 18px rgb(165 62 43 / 12%);
 }
 .mesa-fallback-sync {
