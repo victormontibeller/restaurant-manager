@@ -28,7 +28,6 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'gestao',
-    data: { diagnosticoConexao: true },
     canActivate: [equipeObrigatoria],
     loadComponent: () => import('./equipe-layout.component').then((m) => m.EquipeLayoutComponent),
     loadChildren: () => import('./gestao.routes').then((m) => m.GESTAO_ROUTES),
@@ -36,7 +35,6 @@ export const APP_ROUTES: Routes = [
   {
     path: 'conta',
     canMatch: [contaDaEquipe],
-    data: { diagnosticoConexao: true },
     loadComponent: () => import('./equipe-layout.component').then((m) => m.EquipeLayoutComponent),
     children: [
       {
@@ -52,7 +50,7 @@ export const APP_ROUTES: Routes = [
     path: 'cozinha',
     title: 'Cozinha',
     canActivate: [equipeObrigatoria],
-    data: { cozinha: true, titulo: 'Cozinha', diagnosticoConexao: true },
+    data: { cozinha: true, titulo: 'Cozinha' },
     loadComponent: () => import('./equipe-layout.component').then((m) => m.EquipeLayoutComponent),
     children: [
       {

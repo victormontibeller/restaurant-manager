@@ -12,6 +12,8 @@ Passaram 23 combinações distintas de jornada e navegador no mesmo JAR. Elas co
 
 O provedor OAuth dessa rodada é fictício. A homologação integrada no Hermes continua adiada por decisão do proprietário. O próximo marco é executar a matriz completa por perfil e unidade no candidato homologado, com evidências de tela, API e dispositivos físicos.
 
+O publicador do Mac promoveu o commit local `b8eb10c` na [demo](https://demo.localhost:8095) às 18h10, com JAR `b24948fb5b4cca8e7d12b590e7ab6b83e0d0c49d9e7b8131f13f506d79bb3ff8` e a mesma versão da PWA. As 37 migrações coincidiram com a release anterior. O Chromium confirmou a navegação autenticada pelas oito telas em 48 combinações de largura e tema, a posição fixa do menu e do cabeçalho em Pedidos e a abertura da matriz com retorno de foco. A conferência na demo preservou as permissões existentes.
+
 ## Sprints 06 a 09 na demo local — 2026-11-18
 
 Os quatro incrementos foram publicados em sequência na [demo](https://demo.localhost:8095). O menu Dia a dia inclui a [Cozinha](https://demo.localhost:8095/cozinha), com a mesma navegação e os mesmos temas de Pedidos. A [auditoria de dados por tela e perfil](evidencias/cobertura-pedidos-comandas-2026-11-18.md) também estendeu os detalhes de pedidos, comandas e cobranças.

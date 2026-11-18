@@ -41,7 +41,7 @@ import { PwaComponent } from './app/pwa/pwa.component';
       position: relative;
       overflow: clip;
     }
-    :host:has(> app-equipe-layout) > .app-utilities {
+    :host:has(> app-equipe-layout) > .app-utilities:has(> app-pwa.pwa-com-acoes) {
       max-height: 30dvh;
       overflow: auto;
       overscroll-behavior: contain;

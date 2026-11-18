@@ -47,7 +47,7 @@ emulação local não comprova instalação em aparelho físico.
 A cor de abertura da PWA e os ícones instaláveis usam terracota `#a53e2b`.
 O rodapé do cliente exibe a instalação como ação discreta quando o navegador
 oferece o recurso. Avisos aparecem quando a conexão cai ou quando uma atualização
-está disponível. A consulta de diagnóstico do servidor fica na área interna.
+está disponível. O diagnóstico manual da equipe fica na tela de entrada.
 Links públicos inexistentes abertos diretamente no navegador recebem uma página
 HTML com status 404, acesso ao cardápio e entrada manual de mesa. O frontend
 usa a mesma mensagem nas navegações internas. A abertura offline de pedidos e
@@ -187,6 +187,8 @@ O menu lateral, a barra superior e a faixa com o título e a ação principal
 permanecem visíveis durante a rolagem do conteúdo da Gestão e da Cozinha. O
 menu lateral rola por conta própria se faltar altura. No celular e no tablet
 estreito, o menu abre sobre o conteúdo e devolve o foco ao botão ao fechar.
+Na Gestão, na Cozinha e em Minha conta da equipe, a faixa inferior ocupa
+espaço somente enquanto a PWA exibe um aviso ou uma ação disponível.
 Listas administrativas resumem os registros antes da edição. A matriz de
 permissões tem cabeçalho e primeira coluna fixos e rolagem na própria tabela.
 
