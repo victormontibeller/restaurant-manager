@@ -714,6 +714,24 @@ e reexecuções ficam na
 [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md). Essa aprovação
 é local; homologação Linux, serviços externos e piloto permanecem pendentes.
 
+## Demo local do Mac a cada incremento
+
+O [publicador da demonstração](../scripts/demo_sprints.py) acompanha commits em branches `codex/sprint-NN-*` e `hermes/sprint-NN-*` no checkout instalado. A ativação é local, a partir da raiz do projeto, com a demonstração gerenciada já saudável.
+
+```sh
+python3 scripts/demo_sprints.py install
+python3 scripts/demo_sprints.py status
+```
+
+A instalação confere o serviço launchd `com.restaurantmanager.demo.local`, o processo Java, o banco `rm_dev` em loopback e a identidade HTTPS da [demo](https://demo.localhost:8095/conta). Ela instala o `post-commit` no checkout e guarda uma cópia do worker com permissões privadas em `~/.local/share/restaurant-manager-manual/release/sprints/automacao`. Um hook de outro fluxo ou um diretório personalizado de hooks requer integração manual. A ferramenta mostra o motivo e preserva o hook existente.
+
+1. Um commit que altera as entradas de build enfileira o SHA e devolve o controle ao Git. Commits apenas de documentação mantêm a demo e o build em andamento. O worker usa um arquivo do commit em diretório temporário, faz instalação reproduzível pelo lock, checa os tipos da aplicação e dos testes de interface, compila a PWA e empacota o JAR.
+2. Um único worker publica por vez. Antes da troca, ele confere o pedido mais recente e o conteúdo da branch. Commits superados são descartados. A sprint selecionada e a sprint enfileirada estabelecem a versão mínima. As migrações SQL precisam coincidir, byte a byte, com as da versão ativa. Mudanças de esquema seguem manutenção com backup antes da promoção.
+3. O ponteiro da demo muda atomicamente. O launchd reinicia o serviço e o worker verifica processo, JAR, saúde, página e service worker no endereço da demo. Os arquivos JavaScript e CSS com hash da versão anterior continuam disponíveis para abas abertas. O diretório da release registra o SHA da origem e o SHA-256 do JAR.
+4. Falha de build mantém a versão servida. Falha de saúde após a troca recupera e valida a anterior. Um diário privado registra trocas interrompidas para retomada pelo próximo worker. O log `automacao/worker.log` e o comando `status` mostram o resultado. Para repetir a última tentativa, execute `python3 scripts/demo_sprints.py worker` no checkout instalado.
+
+Para desativar os próximos disparos, execute `python3 scripts/demo_sprints.py uninstall`. Uma atualização da ferramenta pode ser instalada novamente pelo comando de ativação. Essa rotina cobre a demonstração deste Mac. Os testes completos, as auditorias obrigatórias de CI e os critérios de homologação continuam no [plano de testes](26_TEST_STRATEGY.md).
+
 ## Documentos relacionados
 
 - [Métricas e alertas](07_OBSERVABILITY.md)
