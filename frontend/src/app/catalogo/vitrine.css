@@ -21,12 +21,6 @@
   letter-spacing: -0.035em;
   margin: 0.5rem 0;
 }
-.bistro-hero .eyebrow {
-  color: #f1cba2;
-}
-.bistro-hero p {
-  margin: 0.6rem 0;
-}
 .bistro-hero span {
   display: block;
   font-size: 0.65rem;
@@ -46,21 +40,8 @@
   background: transparent !important;
 }
 .vitrine-cabecalho {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-}
-.vitrine-cabecalho h2 {
-  font-size: 1.8rem;
-  margin: 0.3rem 0;
-}
-.vitrine-cabecalho .eyebrow {
-  margin: 0;
-}
-.vitrine-cabecalho .badge {
-  background: var(--card);
+  margin: 0 0 var(--gestao-espaco-3, 12px);
+  font-size: 1.125rem;
 }
 .categorias {
   display: flex;
@@ -254,9 +235,6 @@
   }
   .vitrine-painel {
     padding-bottom: 5rem !important;
-  }
-  .vitrine-cabecalho > .badge {
-    display: none;
   }
 }
 
@@ -524,9 +502,6 @@
   .bistro-hero h1 {
     font-size: 2.6rem;
   }
-  .bistro-hero p:not(.eyebrow) {
-    max-width: 20ch;
-  }
   .produtos {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -535,9 +510,6 @@
   }
   .produto-corpo {
     padding: 1rem;
-  }
-  .vitrine-cabecalho h2 {
-    font-size: 1.65rem;
   }
 }
 
