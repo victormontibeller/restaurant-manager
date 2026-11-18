@@ -1,5 +1,15 @@
 # Checkpoint de execução
 
+## Faixa inferior da Gestão — 2026-11-18
+
+A [demo local](https://demo.localhost:8095/gestao/pedidos) confirmou o commit `f82f286` às 19h24, com PWA `b593797947695774682f` e JAR `237f08d0d4f1ab8c993ccb3bb8baea2e677ff8c9714934db36578dedaa7843a1`. Gestão, Cozinha e Minha conta da equipe ganharam o espaço antes reservado pelo diagnóstico permanente. A faixa inferior aparece quando a PWA tem aviso ou ação disponível. O diagnóstico manual da equipe fica na tela de entrada. As classes Java e as migrações SQL do pacote coincidiram byte a byte com a release anterior.
+
+Formatação, tipos e lógica do frontend passaram. Uma aba Chromium da demo em 360 px permaneceu aberta no serviço anterior até receber o aviso de atualização. Cancelar manteve a versão anterior na aba. Confirmar ativou a PWA publicada e recarregou Pedidos com a faixa recolhida.
+
+Na demo, passaram 12 combinações de Pedidos, Acessos, Cozinha e Minha conta em 360, 768 e 1280 px no Chromium. Em cada uma, o aviso offline apareceu, a faixa voltou a ocupar zero pixels ao reconectar e a barra e o título conservaram suas posições. A consulta manual na entrada da equipe confirmou o acesso ao banco, e o Cardápio abriu sem esse diagnóstico.
+
+O cenário S06-UI03 passou nos cinco projetos de navegador contra o mesmo JAR em HTTPS e PostgreSQL isolado. O cenário verificou rolagem, menu, teclado e recuperação após o modo offline.
+
 ## Navegação fixa e administração da Gestão — 2026-11-18
 
 O candidato local deriva de `223feac` na branch `codex/sprint-09-catalogo-ofertas`. A Gestão e a Cozinha ganharam rolagem independente do menu e do conteúdo. A barra superior, o título e a ação principal continuam visíveis durante a rolagem. A administração usa o padrão compacto nos dois temas. **Equipe** reúne os vínculos dos funcionários e **Acessos** abre a matriz de permissões por módulo e perfil.
