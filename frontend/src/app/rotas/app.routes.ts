@@ -1,5 +1,11 @@
 import { CanMatchFn, Routes } from '@angular/router';
-import { clienteObrigatorio, contaObrigatoria, equipeObrigatoria, protegerSaida } from './guardas';
+import {
+  clienteObrigatorio,
+  contaObrigatoria,
+  contaDaEquipe,
+  equipeObrigatoria,
+  protegerSaida,
+} from './guardas';
 
 const identidade = () =>
   import('../identidade/identidade.component').then((m) => m.IdentidadeComponent);
@@ -26,6 +32,21 @@ export const APP_ROUTES: Routes = [
     canActivate: [equipeObrigatoria],
     loadComponent: () => import('./equipe-layout.component').then((m) => m.EquipeLayoutComponent),
     loadChildren: () => import('./gestao.routes').then((m) => m.GESTAO_ROUTES),
+  },
+  {
+    path: 'conta',
+    canMatch: [contaDaEquipe],
+    data: { diagnosticoConexao: true },
+    loadComponent: () => import('./equipe-layout.component').then((m) => m.EquipeLayoutComponent),
+    children: [
+      {
+        path: '',
+        title: 'Minha conta',
+        data: { formulario: 'conta', titulo: 'Minha conta', equipe: true, compacta: true },
+        canDeactivate: [protegerSaida],
+        loadComponent: identidade,
+      },
+    ],
   },
   {
     path: 'cozinha',
@@ -123,6 +144,7 @@ export const APP_ROUTES: Routes = [
         title: 'Minha conta',
         data: { formulario: 'conta', visualCliente: true },
         canActivate: [contaObrigatoria],
+        canDeactivate: [protegerSaida],
         loadComponent: identidade,
       },
       {

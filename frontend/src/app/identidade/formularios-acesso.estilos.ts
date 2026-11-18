@@ -20,7 +20,7 @@ export const estilosFormularioAcesso = `
   }
 
   .erro {
-    color: #9d2424;
+    color: var(--gestao-erro-fg, #9d2424);
     font-weight: 600;
   }
 
@@ -80,7 +80,7 @@ export const estilosFormularioAcesso = `
   }
 
   :host(.formulario-cliente) .erro {
-    background: #fff1ed;
+    background: var(--gestao-erro-bg, #fff1ed);
     color: var(--destructive);
   }
 

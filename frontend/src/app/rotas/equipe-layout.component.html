@@ -1,8 +1,8 @@
 <div
   class="workplace"
   [class.kitchen-workplace]="cozinha"
-  [class.gestao-compacta]="pagina()['compacta']"
-  [attr.data-tema-gestao]="cozinha ? null : tema()"
+  [class.gestao-compacta]="!cozinha"
+  [attr.data-tema-gestao]="tema()"
 >
   @if (!cozinha) {
     @if (menuAberto()) {
@@ -121,13 +121,7 @@
           ><span>{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
         >
       } @else {
-        @if (pagina()['compacta']) {
-          <div class="breadcrumb">Gestão</div>
-        } @else {
-          <div class="breadcrumb">
-            Restaurante <span>/</span> <strong>{{ titulo() }}</strong>
-          </div>
-        }
+        <div class="breadcrumb">Gestão</div>
       }
       <div class="workspace-tools">
         @if (cozinha || pagina()['unidade']) {
@@ -149,20 +143,7 @@
         @if (cozinha) {
           <a hlmBtn variant="outline" routerLink="/gestao/pedidos">Gestão</a>
         }
-        @if (!cozinha) {
-          <button
-            hlmBtn
-            variant="ghost"
-            size="icon"
-            type="button"
-            class="alternar-tema"
-            [attr.aria-label]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
-            [attr.title]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
-            (click)="alternarTema()"
-          >
-            <app-icone [nome]="tema() === 'escuro' ? 'sol' : 'lua'" />
-          </button>
-        }
+        <app-alternar-tema />
         <a class="user-avatar" routerLink="/conta" aria-label="Minha conta"
           ><app-icone nome="conta"
         /></a>

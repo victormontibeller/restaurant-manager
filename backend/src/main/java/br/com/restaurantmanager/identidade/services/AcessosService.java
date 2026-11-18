@@ -4,6 +4,7 @@ import br.com.restaurantmanager.identidade.dtos.AcessosEfetivos;
 import br.com.restaurantmanager.identidade.dtos.DescricaoAcao;
 import br.com.restaurantmanager.identidade.dtos.FuncionarioResumo;
 import br.com.restaurantmanager.identidade.dtos.MatrizAcessos;
+import br.com.restaurantmanager.identidade.dtos.MinhaConta;
 import br.com.restaurantmanager.identidade.dtos.UnidadePermitida;
 import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.models.Acao;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -35,6 +37,51 @@ public class AcessosService {
 
     public AcessosService(AcessosRepository repository) {
         this.repository = repository;
+    }
+
+    @Transactional
+    public MinhaConta minhaConta(IdentidadeAtual ator) {
+        repository.politica(false);
+        return dadosDaConta(usuarioAtual(ator));
+    }
+
+    @Transactional
+    public MinhaConta atualizarMinhaConta(IdentidadeAtual ator, long versao, String nome, String telefone) {
+        repository.politica(false);
+        var usuario = usuarioAtual(ator);
+        String nomeLimpo = opcional(nome);
+        if (nomeLimpo != null && nomeLimpo.codePoints().anyMatch(Character::isISOControl)) {
+            throw invalido("Informe um nome sem caracteres de controle.");
+        }
+        String numero = opcional(telefone);
+        if (numero != null) {
+            numero = numero.replaceAll("[ ().-]", "");
+            if (!numero.matches("[+]?[0-9]{8,15}")) {
+                throw invalido("Informe um telefone com 8 a 15 dígitos.");
+            }
+        }
+        if (versao != usuario.getVersao()) {
+            throw conflito("Os dados da conta mudaram. Consulte a versão atual antes de editar.");
+        }
+        if (!Objects.equals(nomeLimpo, usuario.getNome()) || !Objects.equals(numero, usuario.getTelefone())) {
+            usuario.atualizarDadosPessoais(nomeLimpo, numero, Instant.now());
+            try {
+                repository.flush();
+            } catch (ObjectOptimisticLockingFailureException erro) {
+                throw conflito("Os dados da conta mudaram. Consulte a versão atual antes de editar.");
+            }
+        }
+        return dadosDaConta(usuario);
+    }
+
+    private MinhaConta dadosDaConta(Usuario usuario) {
+        var unidades = usuario.getPerfil().equals("CLIENTE") ? List.<UnidadePermitida>of() : unidadesExistentesDo(usuario);
+        return new MinhaConta(usuario.getNome(), usuario.getTelefone(), usuario.getEmail(),
+                usuario.isEmailVerificado(), usuario.getPerfil(), usuario.getCriadoEm(), usuario.getVersao(), unidades);
+    }
+
+    private static String opcional(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.strip();
     }
 
     @Transactional
@@ -326,7 +373,10 @@ public class AcessosService {
                 u.getPerfil(),
                 u.isAtivo(),
                 u.getVersao(),
-                repository.unidades(u.getId()));
+                repository.unidades(u.getId()),
+                u.getNome(),
+                u.isEmailVerificado(),
+                u.getCriadoEm());
     }
 
     private String estado(Usuario u, List<UUID> unidades) {

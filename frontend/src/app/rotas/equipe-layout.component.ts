@@ -24,19 +24,19 @@ import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
 import { NavegacaoProtegidaService } from './navegacao-protegida.service';
 
-const CHAVE_TEMA_GESTAO = 'rm-tema-gestao';
-
-function lerTemaGestao(): 'claro' | 'escuro' {
-  try {
-    return localStorage.getItem(CHAVE_TEMA_GESTAO) === 'escuro' ? 'escuro' : 'claro';
-  } catch {
-    return 'claro';
-  }
-}
+import { AlternarTemaComponent } from '../ui/alternar-tema.component';
+import { TemaService } from '../ui/tema.service';
 
 @Component({
   selector: 'app-equipe-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, HlmButton, IconeComponent],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    HlmButton,
+    IconeComponent,
+    AlternarTemaComponent,
+  ],
   templateUrl: './equipe-layout.component.html',
   styleUrl: './equipe-layout.css',
 })
@@ -48,7 +48,7 @@ export class EquipeLayoutComponent {
   private readonly router = inject(Router);
   private readonly rota = inject(ActivatedRoute);
   readonly cozinha = this.rota.snapshot.data['cozinha'] === true;
-  readonly tema = signal(lerTemaGestao());
+  readonly tema = inject(TemaService).atual;
   readonly menuAberto = signal(false);
   @ViewChild('abrirMenu') abrirMenu?: ElementRef<HTMLButtonElement>;
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -97,16 +97,6 @@ export class EquipeLayoutComponent {
     }
     this.menuAberto.set(true);
     setTimeout(() => this.elemento.nativeElement.querySelector<HTMLElement>('.sidebar a')?.focus());
-  }
-
-  alternarTema(): void {
-    const tema = this.tema() === 'claro' ? 'escuro' : 'claro';
-    this.tema.set(tema);
-    try {
-      localStorage.setItem(CHAVE_TEMA_GESTAO, tema);
-    } catch {
-      // O tema ainda pode ser alternado nesta página.
-    }
   }
 
   @HostListener('document:keydown.escape') fecharMenu(): void {

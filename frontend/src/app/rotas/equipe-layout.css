@@ -445,3 +445,14 @@ h1 {
     max-width: min(46vw, 215px);
   }
 }
+
+.kitchen-workplace[data-tema-gestao='escuro'] {
+  background: var(--background);
+}
+.kitchen-workplace[data-tema-gestao='escuro'] .unit-picker {
+  background: var(--card);
+}
+@media (max-width: 800px) {
+  .kitchen-workplace .workspace-header,
+  .kitchen-workplace .workspace-tools { flex-wrap: wrap; gap: 6px; }
+}

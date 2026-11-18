@@ -173,7 +173,8 @@ public class ConviteService {
     }
 
     private ConviteResumo resumo(ConviteFuncionario c) {
-        return new ConviteResumo(c.getId(), c.getEmail(), c.getPerfil(), c.vinculos(), c.estado(Instant.now()), c.getExpiraEm());
+        return new ConviteResumo(c.getId(), c.getEmail(), c.getPerfil(), c.vinculos(),
+                c.estado(Instant.now()), c.getExpiraEm(), c.getCriadoEm(), c.getAceitoEm(), c.getRevogadoEm());
     }
 
     private static AuthFailure inexistente() {

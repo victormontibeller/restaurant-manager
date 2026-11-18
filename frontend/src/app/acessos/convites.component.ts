@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 import { ConvitePendenteService } from './convite-pendente.service';
@@ -17,11 +17,14 @@ interface Convite {
   unidades: string[];
   estado: string;
   expiraEm: string;
+  criadoEm: string;
+  aceitoEm: string | null;
+  revogadoEm: string | null;
 }
 
 @Component({
   selector: 'app-convites',
-  imports: [DatePipe],
+  imports: [DatePipe, NgTemplateOutlet],
   template: `
     <section aria-labelledby="convites-titulo" [attr.aria-busy]="ocupado()">
       <div class="gestao-toolbar">
@@ -109,8 +112,15 @@ interface Convite {
         <button data-variant="outline" [disabled]="ocupado()">Consultar convite</button>
       </form>
       @if (encontrado(); as c) {
+        <ng-container [ngTemplateOutlet]="dadosConvite" [ngTemplateOutletContext]="{ $implicit: c }"/>
         <p class="consulta-resultado" role="status">{{ c.id }} · {{ c.email }} · {{ c.perfil }} · {{ c.estado }}</p>
       }
+      <ng-template #dadosConvite let-c><details class="detalhes-convite"><summary>Dados do convite</summary>
+              <p>Unidades: {{ nomesUnidades(c) }}</p>
+              <p>Criado em {{ c.criadoEm | date: 'dd/MM/yyyy HH:mm' }} · Validade até {{ c.expiraEm | date: 'dd/MM/yyyy HH:mm' }}</p>
+              @if (c.aceitoEm) { <p>Aceito em {{ c.aceitoEm | date: 'dd/MM/yyyy HH:mm' }}</p> }
+              @if (c.revogadoEm) { <p>Revogado em {{ c.revogadoEm | date: 'dd/MM/yyyy HH:mm' }}</p> }
+            </details></ng-template>
       <div class="gestao-lista">
         @for (c of lista(); track c.id) {
           <article class="gestao-linha">
@@ -120,6 +130,7 @@ interface Convite {
             </div>
             <span class="gestao-estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
             <span class="validade">Expira em <time [attr.datetime]="c.expiraEm">{{ c.expiraEm | date: 'dd/MM/yyyy HH:mm' }}</time></span>
+            <ng-container [ngTemplateOutlet]="dadosConvite" [ngTemplateOutletContext]="{ $implicit: c }"/>
             @if (c.estado === 'PENDENTE') {
               <button type="button" data-variant="outline" [attr.aria-label]="'Revogar convite de ' + c.email"
                 (click)="revogar(c.id)" [disabled]="ocupado()">Revogar</button>
@@ -209,6 +220,17 @@ export class ConvitesComponent implements OnInit {
 
   vincular(id: string, ativo: boolean): void {
     this.vinculos.update((v) => (ativo ? [...new Set([...v, id])] : v.filter((x) => x !== id)));
+  }
+
+  nomesUnidades(convite: Convite): string {
+    if (convite.perfil === 'ADMINISTRADOR') return 'Todas as unidades';
+    return (
+      convite.unidades
+        .map(
+          (id) => this.unidades().find((u) => u.id === id)?.nome ?? 'Unidade fora da lista ativa',
+        )
+        .join(', ') || 'Nenhuma unidade'
+    );
   }
 
   async carregar(pagina: number): Promise<void> {

@@ -266,6 +266,19 @@
       </ul>
     </section>
   }
+  @if (contexto() === 'cliente' && pedido().endereco; as endereco) {
+    <details>
+      <summary>Dados da entrega</summary>
+      <address>
+        {{ endereco.destinatario }} · {{ endereco.contato }}<br />
+        {{ endereco.logradouro }}, {{ endereco.numero }} {{ endereco.complemento }}<br />
+        {{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP {{ endereco.cep }}
+      </address>
+      @if (pedido().entrega; as entrega) {
+        <p>{{ entrega.regiao }} · Taxa {{ moeda(entrega.taxa) }}</p>
+      }
+    </details>
+  }
   @if (pessoal() && pedido().saldo; as saldo) {
     <dl>
       <dt>Total devido</dt>
@@ -351,8 +364,8 @@
   </div>
   @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
     <p>
-      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
-      decisão.
+      {{ horario(solicitacao.criadaEm) }} · Solicitação: {{ solicitacao.motivo }} ·
+      {{ solicitacao.estado }}. A produção continua até decisão.
     </p>
     @if (
       contexto() === 'operacao' && solicitacao.estado === 'PENDENTE' && tem('pedido.cancelar_apos_preparo')

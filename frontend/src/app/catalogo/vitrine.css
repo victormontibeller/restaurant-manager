@@ -60,7 +60,7 @@
   margin: 0;
 }
 .vitrine-cabecalho .badge {
-  background: white;
+  background: var(--card);
 }
 .categorias {
   display: flex;
@@ -76,7 +76,7 @@
 }
 .categorias button[aria-pressed='true'] {
   background: var(--primary);
-  color: white;
+  color: var(--primary-foreground);
   border-color: var(--primary);
 }
 .produtos {
@@ -87,7 +87,7 @@
   padding: 0;
   overflow: hidden;
   border-color: var(--border);
-  background: white;
+  background: var(--card);
   display: flex;
   flex-direction: column;
   border-radius: 1rem;
@@ -107,8 +107,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: #f0ebe3;
-  color: #785d40;
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 .produto-sem-foto svg {
   width: 65px;
@@ -158,7 +158,7 @@
 }
 .carrinho-lateral app-carrinho {
   display: block;
-  background: white;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.25rem;
@@ -261,11 +261,6 @@
 }
 
 :host(.cardapio-cliente) {
-  --background: #faf9f7;
-  --foreground: #262320;
-  --muted-foreground: #635c56;
-  --border: #dedad6;
-  --input: #a9a099;
   --radius: 12px;
   line-height: 1.45;
   color: var(--foreground);
@@ -328,15 +323,15 @@
   border-radius: 999px;
   padding: 8px 16px;
   border-color: transparent;
-  background: #f2eee8;
+  background: var(--muted);
   color: var(--foreground);
   font-size: 0.875rem;
 }
 
 :host(.cardapio-cliente) .categorias button[aria-pressed='true'] {
   color: var(--primary);
-  border-color: #e2b6a8;
-  background: #faeae4;
+  border-color: var(--selecao-borda);
+  background: var(--selecao-bg);
 }
 
 :host(.cardapio-cliente) .modos-cardapio {
@@ -356,7 +351,7 @@
 :host(.cardapio-cliente) .modos-cardapio [aria-pressed='true'] {
   color: var(--primary);
   border-color: var(--primary);
-  background: #f9eeea;
+  background: var(--selecao-bg);
 }
 
 :host(.cardapio-cliente) .estado-cardapio {
@@ -417,8 +412,8 @@
 }
 
 :host(.cardapio-cliente) .produto-corpo > .acoes button:first-child {
-  border-color: #e2b6a8;
-  background: #fff9f6;
+  border-color: var(--selecao-borda);
+  background: var(--superficie-cliente);
   color: var(--primary);
 }
 

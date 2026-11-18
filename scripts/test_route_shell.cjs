@@ -43,7 +43,9 @@ function fixture(cozinha = false, storage = new Map()) {
     ativar: () => ativacoes++,
     desativar: () => ativacoes--,
   };
+  class TemaService {}
   const instancias = new Map([
+    [TemaService, { atual: signal('claro') }],
     [ActivatedRoute, route],
     [
       Router,
@@ -93,6 +95,7 @@ function fixture(cozinha = false, storage = new Map()) {
         : nome === '@angular/router'
           ? { ActivatedRoute, Router, NavigationEnd }
           : {
+              TemaService,
               ContextoOperacaoService,
               SessaoNavegacaoService,
               MarcaService,
@@ -155,18 +158,49 @@ expedicao.permissions.set(['pedido.consultar']);
 assert.equal(expedicao.layout.autorizado(), false, 'Revogação remove a página já aberta.');
 expedicao.terminar();
 
-const preferencia = new Map();
-const gestao = fixture(false, preferencia);
-assert.equal(gestao.layout.tema(), 'claro');
-assert.equal(preferencia.size, 0);
-gestao.layout.alternarTema();
-assert.equal(gestao.layout.tema(), 'escuro');
-gestao.terminar();
-const gestaoReaberta = fixture(false, preferencia);
-assert.equal(gestaoReaberta.layout.tema(), 'escuro');
-gestaoReaberta.layout.alternarTema();
-assert.equal(gestaoReaberta.layout.tema(), 'claro');
-gestaoReaberta.terminar();
+function temaNavegador(storage) {
+  const dataset = {};
+  let aoMudar;
+  const navegador = {
+    localStorage: {
+      getItem: (chave) => storage.get(chave),
+      setItem: (chave, valor) => storage.set(chave, valor),
+    },
+    addEventListener: (_, fn) => (aoMudar = fn),
+    removeEventListener() {},
+  };
+  const documento = { documentElement: { dataset }, defaultView: navegador };
+  const context = {
+    exports: {},
+    require: () => ({
+      DOCUMENT: documento,
+      Injectable: () => (tipo) => tipo,
+      inject: (token) => (token === documento ? documento : { onDestroy() {} }),
+      signal,
+    }),
+  };
+  vm.runInNewContext(
+    ts.transpileModule(fs.readFileSync(repo + '/frontend/src/app/ui/tema.service.ts', 'utf8'), {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.CommonJS,
+        experimentalDecorators: true,
+      },
+    }).outputText,
+    context,
+  );
+  return { tema: new context.exports.TemaService(), dataset, sincronizar: (e) => aoMudar(e) };
+}
+const storage = new Map();
+const primeira = temaNavegador(storage);
+assert.equal(primeira.dataset.tema, 'claro');
+primeira.tema.alternar();
+assert.equal(primeira.dataset.tema, 'escuro');
+assert.equal(storage.get('rm-tema-gestao'), 'escuro');
+const recarga = temaNavegador(storage);
+assert.equal(recarga.tema.atual(), 'escuro');
+recarga.sincronizar({ key: 'rm-tema-gestao', newValue: 'claro' });
+assert.equal(recarga.dataset.tema, 'claro');
 
 console.log(
   'Layout: ativação antes do snapshot do filho, navegação, permissão, logout, limpeza e preferência de tema aprovados; injeções fictícias.',

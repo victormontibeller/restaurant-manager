@@ -1,15 +1,16 @@
 import { Component, signal } from '@angular/core';
+import { AlternarTemaComponent } from './alternar-tema.component';
 import { HlmButton } from './button';
 import { RM_TABS } from './tabs';
 
 @Component({
   selector: 'app-catalogo-ui',
-  imports: [HlmButton, RM_TABS],
+  imports: [HlmButton, RM_TABS, AlternarTemaComponent],
   template: `
     <main class="ui-catalogo">
       <h1>Componentes do Restaurant Manager</h1>
       <section class="gestao-compacta" aria-labelledby="ui-gestao">
-        <h2 id="ui-gestao">Gestão</h2>
+        <h2 id="ui-gestao">Gestão</h2><app-alternar-tema/>
         <div class="gestao-toolbar" role="group" aria-label="Filtros de exemplo">
           <div><label for="ui-estado">Estado</label><select id="ui-estado"><option>Em andamento</option><option>Concluídos</option></select></div>
           <div><label for="ui-canal">Canal</label><select id="ui-canal"><option>Todos os canais</option><option>Mesa</option></select></div>

@@ -1,5 +1,9 @@
 # Checkpoint de execução
 
+## Sprint 06 — 2026-11-18
+
+Base `1a3d01f`. Perfil próprio, campos estruturados e tema compartilhado na [Sprint 06](28_SPRINT_06.md). Dois testes de perfil em PostgreSQL passaram. O build da PWA `bbe2c4d7bc0c1b86eb63` e o JAR `d9e6aabcf1da4627a37a41ef57d52e8cfb535c96da6612fa0ce1a262bca36065` estão na demonstração local em 8095. A migração V29 foi aplicada em cópia no cluster dedicado e restaurada em um banco novo, preservando a versão anterior. Validação no Hermes adiada pelo proprietário.
+
 ## Integração da Gestão compacta — 2026-11-16
 
 A branch `codex/integrar-gestao` integra o snapshot local `7f9cfd9` à

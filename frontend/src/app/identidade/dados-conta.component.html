@@ -1,0 +1,113 @@
+<section class="dados" [attr.aria-busy]="ocupado()" aria-labelledby="dados-pessoais-titulo">
+  <header>
+    <h2 id="dados-pessoais-titulo">Dados pessoais</h2>
+    @if (dados() && !editando()) {
+      <button
+        #editarBotao
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="editar()"
+        [disabled]="ocupado()"
+      >
+        Editar dados pessoais
+      </button>
+    }
+  </header>
+  @if (dados(); as conta) {
+    <dl class="resumo">
+      <div>
+        <dt>E-mail</dt>
+        <dd>{{ conta.email }}</dd>
+      </div>
+      <div>
+        <dt>Verificação</dt>
+        <dd>{{ conta.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</dd>
+      </div>
+      <div>
+        <dt>Perfil</dt>
+        <dd>{{ nomePerfil() }}</dd>
+      </div>
+      <div>
+        <dt>Data do cadastro</dt>
+        <dd>
+          <time [attr.datetime]="conta.criadoEm">{{ dataCadastro(conta.criadoEm) }}</time>
+        </dd>
+      </div>
+      @if (!editando()) {
+        <div>
+          <dt>Nome</dt>
+          <dd>{{ conta.nome || 'Não informado' }}</dd>
+        </div>
+        <div>
+          <dt>Telefone</dt>
+          <dd>{{ conta.telefone || 'Não informado' }}</dd>
+        </div>
+      }
+    </dl>
+    @if (editando()) {
+      <form (submit)="salvar($event)">
+        <label
+          >Nome<input
+            #campoNome
+            type="text"
+            maxlength="120"
+            autocomplete="name"
+            [value]="nome()"
+            (input)="nome.set(campoNome.value)"
+            [disabled]="ocupado() || consultarAntesDeSalvar()"
+        /></label>
+        <label
+          >Telefone<input
+            #campoTelefone
+            type="tel"
+            maxlength="32"
+            autocomplete="tel"
+            [value]="telefone()"
+            (input)="telefone.set(campoTelefone.value)"
+            [disabled]="ocupado() || consultarAntesDeSalvar()"
+        /></label>
+        <div class="acoes">
+          <button
+            hlmBtn
+            type="submit"
+            [disabled]="ocupado() || !alterado() || consultarAntesDeSalvar()"
+          >
+            Salvar dados pessoais
+          </button>
+          <button hlmBtn variant="outline" type="button" (click)="fechar()" [disabled]="ocupado()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    }
+    @if (conta.perfil !== 'CLIENTE') {
+      <h3>Unidades de acesso</h3>
+      @if (conta.unidades.length) {
+        <ul class="unidades">
+          @for (unidade of conta.unidades; track unidade.id) {
+            <li>
+              <strong>{{ unidade.nome }}</strong
+              ><span>{{ unidade.fuso }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p>Nenhuma unidade vinculada.</p>
+      }
+    }
+  } @else if (ocupado()) {
+    <p role="status">Consultando a conta…</p>
+  }
+  @if (erro()) {
+    <p role="alert">{{ erro() }}</p>
+    @if (!dados() || consultarAntesDeSalvar()) {
+      <button hlmBtn variant="outline" type="button" (click)="consultar()" [disabled]="ocupado()">
+        Consultar dados atuais
+      </button>
+    }
+  }
+  @if (aviso()) {
+    <p role="status">{{ aviso() }}</p>
+  }
+</section>

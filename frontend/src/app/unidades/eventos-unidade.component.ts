@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 
@@ -29,6 +30,7 @@ interface Pagina {
 
 @Component({
   selector: 'app-eventos-unidade',
+  imports: [DatePipe],
   template: `
     <section aria-labelledby="eventos-titulo">
       <h3 id="eventos-titulo">Atualizações da unidade</h3>
@@ -60,7 +62,7 @@ interface Pagina {
         } @else {
           <ol aria-label="Alterações cadastrais recebidas">
             @for (evento of eventos(); track evento.versao) {
-              <li>{{ evento.tipo === 'UNIDADE_CRIADA' ? 'Unidade criada' : 'Cadastro alterado' }}: {{ evento.nome }} · {{ evento.fuso }} · {{ evento.ativa ? 'ativa' : 'inativa' }} · versão {{ evento.versao }}</li>
+              <li><time [attr.datetime]="evento.ocorridoEm">{{ evento.ocorridoEm | date: 'dd/MM/yyyy HH:mm:ss' }}</time> · {{ evento.tipo === 'UNIDADE_CRIADA' ? 'Unidade criada' : 'Cadastro alterado' }}: {{ evento.nome }} · {{ evento.fuso }} · {{ evento.ativa ? 'ativa' : 'inativa' }} · versão {{ evento.versao }}</li>
             }
           </ol>
           <p>Exibidas até cinquenta alterações recentes desta consulta. O histórico permanece no servidor.</p>
@@ -97,7 +99,7 @@ interface Pagina {
       overflow-wrap: anywhere;
     }
     .erro {
-      color: #9d2424;
+      color: var(--gestao-erro-fg, #9d2424);
     }
   `,
 })

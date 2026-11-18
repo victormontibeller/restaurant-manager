@@ -22,6 +22,27 @@
                   >
                 }
               </span>
+              @if (modoConta()) {
+                <details class="detalhe-endereco">
+                  <summary>Dados de entrega</summary>
+                  <dl>
+                    <dt>CEP</dt>
+                    <dd>{{ e.endereco.cep.slice(0, 5) }}-{{ e.endereco.cep.slice(5) }}</dd>
+                    @if (e.endereco.complemento) {
+                      <dt>Complemento</dt>
+                      <dd>{{ e.endereco.complemento }}</dd>
+                    }
+                    @if (e.endereco.destinatario) {
+                      <dt>Quem recebe</dt>
+                      <dd>{{ e.endereco.destinatario }}</dd>
+                    }
+                    @if (e.endereco.contato) {
+                      <dt>Contato de entrega</dt>
+                      <dd>{{ e.endereco.contato }}</dd>
+                    }
+                  </dl>
+                </details>
+              }
               <div class="acoes-endereco">
                 <button
                   type="button"

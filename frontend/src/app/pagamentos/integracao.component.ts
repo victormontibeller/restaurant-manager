@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
@@ -10,6 +11,7 @@ interface Conexao {
 }
 @Component({
   selector: 'app-integracao-pagamento',
+  imports: [DatePipe],
   styleUrl: '../operacao.css',
   templateUrl: './integracao.component.html',
 })

@@ -21,9 +21,7 @@ async function entrar(page: Page, email = auth.email, senha = auth.senha): Promi
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await r).status()).toBe(200);
   await abrirConta(page);
-  await expect(
-    page.getByRole('heading', { name: 'Que bom ter você por aqui.', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Minha conta', exact: true })).toBeVisible();
 }
 
 async function admin(page: Page): Promise<void> {

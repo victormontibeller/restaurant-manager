@@ -79,6 +79,8 @@ export interface Pedido {
   historico?: { tipo: string; motivo: string; ocorridoEm: string }[];
   solicitacoes?: SolicitacaoCancelamento[];
   saldo?: SaldoPedido;
+  endereco?: EnderecoPedido | null;
+  entrega?: { regiao: string; taxa: string; minimo: string; total: string } | null;
   pagoOnline?: boolean;
   pagamentoExpiraEm?: string | null;
 }

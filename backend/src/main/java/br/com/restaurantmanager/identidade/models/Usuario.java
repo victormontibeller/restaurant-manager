@@ -17,6 +17,12 @@ public class Usuario {
     private UUID id;
     @Column(nullable = false, length = 254)
     private String email;
+    @Column(length = 120)
+    private String nome;
+    @Column(length = 16)
+    private String telefone;
+    @Column(name = "criado_em", insertable = false, updatable = false)
+    private Instant criadoEm;
     @Column(name = "senha_hash", nullable = false, length = 100)
     private String senhaHash;
     @Column(nullable = false, length = 20)
@@ -36,6 +42,24 @@ public class Usuario {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public Instant getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void atualizarDadosPessoais(String nome, String telefone, Instant agora) {
+        this.nome = nome;
+        this.telefone = telefone;
+        this.alteradoEm = agora;
     }
 
     public String getSenhaHash() {

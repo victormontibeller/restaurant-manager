@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
@@ -23,6 +24,9 @@ interface Unidade {
 }
 
 interface Funcionario {
+  nome: string | null;
+  emailVerificado: boolean;
+  criadoEm: string;
   id: string;
   email: string;
   perfil: string;
@@ -33,7 +37,7 @@ interface Funcionario {
 
 @Component({
   selector: 'app-acessos',
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   template: `
     <section aria-labelledby="acessos-titulo" [attr.aria-busy]="ocupado()">
       <div class="gestao-toolbar">
@@ -103,7 +107,8 @@ interface Funcionario {
             <article>
               <header class="gestao-linha">
                 <div>
-                  <h3>{{ f.email }}</h3>
+                  <h3>{{ f.nome || f.email }}</h3>
+                  @if (f.nome) { <p>{{ f.email }}</p> }
                   <span>{{ f.perfil }} · {{ f.perfil === 'ADMINISTRADOR' ? 'Todas as unidades' : f.unidades.length + (f.unidades.length === 1 ? ' unidade' : ' unidades') }}</span>
                 </div>
                 <span class="gestao-estado" [attr.data-estado]="f.ativo ? 'ativo' : 'inativo'">{{ f.ativo ? 'Ativo' : 'Inativo' }}</span>
@@ -116,6 +121,7 @@ interface Funcionario {
                   <section class="gestao-editor" [attr.aria-labelledby]="'editar-funcionario-' + f.id"
                     [attr.data-rascunho]="'funcionario-' + f.id">
                     <h4 [id]="'editar-funcionario-' + f.id" tabindex="-1" data-gestao-foco>Editar funcionário</h4>
+                    <p>{{ f.emailVerificado ? 'E-mail verificado' : 'Verificação de e-mail pendente' }} · Cadastro em {{ f.criadoEm | date: 'dd/MM/yyyy' }}</p>
                     <div class="gestao-campos">
                       <div>
                         <label [for]="'perfil-' + f.id">Perfil do funcionário</label>

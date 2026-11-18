@@ -42,8 +42,8 @@ interface PedidoInstalacao extends Event {
       margin: 0 0 8px;
       padding: 8px 12px;
       border-radius: 8px;
-      background: #fff1d7;
-      color: #694d1a;
+      background: var(--gestao-alerta-bg, #fff1d7);
+      color: var(--gestao-alerta-fg, #694d1a);
     }
     .pwa-atualizacao {
       display: flex;

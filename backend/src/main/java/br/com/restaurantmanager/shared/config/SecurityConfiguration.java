@@ -250,6 +250,7 @@ public class SecurityConfiguration {
                                         .requestMatchers(
                                                 HttpMethod.GET,
                                                 "/api/v1/auth/me",
+                                                "/api/v1/me/perfil",
                                                 "/api/v1/configuracoes/acessos",
                                                 "/api/v1/equipe",
                                                 "/api/v1/acessos/efetivos",
@@ -259,6 +260,7 @@ public class SecurityConfiguration {
                                         .authenticated()
                                         .requestMatchers(
                                                 HttpMethod.PUT,
+                                                "/api/v1/me/perfil",
                                                 "/api/v1/configuracoes/acessos",
                                                 "/api/v1/equipe/*")
                                         .authenticated()

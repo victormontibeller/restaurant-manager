@@ -1,8 +1,15 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, CanDeactivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanDeactivateFn, CanMatchFn, Router } from '@angular/router';
 import { SessaoNavegacaoService } from '../identidade/sessao-navegacao.service';
 import { ContextoOperacaoService } from './contexto-operacao.service';
 import { NavegacaoProtegidaService } from './navegacao-protegida.service';
+
+export const contaDaEquipe: CanMatchFn = async () => {
+  const coordenacao = inject(SessaoNavegacaoService);
+  await coordenacao.inicializar();
+  const perfil = coordenacao.sessao.identidade()?.perfil;
+  return !!perfil && perfil !== 'CLIENTE' && !coordenacao.encerramentoPendente();
+};
 
 export const contaObrigatoria: CanActivateFn = async (_route, state) => {
   const coordenacao = inject(SessaoNavegacaoService);

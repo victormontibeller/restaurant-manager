@@ -6,7 +6,13 @@
       Conta vendedora: {{ c.vendedor }}.
       {{ c.reautorizar ? 'Nova autorização necessária.' : 'Conectada.' }}
     </p>
-  } @else {
+    @if (c.expiraEm) {
+      <p>
+        Validade da autorização:
+        <time [attr.datetime]="c.expiraEm">{{ c.expiraEm | date: 'dd/MM/yyyy HH:mm' }}</time>
+      </p>
+    }
+  } @else if (!ocupado() && !erro()) {
     <p>Nenhuma conta conectada.</p>
   }
   <form (submit)="autorizar($event,senha)">

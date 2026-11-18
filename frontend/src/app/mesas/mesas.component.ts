@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { FinanceiroComponent } from '../financeiro/financeiro.component';
 import {
   Component,
@@ -21,7 +22,7 @@ import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 
 @Component({
-  imports: [FinanceiroComponent],
+  imports: [FinanceiroComponent, DatePipe],
   selector: 'app-mesas',
   templateUrl: './mesas.component.html',
   styleUrls: ['../operacao.css', './mesas.component.css'],

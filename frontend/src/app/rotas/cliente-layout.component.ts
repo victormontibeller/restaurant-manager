@@ -10,13 +10,21 @@ import { Data, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/route
 import { CarrinhoService } from '../carrinho/carrinho.service';
 import { SessaoService } from '../identidade/sessao.service';
 import { SessaoMesaService } from '../mesas/sessao-mesa.service';
+import { AlternarTemaComponent } from '../ui/alternar-tema.component';
 import { HlmButton } from '../ui/button';
 import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
 
 @Component({
   selector: 'app-cliente-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, HlmButton, IconeComponent],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    HlmButton,
+    IconeComponent,
+    AlternarTemaComponent,
+  ],
   template: `
     <header class="client-header" [class.vitrine-cliente]="visualCliente(pagina.activatedRouteData)" [class.cabecalho-convite]="pagina.activatedRouteData['formulario'] === 'convite'">
       <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark"><app-icone nome="marca"/></span><span>{{ marca.nome() }}<small>Bom de escolher. Melhor de saborear.</small></span></a>
@@ -24,7 +32,7 @@ import { MarcaService } from './marca.service';
         <a routerLink="/cardapio" routerLinkActive="active" ariaCurrentWhenActive="page">Cardápio</a>
         <a [routerLink]="mesa.participante() ? ['/mesa'] : ['/pedidos']" routerLinkActive="active" ariaCurrentWhenActive="page">{{ mesa.participante() ? 'Minha mesa' : 'Meus pedidos' }}</a>
       </nav>
-      <div class="header-actions"><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
+      <div class="header-actions"><app-alternar-tema/><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
     </header>
     <main id="conteudo" class="client-main" [class.vitrine-cliente]="visualCliente(pagina.activatedRouteData)" tabindex="-1"><router-outlet #pagina="outlet"/></main>
     <footer class="client-footer"><span><strong>{{ marca.nome() }}</strong><br>Feito para bons momentos à mesa.</span><a routerLink="/gestao/entrar">Área da equipe <app-icone nome="seta"/></a></footer>
