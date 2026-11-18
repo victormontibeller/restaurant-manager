@@ -267,10 +267,16 @@
     }
     @for (linha of pedido().linhas; track linha.id) {
       <section class="linha-pedido" [attr.aria-label]="linha.nome">
-        <h4>
-          {{ linha.quantidade }} × {{ linha.nome }}
-          {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
-        </h4>
+        <div class="linha-pedido-topo">
+          <h4>
+            {{ linha.quantidade }} × {{ linha.nome }}
+            {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
+          </h4>
+          @if (linha.subtotal) {
+            <span class="talao-guia" aria-hidden="true"></span>
+            <span class="talao-valor">{{ moeda(linha.subtotal!) }}</span>
+          }
+        </div>
         @for (extra of linha.adicionais; track $index) {
           <p class="componente-item">Adicional: {{ extra.quantidade }} × {{ extra.nome }}</p>
         }
@@ -307,7 +313,10 @@
                     <span>Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span>
                   </label>
                 } @else {
-                  <span [attr.title]="'Referência: ' + unidade.id"
+                  <span
+                    class="unidade-estatica"
+                    [attr.data-estado]="unidade.estado"
+                    [attr.title]="'Referência: ' + unidade.id"
                     >Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span
                   >
                 }
@@ -318,44 +327,96 @@
       </section>
     }
     @if (pedeMotivo()) {
-      <label [for]="'motivo-pedido-' + pedido().id"
-        >Motivo de recusa, cancelamento ou avaliação</label
-      >
-      <textarea
-        [id]="'motivo-pedido-' + pedido().id"
-        #motivoInput
-        maxlength="500"
-        [value]="motivo"
-        (input)="motivo = motivoInput.value"
-        [disabled]="bloqueado()"
-      ></textarea>
+      <div class="bloco-motivo-operacional">
+        <label [for]="'motivo-pedido-' + pedido().id"
+          >Motivo de recusa, cancelamento ou avaliação</label
+        >
+        <textarea
+          [id]="'motivo-pedido-' + pedido().id"
+          #motivoInput
+          rows="2"
+          maxlength="500"
+          placeholder="Descreva o motivo caso precise recusar, cancelar ou avaliar solicitação…"
+          [value]="motivo"
+          (input)="motivo = motivoInput.value"
+          [disabled]="bloqueado()"
+        ></textarea>
+      </div>
     }
     <div class="acoes acoes-pedido">
       @if (contexto() === 'operacao' && pedido().estado === 'AGUARDANDO_ACEITE') {
         @if (tem('pedido.aceitar')) {
-          <button (click)="comandar('aceitar')" [disabled]="bloqueado()">Aceitar pedido</button>
+          <button
+            hlmBtn
+            type="button"
+            class="btn-aceitar-pedido"
+            (click)="comandar('aceitar')"
+            [disabled]="bloqueado()"
+          >
+            Aceitar pedido
+          </button>
         }
         @if (tem('pedido.recusar')) {
-          <button class="perigo" (click)="comandar('recusar')" [disabled]="bloqueado()">
+          <button
+            hlmBtn
+            variant="destructive"
+            type="button"
+            (click)="comandar('recusar')"
+            [disabled]="bloqueado()"
+          >
             Recusar pedido
           </button>
         }
       }
       @if (contexto() === 'cozinha' && ['NA_FILA', 'EM_PREPARO'].includes(pedido().estado)) {
         @if (tem('cozinha.iniciar')) {
-          <button (click)="comandar('iniciar')" [disabled]="bloqueado() || !selecionadas().length">
+          <button
+            hlmBtn
+            type="button"
+            (click)="comandar('iniciar')"
+            [disabled]="bloqueado() || !selecionadas().length"
+          >
             Iniciar unidades selecionadas
           </button>
         }
         @if (tem('cozinha.concluir')) {
-          <button (click)="comandar('concluir')" [disabled]="bloqueado() || !selecionadas().length">
+          <button
+            hlmBtn
+            type="button"
+            class="btn-servir-mesa"
+            (click)="comandar('concluir')"
+            [disabled]="bloqueado() || !selecionadas().length"
+          >
             Concluir unidades selecionadas
           </button>
         }
       }
       @if (contexto() === 'operacao' && !terminal()) {
+        @if (pedido().canal === 'MESA' && pedido().estado === 'PRONTO' && tem('pedido.servir')) {
+          <button
+            hlmBtn
+            type="button"
+            class="btn-servir-mesa"
+            (click)="comandar('servir')"
+            [disabled]="bloqueado() || cancelamentoPendente()"
+          >
+            Marcar servido na mesa
+          </button>
+          @if (cancelamentoPendente()) {
+            <p role="status" class="aviso-pedido">
+              Aguarde a decisão sobre o cancelamento antes de marcar o pedido como servido.
+            </p>
+          }
+        }
         @if (podeCancelarOperacional()) {
-          <button class="perigo" (click)="comandar('cancelar')" [disabled]="bloqueado()">
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            class="btn-cancelar-outline"
+            (click)="comandar('cancelar')"
+            [disabled]="bloqueado()"
+          >
             {{
               selecionadas().length
                 ? 'Cancelar unidades selecionadas'
@@ -363,56 +424,76 @@
             }}
           </button>
         }
-        @if (pedido().canal === 'MESA' && pedido().estado === 'PRONTO' && tem('pedido.servir')) {
-          <button (click)="comandar('servir')" [disabled]="bloqueado() || cancelamentoPendente()">
-            Marcar servido na mesa
-          </button>
-          @if (cancelamentoPendente()) {
-            <p role="status">
-              Aguarde a decisão sobre o cancelamento antes de marcar o pedido como servido.
-            </p>
-          }
-        }
       }
     </div>
     @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
-      <p class="solicitacao-estado">
-        Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
-        decisão.
-      </p>
-      @if (
-        contexto() === 'operacao' &&
-        solicitacao.estado === 'PENDENTE' &&
-        tem('pedido.cancelar_apos_preparo')
-      ) {
-        <div class="acoes">
-          <button (click)="comandar('aprovar', solicitacao.id)" [disabled]="bloqueado()">
-            Aprovar solicitação
-          </button>
-          <button (click)="comandar('rejeitar', solicitacao.id)" [disabled]="bloqueado()">
-            Rejeitar solicitação
-          </button>
-        </div>
-      }
+      <div class="solicitacao-avaliacao-bloco">
+        <p class="solicitacao-estado">
+          Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
+          decisão.
+        </p>
+        @if (
+          contexto() === 'operacao' &&
+          solicitacao.estado === 'PENDENTE' &&
+          tem('pedido.cancelar_apos_preparo')
+        ) {
+          <div class="acoes">
+            <button
+              hlmBtn
+              variant="destructive"
+              type="button"
+              (click)="comandar('aprovar', solicitacao.id)"
+              [disabled]="bloqueado()"
+            >
+              Aprovar solicitação
+            </button>
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="comandar('rejeitar', solicitacao.id)"
+              [disabled]="bloqueado()"
+            >
+              Rejeitar solicitação
+            </button>
+          </div>
+        }
+      </div>
     }
     @if (pendente()) {
       <p class="aviso">
         Resultado da ação ainda não confirmado. O reenvio usa o mesmo identificador e os mesmos
         dados.
       </p>
-      <button (click)="repetir()" [disabled]="comandos.ocupado() || !online()">
-        Recuperar resultado da mesma ação
-      </button>
+      <div class="acoes">
+        <button
+          hlmBtn
+          variant="secondary"
+          type="button"
+          (click)="repetir()"
+          [disabled]="comandos.ocupado() || !online()"
+        >
+          Recuperar resultado da mesma ação
+        </button>
+      </div>
     }
     @if (pedido().historico?.length) {
-      <details class="historico-pedido">
+      <details class="historico-pedido bistro-details">
         <summary>Histórico do pedido</summary>
-        <p class="referencia-completa">Referência completa: {{ pedido().id }}</p>
-        <ol>
-          @for (evento of pedido().historico ?? []; track $index) {
-            <li>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</li>
-          }
-        </ol>
+        <div class="bistro-details-body">
+          <p class="referencia-completa">Referência completa: {{ pedido().id }}</p>
+          <ol>
+            @for (evento of pedido().historico ?? []; track $index) {
+              <li>
+                <span class="historico-hora">{{ horario(evento.ocorridoEm) }}</span> ·
+                <strong>{{ nomeEvento(evento.tipo) }}</strong>
+                @if (evento.motivo) {
+                  · {{ evento.motivo }}
+                }
+              </li>
+            }
+          </ol>
+        </div>
       </details>
     }
     @if (erro()) {
@@ -426,16 +507,22 @@
       !pedido().comandaId &&
       (tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar'))
     ) {
-      <details #painelFinanceiro (toggle)="financeiroAberto.set(painelFinanceiro.open)">
+      <details
+        #painelFinanceiro
+        class="gaveta-financeira bistro-details"
+        (toggle)="financeiroAberto.set(painelFinanceiro.open)"
+      >
         <summary>Recebimentos, ajustes e devoluções deste pedido</summary>
-        @if (financeiroAberto()) {
-          <app-financeiro
-            [recurso]="pedido().id"
-            [acoes]="acoes()"
-            [atualizacao]="pedido()"
-            (atualizar)="atualizar.emit()"
-          />
-        }
+        <div class="bistro-details-body">
+          @if (financeiroAberto()) {
+            <app-financeiro
+              [recurso]="pedido().id"
+              [acoes]="acoes()"
+              [atualizacao]="pedido()"
+              (atualizar)="atualizar.emit()"
+            />
+          }
+        </div>
       </details>
     }
   }

@@ -92,15 +92,57 @@ div {
   background: var(--card, #fff);
   border: 1px solid var(--border, #e5ded3);
   border-radius: 0.9rem;
-  margin: 1rem 0;
+  margin: 0.85rem 0;
 }
 .campo-filtro {
-  flex: 1 1 15rem;
+  flex: 1 1 16.5rem;
+  min-width: 0;
+}
+.campo-filtro--largo {
+  flex: 2 1 20rem;
 }
 .campo-filtro label {
   margin: 0 0 0.4rem;
   font-size: 0.78rem;
+  font-weight: 700;
   color: var(--muted-foreground, #6e6259);
+}
+.campo-filtro select:not(.sr-only) {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding-inline: 0.75rem 2.2rem;
+}
+.busca-filtro-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.busca-filtro-linha input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.busca-filtro-linha button {
+  flex: none;
+  white-space: nowrap;
+}
+.atalhos-operacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0 0.85rem;
+}
+.atalhos-operacao .filtro-pilula {
+  background: var(--card, #fff);
+  border-color: var(--border, #e5ded3);
+  color: var(--secondary-foreground, #44372e);
+  box-shadow: var(--shadow-soft, 0 1px 2px rgb(41 37 33 / 5%));
+}
+.atalhos-operacao .filtro-pilula:hover:not(:disabled) {
+  border-color: var(--primary-ink, #a53e2b);
+  color: var(--foreground, #292521);
+  filter: none;
 }
 .filtros-pedidos {
   display: flex;
@@ -130,9 +172,11 @@ div {
   gap: 0.45rem;
   cursor: pointer;
 }
-.filtro-pilula:hover {
+.filtro-pilula:hover:not(:disabled) {
   color: var(--foreground, #292521);
+  filter: none;
 }
+.filtro-pilula.ativo,
 .filtro-pilula[aria-pressed='true'] {
   background: var(--card, #fff);
   color: var(--foreground, #292521);
@@ -140,14 +184,26 @@ div {
   box-shadow: 0 2px 6px rgb(41 37 33 / 8%);
   font-weight: 750;
 }
+.atalhos-operacao .filtro-pilula.ativo,
+.atalhos-operacao .filtro-pilula[aria-pressed='true'] {
+  background: var(--primary-soft, #fbefec);
+  border-color: var(--primary-ink, #a53e2b);
+  color: var(--primary-ink, #a53e2b);
+  box-shadow: inset 0 0 0 1px var(--primary-soft-border, #e3bfb7);
+}
 .filtro-contagem {
-  padding: 0.1rem 0.45rem;
+  padding: 0.12rem 0.48rem;
   border-radius: 999px;
   background: var(--secondary, #f0ebe3);
   color: var(--foreground, #292521);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
+}
+.atalhos-operacao .filtro-pilula.ativo .filtro-contagem,
+.atalhos-operacao .filtro-pilula[aria-pressed='true'] .filtro-contagem {
+  background: var(--primary, #a53e2b);
+  color: var(--primary-foreground, #fff);
 }
 .grade-pedidos {
   display: grid;
@@ -291,6 +347,21 @@ button {
 .btn-cancelar-outline:hover:not(:disabled) {
   background: var(--danger-bg, #fff5f3);
   border-color: var(--danger-fg, #ad2929);
+  filter: none;
+}
+.btn-servir-mesa {
+  background: var(--sage-solid, #30523b);
+  color: #ffffff;
+  border-color: var(--sage-solid-deep, #203828);
+  box-shadow: 0 2px 0 var(--sage-solid-deep, #203828);
+}
+.btn-servir-mesa:hover:not(:disabled) {
+  background: var(--sage-solid-hover, #274431);
+  filter: none;
+}
+.btn-servir-mesa:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 var(--sage-solid-deep, #203828);
 }
 .navegacao-operacao {
   padding: 0.35rem;
@@ -366,28 +437,41 @@ button {
 }
 .etiqueta[data-estado='AGUARDANDO_PAGAMENTO'],
 .etiqueta[data-estado='AGUARDANDO_ACEITE'],
-.etiqueta[data-estado='EM_FECHAMENTO'] {
+.etiqueta[data-estado='EM_FECHAMENTO'],
+.etiqueta[data-estado='PENDENTE'],
+.etiqueta[data-estado='SOLICITADA'],
+.etiqueta[data-variante='warn'] {
   background: var(--amber-bg, #fdf1df);
+  border: 1px solid var(--amber-border, #e6cf9e);
   color: var(--amber-fg, #7a440d);
 }
 .etiqueta[data-estado='NA_FILA'],
 .etiqueta[data-estado='EM_ENTREGA'] {
   background: var(--info-bg, #edf0f8);
+  border: 1px solid var(--info-border, #c5cee6);
   color: var(--info-fg, #36457d);
 }
-.etiqueta[data-estado='EM_PREPARO'] {
-  background: var(--primary-soft, #faecdc);
-  color: var(--primary-ink, #82410a);
+.etiqueta[data-estado='EM_PREPARO'],
+.etiqueta[data-estado='ABERTA'] {
+  background: var(--primary-soft, #fbefec);
+  border: 1px solid var(--primary-soft-border, #e3bfb7);
+  color: var(--primary-ink, #a53e2b);
 }
 .etiqueta[data-estado='PRONTO'],
 .etiqueta[data-estado='CONCLUIDO'],
-.etiqueta[data-estado='ABERTA'] {
+.etiqueta[data-estado='LIVRE'],
+.etiqueta[data-estado='CONFIRMADA'],
+.etiqueta[data-estado='ATENDIDA'],
+.etiqueta[data-variante='ok'] {
   background: var(--accent, #e8efe7);
+  border: 1px solid var(--accent-border, #b7d2be);
   color: var(--accent-foreground, #30523b);
 }
 .etiqueta[data-estado='CANCELADO'],
-.etiqueta[data-estado='INATIVA'] {
+.etiqueta[data-estado='INATIVA'],
+.etiqueta[data-variante='danger'] {
   background: var(--danger-bg, #fae9e6);
+  border: 1px solid var(--danger-border, #e8c7c1);
   color: var(--danger-fg, #9c2323);
 }
 .talao-pedido {
@@ -1187,6 +1271,619 @@ dd {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Sprint 4 · Caixa & Financeiro (app-financeiro) ---------- */
+.painel-financeiro {
+  display: grid;
+  gap: 1rem;
+  padding: 0.25rem 0 0;
+}
+.financeiro-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+.financeiro-cabecalho h3 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--foreground, #292521);
+}
+.extrato-financeiro-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.25rem), 1fr));
+  gap: 0.6rem;
+  border-top: 0;
+  padding-top: 0;
+  margin: 0;
+}
+.extrato-kpi {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--background, #faf7f2);
+}
+.extrato-kpi dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground, #6e6259);
+  line-height: 1.3;
+}
+.extrato-kpi dd {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground, #292521);
+}
+.extrato-kpi--recebido {
+  background: var(--accent, #e8efe7);
+  border-color: var(--accent-border, #b7d2be);
+}
+.extrato-kpi--recebido dt,
+.extrato-kpi--recebido dd {
+  color: var(--accent-foreground, #30523b);
+}
+.extrato-kpi--receber {
+  background: var(--primary-soft, #fbefec);
+  border-color: var(--primary-soft-border, #e3bfb7);
+}
+.extrato-kpi--receber dt,
+.extrato-kpi--receber dd {
+  color: var(--primary-ink, #a53e2b);
+}
+.extrato-kpi--devolver {
+  background: var(--amber-bg, #fff8e8);
+  border-color: var(--amber-border, #e6cf9e);
+}
+.extrato-kpi--devolver dt,
+.extrato-kpi--devolver dd {
+  color: var(--amber-fg, #684614);
+}
+.bloco-financeiro-form {
+  max-width: none;
+  margin: 0;
+}
+.bloco-financeiro-fieldset {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border, #e5ded3);
+  border-radius: 0.95rem;
+  background: var(--background, #faf7f2);
+}
+.bloco-financeiro-fieldset legend {
+  padding: 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary-ink, #a53e2b);
+}
+.financeiro-campos-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+.campo-financeiro label {
+  margin: 0 0 0.35rem;
+  font-size: 0.84rem;
+}
+.atalho-saldo-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.troco-calculadora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--accent-border, #b7d2be);
+  background: var(--accent, #e8efe7);
+  color: var(--accent-foreground, #30523b);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.troco-calculadora--falta {
+  border-color: var(--amber-border, #e6cf9e);
+  background: var(--amber-bg, #fff8e8);
+  color: var(--amber-fg, #684614);
+}
+.troco-calculadora strong {
+  font-size: 1.08rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.nota-financeiro {
+  margin: 0;
+  font-size: 0.83rem;
+  color: var(--muted-foreground, #6e6259);
+  line-height: 1.45;
+}
+.item-abatimento-selecionado {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.7rem;
+  border: 1px dashed var(--input, #c6b9aa);
+  background: var(--card, #fff);
+  font-size: 0.85rem;
+  color: var(--foreground, #292521);
+}
+.secao-lista-caixa {
+  display: grid;
+  gap: 0.5rem;
+}
+.secao-lista-caixa h4 {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--secondary-foreground, #44372e);
+}
+.lista-movimentos-caixa {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.movimento-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--card, #fff);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.movimento-item--vazio {
+  justify-content: flex-start;
+  border-style: dashed;
+  background: var(--muted, #f3eee7);
+  color: var(--muted-foreground, #6e6259);
+}
+.movimento-info {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+.movimento-hora {
+  font-size: 0.78rem;
+  color: var(--muted-foreground, #6e6259);
+}
+
+/* ---------- Sprint 4 · Expedição & Etiqueta de Despacho ---------- */
+.painel-expedicao {
+  display: grid;
+  gap: 1rem;
+}
+.expedicao-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.expedicao-topo .atalhos-operacao {
+  margin: 0;
+  flex: 1 1 24rem;
+}
+.expedicao-item {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border, #e5ded3);
+  border-top: 4px solid var(--border, #e5ded3);
+  border-radius: 1.15rem;
+  background: var(--card, #fff);
+  box-shadow: var(--shadow-soft, 0 2px 10px -4px rgb(41 37 33 / 6%));
+}
+.expedicao-item[data-estado='PRONTO'] {
+  border-top-color: var(--sage-solid, #30523b);
+}
+.expedicao-item[data-estado='EM_ENTREGA'] {
+  border-top-color: var(--info-fg, #36457d);
+}
+.expedicao-item[data-ocorrencia='PENDENTE'] {
+  border-top-color: #c57d1f;
+}
+.etiqueta-despacho {
+  font-style: normal;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.95rem 1.05rem;
+  border-radius: 0.9rem;
+  border: 1.5px dashed var(--input, #c6b9aa);
+  background: var(--background, #faf7f2);
+  color: var(--foreground, #292521);
+}
+.etiqueta-despacho-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px dotted var(--border, #e5ded3);
+}
+.etiqueta-despacho-destinatario {
+  display: grid;
+  gap: 0.15rem;
+}
+.etiqueta-despacho-selo {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--primary-ink, #a53e2b);
+}
+.etiqueta-despacho-nome {
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--foreground, #292521);
+}
+.etiqueta-despacho-contato {
+  font-size: 0.86rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--secondary-foreground, #44372e);
+}
+.etiqueta-despacho-endereco {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--foreground, #292521);
+}
+.ocorrencia-alerta {
+  margin: 0;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--amber-border, #e6cf9e);
+  border-left: 4px solid var(--amber-fg, #684614);
+  background: var(--amber-bg, #fff8e8);
+  color: var(--amber-fg, #684614);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+.ocorrencia-bloco {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1.05rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--muted, #f3eee7);
+}
+.ocorrencia-bloco label:not(.selecao-check-linha) {
+  margin: 0;
+  font-size: 0.84rem;
+}
+.selecao-check-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  padding: 0.55rem 0.8rem;
+  margin: 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--card, #fff);
+  color: var(--foreground, #292521);
+  font-weight: 650;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.selecao-check-linha input[type='checkbox'] {
+  flex: none;
+}
+
+/* ---------- Sprint 4 · Pendências Financeiras & Notificações ---------- */
+.painel-pendencias {
+  display: grid;
+  gap: 1.15rem;
+}
+.pendencias-barra-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--card, #fff);
+}
+.pendencias-barra-topo h2 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground, #292521);
+}
+.grade-pendencias {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+.coluna-pendencias {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.2rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--card, #fff);
+  box-shadow: var(--shadow-soft, 0 1px 2px rgb(41 37 33 / 5%));
+}
+.coluna-pendencias-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px dashed var(--border, #e5ded3);
+}
+.coluna-pendencias-topo h3 {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--foreground, #292521);
+}
+.link-discreto-pedidos {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-ink, #a53e2b);
+}
+.nota-capturado {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.75rem;
+  border-left: 3px solid var(--primary-ink, #a53e2b);
+  background: var(--background, #faf7f2);
+  color: var(--secondary-foreground, #44372e);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.lista-cartoes-pendencia {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.cartao-pendencia {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--background, #faf7f2);
+}
+.cartao-pendencia--vazio {
+  border-style: dashed;
+  background: var(--muted, #f3eee7);
+  color: var(--muted-foreground, #6e6259);
+  text-align: center;
+  padding: 1.35rem 1rem;
+}
+.cartao-pendencia-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+}
+.cartao-pendencia-ref {
+  font-weight: 750;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground, #292521);
+}
+.cartao-pendencia-detalhe {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted-foreground, #6e6259);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Sprint 4 · Relatório de Vendas & Movimentos ---------- */
+.painel-vendas {
+  display: grid;
+  gap: 1.15rem;
+}
+.vendas-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.vendas-topo .atalhos-operacao {
+  margin: 0;
+}
+.vendas-filtros-form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  max-width: none;
+  padding: 1rem 1.1rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--card, #fff);
+}
+.vendas-filtros-form .campo-filtro {
+  flex: 1 1 13rem;
+}
+.vendas-filtros-form button[type='submit'] {
+  flex: 0 1 auto;
+}
+.vendas-metadados {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border, #e5ded3);
+  background: var(--muted, #f3eee7);
+}
+.vendas-metadados p {
+  margin: 0;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.vendas-periodo {
+  font-weight: 750;
+  color: var(--foreground, #292521);
+}
+.vendas-fuso {
+  color: var(--muted-foreground, #6e6259);
+}
+.grade-kpis-vendas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  border-top: 0;
+  padding-top: 0;
+  margin: 0;
+  align-items: stretch;
+}
+.cartao-kpi-vendas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.2rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border, #e5ded3);
+  border-top: 3px solid var(--primary, #a53e2b);
+  background: var(--card, #fff);
+  box-shadow: var(--shadow-soft, 0 2px 10px -4px rgb(41 37 33 / 6%));
+}
+.cartao-kpi-vendas--caixa {
+  border-top-color: var(--sage-solid, #30523b);
+}
+.cartao-kpi-vendas--saldos {
+  border-top-color: #c57d1f;
+}
+.cartao-kpi-cabecalho {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px dashed var(--border, #e5ded3);
+}
+.cartao-kpi-num {
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-ink, #a53e2b);
+}
+.cartao-kpi-titulo {
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--foreground, #292521);
+}
+.kpi-lista-linhas {
+  display: grid;
+  gap: 0.65rem;
+}
+.kpi-linha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px dotted var(--border, #e5ded3);
+}
+.kpi-linha:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.kpi-linha dt {
+  font-size: 0.86rem;
+  color: var(--muted-foreground, #6e6259);
+  line-height: 1.35;
+}
+.kpi-linha dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--foreground, #292521);
+}
+.kpi-linha--destaque {
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  border-bottom: 0;
+  background: var(--background, #faf7f2);
+  border: 1px solid var(--border, #e5ded3);
+}
+.kpi-linha--destaque dt {
+  font-weight: 700;
+  color: var(--foreground, #292521);
+}
+.kpi-linha--destaque dd {
+  font-size: 1.12rem;
+  color: var(--primary-ink, #a53e2b);
+}
+.cartao-kpi-vendas--caixa .kpi-linha--destaque dd {
+  color: var(--accent-foreground, #30523b);
+}
+.nota-metodologia-vendas {
+  margin: 0;
+  max-width: none;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.9rem;
+  border: 1px dashed var(--input, #c6b9aa);
+  background: var(--card, #fff);
+  color: var(--muted-foreground, #6e6259);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 1080px) {
+  .grade-kpis-vendas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 1023px) {
+  .grade-pendencias {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 @media (min-width: 1600px) {
   .grade-cozinha {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1203,6 +1900,12 @@ dd {
   .campo-filtro {
     flex-basis: 100%;
   }
+  .busca-filtro-linha {
+    flex-wrap: wrap;
+  }
+  .busca-filtro-linha button {
+    width: 100%;
+  }
   .filtros-pedidos {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1211,11 +1914,16 @@ dd {
     gap: 0.2rem;
     width: 100%;
   }
-  .filtro-pilula {
+  .filtros-pedidos .filtro-pilula {
     padding: 0.4rem 0.25rem;
     font-size: 0.74rem;
     gap: 0.22rem;
     white-space: nowrap;
+  }
+  .atalhos-operacao .filtro-pilula {
+    flex: 1 1 auto;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
   }
   .filtro-contagem {
     padding: 0.08rem 0.32rem;
@@ -1243,8 +1951,15 @@ dd {
     flex: 1 1 100%;
   }
   .comanda-sync button,
-  .barra-conexao button {
+  .barra-conexao button,
+  .expedicao-topo > button,
+  .pendencias-barra-topo > button,
+  .vendas-topo > button,
+  .vendas-filtros-form button[type='submit'] {
     width: 100%;
+  }
+  .kpi-linha {
+    flex-wrap: wrap;
   }
   .canal-alternancia {
     grid-template-columns: minmax(0, 1fr);
@@ -1280,11 +1995,35 @@ dd {
 @media (max-width: 400px) {
   article,
   .cartao-formulario,
-  .pedido-card-resumo {
+  .pedido-card-resumo,
+  .coluna-pendencias,
+  .cartao-kpi-vendas {
     padding: 0.95rem 1rem;
   }
   .acoes button {
     width: 100%;
+  }
+}
+@media print {
+  .nao-imprimir,
+  .vendas-topo,
+  .vendas-filtros-form,
+  .barra-conexao,
+  .paginacao {
+    display: none !important;
+  }
+  .grade-kpis-vendas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .cartao-kpi-vendas,
+  .vendas-metadados,
+  .nota-metodologia-vendas {
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #cccccc !important;
+    break-inside: avoid;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1292,7 +2031,8 @@ dd {
     transition: none !important;
     animation: none !important;
   }
-  .pedido-resumo-acoes > a.pedido-resumo-cta[data-variant='default']:active {
+  .pedido-resumo-acoes > a.pedido-resumo-cta[data-variant='default']:active,
+  .btn-servir-mesa:active:not(:disabled) {
     transform: none;
   }
 }

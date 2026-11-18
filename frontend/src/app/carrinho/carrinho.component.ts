@@ -344,7 +344,7 @@ import { ItemCarrinho } from './modelos';
                   </button>
                 } @else {
                   <p role="status" class="resumo-confirmado">
-                    Resumo confirmado. Confira os dados abaixo para concluir o envio.
+                    Resumo confirmado. O envio do pedido exige confirmação separada.
                   </p>
                 }
               </section>

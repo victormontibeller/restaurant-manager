@@ -49,6 +49,7 @@ export class VitrineComponent {
   private focoAnterior: HTMLElement | null = null;
   @ViewChild('configuracao') private configuracao?: ElementRef<HTMLDialogElement>;
   @ViewChild('alerta') private alerta?: ElementRef<HTMLElement>;
+  @ViewChild(CarrinhoComponent) private carrinhoLateral?: CarrinhoComponent;
   private readonly api = inject(CatalogoApiService);
   private readonly catalogoMidia = inject(CatalogoMidiaService, { optional: true });
   readonly carrinho = inject(CarrinhoService);
@@ -177,11 +178,13 @@ export class VitrineComponent {
       const preferida = this.contextoVitrine?.unidadeId() || contexto?.unidadeId || '';
       const unidade = this.unidades().find((u) => u.id === preferida) ?? this.unidades()[0];
       const canalInicial: Canal =
-        contexto?.canal && contexto.canal !== 'MESA'
+        this.unidadeExterna() && contexto?.canal
           ? contexto.canal
-          : this.canalSelecionado() === 'MESA'
-            ? 'DELIVERY'
-            : this.canalSelecionado();
+          : contexto?.canal && contexto.canal !== 'MESA'
+            ? contexto.canal
+            : this.canalSelecionado() === 'MESA' && !this.unidadeExterna()
+              ? 'DELIVERY'
+              : this.canalSelecionado();
       this.aplicarContexto({
         unidadeId: unidade.id,
         unidadeNome: unidade.nome,
@@ -281,9 +284,20 @@ export class VitrineComponent {
     );
   }
 
+  modoPdv(): boolean {
+    return !!this.unidadeExterna();
+  }
+
+  abrirRevisaoPdv(acionador?: EventTarget | null): void {
+    void this.carrinhoLateral?.abrirRevisao(acionador);
+  }
+
   canaisDisponiveis(): readonly { valor: Canal; nome: string }[] {
     if (this.mesaSessao.participante()) {
       return this.canais.filter((c) => c.valor === 'MESA');
+    }
+    if (this.unidadeExterna()) {
+      return this.canais;
     }
     return this.canais.filter((c) => c.valor !== 'MESA');
   }

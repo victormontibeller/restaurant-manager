@@ -2,6 +2,7 @@ import { Component, DestroyRef, effect, inject, input, signal, untracked } from 
 import { FormsModule } from '@angular/forms';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 interface Relatorio {
   inicio: string;
   fim: string;
@@ -17,9 +18,10 @@ interface Relatorio {
   saldoADevolverAtual: string;
   reservasAtuais: string;
 }
+type PeriodoRapido = 'HOJE' | 'ONTEM' | '7DIAS' | 'MES' | 'CUSTOM';
 @Component({
   selector: 'app-vendas',
-  imports: [FormsModule],
+  imports: [FormsModule, HlmButton],
   styleUrl: '../operacao.css',
   templateUrl: './vendas.component.html',
 })
@@ -29,6 +31,7 @@ export class VendasComponent {
   readonly dados = signal<Relatorio | null>(null);
   readonly erro = signal('');
   readonly ocupado = signal(false);
+  readonly periodoRapido = signal<PeriodoRapido>('HOJE');
   readonly moeda = moeda;
   inicio = new Date().toLocaleDateString('en-CA');
   fim = this.inicio;
@@ -48,6 +51,58 @@ export class VendasComponent {
   }
   data(valor: string): string {
     return valor.split('-').reverse().join('/');
+  }
+  marcarPeriodoCustom(): void {
+    this.periodoRapido.set('CUSTOM');
+  }
+  aplicarPeriodoRapido(tipo: Exclude<PeriodoRapido, 'CUSTOM'>): void {
+    if (this.ocupado()) return;
+    const base = new Date();
+    const iso = (d: Date) => d.toLocaleDateString('en-CA');
+    if (tipo === 'HOJE') {
+      this.inicio = iso(base);
+      this.fim = this.inicio;
+    } else if (tipo === 'ONTEM') {
+      const ontem = new Date(base);
+      ontem.setDate(ontem.getDate() - 1);
+      this.inicio = iso(ontem);
+      this.fim = this.inicio;
+    } else if (tipo === '7DIAS') {
+      const sete = new Date(base);
+      sete.setDate(sete.getDate() - 6);
+      this.inicio = iso(sete);
+      this.fim = iso(base);
+    } else if (tipo === 'MES') {
+      const primeiro = new Date(base.getFullYear(), base.getMonth(), 1);
+      this.inicio = iso(primeiro);
+      this.fim = iso(base);
+    }
+    this.periodoRapido.set(tipo);
+    void this.carregar();
+  }
+  ticketMedio(r: Relatorio): string {
+    const total = Number(r.cobrancasOriginais) || 0;
+    if (!r.pedidosCriados || total <= 0) return moeda('0.00');
+    return moeda((total / r.pedidosCriados).toFixed(2));
+  }
+  horarioConsulta(r: Relatorio): string {
+    if (!r.consultadoEm) return '';
+    try {
+      const dt = new Date(r.consultadoEm);
+      if (Number.isNaN(dt.getTime())) return r.consultadoEm;
+      return new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: r.fuso || 'UTC',
+      }).format(dt);
+    } catch {
+      return r.consultadoEm;
+    }
+  }
+  imprimir(): void {
+    if (typeof window !== 'undefined' && typeof window.print === 'function') {
+      window.print();
+    }
   }
   async carregar(): Promise<void> {
     if (this.ocupado()) return;

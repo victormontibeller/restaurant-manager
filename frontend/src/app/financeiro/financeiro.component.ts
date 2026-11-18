@@ -12,15 +12,16 @@ import { FormsModule } from '@angular/forms';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 import { FinanceiroService } from './financeiro.service';
 import { DetalheFinanceiro, IntencaoFinanceira } from './modelos';
 
 @Component({
   selector: 'app-financeiro',
-  imports: [FormsModule],
+  imports: [FormsModule, HlmButton],
   templateUrl: './financeiro.component.html',
   styleUrl: '../operacao.css',
-  styles: `:host { display:block; margin-block:1rem; } form {display:grid; gap:.5rem; margin-block:1rem;} input,select,button{min-height:48px;} li{overflow-wrap:anywhere;} fieldset{min-width:0;}`,
+  styles: `:host { display:block; margin-block:1rem; }`,
 })
 export class FinanceiroComponent {
   readonly recurso = input.required<string>();
@@ -143,6 +144,47 @@ export class FinanceiroComponent {
       this.dados()?.recebimentos.some((r) => r.id === recebimentoId && r.metodo === 'ONLINE') ??
       false
     );
+  }
+  temSaldoAReceber(): boolean {
+    return Number(this.dados()?.saldo.saldoAReceber ?? 0) > 0;
+  }
+  usarSaldoRestante(): void {
+    const restante = this.dados()?.saldo.saldoAReceber;
+    if (restante && Number(restante) > 0) {
+      this.valor = restante;
+      if (this.metodo === 'DINHEIRO' && !this.entregue) {
+        this.entregue = restante;
+      }
+    }
+  }
+  calculoTroco(): { falta: boolean; valor: string } | null {
+    if (this.metodo !== 'DINHEIRO') return null;
+    const aplicado = Number(this.valor);
+    const entregue = Number(this.entregue);
+    if (
+      !this.valor.trim() ||
+      !this.entregue.trim() ||
+      Number.isNaN(aplicado) ||
+      Number.isNaN(entregue) ||
+      aplicado <= 0
+    ) {
+      return null;
+    }
+    const diffCentavos = Math.round(entregue * 100) - Math.round(aplicado * 100);
+    return {
+      falta: diffCentavos < 0,
+      valor: moeda((Math.abs(diffCentavos) / 100).toFixed(2)),
+    };
+  }
+  horarioCurto(iso?: string | null): string {
+    if (!iso) return '';
+    try {
+      const dt = new Date(iso);
+      if (Number.isNaN(dt.getTime())) return '';
+      return dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
   }
 
   async confirmar(id: string): Promise<void> {

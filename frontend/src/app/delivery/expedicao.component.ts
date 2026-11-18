@@ -6,6 +6,7 @@ import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
 import { PedidoComandoService } from '../pedidos/pedido-comando.service';
 import { EnderecoPedido, Pedido } from '../pedidos/modelos';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 interface Expedicao {
   pedido: Pedido;
   endereco: EnderecoPedido | null;
@@ -17,9 +18,11 @@ interface Expedicao {
   } | null;
 }
 
+type FiltroExpedicao = 'TODOS' | 'RETIRADA' | 'PRONTO_DELIVERY' | 'EM_ENTREGA' | 'OCORRENCIA';
+
 @Component({
   selector: 'app-expedicao',
-  imports: [FormsModule, PedidoDetalheComponent],
+  imports: [FormsModule, PedidoDetalheComponent, HlmButton],
   templateUrl: './expedicao.component.html',
   styleUrl: '../operacao.css',
 })
@@ -31,9 +34,11 @@ export class ExpedicaoComponent {
   private readonly nav = inject(NavegacaoProtegidaService);
   private readonly chave = 'expedicao:' + crypto.randomUUID();
   readonly lista = signal<Expedicao[]>([]);
+  readonly filtroRapido = signal<FiltroExpedicao>('TODOS');
   readonly pagina = signal(0);
   readonly mais = signal(false);
   readonly erro = signal('');
+  readonly aviso = signal('');
   readonly carregando = signal(false);
   motivos: Record<string, string> = {};
   devolverTaxa: Record<string, boolean> = {};
@@ -61,10 +66,41 @@ export class ExpedicaoComponent {
   pendente(): boolean {
     return this.lista().some((e) => !!this.comandos.pendente(e.pedido.id, false));
   }
+  private correspondeFiltro(e: Expedicao, filtro: FiltroExpedicao): boolean {
+    if (filtro === 'RETIRADA') return e.pedido.canal === 'RETIRADA' && e.pedido.estado === 'PRONTO';
+    if (filtro === 'PRONTO_DELIVERY')
+      return e.pedido.canal === 'DELIVERY' && e.pedido.estado === 'PRONTO';
+    if (filtro === 'EM_ENTREGA') return e.pedido.estado === 'EM_ENTREGA';
+    if (filtro === 'OCORRENCIA') return !!e.ocorrencia && e.ocorrencia.estado === 'PENDENTE';
+    return true;
+  }
+  listaVisivel(): Expedicao[] {
+    const f = this.filtroRapido();
+    const base = this.lista();
+    return f === 'TODOS' ? base : base.filter((e) => this.correspondeFiltro(e, f));
+  }
+  contarFiltro(filtro: FiltroExpedicao): number {
+    const base = this.lista();
+    return filtro === 'TODOS'
+      ? base.length
+      : base.filter((e) => this.correspondeFiltro(e, filtro)).length;
+  }
+  async copiarContato(valor: string): Promise<void> {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(valor);
+        this.aviso.set('Contato copiado para a área de transferência.');
+      }
+    } catch {
+      /* Ambientes sem permissão de área de transferência mantêm o texto selecionável. */
+    }
+  }
   private limparDados(): void {
     this.lista.set([]);
+    this.filtroRapido.set('TODOS');
     this.pagina.set(0);
     this.mais.set(false);
+    this.aviso.set('');
     this.motivos = {};
     this.devolverTaxa = {};
   }

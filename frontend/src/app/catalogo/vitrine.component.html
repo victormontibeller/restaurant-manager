@@ -122,20 +122,30 @@
   </dialog>
 }
 
-<div class="experiencia-cardapio" [class.somente-carrinho]="modo === 'carrinho'">
+<div
+  class="experiencia-cardapio"
+  [class.somente-carrinho]="modo === 'carrinho'"
+  [class.vitrine-pdv]="modoPdv()"
+>
   @if (modo === 'cardapio') {
     <section class="vitrine-painel" aria-labelledby="vitrine-titulo" [attr.aria-busy]="ocupado()">
       <h2 id="vitrine-titulo" class="sr-only">Nosso cardápio</h2>
 
       <div class="masthead bistro-hero">
-        <div class="mast-text">
-          <p class="kicker">Cardápio de sexta-feira</p>
-          <h1>Bom de escolher.<br /><em>Melhor de saborear.</em></h1>
-        </div>
+        @if (!modoPdv()) {
+          <div class="mast-text">
+            <p class="kicker">Cardápio de sexta-feira</p>
+            <h1>Bom de escolher.<br /><em>Melhor de saborear.</em></h1>
+          </div>
+        }
 
         <div class="mast-controls contexto-mesa">
           <div class="context">
-            <span class="ctx-word">Pedido na</span>
+            @if (modoPdv()) {
+              <span class="pdv-selo-contexto">Atendimento assistido</span>
+            } @else {
+              <span class="ctx-word">Pedido na</span>
+            }
             <div
               class="ctx-wrap"
               (focusout)="
@@ -147,6 +157,7 @@
               <label
                 class="ctx"
                 [class.ctx-open]="menuUnidade.checked"
+                [class.ctx-travado]="!!unidadeExterna()"
                 for="vitrine-unidade"
                 (mousedown)="
                   !ocupado() && !trocaPendente() && !unidadeExterna() && $event.preventDefault()
@@ -186,15 +197,17 @@
                     </option>
                   }
                 </select>
-                <svg
-                  class="chev"
-                  [class.rot]="menuUnidade.checked"
-                  width="16"
-                  height="16"
-                  aria-hidden="true"
-                >
-                  <use href="#i-chev" />
-                </svg>
+                @if (!unidadeExterna()) {
+                  <svg
+                    class="chev"
+                    [class.rot]="menuUnidade.checked"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <use href="#i-chev" />
+                  </svg>
+                }
               </label>
 
               @if (menuUnidade.checked) {
@@ -365,73 +378,79 @@
                 }}
                 (consulta em {{ horarioConsulta() }}).
               </span>
-              <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
+              @if (!modoPdv()) {
+                <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
+              }
             </div>
           } @else {
             <div class="status contexto-status">
               <span class="status-hours">Horários sujeitos à unidade</span>
-              <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
+              @if (!modoPdv()) {
+                <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
+              }
             </div>
           }
         </div>
 
-        <figure class="mast-photo" aria-hidden="true">
-          <div
-            class="arch"
-            [style.--rm-hero-banner]="marca.bannerCss()"
-            role="img"
-            aria-label="Risoto de cogumelos servido em prato de cerâmica"
-          ></div>
-          <span class="credit">Imagem ilustrativa</span>
-          @if (marca.logoUrl() && !marca.erroLogo()) {
-            <div class="stamp stamp--logo">
-              <img
-                [src]="marca.logoUrl()!"
-                [alt]="'Logo de ' + marca.nome()"
-                width="120"
-                height="120"
-                decoding="async"
-                (error)="marca.marcarErroLogo()"
-              />
-            </div>
-          } @else {
-            <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
-              <defs>
-                <path id="ring" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" />
-              </defs>
-              <circle cx="60" cy="60" r="58" fill="#faf7f2" stroke="#a53e2b" stroke-width="1.6" />
-              <circle
-                cx="60"
-                cy="60"
-                r="34"
-                fill="none"
-                stroke="#a53e2b"
-                stroke-width="1"
-                stroke-dasharray="2 3"
-              />
-              <text
-                font-family="Segoe UI, sans-serif"
-                font-size="10"
-                font-weight="700"
-                fill="#a53e2b"
-              >
-                <textPath href="#ring" textLength="276" lengthAdjust="spacing">
-                  FEITO NA CASA · TODO DIA · COM CALMA ·
-                </textPath>
-              </text>
-              <g transform="translate(42 42) scale(1.5)">
-                <path
-                  d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M20 21V3c-5 3-5 10 0 10"
+        @if (!modoPdv()) {
+          <figure class="mast-photo" aria-hidden="true">
+            <div
+              class="arch"
+              [style.--rm-hero-banner]="marca.bannerCss()"
+              role="img"
+              aria-label="Risoto de cogumelos servido em prato de cerâmica"
+            ></div>
+            <span class="credit">Imagem ilustrativa</span>
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <div class="stamp stamp--logo">
+                <img
+                  [src]="marca.logoUrl()!"
+                  [alt]="'Logo de ' + marca.nome()"
+                  width="120"
+                  height="120"
+                  decoding="async"
+                  (error)="marca.marcarErroLogo()"
+                />
+              </div>
+            } @else {
+              <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <path id="ring" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" />
+                </defs>
+                <circle cx="60" cy="60" r="58" fill="#faf7f2" stroke="#a53e2b" stroke-width="1.6" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="34"
                   fill="none"
                   stroke="#a53e2b"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  stroke-width="1"
+                  stroke-dasharray="2 3"
                 />
-              </g>
-            </svg>
-          }
-        </figure>
+                <text
+                  font-family="Segoe UI, sans-serif"
+                  font-size="10"
+                  font-weight="700"
+                  fill="#a53e2b"
+                >
+                  <textPath href="#ring" textLength="276" lengthAdjust="spacing">
+                    FEITO NA CASA · TODO DIA · COM CALMA ·
+                  </textPath>
+                </text>
+                <g transform="translate(42 42) scale(1.5)">
+                  <path
+                    d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M20 21V3c-5 3-5 10 0 10"
+                    fill="none"
+                    stroke="#a53e2b"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+              </svg>
+            }
+          </figure>
+        }
       </div>
 
       @if (trocaPendente(); as pendente) {
@@ -534,50 +553,52 @@
               }
             </nav>
 
-            <hr class="rail-hr" />
+            @if (!modoPdv()) {
+              <hr class="rail-hr" />
 
-            <div class="acoes-indice">
-              @if (favoritos.cliente()) {
-                <button
-                  type="button"
-                  class="rail-link fav-link"
-                  [class.on]="somenteFavoritos()"
-                  (click)="abrirFavoritos(!somenteFavoritos())"
-                  [attr.aria-pressed]="somenteFavoritos()"
-                  [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
-                >
-                  <span class="n" aria-hidden="true">♥</span>Meus favoritos
-                </button>
-                <button
-                  type="button"
-                  class="rail-link rail-sub sr-only"
-                  (click)="abrirFavoritos(false)"
-                  [attr.aria-pressed]="!somenteFavoritos()"
-                  [disabled]="ocupado() || !carrinho.online()"
-                >
-                  <span class="n" aria-hidden="true">•</span>Todos os produtos
-                </button>
-                <button
-                  type="button"
-                  class="rail-link rail-sub"
-                  [class.sr-only]="!favoritos.incerto()"
-                  (click)="consultarFavoritos()"
-                  [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
-                >
-                  <span class="n" aria-hidden="true">↻</span>Consultar favoritos no servidor
-                </button>
-              } @else {
-                <span class="rail-link fav-link rail-fav-static" aria-hidden="true">
-                  <span class="n">♥</span>Meus favoritos
-                </span>
-                <p class="nota-favoritos">
-                  Entre em uma conta de cliente para guardar seus favoritos pessoais.
-                </p>
-              }
-              @if (favoritos.erro()) {
-                <p role="alert" class="erro">{{ favoritos.erro() }}</p>
-              }
-            </div>
+              <div class="acoes-indice">
+                @if (favoritos.cliente()) {
+                  <button
+                    type="button"
+                    class="rail-link fav-link"
+                    [class.on]="somenteFavoritos()"
+                    (click)="abrirFavoritos(!somenteFavoritos())"
+                    [attr.aria-pressed]="somenteFavoritos()"
+                    [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">♥</span>Meus favoritos
+                  </button>
+                  <button
+                    type="button"
+                    class="rail-link rail-sub sr-only"
+                    (click)="abrirFavoritos(false)"
+                    [attr.aria-pressed]="!somenteFavoritos()"
+                    [disabled]="ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">•</span>Todos os produtos
+                  </button>
+                  <button
+                    type="button"
+                    class="rail-link rail-sub"
+                    [class.sr-only]="!favoritos.incerto()"
+                    (click)="consultarFavoritos()"
+                    [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">↻</span>Consultar favoritos no servidor
+                  </button>
+                } @else {
+                  <span class="rail-link fav-link rail-fav-static" aria-hidden="true">
+                    <span class="n">♥</span>Meus favoritos
+                  </span>
+                  <p class="nota-favoritos">
+                    Entre em uma conta de cliente para guardar seus favoritos pessoais.
+                  </p>
+                }
+                @if (favoritos.erro()) {
+                  <p role="alert" class="erro">{{ favoritos.erro() }}</p>
+                }
+              </div>
+            }
           </div>
 
           <div class="menu coluna-pratos">
@@ -721,36 +742,38 @@
                             {{ produto.tipo === 'COMBO' ? 'Combo para montar' : 'Sugestão do chef' }}
                           </span>
                           <p class="sr-only">Sugestão da casa</p>
-                          @if (favoritos.cliente()) {
-                            <button
-                              class="fav botao-favorito"
-                              [class.on]="favoritos.ids().includes(produto.id)"
-                              type="button"
-                              (click)="$event.stopPropagation(); favoritos.alternar(produto.id)"
-                              [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
-                              [disabled]="
-                                favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
-                              "
-                            >
-                              <span class="sr-only">
-                                {{
-                                  (favoritos.ids().includes(produto.id)
-                                    ? 'Remover dos favoritos: '
-                                    : 'Favoritar: ') + produto.nome
-                                }}
+                          @if (!modoPdv()) {
+                            @if (favoritos.cliente()) {
+                              <button
+                                class="fav botao-favorito"
+                                [class.on]="favoritos.ids().includes(produto.id)"
+                                type="button"
+                                (click)="$event.stopPropagation(); favoritos.alternar(produto.id)"
+                                [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
+                                [disabled]="
+                                  favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
+                                "
+                              >
+                                <span class="sr-only">
+                                  {{
+                                    (favoritos.ids().includes(produto.id)
+                                      ? 'Remover dos favoritos: '
+                                      : 'Favoritar: ') + produto.nome
+                                  }}
+                                </span>
+                                <svg width="20" height="20" aria-hidden="true">
+                                  <use
+                                    [attr.href]="
+                                      favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
+                                    "
+                                  />
+                                </svg>
+                              </button>
+                            } @else {
+                              <span class="fav" aria-hidden="true">
+                                <svg width="20" height="20"><use href="#i-heart" /></svg>
                               </span>
-                              <svg width="20" height="20" aria-hidden="true">
-                                <use
-                                  [attr.href]="
-                                    favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
-                                  "
-                                />
-                              </svg>
-                            </button>
-                          } @else {
-                            <span class="fav" aria-hidden="true">
-                              <svg width="20" height="20"><use href="#i-heart" /></svg>
-                            </span>
+                            }
                           }
                         </div>
                         <div class="f-body produto-corpo">
@@ -875,7 +898,7 @@
                                   </span>
                                 </button>
                               }
-                              @if (favoritos.cliente()) {
+                              @if (!modoPdv() && favoritos.cliente()) {
                                 <button
                                   class="fav-sm botao-favorito"
                                   [class.on]="favoritos.ids().includes(produto.id)"
@@ -970,36 +993,38 @@
                             </div>
                           </div>
                           <div class="r-act produto-acoes">
-                            @if (favoritos.cliente()) {
-                              <button
-                                class="fav-sm botao-favorito"
-                                [class.on]="favoritos.ids().includes(produto.id)"
-                                type="button"
-                                (click)="favoritos.alternar(produto.id)"
-                                [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
-                                [disabled]="
-                                  favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
-                                "
-                              >
-                                <span class="sr-only">
-                                  {{
-                                    (favoritos.ids().includes(produto.id)
-                                      ? 'Remover dos favoritos: '
-                                      : 'Favoritar: ') + produto.nome
-                                  }}
+                            @if (!modoPdv()) {
+                              @if (favoritos.cliente()) {
+                                <button
+                                  class="fav-sm botao-favorito"
+                                  [class.on]="favoritos.ids().includes(produto.id)"
+                                  type="button"
+                                  (click)="favoritos.alternar(produto.id)"
+                                  [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
+                                  [disabled]="
+                                    favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
+                                  "
+                                >
+                                  <span class="sr-only">
+                                    {{
+                                      (favoritos.ids().includes(produto.id)
+                                        ? 'Remover dos favoritos: '
+                                        : 'Favoritar: ') + produto.nome
+                                    }}
+                                  </span>
+                                  <svg width="19" height="19" aria-hidden="true">
+                                    <use
+                                      [attr.href]="
+                                        favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
+                                      "
+                                    />
+                                  </svg>
+                                </button>
+                              } @else {
+                                <span class="fav-sm" aria-hidden="true">
+                                  <svg width="19" height="19"><use href="#i-heart" /></svg>
                                 </span>
-                                <svg width="19" height="19" aria-hidden="true">
-                                  <use
-                                    [attr.href]="
-                                      favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
-                                    "
-                                  />
-                                </svg>
-                              </button>
-                            } @else {
-                              <span class="fav-sm" aria-hidden="true">
-                                <svg width="19" height="19"><use href="#i-heart" /></svg>
-                              </span>
+                              }
                             }
                             @if (produto.disponivel) {
                               <button
@@ -1103,17 +1128,38 @@
 </div>
 
 @if (modo === 'cardapio' && quantidadeItens() > 0) {
-  <a hlmBtn routerLink="/carrinho" class="carrinho-movel dock-cart">
-    <span class="bagi" aria-hidden="true">
-      <svg width="20" height="20"><use href="#i-bag" /></svg>
-      <b>{{ quantidadeItens() }}</b>
-    </span>
-    <span class="lbl">Ver meu carrinho</span>
-    <span class="sr-only">
-      ({{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }})
-    </span>
-    <span class="amount carrinho-contagem" aria-hidden="true">
-      {{ totalEstimadoCarrinho() }}
-    </span>
-  </a>
+  @if (modoPdv()) {
+    <button
+      hlmBtn
+      type="button"
+      class="carrinho-movel dock-cart dock-cart-pdv"
+      (click)="abrirRevisaoPdv($event.currentTarget)"
+    >
+      <span class="bagi" aria-hidden="true">
+        <svg width="20" height="20"><use href="#i-bag" /></svg>
+        <b>{{ quantidadeItens() }}</b>
+      </span>
+      <span class="lbl">Conferir comanda</span>
+      <span class="sr-only">
+        ({{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }})
+      </span>
+      <span class="amount carrinho-contagem" aria-hidden="true">
+        {{ totalEstimadoCarrinho() }}
+      </span>
+    </button>
+  } @else {
+    <a hlmBtn routerLink="/carrinho" class="carrinho-movel dock-cart">
+      <span class="bagi" aria-hidden="true">
+        <svg width="20" height="20"><use href="#i-bag" /></svg>
+        <b>{{ quantidadeItens() }}</b>
+      </span>
+      <span class="lbl">Ver meu carrinho</span>
+      <span class="sr-only">
+        ({{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }})
+      </span>
+      <span class="amount carrinho-contagem" aria-hidden="true">
+        {{ totalEstimadoCarrinho() }}
+      </span>
+    </a>
+  }
 }

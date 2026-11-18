@@ -16,9 +16,10 @@ import { nomeEstado } from '../pedidos/modelos';
 import { AberturaAtendimento, Comanda, Mesa, SolicitacaoMesa } from './modelos';
 import { PendenciasMesaService } from './pendencias-mesa.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 
 @Component({
-  imports: [FinanceiroComponent],
+  imports: [FinanceiroComponent, HlmButton],
   selector: 'app-mesas',
   templateUrl: './mesas.component.html',
   styleUrls: ['../operacao.css', './mesas.component.css'],
@@ -134,6 +135,44 @@ export class MesasComponent {
   }
   linkMesa(mesa: Mesa): string {
     return location.origin + '/mesa/' + encodeURIComponent(mesa.id);
+  }
+  exibirFinanceiroComanda(): boolean {
+    return (
+      this.tem('recebimento.registrar') ||
+      this.tem('financeiro.ajustar') ||
+      this.tem('devolucao.solicitar') ||
+      this.tem('comanda.concluir')
+    );
+  }
+  fecharQr(): void {
+    this.qrMesa.set(null);
+    this.qrUrl.set('');
+  }
+  fecharComanda(): void {
+    this.comanda.set(null);
+  }
+  tempoSolicitacao(criadaEm?: string): string {
+    if (!criadaEm) return '';
+    const ms = Date.parse(criadaEm);
+    if (Number.isNaN(ms)) return '';
+    const min = Math.max(0, Math.floor((Date.now() - ms) / 60000));
+    if (min < 1) return 'agora';
+    return min < 60 ? `há ${min} min` : `há ${Math.floor(min / 60)} h ${min % 60} min`;
+  }
+  async copiarTexto(valor: string, rotulo: string): Promise<void> {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(valor);
+        this.aviso.set(rotulo + ' copiado para a área de transferência.');
+      }
+    } catch {
+      /* Sem permissão de área de transferência; mantém texto visível. */
+    }
+  }
+  imprimirQr(): void {
+    if (typeof window !== 'undefined' && typeof window.print === 'function') {
+      window.print();
+    }
   }
 
   async mostrarQr(mesa: Mesa): Promise<void> {

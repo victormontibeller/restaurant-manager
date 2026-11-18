@@ -176,22 +176,39 @@ export class PedidoDetalheComponent {
     return '';
   }
   nomeEvento(tipo: string): string {
-    return (
-      (
-        {
-          PEDIDO_CRIADO: 'Pedido registrado',
-          CRIADO: 'Pedido registrado',
-          ACEITO: 'Confirmado pelo restaurante',
-          EM_PREPARO: 'Preparo iniciado',
-          PRONTO: 'Pedido pronto',
-          EM_ENTREGA: 'Saiu para entrega',
-          CONCLUIDO: 'Concluído',
-          CANCELADO: 'Cancelado',
-          RECUSADO: 'Recusado pelo restaurante',
-          SOLICITACAO_CANCELAMENTO: 'Solicitação de cancelamento',
-        } as Record<string, string>
-      )[tipo] ?? tipo
-    );
+    const mapa: Record<string, string> = {
+      PEDIDO_CRIADO: 'Pedido registrado',
+      CRIADO: 'Pedido registrado',
+      PAGAMENTO_CONFIRMADO: 'Pagamento confirmado',
+      ACEITO: 'Confirmado pelo restaurante',
+      PEDIDO_ACEITO: 'Confirmado pelo restaurante',
+      NA_FILA: 'Na fila de preparo',
+      EM_PREPARO: 'Preparo iniciado',
+      UNIDADE_INICIADA: 'Preparo de item iniciado',
+      UNIDADE_CONCLUIDA: 'Item concluído na cozinha',
+      PRONTO: 'Pedido pronto',
+      PEDIDO_PRONTO: 'Pedido pronto',
+      EM_ENTREGA: 'Saiu para entrega',
+      SAIDA_ENTREGA: 'Saiu para entrega',
+      CONCLUIDO: 'Concluído',
+      PEDIDO_SERVIDO: 'Servido na mesa',
+      PEDIDO_ENTREGUE: 'Entrega confirmada',
+      RETIRADA_ENTREGUE: 'Retirada entregue',
+      CANCELADO: 'Cancelado',
+      UNIDADE_CANCELADA: 'Unidade cancelada',
+      RECUSADO: 'Recusado pelo restaurante',
+      PEDIDO_RECUSADO: 'Recusado pelo restaurante',
+      SOLICITACAO_CANCELAMENTO: 'Solicitação de cancelamento',
+      CANCELAMENTO_SOLICITADO: 'Solicitação de cancelamento',
+      CANCELAMENTO_APROVADO: 'Cancelamento aprovado',
+      CANCELAMENTO_REJEITADO: 'Cancelamento recusado',
+      OCORRENCIA_REGISTRADA: 'Ocorrência na entrega',
+      OCORRENCIA_DECIDIDA: 'Decisão sobre ocorrência',
+    };
+    if (mapa[tipo]) return mapa[tipo];
+    if (!tipo) return 'Atualização';
+    const limpo = tipo.replaceAll('_', ' ').toLowerCase();
+    return limpo.charAt(0).toUpperCase() + limpo.slice(1);
   }
   podeCancelarOperacional(): boolean {
     return (

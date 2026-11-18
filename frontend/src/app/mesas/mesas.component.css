@@ -1,17 +1,70 @@
 .codigo {
-  display: block;
-  font-size: 1.5rem;
-  letter-spacing: 0.15rem;
-  font-weight: 750;
+  display: inline-block;
+  padding: 0.45rem 0.95rem;
+  border-radius: 0.75rem;
+  border: 1.5px dashed var(--amber-border, #e6cf9e);
+  background: var(--card, #ffffff);
+  color: var(--foreground, #292521);
+  font-size: 1.85rem;
+  letter-spacing: 0.16rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+.cadastro-mesa-details {
+  margin: 1rem 0;
+}
+.cadastro-mesa-corpo {
+  display: grid;
+  gap: 1rem;
+}
+.cadastro-mesa-bloco,
+.cadastro-mesa-form {
+  display: grid;
+  gap: 0.4rem;
+  max-width: none;
+}
+.cadastro-mesa-bloco label,
+.cadastro-mesa-form label {
+  margin: 0;
+  font-size: 0.84rem;
+}
+.cadastro-mesa-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+.cadastro-mesa-linha input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.cadastro-mesa-linha button {
+  flex: 0 1 auto;
+}
 .cartao-mesa {
-  border-top: 3px solid var(--input, #c6b9aa);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border-top: 4px solid var(--sage-solid, #30523b);
   background: var(--card, #ffffff);
   color: var(--foreground, #292521);
 }
-.cartao-mesa.mesa-ocupada {
+.cartao-mesa[data-mesa-estado='LIVRE'] {
+  border-top-color: var(--sage-solid, #30523b);
+}
+.cartao-mesa.mesa-ocupada,
+.cartao-mesa[data-mesa-estado='ABERTA'] {
   border-top-color: var(--primary, #a53e2b);
+}
+.cartao-mesa[data-mesa-estado='EM_FECHAMENTO'] {
+  border-top-color: #c57d1f;
+}
+.cartao-mesa[data-mesa-estado='INATIVA'] {
+  border-style: dashed;
+  border-color: var(--input, #c6b9aa);
+  border-top: 3px dashed var(--input, #c6b9aa);
+  background: var(--muted, #f3eee7);
 }
 .mesa-cabecalho {
   display: flex;
@@ -21,52 +74,182 @@
 }
 .mesa-cabecalho h3,
 .mesa-cabecalho h4 {
-  font-size: 1.1rem;
-  margin: 0.15rem 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0.1rem 0;
+  color: var(--foreground, #292521);
 }
-.cartao-mesa .acoes {
-  margin: 1rem 0 0;
+.mesa-subtitulo {
+  margin: 0;
 }
-.cartao-mesa .acoes button {
-  flex: 1 1 11rem;
+.cartao-mesa .mesa-acoes {
+  margin: auto 0 0;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--border, #e5ded3);
+}
+.cartao-mesa .mesa-acoes button {
+  flex: 1 1 8.5rem;
 }
 .codigo-atendimento,
 .comanda-resumo,
 .qr-painel {
-  border: 1px solid var(--border, #dedfd8);
-  border-radius: 1rem;
+  border: 1px solid var(--border, #e5ded3);
+  border-radius: 1.15rem;
   padding: 1.25rem;
   background: var(--card, #fff);
   margin: 1.25rem 0;
+  box-shadow: var(--shadow-soft, 0 2px 10px -4px rgb(41 37 33 / 6%));
 }
 .codigo-atendimento {
-  background: var(--amber-bg, #fff5e8);
-  border-color: var(--amber-border, #e9cba3);
+  display: grid;
+  justify-items: start;
+  gap: 0.55rem;
+  background: var(--amber-bg, #fff8e8);
+  border-color: var(--amber-border, #e6cf9e);
+  border-left: 4px solid var(--amber-fg, #684614);
   color: var(--amber-fg, #684614);
 }
-.codigo-atendimento .codigo {
-  margin: 1rem 0;
-  font-size: 2rem;
+.codigo-atendimento p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.codigo-atendimento .acoes {
+  margin: 0.2rem 0 0;
 }
 .comanda-resumo {
-  max-width: 45rem;
+  max-width: 56rem;
+  border-top: 4px solid var(--primary, #a53e2b);
+  display: grid;
+  gap: 0.85rem;
+}
+.comanda-resumo-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--border, #e5ded3);
 }
 .comanda-resumo h4 {
-  font-size: 1.2rem;
-  margin-top: 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.32rem;
+  font-weight: 600;
+  margin: 0.15rem 0 0;
+  color: var(--foreground, #292521);
+}
+.comanda-resumo-dl {
+  margin: 0;
+}
+.comanda-acoes-rodape {
+  margin: 0.25rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border, #e5ded3);
 }
 .qr-painel {
-  max-width: 30rem;
+  max-width: 32rem;
+  display: grid;
+  justify-items: center;
   text-align: center;
+  gap: 0.75rem;
+  border-top: 4px solid var(--primary, #a53e2b);
 }
-.qr-painel img {
-  border: 1px solid var(--border, #dedfd8);
-  border-radius: 0.75rem;
+.qr-painel-topo {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px dashed var(--border, #e5ded3);
+}
+.qr-painel-topo h4 {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.25rem;
+  color: var(--foreground, #292521);
+}
+.qr-moldura {
+  display: inline-grid;
+  place-items: center;
+  padding: 0.75rem;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  border: 1px solid var(--border, #e5ded3);
+}
+.qr-moldura img {
+  display: block;
+  border-radius: 0.4rem;
+}
+.qr-link-linha {
+  margin: 0;
+  font-weight: 700;
+}
+.qr-acoes {
+  width: 100%;
+  justify-content: center;
+  margin: 0.25rem 0 0;
 }
 .solicitacoes-titulo {
-  margin-top: 2.5rem;
+  margin-top: 2.25rem;
 }
-.cartao-solicitacao p {
-  font-size: 0.9rem;
-  color: var(--muted-foreground, #68736b);
+.cartao-solicitacao {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 4px solid var(--border, #e5ded3);
+}
+.cartao-solicitacao[data-estado='PENDENTE'] {
+  border-top-color: #c57d1f;
+  background: var(--amber-bg, #fff8e8);
+  border-color: var(--amber-border, #e6cf9e);
+}
+.cartao-solicitacao[data-estado='ATENDIDA'] {
+  background: var(--card, #fff);
+}
+.solicitacao-tempo {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground, #6e6259);
+}
+.cartao-solicitacao[data-estado='PENDENTE'] .solicitacao-tempo {
+  color: var(--amber-fg, #684614);
+}
+.solicitacao-motivo {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--foreground, #292521);
+}
+.cartao-solicitacao[data-estado='PENDENTE'] .solicitacao-motivo,
+.cartao-solicitacao[data-estado='PENDENTE'] .mesa-cabecalho h4 {
+  color: var(--amber-fg, #684614);
+}
+@media (max-width: 600px) {
+  .cadastro-mesa-linha button {
+    width: 100%;
+  }
+}
+@media print {
+  .cartao-mesa,
+  .barra-conexao,
+  .cadastro-mesa-details,
+  .resumo-listagem,
+  .paginacao,
+  .solicitacoes-titulo,
+  .cartao-solicitacao,
+  .comanda-resumo,
+  .nao-imprimir {
+    display: none !important;
+  }
+  .qr-painel {
+    margin: 0 auto;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
 }

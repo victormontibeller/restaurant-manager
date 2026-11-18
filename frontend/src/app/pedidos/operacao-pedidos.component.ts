@@ -4,13 +4,20 @@ import { CozinhaComponent } from '../cozinha/cozinha.component';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { MesasComponent } from '../mesas/mesas.component';
+import { HlmButton } from '../ui/button';
 import { PrazosAceiteComponent } from '../unidades/prazos-aceite.component';
 import { AcessosOperacao, PaginaPedidos, Pedido } from './modelos';
 import { PedidoDetalheComponent } from './pedido-detalhe.component';
 
 @Component({
   selector: 'app-operacao-pedidos',
-  imports: [PedidoDetalheComponent, MesasComponent, CozinhaComponent, PrazosAceiteComponent],
+  imports: [
+    PedidoDetalheComponent,
+    MesasComponent,
+    CozinhaComponent,
+    PrazosAceiteComponent,
+    HlmButton,
+  ],
   templateUrl: './operacao-pedidos.component.html',
   styleUrl: '../operacao.css',
 })
@@ -35,6 +42,7 @@ export class OperacaoPedidosComponent {
   readonly filtroEstado = signal('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO');
   readonly filtroCanal = signal('');
   readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('RECENTES');
+  readonly busca = signal('');
   readonly acompanhamento = new AcompanhamentoEventos();
   private geracao = 0;
   private carregamento: Promise<void> | null = null;
@@ -70,6 +78,37 @@ export class OperacaoPedidosComponent {
 
   tem(acao: string): boolean {
     return this.acoes().includes(acao);
+  }
+
+  definirBusca(valor: string): void {
+    this.busca.set(valor);
+  }
+
+  limparBusca(): void {
+    this.busca.set('');
+  }
+
+  atalhoEstadoAtivo(valor: string): boolean {
+    return this.filtroEstado() === valor;
+  }
+
+  pedidosVisiveis(): Pedido[] {
+    const termo = this.busca().trim().toLowerCase();
+    const lista = this.pedidos();
+    if (!termo) return lista;
+    return lista.filter((pedido) => {
+      const ref = pedido.id.slice(0, 8).toLowerCase();
+      const itens = (pedido.linhas ?? []).map((l) => l.nome.toLowerCase()).join(' ');
+      const obs = (pedido.observacao ?? '').toLowerCase();
+      const canal = (pedido.canal ?? '').toLowerCase();
+      return (
+        pedido.id.toLowerCase().includes(termo) ||
+        ref.includes(termo.replace(/^#/, '')) ||
+        itens.includes(termo) ||
+        obs.includes(termo) ||
+        canal.includes(termo)
+      );
+    });
   }
 
   async carregarAcessos(): Promise<void> {

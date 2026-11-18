@@ -1,48 +1,142 @@
-<section>
-  <h2>Pendências financeiras e notificações</h2>
-  <button (click)="carregar(pagina())" [disabled]="ocupado()">Atualizar pendências</button>
-  <h3>Pagamentos e devoluções</h3>
-  <ul>
-    @for (p of lista(); track p.id) {
-      <li>
-        Pedido {{ p.pedidoId.slice(0,8) }} · {{ p.tipo==='CHECKOUT'?'Pagamento':'Devolução' }} ·
-        {{ p.estado }}
-        <button (click)="reconciliar(p)" [disabled]="ocupado()">
-          Reconciliar a mesma operação
+<section class="painel-interno painel-pendencias">
+  <header class="pendencias-barra-topo">
+    <h2>Pendências financeiras e notificações</h2>
+    <button
+      hlmBtn
+      variant="outline"
+      type="button"
+      (click)="carregar(pagina())"
+      [disabled]="ocupado()"
+    >
+      Atualizar pendências
+    </button>
+  </header>
+
+  @if (aviso()) {
+    <p role="status" class="sucesso">{{ aviso() }}</p>
+  }
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+
+  <div class="grade-pendencias">
+    <section class="coluna-pendencias" aria-labelledby="pendencias-pagamentos-titulo">
+      <header class="coluna-pendencias-topo">
+        <div>
+          <span class="sobretitulo">01 · Conciliação</span>
+          <h3 id="pendencias-pagamentos-titulo">Pagamentos e devoluções</h3>
+        </div>
+        <a routerLink="/gestao/pedidos" class="link-discreto-pedidos">Ver pedidos</a>
+      </header>
+
+      <ul class="lista-cartoes-pendencia">
+        @for (p of lista(); track p.id) {
+          <li class="cartao-pendencia">
+            <div class="cartao-pendencia-cabecalho">
+              <span class="cartao-pendencia-ref">
+                Pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }} ·
+                {{ p.tipo === 'CHECKOUT' ? 'Pagamento' : 'Devolução' }}
+              </span>
+              <span class="etiqueta" [attr.data-variante]="varianteEstado(p.estado)">
+                {{ rotuloEstado(p.estado) }}
+              </span>
+            </div>
+            <div class="acoes">
+              <button hlmBtn type="button" (click)="reconciliar(p)" [disabled]="ocupado()">
+                Reconciliar a mesma operação
+              </button>
+            </div>
+          </li>
+        } @empty {
+          <li class="cartao-pendencia cartao-pendencia--vazio">
+            Nenhuma pendência financeira nesta página.
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="coluna-pendencias" aria-labelledby="pendencias-notificacoes-titulo">
+      <header class="coluna-pendencias-topo">
+        <div>
+          <span class="sobretitulo">02 · Comunicações</span>
+          <h3 id="pendencias-notificacoes-titulo">Notificações por e-mail</h3>
+        </div>
+      </header>
+
+      <p class="nota-capturado">
+        Capturado significa salvo localmente. Não comprova envio ou leitura por destinatário.
+      </p>
+
+      <div class="atalhos-operacao" role="group" aria-label="Filtrar notificações">
+        <button
+          type="button"
+          class="filtro-pilula"
+          [class.ativo]="filtroNotificacao() === 'TODAS'"
+          [attr.aria-pressed]="filtroNotificacao() === 'TODAS'"
+          (click)="filtroNotificacao.set('TODAS')"
+        >
+          Todas
+          <span class="filtro-contagem">{{ notificacoes().length }}</span>
         </button>
-      </li>
-    } @empty {
-      <li>Nenhuma pendência financeira nesta página.</li>
-    }
-  </ul>
-  <h3>Notificações por e-mail</h3>
-  <p>Capturado significa salvo localmente. Não comprova envio ou leitura por destinatário.</p>
-  <ul>
-    @for (n of notificacoes(); track n.id) {
-      <li>
-        Pedido {{ n.pedidoId.slice(0,8) }} · {{ n.tipo }} · {{ n.estado }} · tentativas
-        {{ n.tentativas }}
-      </li>
-    } @empty {
-      <li>Nenhuma notificação nesta página.</li>
-    }
-  </ul>
-  <div class="acoes">
-    <button (click)="carregar(pagina()-1)" [disabled]="ocupado() || pagina()===0">
+        <button
+          type="button"
+          class="filtro-pilula"
+          [class.ativo]="filtroNotificacao() === 'FALHAS'"
+          [attr.aria-pressed]="filtroNotificacao() === 'FALHAS'"
+          (click)="filtroNotificacao.set('FALHAS')"
+        >
+          Com falha ou pendentes
+        </button>
+      </div>
+
+      <ul class="lista-cartoes-pendencia">
+        @for (n of notificacoesVisiveis(); track n.id) {
+          <li class="cartao-pendencia">
+            <div class="cartao-pendencia-cabecalho">
+              <span class="cartao-pendencia-ref">
+                Pedido #{{ n.pedidoId.slice(0, 8).toUpperCase() }}
+              </span>
+              <span class="etiqueta" [attr.data-variante]="varianteEstado(n.estado)">
+                {{ rotuloEstado(n.estado) }}
+              </span>
+            </div>
+            <p class="cartao-pendencia-detalhe">
+              {{ rotuloTipoNotificacao(n.tipo) }} · {{ n.tentativas }}
+              {{ n.tentativas === 1 ? 'tentativa' : 'tentativas' }}
+            </p>
+          </li>
+        } @empty {
+          <li class="cartao-pendencia cartao-pendencia--vazio">
+            @if (notificacoes().length > 0) {
+              Nenhuma notificação com falha ou pendência nesta página.
+            } @else {
+              Nenhuma notificação nesta página.
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+
+  <nav class="paginacao" aria-label="Páginas de pendências e notificações">
+    <button
+      hlmBtn
+      variant="outline"
+      type="button"
+      (click)="carregar(pagina() - 1)"
+      [disabled]="ocupado() || pagina() === 0"
+    >
       Página anterior
     </button>
-    <span>Página {{ pagina()+1 }}</span>
+    <span>Página {{ pagina() + 1 }}</span>
     <button
-      (click)="carregar(pagina()+1)"
-      [disabled]="ocupado() || (lista().length<50 && notificacoes().length<50)"
+      hlmBtn
+      variant="outline"
+      type="button"
+      (click)="carregar(pagina() + 1)"
+      [disabled]="ocupado() || (lista().length < 50 && notificacoes().length < 50)"
     >
       Próxima página
     </button>
-  </div>
-  @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
-  }
+  </nav>
 </section>

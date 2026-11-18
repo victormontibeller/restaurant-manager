@@ -1,16 +1,29 @@
 <section class="painel-interno" aria-labelledby="operacao-pedidos-titulo">
-  <header class="cabecalho-painel">
+  <header
+    class="cabecalho-painel"
+    [class.sr-only]="!navegacaoInterna() && unidadeExterna() !== undefined"
+  >
     <div>
-      <span class="sobretitulo">Atendimento</span>
-      <h2 id="operacao-pedidos-titulo">
+      @if (navegacaoInterna()) {
+        <span class="sobretitulo">Atendimento</span>
+      }
+      <h2 id="operacao-pedidos-titulo" [class.sr-only]="!navegacaoInterna()">
         {{ navegacaoInterna() ? 'Operação de pedidos e mesas' : 'Fila de pedidos' }}
       </h2>
-      <p class="texto-secundario">
-        Acompanhe cada pedido, confirme o aceite e mantenha a equipe em sintonia.
-      </p>
+      @if (navegacaoInterna()) {
+        <p class="texto-secundario">
+          Acompanhe cada pedido, confirme o aceite e mantenha a equipe em sintonia.
+        </p>
+      }
     </div>
     @if (unidadeExterna() === undefined) {
-      <button class="secundario" (click)="carregarAcessos()" [disabled]="carregandoAcessos()">
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="carregarAcessos()"
+        [disabled]="carregandoAcessos()"
+      >
         Revalidar acesso operacional
       </button>
     }
@@ -41,28 +54,97 @@
       @for (unidadeAtual of [unidadeId()]; track unidadeAtual) {
         @if (navegacaoInterna()) {
           <nav class="acoes navegacao-operacao" aria-label="Áreas da operação">
-            <button (click)="selecionarArea('pedidos')" [attr.aria-pressed]="area() === 'pedidos'">
+            <button
+              type="button"
+              (click)="selecionarArea('pedidos')"
+              [attr.aria-pressed]="area() === 'pedidos'"
+            >
               Fila de pedidos
             </button>
             @if (tem('cozinha.iniciar') || tem('cozinha.concluir')) {
               <button
+                type="button"
                 (click)="selecionarArea('cozinha')"
                 [attr.aria-pressed]="area() === 'cozinha'"
               >
                 Painel da cozinha
               </button>
             }
-            <button (click)="selecionarArea('mesas')" [attr.aria-pressed]="area() === 'mesas'">
+            <button
+              type="button"
+              (click)="selecionarArea('mesas')"
+              [attr.aria-pressed]="area() === 'mesas'"
+            >
               Mesas e comandas
             </button>
             @if (administrador()) {
-              <button (click)="selecionarArea('prazos')" [attr.aria-pressed]="area() === 'prazos'">
+              <button
+                type="button"
+                (click)="selecionarArea('prazos')"
+                [attr.aria-pressed]="area() === 'prazos'"
+              >
                 Configurar prazos de aceite
               </button>
             }
           </nav>
         }
         @if (area() === 'pedidos') {
+          <div class="atalhos-operacao" role="group" aria-label="Atalhos de estado dos pedidos">
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO')"
+              (click)="filtrar('estado', 'AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO')"
+            >
+              Em andamento
+            </button>
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('AGUARDANDO_ACEITE')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('AGUARDANDO_ACEITE')"
+              (click)="filtrar('estado', 'AGUARDANDO_ACEITE')"
+            >
+              Aguardando aceite
+            </button>
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('NA_FILA')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('NA_FILA')"
+              (click)="filtrar('estado', 'NA_FILA')"
+            >
+              Na fila
+            </button>
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('EM_PREPARO')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('EM_PREPARO')"
+              (click)="filtrar('estado', 'EM_PREPARO')"
+            >
+              Em preparo
+            </button>
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('PRONTO')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('PRONTO')"
+              (click)="filtrar('estado', 'PRONTO')"
+            >
+              Prontos
+            </button>
+            <button
+              type="button"
+              class="filtro-pilula"
+              [class.ativo]="atalhoEstadoAtivo('')"
+              [attr.aria-pressed]="atalhoEstadoAtivo('')"
+              (click)="filtrar('estado', '')"
+            >
+              Todos
+            </button>
+          </div>
           <div class="filtros" aria-label="Filtros da fila de pedidos">
             <div class="campo-filtro">
               <label for="pedidos-estado">Estado dos pedidos</label>
@@ -109,6 +191,24 @@
                 <option value="RECENTES">Mais recentes primeiro</option>
               </select>
             </div>
+            <div class="campo-filtro campo-filtro--largo">
+              <label for="pedidos-busca">Buscar na página</label>
+              <div class="busca-filtro-linha">
+                <input
+                  id="pedidos-busca"
+                  #buscaInput
+                  type="search"
+                  [value]="busca()"
+                  (input)="definirBusca(buscaInput.value)"
+                  placeholder="Buscar por #código, item ou observação…"
+                />
+                @if (busca()) {
+                  <button hlmBtn variant="outline" type="button" (click)="limparBusca()">
+                    Limpar busca
+                  </button>
+                }
+              </div>
+            </div>
           </div>
           <div class="barra-conexao">
             <p role="status" class="status-consulta">
@@ -121,18 +221,30 @@
                 {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.</span
               >
             </p>
-            <button class="secundario" (click)="carregarPedidos(pagina())" [disabled]="ocupado()">
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="carregarPedidos(pagina())"
+              [disabled]="ocupado()"
+            >
               Atualizar fila de pedidos
             </button>
           </div>
           <div class="resumo-listagem">
-            <span
-              >{{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
-              página</span
-            ><span>Página {{ pagina() + 1 }}</span>
+            <span>
+              @if (busca().trim()) {
+                Exibindo {{ pedidosVisiveis().length }} de {{ pedidos().length }}
+                {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta página
+              } @else {
+                {{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }} nesta
+                página
+              }
+            </span>
+            <span>Página {{ pagina() + 1 }}</span>
           </div>
           <div class="grade-pedidos" [attr.aria-busy]="ocupado()">
-            @for (pedido of pedidos(); track pedido.id) {
+            @for (pedido of pedidosVisiveis(); track pedido.id) {
               <app-pedido-detalhe
                 [pedido]="pedido"
                 contexto="operacao"
@@ -140,15 +252,36 @@
                 (atualizar)="carregarPedidos(pagina())"
               />
             } @empty {
-              <div class="vazio">
-                <h3>{{ ocupado() ? 'Buscando pedidos…' : 'Nenhum pedido por aqui' }}</h3>
-                <p>Os pedidos desta unidade aparecerão aqui conforme os filtros selecionados.</p>
-              </div>
+              @if (pedidos().length > 0) {
+                <div class="vazio">
+                  <h3>Nenhum pedido corresponde à busca</h3>
+                  <p>
+                    Não encontramos pedidos com “{{ busca() }}” nesta página. Limpe o filtro rápido
+                    para ver todos os itens carregados.
+                  </p>
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    type="button"
+                    class="vazio-acao"
+                    (click)="limparBusca()"
+                  >
+                    Limpar busca
+                  </button>
+                </div>
+              } @else {
+                <div class="vazio">
+                  <h3>{{ ocupado() ? 'Buscando pedidos…' : 'Nenhum pedido por aqui' }}</h3>
+                  <p>Os pedidos desta unidade aparecerão aqui conforme os filtros selecionados.</p>
+                </div>
+              }
             }
           </div>
           <nav class="paginacao" aria-label="Páginas da fila de pedidos">
             <button
-              class="secundario"
+              hlmBtn
+              variant="outline"
+              type="button"
               (click)="carregarPedidos(pagina() - 1)"
               [disabled]="ocupado() || pagina() === 0"
             >
@@ -156,7 +289,9 @@
             </button>
             <span>Página {{ pagina() + 1 }}</span>
             <button
-              class="secundario"
+              hlmBtn
+              variant="outline"
+              type="button"
               (click)="carregarPedidos(pagina() + 1)"
               [disabled]="ocupado() || !mais()"
             >

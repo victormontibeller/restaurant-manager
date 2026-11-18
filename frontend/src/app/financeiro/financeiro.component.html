@@ -1,188 +1,348 @@
-<section aria-label="Recebimentos e devoluções">
-  <h3>Recebimentos e devoluções</h3>
-  <button type="button" (click)="carregar()" [disabled]="carregando() || movimentos.ocupado()">
-    Atualizar financeiro
-  </button>
+<section class="painel-financeiro" aria-label="Recebimentos e devoluções">
+  <header class="financeiro-cabecalho">
+    <h3>Recebimentos e devoluções</h3>
+    <button
+      hlmBtn
+      variant="outline"
+      type="button"
+      (click)="carregar()"
+      [disabled]="carregando() || movimentos.ocupado()"
+    >
+      Atualizar financeiro
+    </button>
+  </header>
+
   @if (carregando()) {
-    <p role="status">Consultando valores…</p>
+    <p role="status" class="texto-secundario">Consultando valores…</p>
   }
+
   @if (dados(); as detalhe) {
     @if (detalhe.cobrancaId === null) {
-      <p>Nenhum consumo foi registrado nesta comanda.</p>
+      <p class="aviso">Nenhum consumo foi registrado nesta comanda.</p>
     }
-    <dl>
-      <dt>Total devido</dt>
-      <dd>{{ moeda(detalhe.saldo.totalDevido) }}</dd>
-      <dt>Recebido</dt>
-      <dd>{{ moeda(detalhe.saldo.pagoConfirmado) }}</dd>
-      <dt>Devolvido</dt>
-      <dd>{{ moeda(detalhe.saldo.devolvidoConfirmado) }}</dd>
-      <dt>A receber</dt>
-      <dd>{{ moeda(detalhe.saldo.saldoAReceber) }}</dd>
-      <dt>A devolver</dt>
-      <dd>{{ moeda(detalhe.saldo.saldoADevolver) }}</dd>
-      <dt>Reservado para devolução</dt>
-      <dd>{{ moeda(detalhe.reservado) }}</dd>
+
+    <dl class="extrato-financeiro-dl">
+      <div class="extrato-kpi">
+        <dt>Total devido</dt>
+        <dd>{{ moeda(detalhe.saldo.totalDevido) }}</dd>
+      </div>
+      <div class="extrato-kpi" [class.extrato-kpi--recebido]="+detalhe.saldo.pagoConfirmado > 0">
+        <dt>Recebido</dt>
+        <dd>{{ moeda(detalhe.saldo.pagoConfirmado) }}</dd>
+      </div>
+      <div class="extrato-kpi">
+        <dt>Devolvido</dt>
+        <dd>{{ moeda(detalhe.saldo.devolvidoConfirmado) }}</dd>
+      </div>
+      <div class="extrato-kpi" [class.extrato-kpi--receber]="temSaldoAReceber()">
+        <dt>A receber</dt>
+        <dd>{{ moeda(detalhe.saldo.saldoAReceber) }}</dd>
+      </div>
+      <div class="extrato-kpi" [class.extrato-kpi--devolver]="+detalhe.saldo.saldoADevolver > 0">
+        <dt>A devolver</dt>
+        <dd>{{ moeda(detalhe.saldo.saldoADevolver) }}</dd>
+      </div>
+      <div class="extrato-kpi" [class.extrato-kpi--devolver]="+detalhe.reservado > 0">
+        <dt>Reservado para devolução</dt>
+        <dd>{{ moeda(detalhe.reservado) }}</dd>
+      </div>
     </dl>
+
     @if (detalhe.saldo.pendenciaFinanceira) {
       <p class="aviso">Há uma operação financeira pendente. Confira antes do fechamento.</p>
     }
+
     @if (tem('recebimento.registrar')) {
-      <form (ngSubmit)="receber()">
-        <fieldset [disabled]="bloqueado()">
+      <form class="bloco-financeiro-form" (ngSubmit)="receber()">
+        <fieldset class="bloco-financeiro-fieldset" [disabled]="bloqueado()">
           <legend>Registrar recebimento presencial</legend>
-          <label
-            >Meio<select name="metodo" [(ngModel)]="metodo">
-              <option value="PIX">Pix presencial conferido</option>
-              <option value="CARTAO">Cartão presencial conferido</option>
-              <option value="DINHEIRO">Dinheiro</option>
-            </select></label
-          >
-          <label
-            >Valor aplicado (ex.: 20.00)<input
-              name="valor"
-              [(ngModel)]="valor"
-              inputmode="decimal"
-              required
-              pattern="[0-9]+([.][0-9]{1,2})?"
-          /></label>
-          @if (metodo === 'DINHEIRO') {
-            <label
-              >Dinheiro entregue<input
-                name="entregue"
-                [(ngModel)]="entregue"
+          <div class="financeiro-campos-grade">
+            <div class="campo-financeiro">
+              <label [for]="'fin-meio-' + recurso()">Meio</label>
+              <select [id]="'fin-meio-' + recurso()" name="metodo" [(ngModel)]="metodo">
+                <option value="PIX">Pix presencial conferido</option>
+                <option value="CARTAO">Cartão presencial conferido</option>
+                <option value="DINHEIRO">Dinheiro</option>
+              </select>
+            </div>
+            <div class="campo-financeiro">
+              <label [for]="'fin-valor-' + recurso()">Valor aplicado (ex.: 20.00)</label>
+              <input
+                [id]="'fin-valor-' + recurso()"
+                name="valor"
+                [(ngModel)]="valor"
                 inputmode="decimal"
+                placeholder="0.00"
                 required
-            /></label>
+                pattern="[0-9]+([.][0-9]{1,2})?"
+              />
+            </div>
+            @if (metodo === 'DINHEIRO') {
+              <div class="campo-financeiro">
+                <label [for]="'fin-entregue-' + recurso()">Dinheiro entregue</label>
+                <input
+                  [id]="'fin-entregue-' + recurso()"
+                  name="entregue"
+                  [(ngModel)]="entregue"
+                  inputmode="decimal"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            }
+          </div>
+
+          @if (temSaldoAReceber()) {
+            <div class="atalho-saldo-linha">
+              <button
+                hlmBtn
+                variant="outline"
+                type="button"
+                (click)="usarSaldoRestante()"
+                [disabled]="bloqueado()"
+              >
+                Usar saldo restante ({{ moeda(detalhe.saldo.saldoAReceber) }})
+              </button>
+            </div>
           }
-          <p>
+
+          @if (calculoTroco(); as calc) {
+            <div
+              class="troco-calculadora"
+              [class.troco-calculadora--falta]="calc.falta"
+              role="status"
+            >
+              @if (calc.falta) {
+                <span>Valor entregue insuficiente · faltam</span>
+                <strong>{{ calc.valor }}</strong>
+              } @else {
+                <span>Troco automático a devolver</span>
+                <strong>{{ calc.valor }}</strong>
+              }
+            </div>
+          }
+
+          <p class="nota-financeiro">
             Confirme somente após conferir o recebimento fora do sistema. O troco não gera crédito.
           </p>
-          <button type="submit">Confirmar recebimento presencial</button>
+          <div class="acoes">
+            <button hlmBtn type="submit" [disabled]="bloqueado()">
+              Confirmar recebimento presencial
+            </button>
+          </div>
         </fieldset>
       </form>
     }
+
     @if (tem('financeiro.ajustar')) {
-      <details>
+      <details class="bistro-details">
         <summary>Ajustar cobrança por valor</summary>
-        <form (ngSubmit)="ajustar()">
-          <fieldset [disabled]="bloqueado()">
-            <legend>Abatimento comercial</legend>
-            <label
-              >Unidade comercial ou taxa<select name="parcela" [(ngModel)]="parcela" required>
-                <option value="">Selecione</option>
-                @for (p of detalhe.parcelas; track p.id) {
-                  <option [value]="p.id">
-                    {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0,8).toUpperCase() }} · original
-                    {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
-                  </option>
+        <div class="bistro-details-body">
+          <form class="bloco-financeiro-form" (ngSubmit)="ajustar()">
+            <fieldset class="bloco-financeiro-fieldset" [disabled]="bloqueado()">
+              <legend>Abatimento comercial</legend>
+              <div class="campo-financeiro">
+                <label [for]="'fin-parcela-' + recurso()">Unidade comercial ou taxa</label>
+                <select
+                  [id]="'fin-parcela-' + recurso()"
+                  name="parcela"
+                  [(ngModel)]="parcela"
+                  required
+                >
+                  <option value="">Selecione</option>
+                  @for (p of detalhe.parcelas; track p.id) {
+                    <option [value]="p.id">
+                      {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }} ·
+                      original {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
+                    </option>
+                  }
+                </select>
+              </div>
+              @for (p of detalhe.parcelas; track p.id) {
+                @if (p.id === parcela) {
+                  <p class="item-abatimento-selecionado">
+                    <span>Item selecionado: {{ p.descricao }}</span>
+                    <span> · pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }}.</span>
+                  </p>
                 }
-              </select></label
-            >
-            @for (p of detalhe.parcelas; track p.id) {
-              @if (p.id === parcela) {
-                <p>
-                  <span>Item selecionado: {{ p.descricao }}</span>
-                  <span> · pedido #{{ p.pedidoId.slice(0,8).toUpperCase() }}.</span>
-                </p>
               }
-            }
-            <label
-              >Valor do abatimento<input
-                name="valorAjuste"
-                [(ngModel)]="valorAjuste"
-                inputmode="decimal"
-                required
-            /></label>
-            <label
-              >Motivo<input name="motivoAjuste" [(ngModel)]="motivoAjuste" maxlength="500" required
-            /></label>
-            <button type="submit">Confirmar ajuste de cobrança</button>
-          </fieldset>
-        </form>
+              <div class="financeiro-campos-grade">
+                <div class="campo-financeiro">
+                  <label [for]="'fin-valor-ajuste-' + recurso()">Valor do abatimento</label>
+                  <input
+                    [id]="'fin-valor-ajuste-' + recurso()"
+                    name="valorAjuste"
+                    [(ngModel)]="valorAjuste"
+                    inputmode="decimal"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div class="campo-financeiro">
+                  <label [for]="'fin-motivo-ajuste-' + recurso()">Motivo</label>
+                  <input
+                    [id]="'fin-motivo-ajuste-' + recurso()"
+                    name="motivoAjuste"
+                    [(ngModel)]="motivoAjuste"
+                    maxlength="500"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="acoes">
+                <button hlmBtn type="submit" [disabled]="bloqueado()">
+                  Confirmar ajuste de cobrança
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        </div>
       </details>
     }
-    <h4>Recebimentos confirmados</h4>
-    <ul>
-      @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
-        <li>
-          Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }} · entregue
-          {{ moeda(r.entregue) }} · troco
-          {{ moeda(r.troco) }}
-        </li>
-      } @empty {
-        <li>Nenhum recebimento confirmado.</li>
-      }
-    </ul>
+
+    <div class="secao-lista-caixa">
+      <h4>Recebimentos confirmados</h4>
+      <ul class="lista-movimentos-caixa">
+        @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+          <li class="movimento-item">
+            <span class="movimento-info">
+              <strong>Recebimento {{ indice + 1 }}</strong>
+              <span>·</span>
+              <span class="etiqueta">{{ r.metodo }}</span>
+              <span>·</span>
+              <strong>{{ moeda(r.valor) }}</strong>
+              @if (r.metodo === 'DINHEIRO') {
+                <span>· entregue {{ moeda(r.entregue) }} · troco {{ moeda(r.troco) }}</span>
+              }
+            </span>
+            @if (horarioCurto(r.confirmadoEm); as hora) {
+              <span class="movimento-hora">{{ hora }}</span>
+            }
+          </li>
+        } @empty {
+          <li class="movimento-item movimento-item--vazio">Nenhum recebimento confirmado.</li>
+        }
+      </ul>
+    </div>
+
     @if (tem('devolucao.solicitar')) {
-      <form (ngSubmit)="devolver()">
-        <fieldset [disabled]="bloqueado()">
+      <form class="bloco-financeiro-form" (ngSubmit)="devolver()">
+        <fieldset class="bloco-financeiro-fieldset" [disabled]="bloqueado()">
           <legend>Solicitar devolução</legend>
-          <p>
+          <p class="nota-financeiro">
             Recebimentos online são devolvidos pelo provedor. Para recebimentos presenciais,
             confirme a realização externa após reservar o valor.
           </p>
-          <label
-            >Recebimento<select name="recebimento" [(ngModel)]="recebimento" required>
+          <div class="campo-financeiro">
+            <label [for]="'fin-recebimento-' + recurso()">Recebimento</label>
+            <select
+              [id]="'fin-recebimento-' + recurso()"
+              name="recebimento"
+              [(ngModel)]="recebimento"
+              required
+            >
               <option value="">Selecione</option>
               @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
                 <option [value]="r.id">
                   Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
                 </option>
               }
-            </select></label
-          >
-          <label
-            >Valor a devolver<input
-              name="valorDevolucao"
-              [(ngModel)]="valorDevolucao"
-              inputmode="decimal"
-              required
-          /></label>
-          <label
-            >Motivo<input
-              name="motivoDevolucao"
-              [(ngModel)]="motivoDevolucao"
-              maxlength="500"
-              required
-          /></label>
-          <button type="submit">Reservar devolução</button>
+            </select>
+          </div>
+          <div class="financeiro-campos-grade">
+            <div class="campo-financeiro">
+              <label [for]="'fin-valor-dev-' + recurso()">Valor a devolver</label>
+              <input
+                [id]="'fin-valor-dev-' + recurso()"
+                name="valorDevolucao"
+                [(ngModel)]="valorDevolucao"
+                inputmode="decimal"
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div class="campo-financeiro">
+              <label [for]="'fin-motivo-dev-' + recurso()">Motivo</label>
+              <input
+                [id]="'fin-motivo-dev-' + recurso()"
+                name="motivoDevolucao"
+                [(ngModel)]="motivoDevolucao"
+                maxlength="500"
+                required
+              />
+            </div>
+          </div>
+          <div class="acoes">
+            <button
+              hlmBtn
+              variant="outline"
+              type="submit"
+              class="btn-cancelar-outline"
+              [disabled]="bloqueado()"
+            >
+              Reservar devolução
+            </button>
+          </div>
         </fieldset>
       </form>
     }
-    <h4>Devoluções</h4>
-    <ul>
-      @for (d of detalhe.devolucoes; track d.id) {
-        <li>
-          {{ moeda(d.valor) }} · {{ d.estado }} · {{ d.motivo }}
-          @if (
-            d.estado === 'SOLICITADA' && tem('devolucao.solicitar') && !online(d.recebimentoId)
-          ) {
-            <button type="button" (click)="confirmar(d.id)" [disabled]="bloqueado()">
-              Confirmar devolução realizada externamente
-            </button>
-          }
-        </li>
-      } @empty {
-        <li>Nenhuma devolução registrada.</li>
-      }
-    </ul>
+
+    <div class="secao-lista-caixa">
+      <h4>Devoluções</h4>
+      <ul class="lista-movimentos-caixa">
+        @for (d of detalhe.devolucoes; track d.id) {
+          <li class="movimento-item">
+            <span class="movimento-info">
+              <strong>{{ moeda(d.valor) }}</strong>
+              <span>·</span>
+              <span class="etiqueta" [attr.data-estado]="d.estado">{{ d.estado }}</span>
+              <span>·</span>
+              <span>{{ d.motivo }}</span>
+            </span>
+            @if (
+              d.estado === 'SOLICITADA' && tem('devolucao.solicitar') && !online(d.recebimentoId)
+            ) {
+              <button
+                hlmBtn
+                type="button"
+                class="btn-servir-mesa"
+                (click)="confirmar(d.id)"
+                [disabled]="bloqueado()"
+              >
+                Confirmar devolução realizada externamente
+              </button>
+            }
+          </li>
+        } @empty {
+          <li class="movimento-item movimento-item--vazio">Nenhuma devolução registrada.</li>
+        }
+      </ul>
+    </div>
   }
+
   @if (movimentos.pendente(base())) {
     <p class="aviso">
       Resultado ainda não confirmado. Recupere a mesma operação antes de continuar.
     </p>
-    <button type="button" (click)="repetir()" [disabled]="movimentos.ocupado()">
-      Recuperar mesma operação financeira
-    </button>
+    <div class="acoes">
+      <button
+        hlmBtn
+        variant="secondary"
+        type="button"
+        (click)="repetir()"
+        [disabled]="movimentos.ocupado()"
+      >
+        Recuperar mesma operação financeira
+      </button>
+    </div>
   }
   @if (erroConsulta()) {
-    <p role="alert">Consulta: {{ erroConsulta() }}</p>
+    <p role="alert" class="erro">Consulta: {{ erroConsulta() }}</p>
   }
   @if (erroAcao()) {
-    <p role="alert">{{ erroAcao() }}</p>
+    <p role="alert" class="erro">{{ erroAcao() }}</p>
   }
   @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+    <p role="status" class="sucesso">{{ aviso() }}</p>
   }
 </section>
