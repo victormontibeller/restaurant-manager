@@ -107,13 +107,9 @@ button {
   padding: 6px 8px;
   font-size: 0.875rem;
   background: var(--primary, #a53e2b);
-  color: white;
+  color: var(--primary-foreground, #fff);
   font-weight: 600;
   flex: 1 1 8rem;
-}
-button.concluir {
-  background: var(--gestao-sucesso-bg, #e6f3e9);
-  color: var(--gestao-sucesso-fg, #28623e);
 }
 button.secundario {
   background: var(--secondary, #f5f3f0);

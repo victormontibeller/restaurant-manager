@@ -140,7 +140,7 @@ e conexão continuam visíveis sem substituir silenciosamente o motivo do comand
 
 ## Redesenho por área — 2026-11-08
 
-Implementação validada localmente, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Cliente inicia no cardápio; gestão possui entrada própria e abre pedidos em andamento; cozinha é uma tela dedicada. O tema de bistrô usa a mesma fundação Spartan/Tailwind nas três áreas. Acessos e unidades refletem ações efetivas e continuam garantidos pela API.
+Implementação validada localmente, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Cliente inicia no cardápio; gestão possui entrada própria e abre pedidos em andamento; a rota dedicada da cozinha usa o mesmo menu, cabeçalho e destaque terracota da gestão. O tema de bistrô usa a mesma fundação Spartan/Tailwind nas três áreas. Acessos e unidades refletem ações efetivas e continuam garantidos pela API.
 
 A navegação mantém sessão, carrinho e pendências em memória. Rascunhos de formulários pedem confirmação ao sair; comandos em andamento impedem saída até reconciliação, e logout permanece possível. Upload confirmado ainda exige salvar a associação ao produto. Recarregar continua descartando o rascunho. Links antigos de mesa e plataforma redirecionam para as novas rotas.
 

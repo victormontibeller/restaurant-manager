@@ -1024,8 +1024,17 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
         name: 'Gestão do restaurante',
         exact: true,
       });
-      if (perfil === 'cozinha') {
-        await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toBeVisible();
+      if (perfil === 'cozinha' || perfil === 'gerente') {
+        const linkCozinha = navegacao.getByRole('link', { name: 'Cozinha', exact: true });
+        await expect(linkCozinha).toBeVisible();
+        await linkCozinha.click();
+        await expect(
+          atual.page.getByRole('heading', { name: 'Cozinha', exact: true }),
+        ).toBeVisible();
+        if (await menu.isVisible()) await menu.click();
+        await expect(linkCozinha).toHaveAttribute('aria-current', 'page');
+        await navegacao.getByRole('link', { name: 'Pedidos', exact: true }).click();
+        await expect(pedido).toBeVisible();
       }
       if (perfil === 'atendimento' || perfil === 'caixa' || perfil === 'expedicao')
         await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toHaveCount(0);
