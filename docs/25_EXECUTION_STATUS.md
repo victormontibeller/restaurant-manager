@@ -1,5 +1,9 @@
 # Checkpoint de execução
 
+## Sprint 08 — 2026-11-18
+
+A [revisão de vendas e movimentos](30_SPRINT_08.md) amplia consultas por unidade, período e canal e separa as duas filas de triagem. A Sprint 07 passou em 20 combinações de preparo, expedição, unidades e permissões em cinco projetos de navegador contra HTTPS e PostgreSQL reais no Mac. A demo serviu a PWA `f0351ec59583576078d2`.
+
 ## Sprint 07 — 2026-11-18
 
 A [cozinha e a expedição](29_SPRINT_07.md) incluem preparo por arraste e consulta compacta. As medições em amostra controlada e os limites da validação constam no documento da sprint. Na revisão integrada da Sprint 06 passaram os 15 cenários por projeto de navegador (Chromium, Firefox e WebKit), além de 126 combinações de navegação e layout na demo.
