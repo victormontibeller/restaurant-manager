@@ -1,5 +1,9 @@
 # Checkpoint de execução
 
+## Sprint 07 — 2026-11-18
+
+A [cozinha e a expedição](29_SPRINT_07.md) incluem preparo por arraste e consulta compacta. As medições em amostra controlada e os limites da validação constam no documento da sprint. Na revisão integrada da Sprint 06 passaram os 15 cenários por projeto de navegador (Chromium, Firefox e WebKit), além de 126 combinações de navegação e layout na demo.
+
 ## Sprint 06 — 2026-11-18
 
 Base `1a3d01f`. Perfil próprio, campos estruturados e tema compartilhado na [Sprint 06](28_SPRINT_06.md). Dois testes de perfil em PostgreSQL passaram. O build da PWA `bbe2c4d7bc0c1b86eb63` e o JAR `d9e6aabcf1da4627a37a41ef57d52e8cfb535c96da6612fa0ce1a262bca36065` estão na demonstração local em 8095. A migração V29 foi aplicada em cópia no cluster dedicado e restaurada em um banco novo, preservando a versão anterior. Validação no Hermes adiada pelo proprietário.

@@ -1,0 +1,52 @@
+.barra-expedicao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.barra-expedicao h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.linha-expedicao {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border, #dedad6);
+  border-radius: 0;
+  box-shadow: none;
+}
+.acao-expedicao {
+  display: contents;
+}
+.acao-expedicao button {
+  min-height: var(--gestao-controle, 48px);
+}
+.estado-expedicao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted-foreground, #635c56);
+}
+.estado-expedicao strong {
+  color: var(--gestao-alerta-fg, #925314);
+}
+.detalhes-expedicao {
+  max-width: 42rem;
+}
+.detalhes-expedicao h3 {
+  font-size: 1rem;
+}
+.detalhes-expedicao address {
+  font-style: normal;
+}
+.detalhes-expedicao label {
+  margin: 12px 0;
+}
+.detalhes-expedicao input[type='checkbox'] {
+  display: inline-block;
+  min-height: auto;
+  width: auto;
+}

@@ -84,8 +84,10 @@
       </div>
       <div class="estado-e-prazo">
         <ng-container [ngTemplateOutlet]="estadoPedido" />
+        <ng-content select="[estadoExpedicao]" />
       </div>
       <div class="acoes-resumo-pedido">
+        <ng-content select="[acaoExpedicao]" />
         <ng-container [ngTemplateOutlet]="aceitarPedido" />
         <ng-container [ngTemplateOutlet]="servirPedido" />
         <button
@@ -109,6 +111,7 @@
       [id]="'detalhes-pedido-' + pedido().id"
       [hidden]="!detalhesAbertos()"
     >
+      <ng-content select="[detalhesExpedicao]" />
       <ng-container [ngTemplateOutlet]="detalhes" />
     </div>
   } @else {
@@ -260,6 +263,12 @@
                   >Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span
                 >
               }
+              @if (contexto() === 'operacao' && unidade.iniciadoEm) {
+                <small> · Início {{ horario(unidade.iniciadoEm) }}</small>
+              }
+              @if (contexto() === 'operacao' && unidade.concluidoEm) {
+                <small> · Conclusão {{ horario(unidade.concluidoEm) }}</small>
+              }
             </li>
           }
         }
@@ -364,8 +373,11 @@
   </div>
   @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
     <p>
-      {{ horario(solicitacao.criadaEm) }} · Solicitação: {{ solicitacao.motivo }} ·
-      {{ solicitacao.estado }}. A produção continua até decisão.
+      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}
+      @if (solicitacao.criadaEm) {
+        · {{ horario(solicitacao.criadaEm) }}
+      }
+      . A produção continua até decisão.
     </p>
     @if (
       contexto() === 'operacao' && solicitacao.estado === 'PENDENTE' && tem('pedido.cancelar_apos_preparo')

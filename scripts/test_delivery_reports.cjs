@@ -47,13 +47,14 @@ async function fixture(tipo) {
   const dependencias = {
     sessao,
     nav: { bloquear() {}, liberar() {} },
-    comandos: { ocupado: () => false, pendente: () => null },
+    comandos: { ocupado: () => false, pendente: () => null, pendenciasDaFila: () => [] },
     destroy: { onDestroy: (fn) => destrutores.push(fn) },
   };
   const core = {
     Component: () => (c) => c,
     DestroyRef: 'destroy',
     signal,
+    computed: (fn) => fn,
     input: Object.assign(signal, { required: () => signal('unidade-A') }),
     effect: (fn) => efeitos.push(fn),
     untracked: (fn) => fn(),
@@ -62,6 +63,8 @@ async function fixture(tipo) {
   const contexto = {
     exports: {},
     URLSearchParams,
+    navigator: { onLine: true },
+    window: new EventTarget(),
     crypto: { randomUUID },
     setInterval: () => 1,
     clearInterval() {},
@@ -119,7 +122,7 @@ async function expedicaoLimpaDadosQuandoAcessoTermina() {
     assert.equal(Object.keys(f.c.motivos).length, 0);
     assert.equal(Object.keys(f.c.devolverTaxa).length, 0);
     assert.equal(f.c.carregando(), false);
-    assert.equal(f.c.erro(), 'Acesso negado.');
+    assert.equal(f.c.erroConsulta(), 'Acesso negado.');
     f.destruir();
   }
 }

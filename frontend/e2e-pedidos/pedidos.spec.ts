@@ -125,25 +125,23 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     await expect(rotulo).toHaveText(/Unidade \d+ · (Na fila|Em preparo)/);
     expect(await rotulo.evaluate((texto) => texto.scrollWidth <= texto.clientWidth)).toBe(true);
     await capturar(cozinha.page, preparo, 's03-cozinha-estados-mistos');
-    const remanescentes = misto.unidades
-      .filter((item) => item.estado === 'NA_FILA')
-      .map((item) => item.id);
-    let atual = await comando(
-      request,
-      tokenCozinha,
-      misto,
-      'iniciar',
-      remanescentes,
-      '/api/v1/cozinha/pedidos',
+    await preparo.getByRole('button', { name: 'Fechar seleção', exact: true }).click();
+    await expect(preparo.locator('.alca')).toHaveCount(0);
+    await preparo.getByRole('button', { name: 'Iniciar pedido (2)', exact: true }).click();
+    const concluir = preparo.getByRole('button', { name: 'Concluir em preparo (2)', exact: true });
+    await expect(concluir).toBeEnabled();
+    const respostaPreparo = cozinha.page.waitForResponse(
+      (r) =>
+        new URL(r.url()).pathname === '/api/v1/cozinha/pedidos/' + enviado.id + '/concluir' &&
+        r.request().method() === 'POST',
     );
-    atual = await comando(
-      request,
-      tokenCozinha,
-      atual,
-      'concluir',
-      remanescentes,
-      '/api/v1/cozinha/pedidos',
-    );
+    if (await etapas.isVisible()) {
+      await concluir.focus();
+      await concluir.press('Enter');
+    } else {
+      await preparo.locator('.alca').dragTo(kds.locator('#etapa-prontos'), { steps: 24 });
+    }
+    const atual = await ok<Pedido>(await respostaPreparo);
     expect(atual.estado).toBe('PRONTO');
     await page.getByRole('button', { name: 'Atualizar pedido', exact: true }).click();
     await expect(pedidoCliente.getByText('Pronto', { exact: true }).first()).toBeVisible();

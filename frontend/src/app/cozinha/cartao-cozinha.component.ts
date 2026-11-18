@@ -1,11 +1,14 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ApiFailure } from '../identidade/sessao.service';
 import { mensagemErro } from '../catalogo/modelos';
 import { IntencaoComando, PedidoComandoService } from '../pedidos/pedido-comando.service';
-import { CartaoCozinha, decorrido, elegiveis } from './modelos';
+import { nomeEstado } from '../pedidos/modelos';
+import { GrupoPainel, CartaoCozinha, decorrido, elegiveis } from './modelos';
 
 @Component({
   selector: 'app-cartao-cozinha',
+  imports: [CdkDrag, CdkDragHandle],
   templateUrl: './cartao-cozinha.component.html',
   styleUrl: './cartao-cozinha.component.css',
 })
@@ -15,6 +18,8 @@ export class CartaoCozinhaComponent {
   readonly fuso = input.required<string>();
   readonly online = input.required<boolean>();
   readonly acoes = input<string[]>([]);
+  readonly permiteArrastar = input(false);
+  readonly nomeEstado = nomeEstado;
   readonly novo = input(false);
   readonly atualizar = output<void>();
   readonly pendencia = output<string>();
@@ -35,6 +40,39 @@ export class CartaoCozinhaComponent {
     this.pedido().solicitacoes?.some((s) => s.estado === 'PENDENTE'),
   );
   readonly referencia = computed(() => this.pedido().id.slice(0, 8).toUpperCase());
+
+  readonly destino = computed((): GrupoPainel | null => {
+    if (!this.permiteArrastar() || this.bloqueado() || this.parcial()) return null;
+    if (this.pedido().estado === 'NA_FILA' && this.tem('iniciar') && this.iniciar().length)
+      return 'emPreparo';
+    if (
+      this.pedido().estado === 'EM_PREPARO' &&
+      !this.iniciar().length &&
+      this.tem('concluir') &&
+      this.concluir().length
+    )
+      return 'prontos';
+    return null;
+  });
+  private versaoArrastada: number | null = null;
+
+  iniciarArraste(): void {
+    this.versaoArrastada = this.pedido().versao;
+  }
+
+  soltar(evento: CdkDragDrop<GrupoPainel>): void {
+    const versao = this.versaoArrastada;
+    this.versaoArrastada = null;
+    if (!evento.isPointerOverContainer || evento.container === evento.previousContainer) return;
+    if (versao !== this.pedido().versao) {
+      this.aviso.set('O pedido mudou durante o arraste. Confira as quantidades antes de avançar.');
+      return;
+    }
+    const destino = this.destino();
+    if (destino && evento.container.data === destino) {
+      void this.comandar(destino === 'emPreparo' ? 'iniciar' : 'concluir');
+    }
+  }
 
   constructor() {
     effect(() => {

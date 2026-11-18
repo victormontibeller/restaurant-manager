@@ -196,7 +196,7 @@ h1 {
 }
 .kitchen-workplace {
   display: block;
-  background: #edf0e9;
+  background: var(--background, #faf9f7);
 }
 .kitchen-brand {
   display: flex;
@@ -220,7 +220,7 @@ h1 {
   background: #ffffff17;
 }
 .kitchen-workplace .unit-picker {
-  background: #fff;
+  background: var(--card, #fff);
 }
 .kitchen-workplace .workspace-main {
   margin: auto;
@@ -335,6 +335,11 @@ h1 {
   .sidebar {
     transition: none;
   }
+}
+
+.kitchen-workplace .workspace-tools > a[hlmBtn] {
+  white-space: nowrap;
+  padding-inline: 0.75rem;
 }
 
 .kitchen-workplace .workspace-tools > button[data-variant='ghost'] {

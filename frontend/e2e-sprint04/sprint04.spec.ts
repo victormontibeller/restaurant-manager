@@ -461,6 +461,8 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
   const artigo = page
     .locator('app-expedicao > section > article')
     .filter({ has: page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }) });
+  await expect(artigo.locator('address')).toBeHidden();
+  await artigo.getByRole('button', { name: /Detalhes do pedido/ }).click();
   await expect(artigo.getByText('Rua fictícia Sprint 4', { exact: false })).toBeVisible();
   await artigo.getByRole('button', { name: 'Registrar saída para entrega', exact: true }).click();
   await artigo.getByRole('button', { name: 'Confirmar entrega realizada', exact: true }).click();
@@ -481,6 +483,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
     const decisao = gerente.page.locator('app-expedicao > section > article').filter({
       has: gerente.page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }),
     });
+    await decisao.getByRole('button', { name: /Detalhes do pedido/ }).click();
     await decisao.getByLabel('Motivo da ocorrência ou decisão').fill('Nova tentativa autorizada');
     await decisao
       .getByRole('button', { name: 'Autorizar nova tentativa de entrega', exact: true })
@@ -509,6 +512,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
       await entrega
         .getByRole('button', { name: 'Registrar saída para entrega', exact: true })
         .click();
+      await entrega.getByRole('button', { name: /Detalhes do pedido/ }).click();
       await entrega
         .getByLabel('Motivo da ocorrência ou decisão')
         .fill('Retorno fictício da entrega');
@@ -520,6 +524,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
       const decisao = gerente.page.locator('app-expedicao > section > article').filter({
         has: gerente.page.getByRole('article', { name: 'Pedido ' + excecao.id, exact: true }),
       });
+      await decisao.getByRole('button', { name: /Detalhes do pedido/ }).click();
       await decisao
         .getByLabel('Motivo da ocorrência ou decisão')
         .fill('Cancelamento gerencial fictício');
@@ -571,6 +576,8 @@ test('S04-UI10: revogação da expedição remove endereços da tela já aberta'
   const artigo = page
     .locator('app-expedicao > section > article')
     .filter({ has: page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }) });
+  await artigo.getByRole('button', { name: /Detalhes do pedido/ }).click();
+  await expect(artigo.locator('address')).toBeVisible();
   await expect(artigo.locator('address')).toContainText('Rua fictícia Sprint 4');
   const admin = await loginApi(request);
   await ok(
