@@ -1,5 +1,18 @@
 # Checkpoint de execução
 
+## Sprints 06 a 09 na demo local — 2026-11-18
+
+Os quatro incrementos foram publicados em sequência na [demo](https://demo.localhost:8095). O menu Dia a dia inclui a [Cozinha](https://demo.localhost:8095/cozinha), com a mesma navegação e os mesmos temas de Pedidos. A [auditoria de dados por tela e perfil](evidencias/cobertura-pedidos-comandas-2026-11-18.md) também estendeu os detalhes de pedidos, comandas e cobranças.
+
+| Entrega | Evidência no Mac |
+| --- | --- |
+| [06 · Conta e tema](28_SPRINT_06.md) | 15 combinações de jornada e navegador aprovadas com PostgreSQL. Em 21 pares de rota e perfil, a revisão da demo em três larguras e dois temas passou nas 126 combinações. |
+| [07 · Cozinha e expedição](29_SPRINT_07.md) | 20 combinações aprovadas. A revisão do menu na PWA `6c6e8cc0d33bbdcf84ff` passou nas 42 combinações de sete perfis, três larguras e dois temas. Com as mesmas 12 entregas, a expedição passou de zero para três, cinco e seis pedidos inteiros na primeira tela de celular, tablet e desktop. |
+| [08 · Vendas e pendências](30_SPRINT_08.md) | 32 casos distintos de PostgreSQL aprovados. A primeira execução de navegador encontrou o limite de login. Após o vencimento, a reexecução no mesmo JAR passou nas 10 combinações, sem casos ignorados ou instáveis. |
+| [09 · Catálogo e ofertas](31_SPRINT_09.md) | A consulta paginada e a separação por unidades passaram nos dois testes dedicados em PostgreSQL. O primeiro build integrado também passou pelas 126 combinações de navegação e largura. |
+
+Os [PRs 06](https://github.com/victormontibeller/restaurant-manager/pull/17), [07](https://github.com/victormontibeller/restaurant-manager/pull/18), [08](https://github.com/victormontibeller/restaurant-manager/pull/19) e [09](https://github.com/victormontibeller/restaurant-manager/pull/20) são cumulativos e estão abertos para revisão. A auditoria npm encontrou o [alerta de severidade alta em picomatch](https://github.com/advisories/GHSA-fc5q-39xc-vjpf). O gate segue obrigatório. A homologação integrada por perfil e unidade no Hermes foi adiada pelo proprietário.
+
 ## Sprint 08 — 2026-11-18
 
 A [revisão de vendas e movimentos](30_SPRINT_08.md) amplia consultas por unidade, período e canal e separa as duas filas de triagem. A Sprint 07 passou em 20 combinações de preparo, expedição, unidades e permissões em cinco projetos de navegador contra HTTPS e PostgreSQL reais no Mac. A demo serviu a PWA `f0351ec59583576078d2`.

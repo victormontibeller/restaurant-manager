@@ -24,11 +24,11 @@ Em 18/11/2026, o Chromium mediu as mesmas doze entregas fictícias nos builds de
 | Expedição | 360 px | 890 px | 221 px | 0 → 3 |
 | Expedição | 768 px | 837 px | 121 px | 0 → 5 |
 | Expedição | 1280 px | 837 px | 101 px | 0 → 6 |
-| Cozinha | 360 px | 558 px | 396 px | 0 → 0 |
-| Cozinha | 768 px | 514 px | 364 px | 0 → 1 |
-| Cozinha | 1280 px | 558 px | 396 px | 0 → 1 |
+| Cozinha | 360 px | 558 px | 380 px | 0 → 1 |
+| Cozinha | 768 px | 514 px | 354 px | 0 → 1 |
+| Cozinha | 1280 px | 558 px | 380 px | 0 → 1 |
 
-Em 360 px, as ações de preparo do primeiro cartão já aparecem antes de rolar, mas parte do histórico recolhido fica abaixo da dobra. O roteiro [de comparação](../scripts/measure_operation_density.cjs) recebe dois diretórios `browser` produzidos pelo Angular. Para salvar as 24 capturas de antes e depois, definir `RM_DENSIDADE_CAPTURAS` com um diretório local.
+Após a integração do menu da gestão, a medição no candidato `b54bd75` confirmou que o primeiro cartão de preparo aparece inteiro nas três larguras, com o histórico recolhido. O roteiro [de comparação](../scripts/measure_operation_density.cjs) recebe dois diretórios `browser` produzidos pelo Angular. Para salvar as 24 capturas de antes e depois, definir `RM_DENSIDADE_CAPTURAS` com um diretório local.
 
 ## Verificação
 
