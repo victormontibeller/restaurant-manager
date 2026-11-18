@@ -103,6 +103,8 @@ class DemoSprintsTest(unittest.TestCase):
         repo = self.root / 'projeto'
         repo.mkdir()
         subprocess.run(['git', 'init', '-q', '-b', 'codex/sprint-10-teste'], cwd=repo, check=True)
+        demo.git(repo, 'config', 'user.name', 'Teste')
+        demo.git(repo, 'config', 'user.email', 'teste@example.invalid')
         return repo
 
     def commit(self, repo, nome, conteudo):
@@ -158,21 +160,81 @@ class DemoSprintsTest(unittest.TestCase):
         with patch.object(demo, 'validar_ambiente'), patch.object(demo, 'conferir'), patch.object(demo.shutil, 'which', return_value='/bin/true'):
             demo.instalar(repo)
             demo.instalar(repo)
-        post = demo.hook(repo)
-        self.assertTrue(os.access(post, os.X_OK))
-        self.assertIn(demo.HOOK_MARKER, post.read_text().splitlines())
+        destinos = demo.hooks_validos(repo)
+        for post in destinos.values():
+            self.assertTrue(os.access(post, os.X_OK))
+            self.assertIn(demo.HOOK_MARKER, post.read_text().splitlines())
         self.assertEqual((self.auto / 'worker.py').read_bytes(), Path(demo.__file__).read_bytes())
         self.assertEqual(demo.ler(self.auto / 'config.json')['repo'], str(repo))
         self.assertFalse((self.auto / 'pedido.json').exists())
+        demo.desinstalar(repo)
+        self.assertTrue(all(not p.exists() for p in destinos.values()))
 
     def test_instalacao_se_recusa_a_sobrescrever_post_commit_existente(self):
         repo = self.criar_repo()
-        destino = demo.hook(repo)
+        destino = demo.hooks_validos(repo)['commit']
         destino.write_text('#!/bin/sh\necho outro hook\n')
         with patch.object(demo, 'validar_ambiente'), patch.object(demo, 'conferir'):
             with self.assertRaisesRegex(RuntimeError, 'outro fluxo'):
                 demo.instalar(repo)
         self.assertIn('outro hook', destino.read_text())
+
+    def test_hook_merge_alheio_preserva_ambos_na_instalacao_e_na_remocao(self):
+        repo = self.criar_repo()
+        destinos = demo.hooks_validos(repo)
+        existente = '#!/bin/sh\n' + demo.HOOK_MARKER + '\n# versão anterior\n'
+        destinos['commit'].write_text(existente)
+        destinos['merge'].write_text('#!/bin/sh\necho outro fluxo\n')
+        with patch.object(demo, 'validar_ambiente'), patch.object(demo, 'conferir'):
+            for operar in [demo.instalar, demo.desinstalar]:
+                with self.assertRaisesRegex(RuntimeError, 'post-merge de outro fluxo'):
+                    operar(repo)
+                self.assertEqual(destinos['commit'].read_text(), existente)
+                self.assertEqual(destinos['merge'].read_text(), '#!/bin/sh\necho outro fluxo\n')
+        self.assertFalse((self.auto / 'worker.py').exists())
+
+    def test_fast_forward_com_docs_na_ponta_enfileira_aplicacao_e_merge_so_de_docs_e_ignorado(self):
+        repo = self.criar_repo()
+        self.commit(repo, 'frontend/src/index.html', 'base')
+        anterior = demo.git(repo, 'rev-parse', 'HEAD')
+        demo.git(repo, 'switch', '-qc', 'lote')
+        self.commit(repo, 'frontend/src/index.html', 'aplicação nova')
+        self.commit(repo, 'docs/leia.md', 'docs na ponta')
+        app = demo.git(repo, 'rev-parse', 'HEAD')
+        demo.git(repo, 'switch', '-q', 'codex/sprint-10-teste')
+        with patch.object(demo, 'validar_ambiente'), patch.object(demo, 'conferir'):
+            demo.instalar(repo)
+        # O Git dispara o hook real. O receptor temporário usa a mesma seleção e registra
+        # o pedido, sem iniciar processo de build nem acessar os arquivos do usuário.
+        receptor = self.auto / 'worker.py'
+        observado = self.root / 'observado.json'
+        receptor.write_text(
+            'from pathlib import Path\nimport json, sys\n'
+            + 'sys.path.insert(0,' + repr(str(Path(demo.__file__).resolve().parent)) + ')\n'
+            + 'import demo_sprints as d\n'
+            + 'repo = Path(sys.argv[sys.argv.index("--repo")+1])\n'
+            + 'evento = sys.argv[sys.argv.index("--evento")+1]\n'
+            + 'Path(' + repr(str(observado)) + ').write_text(json.dumps(d.pedido_atual(repo,evento)))\n')
+        demo.git(repo, 'merge', '--ff-only', 'lote')
+        self.assertEqual(demo.git(repo, 'rev-parse', 'ORIG_HEAD'), anterior)
+        self.assertEqual(demo.ler(observado)['sha'], app)
+        self.assertEqual(demo.ler(observado)['aplicacao'], demo.assinatura_app(repo, app))
+        self.assertIsNone(demo.pedido_atual(repo, 'commit'))
+
+        demo.git(repo, 'switch', '-q', 'lote')
+        self.commit(repo, 'docs/leia.md', 'somente documentação')
+        demo.git(repo, 'switch', '-q', 'codex/sprint-10-teste')
+        observado.unlink()
+        demo.git(repo, 'merge', '--ff-only', 'lote')
+        self.assertTrue(observado.exists())
+        self.assertIsNone(demo.ler(observado))
+
+        demo.git(repo, 'switch', '-q', 'lote')
+        self.commit(repo, 'frontend/src/index.html', 'ainda não confirmado')
+        demo.git(repo, 'switch', '-q', 'codex/sprint-10-teste')
+        observado.unlink()
+        demo.git(repo, 'merge', '--squash', 'lote')
+        self.assertFalse(observado.exists())
 
     def test_destino_local_exige_os_quatro_valores_e_o_checkout_do_servico(self):
         repo = self.root / 'checkout'

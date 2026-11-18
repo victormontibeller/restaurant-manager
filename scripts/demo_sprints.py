@@ -205,24 +205,28 @@ def assinatura_app(repo, sha):
     return hashlib.sha256(arvore).hexdigest()
 
 
-def pedido_atual(repo):
+def pedido_atual(repo, evento='commit'):
     ramo = git(repo, 'branch', '--show-current')
     match = SPRINT.fullmatch(ramo)
     if not match:
         return None
     sha, *pais = git(repo, 'rev-list', '--parents', '-n', '1', 'HEAD').split()
     assinatura = assinatura_app(repo, sha)
-    if pais and assinatura == assinatura_app(repo, pais[0]):
+    # Em um fast-forward, o primeiro pai de HEAD pode já conter a mudança da aplicação.
+    anterior = pais[0] if pais else None
+    if evento == 'merge':
+        anterior = git(repo, 'rev-parse', '--verify', 'ORIG_HEAD')
+    if anterior and assinatura == assinatura_app(repo, anterior):
         return None
     return {'branch': ramo, 'sprint': int(match[1]), 'sha': sha, 'aplicacao': assinatura}
 
 
-def enfileirar(repo):
+def enfileirar(repo, evento='commit'):
     config = ler(AUTO / 'config.json') or {}
     exigir(Path.cwd().resolve() == repo and config.get('repo') == str(repo),
            'O hook está autorizado apenas no checkout instalado.')
     with trava(AUTO / 'pedido.lock'):
-        pedido = pedido_atual(repo)
+        pedido = pedido_atual(repo, evento)
         if not pedido:
             return
         atual = ler(AUTO / 'pedido.json') or {}
@@ -321,47 +325,61 @@ def vigente(repo, pedido):
     return atual == pedido['sha'] or assinatura_app(repo, atual) == pedido['aplicacao']
 
 
-def hook(repo):
-    destino = Path(git(repo, 'rev-parse', '--path-format=absolute', '--git-path', 'hooks/post-commit'))
-    padrao = Path(git(repo, 'rev-parse', '--absolute-git-dir')) / 'hooks/post-commit'
-    exigir(destino == padrao, 'Hooks personalizados em uso. A instalação preservou a configuração existente.')
-    return destino
+def hooks_validos(repo):
+    padrao = Path(git(repo, 'rev-parse', '--absolute-git-dir')) / 'hooks'
+    destinos = {}
+    for evento in ('commit', 'merge'):
+        nome = 'post-' + evento
+        destino = Path(git(repo, 'rev-parse', '--path-format=absolute', '--git-path', 'hooks/' + nome))
+        exigir(destino == padrao / nome, 'Hooks personalizados em uso. Configuração preservada.')
+        exigir(not destino.is_symlink() and (not destino.exists() or (
+            destino.is_file() and HOOK_MARKER in destino.read_text().splitlines())),
+            f'Já existe um {nome} de outro fluxo.')
+        destinos[evento] = destino
+    return destinos
 
 
 def instalar(repo):
     validar_ambiente(repo)
     conferir(release_ativa())
-    destino = hook(repo)
-    exigir(not destino.is_symlink() and (not destino.exists() or HOOK_MARKER in destino.read_text().splitlines()),
-           'Já existe um post-commit de outro fluxo.')
+    destinos = hooks_validos(repo)
     AUTO.mkdir(mode=0o700, exist_ok=True)
     node, npm = shutil.which('node'), shutil.which('npm')
     exigir(node and npm, 'Node e npm precisam estar disponíveis na instalação.')
     json_salvar(AUTO / 'config.json', {'repo': str(repo), 'node': node, 'npm': npm})
     gravar(AUTO / 'worker.py', Path(__file__).read_text())
-    comando = shlex.join([sys.executable, str(AUTO / 'worker.py'), 'enqueue', '--repo', str(repo)])
-    # Worktrees compartilham os hooks; o opt-in pertence somente à pasta selecionada.
-    gravar(destino, '#!/bin/sh\n' + HOOK_MARKER + '\n[ "$PWD" = ' + shlex.quote(str(repo)) +
-           ' ] || exit 0\nexec ' + comando + '\n')
-    destino.chmod(0o700)
-    print('Hook da demo instalado neste checkout. A próxima confirmação em uma sprint inicia o build.')
+    for evento, destino in destinos.items():
+        comando = shlex.join([sys.executable, str(AUTO / 'worker.py'), 'enqueue', '--repo', str(repo),
+                              '--evento', evento])
+        # Worktrees compartilham os hooks. O --squash só altera a árvore de trabalho.
+        linhas = ['#!/bin/sh', HOOK_MARKER, '[ "$PWD" = ' + shlex.quote(str(repo)) + ' ] || exit 0']
+        if evento == 'merge':
+            linhas.append('[ "${1:-0}" = 0 ] || exit 0')
+        gravar(destino, '\n'.join([*linhas, 'exec ' + comando, '']))
+        destino.chmod(0o700)
+    print('Hooks post-commit e post-merge instalados neste checkout.')
+
+
+def desinstalar(repo):
+    existentes = [p for p in hooks_validos(repo).values() if p.exists()]
+    exigir(existentes, 'Não há hooks próprios para remover.')
+    for destino in existentes:
+        destino.unlink()
+    print('Hooks removidos. A demo continua com a release selecionada.')
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('acao', choices=['install', 'uninstall', 'enqueue', 'worker', 'status'])
     parser.add_argument('--repo', type=Path, default=Path.cwd())
+    parser.add_argument('--evento', choices=['commit', 'merge'], default='commit')
     args = parser.parse_args()
     repo = args.repo.resolve()
     os.umask(0o077)
     if args.acao == 'install':
         instalar(repo)
     elif args.acao == 'uninstall':
-        dest = hook(repo)
-        exigir(not dest.is_symlink() and dest.is_file() and HOOK_MARKER in dest.read_text().splitlines(),
-               'Não há hook próprio para remover.')
-        dest.unlink()
-        print('Hook removido. A demo continua com a release selecionada.')
+        desinstalar(repo)
     elif args.acao == 'status':
         print('Release selecionada:', release_ativa().name)
         print('Pedido mais recente:', ler(AUTO / 'pedido.json'))
@@ -370,7 +388,7 @@ def main():
             print('Há uma troca interrompida para recuperar.')
         print('Log privado:', AUTO / 'worker.log')
     elif args.acao == 'enqueue':
-        enfileirar(repo)
+        enfileirar(repo, args.evento)
     else:
         trabalhar(repo)
 
