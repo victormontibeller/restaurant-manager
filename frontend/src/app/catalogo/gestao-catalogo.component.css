@@ -61,9 +61,11 @@
   gap: 8px 12px;
   padding-block: 8px 12px;
 }
-.catalogo-filtros label {
+.catalogo-campo {
   display: grid;
   gap: 4px;
+}
+.catalogo-campo label {
   margin: 0;
 }
 .catalogo-filtros input {
@@ -129,11 +131,11 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
-  .catalogo-filtros label {
+  .catalogo-campo {
     min-width: 0;
     flex: 1 1 9rem;
   }
-  .catalogo-filtros label:first-child {
+  .catalogo-campo:first-child {
     flex-basis: 100%;
   }
   .catalogo-filtros :is(input, select) {

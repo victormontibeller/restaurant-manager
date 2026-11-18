@@ -118,8 +118,10 @@
         </div>
       </div>
       <form class="catalogo-filtros" aria-label="Filtros dos produtos" (submit)="filtrar($event)">
-        <label
-          >Buscar produto<input
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-busca">Buscar produto</label>
+          <input
+            id="catalogo-filtro-busca"
             data-sem-rascunho
             #busca
             type="search"
@@ -127,9 +129,12 @@
             [value]="filtros.busca"
             (input)="filtros.busca = busca.value"
             [disabled]="travado()"
-        /></label>
-        <label
-          >Categoria<select
+          />
+        </div>
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-categoria">Categoria</label>
+          <select
+            id="catalogo-filtro-categoria"
             data-sem-rascunho
             #cat
             (change)="filtros.categoriaId = cat.value"
@@ -141,10 +146,12 @@
                 {{ categoria.nome }}
               </option>
             }
-          </select></label
-        >
-        <label
-          >Tipo<select
+          </select>
+        </div>
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-tipo">Tipo</label>
+          <select
+            id="catalogo-filtro-tipo"
             data-sem-rascunho
             #tipo
             [value]="filtros.tipo"
@@ -154,11 +161,13 @@
             <option value="">Todos</option>
             <option value="SIMPLES">Produto simples</option>
             <option value="COMBO">Combo</option>
-          </select></label
-        >
+          </select>
+        </div>
         @if (podeEditar()) {
-          <label
-            >Situação do cadastro<select
+          <div class="catalogo-campo">
+            <label for="catalogo-filtro-situacao">Situação do cadastro</label>
+            <select
+              id="catalogo-filtro-situacao"
               data-sem-rascunho
               #ativo
               [value]="filtros.ativo"
@@ -168,12 +177,14 @@
               <option value="">Todas</option>
               <option value="true">Ativo</option>
               <option value="false">Inativo</option>
-            </select></label
-          >
+            </select>
+          </div>
         }
         @if (unidadeOperacional()) {
-          <label
-            >Oferta na unidade<select
+          <div class="catalogo-campo">
+            <label for="catalogo-filtro-oferta">Oferta na unidade</label>
+            <select
+              id="catalogo-filtro-oferta"
               data-sem-rascunho
               #disp
               [value]="filtros.disponivel"
@@ -183,8 +194,8 @@
               <option value="">Todas</option>
               <option value="true">Habilitada</option>
               <option value="false">Desabilitada ou sem oferta</option>
-            </select></label
-          >
+            </select>
+          </div>
         }
         <div class="gestao-acoes">
           <button type="submit" [disabled]="travado()">Aplicar filtros</button

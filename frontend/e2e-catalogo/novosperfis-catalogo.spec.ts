@@ -140,26 +140,22 @@ async function abrirGestao(page: Page): Promise<void> {
 }
 
 async function localizarOferta(page: Page, nome: string): Promise<void> {
-  const botao = page.getByRole('button', { name: 'Oferta de ' + nome, exact: true });
-  for (let pagina = 0; pagina <= 10000; pagina++) {
-    if (await botao.count()) {
-      await botao.click();
-      return;
-    }
-    const proxima = page.getByRole('button', { name: 'Próxima página de produtos', exact: true });
-    await expect(proxima).toBeEnabled();
-    const resposta = page.waitForResponse(
-      (item) =>
-        item.request().method() === 'GET' &&
-        new URL(item.url()).pathname === '/api/v1/gestao/catalogo/listagem',
-    );
-    await proxima.click();
-    expect((await resposta).status()).toBe(200);
-    await expect(
-      page.getByRole('region', { name: 'Gestão do catálogo', exact: true }),
-    ).toHaveAttribute('aria-busy', 'false');
+  const painel = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
+  const botao = painel.getByRole('button', { name: 'Oferta de ' + nome, exact: true });
+  if (!(await botao.count())) {
+    await painel.getByLabel('Buscar produto', { exact: true }).fill(nome);
+    const consulta = page.waitForResponse((resposta) => {
+      const url = new URL(resposta.url());
+      return (
+        resposta.request().method() === 'GET' &&
+        url.pathname === '/api/v1/gestao/catalogo/listagem' &&
+        url.searchParams.get('busca') === nome
+      );
+    });
+    await painel.getByRole('button', { name: 'Aplicar filtros' }).click();
+    expect((await consulta).status()).toBe(200);
   }
-  throw new Error('Oferta fictícia não apareceu na paginação completa.');
+  await botao.click();
 }
 
 async function procurarNoCardapio(page: Page, produto: ProdutoPreparado): Promise<void> {
@@ -368,6 +364,8 @@ test('S02-UI-PERFIL-ADMINISTRADOR: gestão compartilhada e oferta nas duas unida
   await painel.getByLabel('Buscar produto', { exact: true }).fill(produto.nome);
   await painel.getByLabel('Categoria', { exact: true }).selectOption(produto.categoriaId);
   await painel.getByLabel('Tipo', { exact: true }).selectOption('SIMPLES');
+  await painel.getByLabel('Situação do cadastro', { exact: true }).selectOption('true');
+  await painel.getByLabel('Oferta na unidade', { exact: true }).selectOption('true');
   await painel.getByRole('button', { name: 'Aplicar filtros' }).click();
   const linha = painel
     .getByRole('article')
