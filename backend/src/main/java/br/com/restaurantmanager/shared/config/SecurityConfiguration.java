@@ -145,6 +145,8 @@ public class SecurityConfiguration {
                                                 "/api/v1/me/pedidos/*/pagamento",
                                                 "/api/v1/relatorios/vendas",
                                                 "/api/v1/operacao/notificacoes",
+                                                "/api/v1/operacao/notificacoes/pagina",
+                                                "/api/v1/operacao/pagamentos/pagina",
                                                 "/api/v1/operacao/pagamentos")
                                         .authenticated()
                                         .requestMatchers(

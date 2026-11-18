@@ -653,6 +653,9 @@ test('S04-UI06: relatório mostra datas, fuso e indicadores separados', async ({
     page.getByText('Recebimentos confirmados no período', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Reservas atuais de devolução', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Extrato de movimentos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vendas por canal' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Movimento por dia' })).toBeVisible();
   await capturar(page, 'relatorio');
   await page.getByLabel('Data inicial', { exact: true }).fill('2026-11-09');
   await page.getByLabel('Data final', { exact: true }).fill('2026-11-01');
@@ -865,12 +868,22 @@ test('S04-UI09: gerente consulta pendências e notificações sem acesso à inte
   await expect(
     page.getByRole('heading', { name: 'Pendências financeiras e notificações' }),
   ).toBeVisible();
-  await expect(page.getByText(/Capturado significa salvo localmente/)).toBeVisible();
+  const pagamentos = page.getByRole('region', { name: 'Pagamentos e devoluções', exact: true });
+  await pagamentos.getByLabel('Tipo', { exact: true }).selectOption('CHECKOUT');
+  await pagamentos.locator('summary').first().click();
+  await expect(pagamentos.getByText('Tentativas', { exact: true }).first()).toBeVisible();
   const reconciliar = page.getByRole('button', { name: 'Reconciliar a mesma operação' }).first();
   await expect(reconciliar).toBeVisible();
   await reconciliar.click();
-  await expect(page.getByRole('status')).toContainText(/reconcilia|solicit/i);
+  await expect(page.getByText(/Reconciliação solicitada para o pedido/)).toBeVisible();
   await capturar(page, 'pendencias');
+  await page.getByRole('button', { name: 'Notificações por e-mail' }).click();
+  await expect(page.getByText(/Capturado significa salvo localmente/)).toBeVisible();
+  const notificacoes = page.getByRole('region', { name: 'Notificações por e-mail', exact: true });
+  await notificacoes.getByLabel('Estado', { exact: true }).selectOption('FALHOU');
+  await expect(notificacoes.getByRole('button', { name: 'Atualizar' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Pendências financeiras' }).click();
+  await expect(pagamentos.getByLabel('Tipo', { exact: true })).toHaveValue('CHECKOUT');
   await page.goto('/gestao/integracoes');
   await expect(page).toHaveURL((url) => url.pathname === '/sem-acesso');
   await expect(page.getByRole('heading', { name: 'Mercado Pago do restaurante' })).toBeHidden();

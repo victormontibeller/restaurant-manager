@@ -144,6 +144,22 @@ class FinanceiroComandaTest {
                                     .getStatus())
                     .isEqualTo(200);
             assertThat(m.estado(comanda, "concluir", 1).getStatus()).isEqualTo(200);
+            var relatorio = m.base.json(m.base.enviar("GET", "/api/v1/relatorios/vendas?unidadeId=" + UNIDADE,
+                    m.base.token, null));
+            assertThat(relatorio.get("cobrancasOriginais").asText()).isEqualTo("120.00");
+            assertThat(relatorio.get("recebimentosConfirmados").asText()).isEqualTo("50.00");
+            assertThat(relatorio.get("devolucoesConfirmadas").asText()).isEqualTo("10.00");
+            assertThat(relatorio.get("canais").get(0).get("pedidos").asInt()).isEqualTo(2);
+            var creditos = relatorio.get("movimentos").valueStream()
+                    .filter(linha -> linha.get("tipo").asText().equals("RECEBIMENTO")).toList();
+            assertThat(creditos).hasSize(1);
+            assertThat(creditos.get(0).get("comandaId").asText()).isEqualTo(comanda.toString());
+            assertThat(creditos.get(0).get("pedidoId").isNull()).isTrue();
+            assertThat(creditos.get(0).get("mesa").asText()).isNotBlank();
+            var estornos = relatorio.get("movimentos").valueStream()
+                    .filter(linha -> linha.get("tipo").asText().equals("DEVOLUCAO")).toList();
+            assertThat(estornos).hasSize(1);
+            assertThat(estornos.get(0).get("recebimentoId").asText()).isEqualTo(recebimento.toString());
         }
     }
 

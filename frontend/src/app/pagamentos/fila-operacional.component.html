@@ -1,0 +1,167 @@
+<section
+  class="bloco-financeiro"
+  [attr.aria-label]="fila()==='pagamentos' ? 'Pagamentos e devoluções' : 'Notificações por e-mail'"
+>
+  @if (fila() === 'pagamentos') {
+    <h2>Pagamentos e devoluções online</h2>
+  } @else {
+    <h2>Histórico de notificações por e-mail</h2>
+    <p class="ajuda">
+      Capturado significa salvo localmente. A captura não confirma o envio nem a leitura do e-mail.
+    </p>
+  }
+  <div class="filtros-financeiros">
+    <div class="campo-financeiro">
+      <label [attr.for]="'tipo-' + fila()">Tipo</label>
+      <select
+        [id]="'tipo-' + fila()"
+        [(ngModel)]="tipo"
+        (ngModelChange)="aviso.set(''); carregar(0)"
+        [disabled]="!!reconciliando()"
+      >
+        <option value="">Todos os tipos</option>
+        @for (t of tipos(); track t[0]) {
+          <option [value]="t[0]">{{ t[1] }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-financeiro">
+      <label [attr.for]="'estado-' + fila()">Estado</label>
+      <select
+        [id]="'estado-' + fila()"
+        [(ngModel)]="estado"
+        (ngModelChange)="aviso.set(''); carregar(0)"
+        [disabled]="!!reconciliando()"
+      >
+        <option value="">Todos os estados</option>
+        @for (e of estados(); track e[0]) {
+          <option [value]="e[0]">{{ e[1] }}</option>
+        }
+      </select>
+    </div>
+    <button
+      type="button"
+      (click)="aviso.set(''); carregar(pagina())"
+      [disabled]="ocupado() || !!reconciliando()"
+    >
+      Atualizar
+    </button>
+  </div>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+  @if (aviso()) {
+    <p role="status" class="sucesso">{{ aviso() }}</p>
+  }
+  @if (ocupado()) {
+    <p role="status">Consultando a fila…</p>
+  }
+  @for (i of lista(); track i.tipo+i.id) {
+    <details class="linha-operacional">
+      <summary>
+        <span
+          ><strong>{{ rotulo(i.tipo) }}</strong
+          ><small>Pedido {{ i.pedidoId.slice(0,8) }} · {{ nomeCanal(i.canalPedido) }}</small></span
+        >
+        <span class="estado" [attr.data-estado]="i.estado">{{ rotulo(i.estado) }}</span>
+        <span class="valor">
+          @if ('valor' in i) {
+            <strong>{{ moeda(i.valor) }}</strong>
+          }
+          <small>{{ dataHora('criadoEm' in i ? i.criadoEm : i.criadaEm, i.fuso) }}</small></span
+        >
+      </summary>
+      <dl class="detalhes">
+        <div>
+          <dt>Pedido</dt>
+          <dd>{{ i.pedidoId }}</dd>
+        </div>
+        <div>
+          <dt>Estado atual do pedido</dt>
+          <dd>{{ nomeEstado(i.estadoPedido) }}</dd>
+        </div>
+        <div>
+          <dt>Operação</dt>
+          <dd>{{ i.id }}</dd>
+        </div>
+        <div>
+          <dt>Tentativas</dt>
+          <dd>{{ i.tentativas }}</dd>
+        </div>
+        <div>
+          <dt>Fuso da unidade</dt>
+          <dd>{{ i.fuso }}</dd>
+        </div>
+        @if (i.emProcessamento) {
+          <div>
+            <dt>Processamento</dt>
+            <dd>Em andamento</dd>
+          </div>
+        }
+        @if (i.ultimaTentativaFalhou) {
+          <div>
+            <dt>Última tentativa</dt>
+            <dd>Falhou</dd>
+          </div>
+        }
+        @if (i.proximaTentativaEm) {
+          <div>
+            <dt>Próxima tentativa prevista</dt>
+            <dd>{{ dataHora(i.proximaTentativaEm, i.fuso) }}</dd>
+          </div>
+        }
+        @if ('valor' in i && i.recebimentoId) {
+          <div>
+            <dt>Recebimento de origem</dt>
+            <dd>{{ i.recebimentoId }}</dd>
+          </div>
+        }
+        @if ('valor' in i && i.substituida !== null) {
+          <div>
+            <dt>Tentativa de pagamento</dt>
+            <dd>{{ i.substituida ? 'Substituída' : 'Vigente' }}</dd>
+          </div>
+          <div>
+            <dt>Solicitação ao provedor</dt>
+            <dd>
+              {{ i.solicitadoAoProvedor ? 'Encaminhamento registrado' : 'Aguardando encaminhamento' }}
+            </dd>
+          </div>
+        }
+      </dl>
+      @if ('valor' in i) {
+        <button
+          type="button"
+          (click)="reconciliar(i)"
+          [disabled]="!!reconciliando() || i.emProcessamento"
+        >
+          {{ reconciliando() === i.id ? 'Solicitando…' : 'Reconciliar a mesma operação' }}
+        </button>
+      }
+    </details>
+  } @empty {
+    @if (!ocupado() && !erro()) {
+      <p>
+        {{ fila() === 'pagamentos' ? 'Nenhuma pendência financeira nesta página.' : 'Nenhuma notificação nesta página.' }}
+      </p>
+    }
+  }
+  @if (pagina() > 0 || temMais()) {
+    <nav class="paginas" [attr.aria-label]="'Páginas de '+fila()">
+      <button
+        type="button"
+        (click)="carregar(pagina()-1)"
+        [disabled]="ocupado() || !!reconciliando() || !pagina()"
+      >
+        Anterior</button
+      ><span>Página {{ pagina()+1 }}</span>
+      <button
+        type="button"
+        (click)="carregar(pagina()+1)"
+        [disabled]="ocupado() || !!reconciliando() || !temMais()"
+      >
+        Próxima
+      </button>
+    </nav>
+  }
+</section>

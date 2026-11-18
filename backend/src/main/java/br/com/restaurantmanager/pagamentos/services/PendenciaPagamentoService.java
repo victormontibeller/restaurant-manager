@@ -1,5 +1,6 @@
 package br.com.restaurantmanager.pagamentos.services;
 
+import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.identidade.models.Acao;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.identidade.services.AcessosService;
@@ -11,7 +12,6 @@ import br.com.restaurantmanager.pedidos.services.PedidoAcessoService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,10 +30,10 @@ public class PendenciaPagamentoService {
         this.pedidos = pedidos;
     }
 
-    public List<PendenciaPagamento> listar(IdentidadeAtual ator, UUID unidade, int pagina) {
+    public Pagina<PendenciaPagamento> listar(IdentidadeAtual ator, UUID unidade, int pagina, String tipo, String estado) {
         acessos.autorizarOperacaoExistente(ator, Acao.PAGAMENTO_RECONCILIAR, unidade);
         if (pagina < 0 || pagina > 10000) throw ErrosPedido.regra("Página inválida.");
-        return repository.listar(unidade, pagina);
+        return repository.listar(unidade, pagina, tipo, estado);
     }
 
     public void reconciliar(IdentidadeAtual ator, UUID id, boolean devolucao) {

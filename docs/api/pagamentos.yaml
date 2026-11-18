@@ -2,8 +2,8 @@
 openapi: 3.1.1
 info:
   title: Restaurant Manager — OAuth, checkout, inbox e comunicações
-  version: 0.4.0
-  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+  version: 0.8.0
+  description: Consultas operacionais da Sprint 8. Tenant pelo domínio, respostas no-store,
     autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
     envio real ou homologação Linux.
 paths:
@@ -237,6 +237,52 @@ paths:
         schema:
           type: string
           format: uuid
+  "/api/v1/operacao/pagamentos/pagina":
+    get:
+      operationId: consultarPaginaPendenciaPagamento
+      description: Filtra por tipo de operação ou evento e estado antes de paginar a unidade autorizada com pagamento.reconciliar.
+      security:
+      - empresarial: []
+      parameters:
+      - {name: unidadeId, in: query, required: true, schema: {type: string, format: uuid}}
+      - {name: pagina, in: query, schema: {type: integer, default: 0, minimum: 0, maximum: 10000}}
+      - {name: tipo, in: query, schema: {type: string}}
+      - {name: estado, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Página filtrada da unidade solicitada
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens, temMais]
+                properties:
+                  itens: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/PendenciaPagamento'}}
+                  temMais: {type: boolean}
+        default: {$ref: '#/components/responses/Erro'}
+  "/api/v1/operacao/notificacoes/pagina":
+    get:
+      operationId: consultarPaginaNotificacaoOperacional
+      description: Filtra por tipo de operação ou evento e estado antes de paginar a unidade autorizada com pagamento.reconciliar.
+      security:
+      - empresarial: []
+      parameters:
+      - {name: unidadeId, in: query, required: true, schema: {type: string, format: uuid}}
+      - {name: pagina, in: query, schema: {type: integer, default: 0, minimum: 0, maximum: 10000}}
+      - {name: tipo, in: query, schema: {type: string}}
+      - {name: estado, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Página filtrada da unidade solicitada
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens, temMais]
+                properties:
+                  itens: {type: array, maxItems: 50, items: {$ref: '#/components/schemas/NotificacaoOperacional'}}
+                  temMais: {type: boolean}
+        default: {$ref: '#/components/responses/Erro'}
 components:
   securitySchemes:
     empresarial:
@@ -310,50 +356,38 @@ components:
     PendenciaPagamento:
       type: object
       additionalProperties: false
+      required: [id, pedidoId, tipo, estado, criadoEm, valor, tentativas, proximaTentativaEm, ultimaTentativaFalhou, emProcessamento, substituida, solicitadoAoProvedor, recebimentoId, canalPedido, estadoPedido, fuso]
       properties:
-        id:
-          type: string
-          format: uuid
-        pedidoId:
-          type: string
-          format: uuid
-        tipo:
-          type: string
-          enum:
-          - CHECKOUT
-          - DEVOLUCAO
-        estado:
-          type: string
-      required:
-      - id
-      - pedidoId
-      - tipo
-      - estado
+        id: {type: string, format: uuid}
+        pedidoId: {type: string, format: uuid}
+        tipo: {type: string, enum: [CHECKOUT, DEVOLUCAO]}
+        estado: {type: string}
+        criadoEm: {type: string, format: date-time}
+        valor: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        tentativas: {type: integer, minimum: 0}
+        proximaTentativaEm: {type: [string, 'null'], format: date-time}
+        ultimaTentativaFalhou: {type: boolean}
+        emProcessamento: {type: boolean}
+        substituida: {type: [boolean, 'null']}
+        solicitadoAoProvedor: {type: [boolean, 'null']}
+        recebimentoId: {type: [string, 'null'], format: uuid}
+        canalPedido: {type: string}
+        estadoPedido: {type: string}
+        fuso: {type: string}
     NotificacaoOperacional:
       type: object
       additionalProperties: false
+      required: [id, pedidoId, tipo, estado, tentativas, criadaEm, proximaTentativaEm, emProcessamento, ultimaTentativaFalhou, canalPedido, estadoPedido, fuso]
       properties:
-        id:
-          type: string
-          format: uuid
-        pedidoId:
-          type: string
-          format: uuid
-        tipo:
-          type: string
-        estado:
-          type: string
-          enum:
-          - PENDENTE
-          - CAPTURADO
-          - FALHOU
-        tentativas:
-          type: integer
-          minimum: 0
-          maximum: 5
-      required:
-      - id
-      - pedidoId
-      - tipo
-      - estado
-      - tentativas
+        id: {type: string, format: uuid}
+        pedidoId: {type: string, format: uuid}
+        tipo: {type: string}
+        estado: {type: string, enum: [PENDENTE, CAPTURADO, FALHOU]}
+        tentativas: {type: integer, minimum: 0, maximum: 5}
+        criadaEm: {type: string, format: date-time}
+        proximaTentativaEm: {type: [string, 'null'], format: date-time}
+        emProcessamento: {type: boolean}
+        ultimaTentativaFalhou: {type: boolean}
+        canalPedido: {type: string}
+        estadoPedido: {type: string}
+        fuso: {type: string}

@@ -24,8 +24,9 @@ public class RelatorioVendasController {
     public RelatorioVendas consultar(
             @AuthenticationPrincipal IdentidadeAtual ator,
             @RequestParam UUID unidadeId,
-            @RequestParam LocalDate inicio,
-            @RequestParam LocalDate fim) {
-        return service.consultar(ator, unidadeId, inicio, fim);
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fim,
+            @RequestParam(defaultValue = "0") int pagina) {
+        return service.consultar(ator, unidadeId, inicio, fim, pagina);
     }
 }

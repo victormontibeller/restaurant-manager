@@ -362,6 +362,33 @@ class Sprint04OperacaoTest {
     }
 
     @Test
+    void extratoPaginaFatosComMesmoHorarioEPreservaTotaisNoFusoDaUnidade() throws Exception {
+        var pedido = p.enviar(p.entrada(2));
+        String base = "/api/v1/financeiro/pedidos/" + pedido.get("id").asText() + "/recebimentos";
+        for (int i = 0; i < 26; i++) {
+            assertThat(p.c.enviar("POST", base, p.c.token,
+                    new EntradaRecebimento(UUID.randomUUID(), "DINHEIRO", "1.00", "2.00")).getStatus()).isEqualTo(200);
+        }
+        // Meia-noite exata no fuso da unidade. O dia anterior não inclui o limite final.
+        p.c.executar("update " + p.c.schema + ".recebimento set confirmado_em='2026-11-01T03:00:00Z'");
+        String url = "/api/v1/relatorios/vendas?unidadeId=" + UNIDADE + "&inicio=2026-11-01&fim=2026-11-01";
+        var primeira = p.c.json(p.c.enviar("GET", url, p.c.token, null));
+        var segunda = p.c.json(p.c.enviar("GET", url + "&pagina=1", p.c.token, null));
+        assertThat(primeira.get("movimentos").size()).isEqualTo(25);
+        assertThat(primeira.get("maisMovimentos").asBoolean()).isTrue();
+        assertThat(segunda.get("movimentos").size()).isEqualTo(1);
+        assertThat(segunda.get("maisMovimentos").asBoolean()).isFalse();
+        assertThat(primeira.get("movimentos").valueStream().map(m -> m.get("id").asText()))
+                .doesNotContain(segunda.get("movimentos").get(0).get("id").asText());
+        assertThat(segunda.get("movimentos").get(0).get("troco").asText()).isEqualTo("1.00");
+        assertThat(segunda.get("recebimentosConfirmados").asText()).isEqualTo("26.00");
+        assertThat(segunda.get("dias").get(0).get("recebido").asText()).isEqualTo("26.00");
+        var anterior = p.c.json(p.c.enviar("GET", url.replace("2026-11-01", "2026-10-31"), p.c.token, null));
+        assertThat(anterior.get("movimentos").size()).isZero();
+        assertThat(anterior.get("dias").size()).isZero();
+    }
+
+    @Test
     void relatorioConfereMassaConhecidaFusoEPermissao() throws Exception {
         var primeiro = p.enviar(p.entrada(2));
         var segundo = p.enviar(p.entrada(1));
@@ -405,6 +432,19 @@ class Sprint04OperacaoTest {
         assertThat(d.get("ajustesNoPeriodo").asText()).isEqualTo("30.00");
         assertThat(d.get("recebimentosConfirmados").asText()).isEqualTo("40.00");
         assertThat(d.get("saldoADevolverAtual").asText()).isEqualTo("10.00");
+        assertThat(d.get("dias").get(0).get("data").asText()).isEqualTo("2026-10-30");
+        assertThat(d.get("dias").get(0).get("recebido").asText()).isEqualTo("40.00");
+        assertThat(d.get("dias").get(0).get("ajustes").asText()).isEqualTo("30.00");
+        assertThat(d.get("canais").get(0).get("cobrancaOriginal").asText()).isEqualTo("60.00");
+        assertThat(d.get("canais").get(0).get("pedidos").asInt()).isEqualTo(2);
+        assertThat(d.get("movimentos").size()).isEqualTo(3);
+        assertThat(d.get("maisMovimentos").asBoolean()).isFalse();
+        assertThat(d.get("movimentos").valueStream().filter(m -> "RECEBIMENTO".equals(m.get("tipo").asText()))
+                .map(m -> m.get("metodo").asText())).containsExactly("PIX");
+        assertThat(p.c.json(p.c.enviar("GET", url + "&pagina=1", p.c.token, null)).get("movimentos").size()).isZero();
+        assertThat(p.c.enviar("GET", url + "&pagina=-1", p.c.token, null).getStatus()).isEqualTo(422);
+        assertThat(p.c.enviar("GET", url.replace("inicio=2026-10-30","inicio=2024-01-01"), p.c.token, null).getStatus())
+                .isEqualTo(422);
         assertThat(p.c.enviar("GET", url, p.tokenCliente, null).getStatus()).isEqualTo(403);
         assertThat(p.c.enviar("GET", url, p.funcionario("COZINHA"), null).getStatus())
                 .isEqualTo(403);
