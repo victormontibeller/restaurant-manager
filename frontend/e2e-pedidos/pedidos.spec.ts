@@ -221,6 +221,11 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     expect(rodada.expirarEm).toBeNull();
     const minhaComanda = page.getByRole('region', { name: 'Minha comanda', exact: true });
     await expect(minhaComanda).toContainText(mesa.nome);
+    for (const campo of ['Recebido confirmado', 'Devolvido confirmado']) {
+      await expect(minhaComanda.getByText(campo, { exact: true }).locator('+ dd')).toHaveText(
+        /0,00/,
+      );
+    }
     await capturar(page, minhaComanda, 't11-mesa-rodadas');
     const participanteB = await playwright.request.newContext({
       baseURL: process.env['RM_BASE_URL'],
@@ -1049,6 +1054,9 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
         await pedido.getByRole('button', { name: /^Detalhes do pedido #/ }).click();
         await expect(pedido.getByRole('checkbox')).toHaveCount(0);
         await expect(
+          pedido.getByText(/Valor por unidade|Taxa de entrega|Total original com entrega/),
+        ).toHaveCount(0);
+        await expect(
           pedido.getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true }),
         ).toHaveCount(0);
         const aceite = await api(
@@ -1150,6 +1158,22 @@ test('S03-UI07 delivery comercial confirma endereço e taxa e admite recusa por 
   const pedido = await enviarUi(page);
   expect(pedido.estado).toBe('AGUARDANDO_ACEITE');
   expect(pedido.saldo!.totalDevido).toBe('15.00');
+  const acompanhamento = page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
+  await acompanhamento.getByRole('link', { name: /^Acompanhar pedido #/ }).click();
+  await expect(page.getByText(/Última consulta confirmada em/)).toBeVisible();
+  await expect(
+    acompanhamento.getByText(/Valor por unidade.*10,00.*Subtotal original.*10,00/),
+  ).toBeVisible();
+  await acompanhamento.getByText('Dados da entrega', { exact: true }).click();
+  for (const [rotulo, valor] of [
+    ['Pedido mínimo da região', '10,00'],
+    ['Taxa de entrega', '5,00'],
+    ['Total original com entrega', '15,00'],
+  ]) {
+    await expect(
+      acompanhamento.locator('dt').filter({ hasText: rotulo }).locator('+ dd'),
+    ).toContainText(valor);
+  }
   const equipe = await loginApi(request, fixture().contas.atendimento);
   const recusado = await comando(request, equipe, pedido, 'recusar');
   expect(recusado.estado).toBe('CANCELADO');

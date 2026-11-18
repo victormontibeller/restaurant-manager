@@ -6,6 +6,10 @@
   <p role="alert" class="erro-acompanhamento">{{ erro() }}</p>
 }
 @if (pedido(); as atual) {
+  <p class="texto-secundario">
+    Última consulta confirmada em
+    <time [attr.datetime]="ultimaConsulta()">{{ horario(ultimaConsulta()) }}</time>
+  </p>
   <app-pedido-detalhe [pedido]="atual" contexto="cliente" (atualizar)="carregar()" />
 } @else if (carregando()) {
   <p role="status" class="carregando-acompanhamento">Buscando seu pedido…</p>

@@ -27,6 +27,22 @@
     @if (detalhe.saldo.pendenciaFinanceira) {
       <p class="aviso">Há uma operação financeira pendente. Confira antes do fechamento.</p>
     }
+    @if (detalhe.parcelas.length) {
+      <details>
+        <summary>Composição da cobrança</summary>
+        <ul aria-label="Parcelas da cobrança">
+          @for (parcela of detalhe.parcelas; track parcela.id) {
+            <li>
+              {{ parcela.descricao }}
+              @if (tipo() === 'comandas') {
+                · pedido #{{ parcela.pedidoId.slice(0, 8).toUpperCase() }}
+              }
+              · original {{ moeda(parcela.original) }} · abatido {{ moeda(parcela.abatido) }}
+            </li>
+          }
+        </ul>
+      </details>
+    }
     @if (tem('recebimento.registrar')) {
       <form (ngSubmit)="receber()">
         <fieldset [disabled]="bloqueado()">
@@ -106,9 +122,12 @@
     <ul>
       @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
         <li>
-          Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }} · entregue
-          {{ moeda(r.entregue) }} · troco
-          {{ moeda(r.troco) }}
+          Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
+          @if (r.metodo === 'DINHEIRO') {
+            · entregue {{ moeda(r.entregue) }} · troco {{ moeda(r.troco) }}
+          }
+          · Confirmado em
+          <time [attr.datetime]="r.confirmadoEm">{{ horario(r.confirmadoEm) }}</time>
         </li>
       } @empty {
         <li>Nenhum recebimento confirmado.</li>
@@ -155,6 +174,14 @@
       @for (d of detalhe.devolucoes; track d.id) {
         <li>
           {{ moeda(d.valor) }} · {{ d.estado }} · {{ d.motivo }}
+          @if (referenciasRecebimentos().get(d.recebimentoId); as referencia) {
+            · Origem: recebimento {{ referencia }}
+          }
+          · Solicitada em <time [attr.datetime]="d.criadaEm">{{ horario(d.criadaEm) }}</time>
+          @if (d.confirmadaEm) {
+            · Confirmada em
+            <time [attr.datetime]="d.confirmadaEm">{{ horario(d.confirmadaEm) }}</time>
+          }
           @if (
             d.estado === 'SOLICITADA' && tem('devolucao.solicitar') && !online(d.recebimentoId)
           ) {

@@ -40,6 +40,7 @@ export interface LinhaPedido {
   nome: string;
   tipo: 'SIMPLES' | 'COMBO';
   quantidade: number;
+  precoBase?: string;
   precoUnitario?: string;
   subtotal?: string;
   adicionais: Partial<SnapshotAdicional>[];

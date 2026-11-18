@@ -309,7 +309,9 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
   await painel
     .getByRole('button', { name: 'Confirmar recebimento presencial', exact: true })
     .click();
-  await expect(painel.getByText(/troco.*30,00/)).toBeVisible();
+  const recibo = painel.getByRole('listitem').filter({ hasText: /troco.*30,00/ });
+  await expect(recibo).toBeVisible();
+  await expect(recibo.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/);
   await painel.getByText('Ajustar cobrança por valor', { exact: true }).click();
   await selecionarFinanceiro(
     painel,
@@ -327,7 +329,15 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
     painel.getByRole('button', { name: 'Confirmar devolução realizada externamente' }),
   ).toBeVisible();
   await painel.getByRole('button', { name: 'Confirmar devolução realizada externamente' }).click();
-  await expect(painel.getByText(/CONFIRMADA/)).toBeVisible();
+  const devolucao = painel.getByRole('listitem').filter({ hasText: /CONFIRMADA/ });
+  await expect(devolucao).toContainText('Origem: recebimento 1');
+  await expect(devolucao.locator('time')).toHaveCount(2);
+  await painel.getByText('Composição da cobrança', { exact: true }).click();
+  const parcelas = painel.getByRole('list', { name: 'Parcelas da cobrança' });
+  const item = parcelas
+    .getByRole('listitem')
+    .filter({ hasText: catalogo.simples.nome + ' · item 1 · unidade 1' });
+  await expect(item).toContainText(/abatido.*5,00/);
   const campoValor = painel.getByLabel('Valor aplicado (ex.: 20.00)', { exact: true });
   await campoValor.fill('1.00');
   const detalhe = await ok<{ parcelas: { id: string; descricao: string }[] }>(
