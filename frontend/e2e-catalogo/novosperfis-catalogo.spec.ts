@@ -139,6 +139,26 @@ async function abrirGestao(page: Page): Promise<void> {
   ).toHaveAttribute('aria-busy', 'false');
 }
 
+async function selecionarUnidadeDaListagem(page: Page, unidade: string): Promise<void> {
+  const painel = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
+  const seletor = painel.getByLabel('Unidade do catálogo operacional', { exact: true });
+  await expect(painel).toHaveAttribute('aria-busy', 'false');
+  if ((await seletor.inputValue()) !== unidade) {
+    const consulta = page.waitForResponse((resposta) => {
+      const url = new URL(resposta.url());
+      return (
+        resposta.request().method() === 'GET' &&
+        url.pathname === '/api/v1/gestao/catalogo/listagem' &&
+        url.searchParams.get('unidadeId') === unidade
+      );
+    });
+    await seletor.selectOption(unidade);
+    expect((await consulta).status()).toBe(200);
+  }
+  await expect(seletor).toHaveValue(unidade);
+  await expect(painel).toHaveAttribute('aria-busy', 'false');
+}
+
 async function localizarOferta(page: Page, nome: string): Promise<void> {
   const painel = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
   const botao = painel.getByRole('button', { name: 'Oferta de ' + nome, exact: true });
@@ -158,14 +178,25 @@ async function localizarOferta(page: Page, nome: string): Promise<void> {
   await botao.click();
 }
 
-async function procurarNoCardapio(page: Page, produto: ProdutoPreparado): Promise<void> {
+async function procurarNoCardapio(
+  page: Page,
+  produto: ProdutoPreparado,
+  unidade = fixture().unidadeA,
+): Promise<void> {
   await navegarUi(page, '/cardapio');
   const vitrine = page.getByRole('region', { name: 'Nosso cardápio', exact: true });
-  await aplicarContextoCardapio(vitrine, fixture().unidadeA);
+  await aplicarContextoCardapio(vitrine, unidade, 'RETIRADA');
   await vitrine.getByLabel('Buscar produtos', { exact: true }).fill(produto.nome);
-  const consulta = page.waitForResponse(
-    (item) => item.url().includes('/api/v1/catalogo?') && item.url().includes('busca='),
-  );
+  const consulta = page.waitForResponse((resposta) => {
+    const url = new URL(resposta.url());
+    return (
+      resposta.request().method() === 'GET' &&
+      url.pathname === '/api/v1/catalogo' &&
+      url.searchParams.get('unidadeId') === unidade &&
+      url.searchParams.get('canal') === 'RETIRADA' &&
+      url.searchParams.get('busca') === produto.nome
+    );
+  });
   await page.getByRole('button', { name: 'Buscar no cardápio', exact: true }).click();
   expect((await consulta).status()).toBe(200);
   await expect(page.getByRole('article', { name: produto.nome, exact: true })).toBeVisible();
@@ -216,7 +247,11 @@ for (const [perfil, chave] of perfis) {
       const produto = await prepararProduto(request, admin);
       const token = await loginUi(page, conta);
       await abrirConta(page);
-      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
+      await expect(
+        page
+          .getByRole('region', { name: 'Minha conta', exact: true })
+          .getByText(nomePerfil[perfil], { exact: true }),
+      ).toBeVisible();
       await abrirGestao(page);
       await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toBeVisible();
 
@@ -257,7 +292,11 @@ for (const [perfil, chave] of perfis) {
 
       await page.reload();
       await abrirConta(page);
-      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
+      await expect(
+        page
+          .getByRole('region', { name: 'Minha conta', exact: true })
+          .getByText(nomePerfil[perfil], { exact: true }),
+      ).toBeVisible();
       await abrirGestao(page);
       await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toHaveCount(0);
       await expect(
@@ -326,7 +365,11 @@ for (const [perfil, chave] of perfis) {
         page.getByRole('region', { name: 'Gestão do catálogo', exact: true }),
       ).toHaveCount(0);
       await abrirConta(page);
-      await expect(page.getByText(nomePerfil[perfil], { exact: true })).toBeVisible();
+      await expect(
+        page
+          .getByRole('region', { name: 'Minha conta', exact: true })
+          .getByText(nomePerfil[perfil], { exact: true }),
+      ).toBeVisible();
       await expect(page.locator('a[href="/gestao/catalogo"]')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         page.viewportSize()!.width,
@@ -361,6 +404,7 @@ test('S02-UI-PERFIL-ADMINISTRADOR: gestão compartilhada e oferta nas duas unida
   await abrirGestao(page);
   await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toBeEnabled();
   const painel = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
+  await selecionarUnidadeDaListagem(page, massa.unidadeA);
   await painel.getByLabel('Buscar produto', { exact: true }).fill(produto.nome);
   await painel.getByLabel('Categoria', { exact: true }).selectOption(produto.categoriaId);
   await painel.getByLabel('Tipo', { exact: true }).selectOption('SIMPLES');
@@ -377,10 +421,17 @@ test('S02-UI-PERFIL-ADMINISTRADOR: gestão compartilhada e oferta nas duas unida
   await expect(
     linha.getByText('Produto fictício da matriz de acessos', { exact: true }),
   ).toBeVisible();
-  await localizarOferta(page, produto.nome);
-  for (const unidade of [massa.unidadeA, massa.unidadeB]) {
-    await selecionarOferta(page, produto.id, unidade);
-    await page.getByLabel('Preço base nesta unidade (R$)', { exact: true }).fill('14.00');
+  const ofertas = [
+    { unidade: massa.unidadeA, preco: '14.00' },
+    { unidade: massa.unidadeB, preco: '17.50' },
+  ];
+  for (const { unidade, preco } of ofertas) {
+    await selecionarUnidadeDaListagem(page, unidade);
+    await localizarOferta(page, produto.nome);
+    await expect(page.getByLabel('Unidade da oferta', { exact: true })).toHaveValue(unidade);
+    const campoPreco = page.getByLabel('Preço base nesta unidade (R$)', { exact: true });
+    await expect(campoPreco).toHaveValue('12.00');
+    await campoPreco.fill(preco);
     const resposta = page.waitForResponse(
       (item) =>
         item.url().endsWith(oferta(produto.id, unidade)) && item.request().method() === 'PUT',
@@ -388,7 +439,19 @@ test('S02-UI-PERFIL-ADMINISTRADOR: gestão compartilhada e oferta nas duas unida
     await page.getByRole('button', { name: 'Salvar oferta da unidade', exact: true }).click();
     expect((await resposta).status()).toBe(200);
     const consulta = await request.get(oferta(produto.id, unidade), { headers: headers(token) });
-    expect((await consulta.json()).preco).toBe('14.00');
+    expect(consulta.status()).toBe(200);
+    expect(await consulta.json()).toMatchObject({
+      produtoId: produto.id,
+      unidadeId: unidade,
+      preco,
+    });
+    await page.getByRole('button', { name: 'Fechar oferta', exact: true }).click();
+    await expect(linha.locator('.produto-oferta strong')).toContainText(preco.replace('.', ','));
+  }
+  for (const { unidade, preco } of ofertas) {
+    await procurarNoCardapio(page, produto, unidade);
+    const cartao = page.getByRole('article', { name: produto.nome, exact: true });
+    await expect(cartao.locator('.produto-preco')).toContainText(preco.replace('.', ','));
   }
   expect(
     (await request.get('/api/v1/clientes/me/favoritos', { headers: headers(token) })).status(),
