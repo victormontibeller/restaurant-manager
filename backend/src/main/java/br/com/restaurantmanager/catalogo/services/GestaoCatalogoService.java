@@ -1,6 +1,13 @@
 package br.com.restaurantmanager.catalogo.services;
 
+import br.com.restaurantmanager.catalogo.dtos.Adicional;
 import br.com.restaurantmanager.catalogo.dtos.Categoria;
+import br.com.restaurantmanager.catalogo.dtos.ComponenteCatalogoGestao;
+import br.com.restaurantmanager.catalogo.dtos.FiltrosCatalogoGestao;
+import br.com.restaurantmanager.catalogo.dtos.Grupo;
+import br.com.restaurantmanager.catalogo.dtos.ItemCatalogoGestao;
+import br.com.restaurantmanager.catalogo.dtos.Opcao;
+import br.com.restaurantmanager.catalogo.dtos.PaginaCatalogoGestao;
 import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.catalogo.dtos.Produto;
 import br.com.restaurantmanager.catalogo.exceptions.ErrosCatalogo;
@@ -9,6 +16,11 @@ import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.models.Acao;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.identidade.services.AcessosService;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +35,55 @@ public class GestaoCatalogoService {
         this.repository = repository;
         this.acessos = acessos;
         this.validacao = validacao;
+    }
+
+    @Transactional
+    public PaginaCatalogoGestao listar(IdentidadeAtual ator, UUID unidade, FiltrosCatalogoGestao filtros, int pagina) {
+        if (unidade == null) {
+            acessos.autorizar(ator, Acao.CATALOGO_EDITAR, null);
+            if (filtros.disponivel() != null) throw ErrosCatalogo.regra("Selecione uma unidade para filtrar a oferta.");
+        } else {
+            acessos.autorizar(ator, Acao.CATALOGO_CONSULTAR, unidade);
+        }
+        boolean editar = acessos.efetivo(ator).acoes().contains(Acao.CATALOGO_EDITAR.codigo());
+        repository.bloquearLeitura();
+        var resultado = repository.listagem(unidade, editar, filtros, pagina);
+        var componentes = referenciasDaPagina(resultado.itens(), editar);
+        var itens = editar ? resultado.itens() : resultado.itens().stream()
+                .map(item -> dadosOperacionais(item, componentes)).toList();
+        return new PaginaCatalogoGestao(itens, resultado.temMais(),
+                editar ? List.of() : repository.categoriasAtivas(), componentes);
+    }
+
+    private Map<UUID, ComponenteCatalogoGestao> referenciasDaPagina(List<ItemCatalogoGestao> itens, boolean editar) {
+        var referencias = new HashMap<UUID, Set<UUID>>();
+        for (var item : itens) {
+            for (var grupo : item.produto().grupos()) {
+                for (var opcao : grupo.opcoes()) {
+                    referencias.computeIfAbsent(opcao.produtoId(), id -> new HashSet<>()).addAll(opcao.adicionaisPermitidos());
+                }
+            }
+        }
+        var componentes = new HashMap<UUID, ComponenteCatalogoGestao>();
+        for (var produto : repository.componentes(referencias.keySet())) {
+            var permitidos = referencias.get(produto.id());
+            var adicionais = produto.adicionais().stream().filter(a -> permitidos.contains(a.id()) && (editar || a.ativo())).toList();
+            componentes.put(produto.id(), new ComponenteCatalogoGestao(produto.nome(), adicionais));
+        }
+        return componentes;
+    }
+
+    private ItemCatalogoGestao dadosOperacionais(ItemCatalogoGestao item, Map<UUID, ComponenteCatalogoGestao> componentes) {
+        var p = item.produto();
+        var grupos = p.grupos().stream().map(g -> new Grupo(g.id(), g.nome(), g.minimo(), g.maximo(),
+                g.opcoes().stream().map(o -> {
+                    var adicionais = componentes.get(o.produtoId()).adicionais().stream().map(Adicional::id)
+                            .filter(o.adicionaisPermitidos()::contains).toList();
+                    return new Opcao(o.id(), o.produtoId(), o.acrescimo(), o.limite(), adicionais);
+                }).toList())).toList();
+        var produto = new Produto(p.id(), p.versao(), p.nome(), p.descricao(), p.categoriaId(), p.tipo(), p.ativo(),
+                p.sugerido(), p.midiaId(), p.adicionais().stream().filter(Adicional::ativo).toList(), grupos);
+        return new ItemCatalogoGestao(produto, item.categoria(), item.oferta());
     }
 
     @Transactional

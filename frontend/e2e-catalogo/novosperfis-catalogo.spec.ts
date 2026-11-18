@@ -151,7 +151,7 @@ async function localizarOferta(page: Page, nome: string): Promise<void> {
     const resposta = page.waitForResponse(
       (item) =>
         item.request().method() === 'GET' &&
-        /\/(operacao\/catalogo|gestao\/catalogo\/produtos)\?/.test(item.url()),
+        new URL(item.url()).pathname === '/api/v1/gestao/catalogo/listagem',
     );
     await proxima.click();
     expect((await resposta).status()).toBe(200);
@@ -364,6 +364,21 @@ test('S02-UI-PERFIL-ADMINISTRADOR: gestão compartilhada e oferta nas duas unida
   const produto = await prepararProduto(request, token);
   await abrirGestao(page);
   await expect(page.getByRole('button', { name: 'Novo produto', exact: true })).toBeEnabled();
+  const painel = page.getByRole('region', { name: 'Gestão do catálogo', exact: true });
+  await painel.getByLabel('Buscar produto', { exact: true }).fill(produto.nome);
+  await painel.getByLabel('Categoria', { exact: true }).selectOption(produto.categoriaId);
+  await painel.getByLabel('Tipo', { exact: true }).selectOption('SIMPLES');
+  await painel.getByRole('button', { name: 'Aplicar filtros' }).click();
+  const linha = painel
+    .getByRole('article')
+    .filter({ has: page.getByRole('heading', { name: produto.nome, exact: true }) });
+  await expect(linha).toBeVisible();
+  await expect(linha.getByText('Oferta habilitada', { exact: true })).toBeVisible();
+  await expect(linha.getByText('Delivery · Retirada · Mesa', { exact: true })).toBeVisible();
+  await linha.getByText('Detalhes de ' + produto.nome, { exact: true }).click();
+  await expect(
+    linha.getByText('Produto fictício da matriz de acessos', { exact: true }),
+  ).toBeVisible();
   await localizarOferta(page, produto.nome);
   for (const unidade of [massa.unidadeA, massa.unidadeB]) {
     await selecionarOferta(page, produto.id, unidade);

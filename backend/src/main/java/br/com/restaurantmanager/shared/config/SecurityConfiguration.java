@@ -222,6 +222,7 @@ public class SecurityConfiguration {
                                         .authenticated()
                                         .requestMatchers(
                                                 HttpMethod.GET,
+                                                "/api/v1/gestao/catalogo/listagem",
                                                 "/api/v1/gestao/catalogo/categorias",
                                                 "/api/v1/gestao/catalogo/produtos",
                                                 "/api/v1/gestao/catalogo/produtos/*",

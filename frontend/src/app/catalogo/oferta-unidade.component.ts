@@ -22,6 +22,8 @@ import { CANAIS, Canal, Oferta, Unidade, mensagemErro } from './modelos';
 export class OfertaUnidadeComponent implements OnChanges {
   @Input({ required: true }) produtoId = '';
   @Input() nome = '';
+  @Input() unidadeInicial = '';
+  @Output() ofertaConfirmada = new EventEmitter<Oferta>();
   @Input() unidades: Unidade[] = [];
   @Input() podeAlterar = false;
   @Input() bloqueado = false;
@@ -63,6 +65,11 @@ export class OfertaUnidadeComponent implements OnChanges {
       this.unidadeId.set(pendente.dados.unidadeId);
       this.incerto.set(true);
       this.bloqueio.emit(true);
+    } else if (changes['produtoId'] && this.unidades.some((u) => u.id === this.unidadeInicial)) {
+      this.unidadeId.set(this.unidadeInicial);
+      queueMicrotask(() => {
+        if (!this.destruido) void this.consultar();
+      });
     }
   }
 
@@ -162,6 +169,7 @@ export class OfertaUnidadeComponent implements OnChanges {
       estado.set(null);
       if (this.destruido) return;
       this.oferta.set(oferta);
+      this.ofertaConfirmada.emit(oferta);
       this.aviso.set('Oferta da unidade salva no servidor.');
       this.salvo.emit(this.grupoRascunho());
     } catch (error) {

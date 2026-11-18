@@ -70,6 +70,8 @@ async function fixture() {
       if (route === '/api/v1/gestao/catalogo/produtos/' + combo.id) return consultarCombo();
       if (route === '/api/v1/gestao/catalogo/produtos/' + componente.id)
         return consultarComponente();
+      if (route.startsWith('/api/v1/gestao/catalogo/listagem?'))
+        return { itens: [], temMais: false, categorias: [], componentes: {} };
       if (route.includes('?pagina=')) return { itens: [], temMais: false };
       throw new Error('Rota inesperada: ' + route);
     },
@@ -93,6 +95,7 @@ async function fixture() {
   };
   const context = {
     exports: {},
+    URLSearchParams,
     structuredClone,
     require: (name) => {
       if (name === '@angular/core') return core;

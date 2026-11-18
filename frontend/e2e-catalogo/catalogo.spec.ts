@@ -105,7 +105,7 @@ async function produtoNaLista(gestao: Locator, nome: string): Promise<Locator> {
       const url = new URL(response.url());
       return (
         response.request().method() === 'GET' &&
-        url.pathname === '/api/v1/gestao/catalogo/produtos' &&
+        url.pathname === '/api/v1/gestao/catalogo/listagem' &&
         url.searchParams.get('pagina') === String(pagina)
       );
     });
@@ -161,7 +161,7 @@ async function abrirProduto(gestao: Locator, nome: string, categoriaId: string):
 
 async function salvarProduto(page: Page, editor: Locator): Promise<ProdutoCriado> {
   const pending = resposta(page, '/api/v1/gestao/catalogo/produtos', 'POST');
-  const atualizacao = resposta(page, '/api/v1/gestao/catalogo/produtos', 'GET');
+  const atualizacao = resposta(page, '/api/v1/gestao/catalogo/listagem', 'GET');
   await editor.getByRole('button', { name: 'Criar produto', exact: true }).click();
   const criada = await pending;
   expect(criada.status()).toBe(200);

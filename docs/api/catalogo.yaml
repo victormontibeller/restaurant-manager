@@ -9,6 +9,61 @@ info:
     catalogo.editar; ofertas exigem consulta/ação local vigente e unidade atribuída.
     Não cria pedidos.
 paths:
+  "/api/v1/gestao/catalogo/listagem":
+    get:
+      operationId: listarCatalogoDeGestao
+      summary: Consultar produtos, composição e ofertas da unidade com filtros antes da paginação
+      description: >-
+        Com unidade, exige catalogo.consultar e vínculo vigente. Sem unidade, exige catalogo.editar
+        e mostra o cadastro empresarial sem preços. O perfil operacional recebe produtos e
+        categorias ativos e adicionais ativos. Disponível significa oferta habilitada na unidade;
+        horários e regras de composição são conferidos no cardápio e no carrinho.
+      security: [{empresarial: []}]
+      parameters:
+        - {name: unidadeId, in: query, schema: {type: string, format: uuid}}
+        - {name: busca, in: query, schema: {type: string, maxLength: 120}}
+        - {name: categoriaId, in: query, schema: {type: string, format: uuid}}
+        - {name: tipo, in: query, schema: {type: string, enum: [SIMPLES, COMBO]}}
+        - {name: ativo, in: query, schema: {type: boolean}}
+        - {name: disponivel, in: query, description: Sem oferta conta como desabilitada. Exige unidade., schema: {type: boolean}}
+        - {name: pagina, in: query, schema: {type: integer, minimum: 0, maximum: 10000, default: 0}}
+      responses:
+        '200':
+          description: Página ordenada por nome e identificador
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens, temMais, categorias, componentes]
+                properties:
+                  itens:
+                    type: array
+                    maxItems: 50
+                    items:
+                      type: object
+                      required: [produto, categoria, oferta]
+                      properties:
+                        produto: {$ref: '#/components/schemas/Produto'}
+                        categoria: {$ref: '#/components/schemas/Categoria'}
+                        oferta:
+                          oneOf:
+                            - {$ref: '#/components/schemas/Oferta'}
+                            - {type: 'null'}
+                  temMais: {type: boolean}
+                  categorias:
+                    type: array
+                    description: Categorias ativas para o filtro operacional. O editor usa a listagem empresarial de categorias.
+                    items: {$ref: '#/components/schemas/Categoria'}
+                  componentes:
+                    type: object
+                    description: Nomes e adicionais permitidos de componentes referenciados na página, por ID de produto.
+                    additionalProperties:
+                      type: object
+                      required: [nome, adicionais]
+                      properties:
+                        nome: {type: string}
+                        adicionais: {type: array, items: {$ref: '#/components/schemas/Adicional'}}
+        default: {$ref: '#/components/responses/Erro'}
   "/api/v1/gestao/catalogo/categorias":
     get:
       operationId: listarCategorias

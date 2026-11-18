@@ -98,6 +98,22 @@ export interface Oferta {
   canais: Canal[];
 }
 
+export interface ItemCatalogoGestao {
+  produto: Produto;
+  categoria: Categoria;
+  oferta: Oferta | null;
+}
+
+export interface ComponenteCatalogoGestao {
+  nome: string;
+  adicionais: Adicional[];
+}
+
+export interface PaginaCatalogoGestao extends Pagina<ItemCatalogoGestao> {
+  categorias: Categoria[];
+  componentes: Record<string, ComponenteCatalogoGestao>;
+}
+
 export interface Midia {
   id: string;
   url: string;
