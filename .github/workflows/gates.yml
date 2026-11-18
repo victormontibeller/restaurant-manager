@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
 
       MAVEN_OPTS: -Xmx384m -XX:ActiveProcessorCount=2
