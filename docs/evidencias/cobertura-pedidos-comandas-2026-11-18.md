@@ -16,6 +16,6 @@ A conferência usou as projeções vigentes na base da Sprint 07. O detalhe fina
 
 Tipagem, formatação, suíte de lógica e build de produção aprovados. No Chromium com o build de produção e transporte simulado, as telas do pedido próprio, da comanda e do financeiro abriram em 390, 820 e 1280 px sem rolagem horizontal. A verificação conferiu a composição de um combo, cotação, saldos da mesa, origem e horários da devolução. Também conferiu que uma falha temporária do pedido mantém a hora da consulta anterior e que a perda de acesso remove o pedido ou as movimentações financeiras da tela.
 
-Os cenários integrados S03-UI02, S03-UI06, S03-UI07 e S04-UI03 receberam asserções para valores da comanda, separação de projeções, cotação e parcela, recebimento e devolução. A execução integrada pertence à matriz do release.
+Os cenários integrados S03-UI02, S03-UI06, S03-UI07 e S04-UI03 receberam asserções para valores da comanda, separação de projeções, cotação e parcela, recebimento e devolução. Os quatro cenários passaram nos cinco projetos de navegador, em HTTPS com PostgreSQL no Mac, sobre o commit `b54bd75`. O [checkpoint](../25_EXECUTION_STATUS.md) distingue essas 20 aprovações da matriz de homologação.
 
 Consulte as diretrizes de [Interface e PWA](../09_UI_GUIDELINES.md), [Acessos](../11_ACCESS_CONTROL.md) e [Matriz de validação](../26_TEST_STRATEGY.md).
