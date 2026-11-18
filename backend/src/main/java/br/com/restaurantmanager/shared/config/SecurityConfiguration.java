@@ -265,6 +265,7 @@ public class SecurityConfiguration {
                                                 HttpMethod.PUT,
                                                 "/api/v1/me/perfil",
                                                 "/api/v1/configuracoes/acessos",
+                                                "/api/v1/configuracoes/acessos/matriz",
                                                 "/api/v1/equipe/*")
                                         .authenticated()
                                         .requestMatchers(

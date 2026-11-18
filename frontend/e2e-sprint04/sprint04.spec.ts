@@ -245,17 +245,27 @@ test('S04-UI02: administrador configura regiões e vê sobreposição rejeitada'
   await page.getByLabel('CEP final', { exact: true }).fill('01999999');
   await page.getByLabel('Taxa fixa em reais', { exact: true }).fill('5.00');
   await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).fill('10.00');
+  await page.getByRole('button', { name: 'Aplicar à lista', exact: true }).click();
   await page.getByLabel('Confirme sua senha', { exact: true }).fill(fixture().senha);
   await page.getByRole('button', { name: 'Salvar regiões e prazo', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('salv');
+  await expect(
+    page.getByText('Regiões e prazo de checkout salvos.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Centro', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Editar região Centro' }).click();
+  await expect(page.getByRole('heading', { name: 'Editar região', exact: true })).toBeFocused();
+  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveValue('Centro');
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Editar região Centro' })).toBeFocused();
   await capturar(page, 'regioes');
   await page.getByRole('button', { name: 'Adicionar região', exact: true }).click();
-  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveCount(2);
-  await page.getByLabel('Nome da região', { exact: true }).last().fill('Sobreposta');
-  await page.getByLabel('CEP inicial', { exact: true }).last().fill('01999999');
-  await page.getByLabel('CEP final', { exact: true }).last().fill('02000000');
-  await page.getByLabel('Taxa fixa em reais', { exact: true }).last().fill('1.00');
-  await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).last().fill('0.00');
+  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveCount(1);
+  await page.getByLabel('Nome da região', { exact: true }).fill('Sobreposta');
+  await page.getByLabel('CEP inicial', { exact: true }).fill('01999999');
+  await page.getByLabel('CEP final', { exact: true }).fill('02000000');
+  await page.getByLabel('Taxa fixa em reais', { exact: true }).fill('1.00');
+  await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).fill('0.00');
+  await page.getByRole('button', { name: 'Aplicar à lista', exact: true }).click();
   await page.getByLabel('Confirme sua senha', { exact: true }).fill(fixture().senha);
   await page.getByRole('button', { name: 'Salvar regiões e prazo', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: /faixas ativas de CEP/ })).toContainText(
@@ -707,7 +717,8 @@ test('S04-UI07: conexão OAuth usa conta fictícia e retorna sem expor segredos'
   await expect(page.getByRole('heading', { name: 'Autorização fictícia local' })).toBeVisible();
   await page.getByRole('link', { name: 'Autorizar conta fictícia' }).click();
   await expect(page).toHaveURL(/\/gestao\/integracoes\?conexao=concluida/);
-  await expect(page.getByText(/Conta vendedora:.*Conectada/)).toBeVisible();
+  await expect(page.getByText('Conta vendedora', { exact: true })).toBeVisible();
+  await expect(page.getByText('Conectada', { exact: true })).toBeVisible();
   await expect(page.getByText(/access_token|refresh_token/)).toHaveCount(0);
   await capturar(page, 'integracao');
 });
@@ -896,5 +907,5 @@ test('S04-UI09: gerente consulta pendências e notificações sem acesso à inte
   await expect(pagamentos.getByLabel('Tipo', { exact: true })).toHaveValue('CHECKOUT');
   await page.goto('/gestao/integracoes');
   await expect(page).toHaveURL((url) => url.pathname === '/sem-acesso');
-  await expect(page.getByRole('heading', { name: 'Mercado Pago do restaurante' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Conta de recebimento' })).toBeHidden();
 });

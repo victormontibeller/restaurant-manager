@@ -1,23 +1,24 @@
 :host {
   display: block;
+  flex: 1 1 0;
+  min-height: 0;
 }
 .workplace {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
-  min-height: 100dvh;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   background: var(--rm-bg, #f7f8f4);
 }
 .sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100dvh;
+  min-height: 0;
   background: var(--rm-surface, #fff);
   border-right: 1px solid var(--rm-border, #e2e7df);
   display: flex;
   flex-direction: column;
   padding: 1.7rem 1rem;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 .workspace-brand {
   display: flex;
@@ -100,7 +101,10 @@
   line-height: 1.6;
 }
 .workspace-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
+  min-height: 0;
 }
 .workspace-header {
   min-height: 85px;
@@ -159,16 +163,26 @@
   border-radius: 50%;
 }
 .workspace-main {
-  padding: clamp(1rem, 3vw, 2.5rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   max-width: 1800px;
+  min-height: 0;
   outline: none;
+}
+.workspace-content {
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
+  padding: 0 var(--gestao-espaco-5) var(--gestao-espaco-5);
+}
+.workspace-content:focus-visible {
+  outline-offset: -2px;
 }
 .page-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.8rem;
 }
 h1 {
   font-size: clamp(1.8rem, 3vw, 2.3rem);
@@ -221,14 +235,14 @@ h1 {
 }
 @media (max-width: 800px) {
   .workplace {
-    display: block;
+    grid-template-columns: minmax(0, 1fr);
   }
   .sidebar {
     position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 270px;
+    width: min(270px, 90vw);
     z-index: 51;
     transform: translateX(-100%);
     visibility: hidden;
@@ -272,11 +286,7 @@ h1 {
   .user-avatar {
     display: none;
   }
-  .workspace-main {
-    padding: 1.25rem 1rem;
-  }
   .page-heading {
-    margin-bottom: 1.2rem;
     align-items: flex-start;
   }
 }
@@ -317,13 +327,10 @@ h1 {
   background: var(--muted);
   border-radius: var(--gestao-raio);
 }
-.gestao-compacta .workspace-main {
-  padding: var(--gestao-espaco-5);
-}
 .gestao-compacta .page-heading {
   align-items: center;
   gap: var(--gestao-espaco-2);
-  margin-bottom: var(--gestao-espaco-4);
+  padding: var(--gestao-espaco-5) var(--gestao-espaco-5) var(--gestao-espaco-4);
 }
 .gestao-compacta h1 {
   font-size: 1.75rem;
@@ -358,11 +365,15 @@ h1 {
 }
 @media (max-width: 800px) {
   .gestao-compacta .workspace-header,
-  .gestao-compacta .workspace-main {
+  .gestao-compacta .page-heading,
+  .gestao-compacta .workspace-content {
     padding-inline: var(--gestao-espaco-3);
   }
-  .gestao-compacta .workspace-main {
-    padding-block: var(--gestao-espaco-4);
+  .gestao-compacta .page-heading {
+    padding-top: var(--gestao-espaco-4);
+  }
+  .gestao-compacta .workspace-content {
+    padding-bottom: var(--gestao-espaco-4);
   }
   .gestao-compacta .unit-picker {
     padding-inline-start: 0;

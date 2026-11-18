@@ -83,11 +83,19 @@ export const GESTAO_ROUTES: Routes = [
   },
   {
     path: 'equipe',
-    title: 'Equipe e acessos · Gestão',
-    data: { titulo: 'Equipe e acessos', administrador: true },
+    title: 'Equipe · Gestão',
+    data: { titulo: 'Equipe', administrador: true },
     canActivate: [equipeObrigatoria],
     canDeactivate: [protegerSaida],
     loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaEquipeComponent),
+  },
+  {
+    path: 'acessos',
+    title: 'Acessos · Gestão',
+    data: { titulo: 'Acessos', administrador: true },
+    canActivate: [equipeObrigatoria],
+    canDeactivate: [protegerSaida],
+    loadComponent: () => import('./paginas-gestao').then((m) => m.PaginaAcessosComponent),
   },
   {
     path: 'equipe/convites',

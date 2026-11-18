@@ -1,90 +1,184 @@
-<section aria-labelledby="regioes-titulo">
-  <h2 id="regioes-titulo">Regiões de entrega e checkout</h2>
-  <p>
-    As faixas de CEP são inclusivas e não podem se sobrepor quando ativas. O mínimo considera os
-    itens, sem a taxa de entrega. Os horários seguem a configuração da unidade.
-  </p>
-  <button type="button" (click)="carregar()" [disabled]="ocupado()">
-    Consultar configuração salva
-  </button>
-  <form #form="ngForm" (ngSubmit)="salvar(senha)">
-    <fieldset [disabled]="ocupado() || incerto()">
-      <legend>Configuração da unidade</legend>
-      <label
-        >Prazo para pagar online, em minutos<input
-          type="number"
-          name="minutosCheckout"
-          [(ngModel)]="minutos"
-          min="1"
-          max="1440"
-          step="1"
-          required
-      /></label>
-      @for (r of regioes; track r.id) {
-        <fieldset>
-          <legend>{{ r.nome || 'Nova região' }}</legend>
+<section class="admin-pagina" aria-label="Configuração de entrega" [attr.aria-busy]="ocupado()">
+  <section class="admin-painel" aria-labelledby="regioes-titulo">
+    <div class="admin-cabecalho">
+      <div>
+        <h2 id="regioes-titulo">Áreas atendidas</h2>
+        <p class="admin-ajuda">Cada região define uma faixa de CEP, uma taxa e um pedido mínimo.</p>
+      </div>
+      <div class="gestao-acoes">
+        <button
+          #nova
+          type="button"
+          (click)="adicionar(nova)"
+          [disabled]="!servidor() || ocupado() || incerto() || regioes.length >= 100"
+        >
+          Adicionar região
+        </button>
+        <button type="button" data-variant="outline" (click)="reconsultar()" [disabled]="ocupado()">
+          Consultar configuração salva
+        </button>
+      </div>
+    </div>
+    @if (servidor()) {
+      <div class="gestao-lista lista-regioes">
+        @for (r of regioes; track r.id) {
+          <article class="gestao-linha">
+            <div>
+              <h3>{{ r.nome }}</h3>
+              <span>CEP {{ r.cepInicial }} a {{ r.cepFinal }}</span>
+            </div>
+            <span>Taxa {{ moeda(r.taxa) }} · Mínimo {{ moeda(r.minimo) }}</span>
+            <span
+              class="gestao-estado"
+              [attr.data-estado]="r.ativa ? 'ativo' : 'inativo'"
+              >{{ r.ativa ? 'Ativa' : 'Inativa' }}</span
+            >
+            <div class="gestao-acoes">
+              <button
+                #editar
+                type="button"
+                data-variant="outline"
+                (click)="editarRegiao(r, editar)"
+                [disabled]="ocupado() || incerto()"
+                [attr.aria-label]="'Editar região ' + r.nome"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                data-variant="ghost"
+                (click)="remover(r.id)"
+                [disabled]="ocupado() || incerto()"
+                [attr.aria-label]="'Remover região ' + r.nome"
+              >
+                Remover
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <p class="admin-vazio">Nenhuma região configurada.</p>
+        }
+      </div>
+    } @else if (ocupado()) {
+      <p role="status">Consultando a configuração…</p>
+    }
+    @if (editor(); as r) {
+      <form
+        #formRegiao="ngForm"
+        class="gestao-editor"
+        (ngSubmit)="aplicarRegiao()"
+        aria-labelledby="regiao-editor"
+      >
+        <h3 id="regiao-editor" data-gestao-foco tabindex="-1">
+          {{ original ? 'Editar região' : 'Nova região' }}
+        </h3>
+        <div class="gestao-campos">
           <label
-            >Nome da região<input
-              [name]="'nome-'+r.id"
-              [(ngModel)]="r.nome"
-              required
-              maxlength="100"
+            >Nome da região<input name="nome" [(ngModel)]="r.nome" required maxlength="100"
           /></label>
           <label
             >CEP inicial<input
-              [name]="'inicio-'+r.id"
+              name="inicio"
               [(ngModel)]="r.cepInicial"
               required
               maxlength="9"
+              pattern="[0-9]{5}-?[0-9]{3}"
+              inputmode="numeric"
           /></label>
           <label
-            >CEP final<input [name]="'fim-'+r.id" [(ngModel)]="r.cepFinal" required maxlength="9"
+            >CEP final<input
+              name="fim"
+              [(ngModel)]="r.cepFinal"
+              required
+              maxlength="9"
+              pattern="[0-9]{5}-?[0-9]{3}"
+              inputmode="numeric"
           /></label>
           <label
             >Taxa fixa em reais<input
-              [name]="'taxa-'+r.id"
+              name="taxa"
               [(ngModel)]="r.taxa"
               required
+              pattern="[0-9]+([.,][0-9]{1,2})?"
               inputmode="decimal"
           /></label>
           <label
             >Pedido mínimo de itens em reais<input
-              [name]="'minimo-'+r.id"
+              name="minimo"
               [(ngModel)]="r.minimo"
               required
+              pattern="[0-9]+([.,][0-9]{1,2})?"
               inputmode="decimal"
           /></label>
-          <label class="checkbox"
-            ><input type="checkbox" [name]="'ativa-'+r.id" [(ngModel)]="r.ativa" /> Região
-            ativa</label
-          ><button type="button" (click)="remover(r.id)">Remover região {{ r.nome }}</button>
-        </fieldset>
-      }
-      <button type="button" (click)="adicionar()" [disabled]="regioes.length >= 100">
-        Adicionar região
-      </button>
-      <label
-        >Confirme sua senha<input
-          #senha
-          type="password"
-          name="senhaDelivery"
-          autocomplete="current-password"
-          required
-      /></label>
-      <button type="submit" [disabled]="!form.valid">Salvar regiões e prazo</button>
-    </fieldset>
-  </form>
+        </div>
+        <label class="gestao-opcao"
+          ><input type="checkbox" name="ativa" [(ngModel)]="r.ativa" /> Região ativa</label
+        >
+        <p class="admin-ajuda">
+          Os limites de CEP são inclusivos. Regiões ativas precisam ter faixas distintas.
+        </p>
+        <div class="gestao-acoes">
+          <button type="submit" [disabled]="!formRegiao.valid || !r.nome.trim() || ocupado()">
+            Aplicar à lista
+          </button>
+          <button type="button" data-variant="ghost" (click)="cancelarEditor()">Cancelar</button>
+        </div>
+      </form>
+    }
+  </section>
+  @if (servidor()) {
+    <section class="admin-painel" aria-labelledby="checkout-titulo">
+      <h2 id="checkout-titulo">Checkout da unidade</h2>
+      <p class="admin-ajuda">O prazo e a lista de regiões entram em vigor juntos ao salvar.</p>
+      <form ngNativeValidate #formConfig="ngForm" class="admin-filtros" (ngSubmit)="salvar(senha)">
+        <label
+          >Prazo para pagar online, em minutos<input
+            type="number"
+            name="minutosCheckout"
+            [(ngModel)]="minutos"
+            min="1"
+            max="1440"
+            step="any"
+            required
+            [disabled]="ocupado() || incerto()"
+        /></label>
+        <label
+          >Confirme sua senha<input
+            #senha
+            type="password"
+            name="senhaDelivery"
+            autocomplete="current-password"
+            required
+            [disabled]="ocupado() || incerto()"
+        /></label>
+        <button
+          type="submit"
+          [disabled]="!formConfig.valid || !!editor() || ocupado() || incerto()"
+        >
+          Salvar regiões e prazo
+        </button>
+      </form>
+    </section>
+  }
   @if (incerto()) {
-    <p class="aviso">
-      Resultado de salvamento ainda não confirmado. Consulte a configuração antes de outra
-      alteração.
+    <p class="aviso" role="status">
+      Salvamento pendente de confirmação. Consulte a configuração salva para conferir o resultado.
     </p>
-    <button type="button" (click)="usarServidor()" [disabled]="ocupado()">
-      Usar versão do servidor e descartar rascunho
-    </button>
+    @if (divergente()) {
+      <div class="gestao-acoes">
+        <button
+          type="button"
+          data-variant="outline"
+          (click)="usarServidor()"
+          [disabled]="ocupado()"
+        >
+          Usar versão do servidor e descartar rascunho
+        </button>
+      </div>
+    }
   }
   @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
+    <p class="erro" role="alert">{{ erro() }}</p>
   }
   @if (aviso()) {
     <p role="status">{{ aviso() }}</p>

@@ -1,8 +1,16 @@
 <div class="workplace gestao-compacta" [attr.data-tema-gestao]="tema()">
   @if (menuAberto()) {
-    <button class="sidebar-overlay" aria-label="Fechar menu" (click)="fecharMenu()"></button>
+    <button class="sidebar-overlay" tabindex="-1" aria-label="Fechar menu" (click)="fecharMenu()"></button>
   }
-  <aside class="sidebar" [class.open]="menuAberto()">
+  <aside
+    id="menu-gestao"
+    class="sidebar"
+    aria-label="Menu de gestão"
+    [class.open]="menuAberto()"
+    [attr.role]="menuAberto() ? 'dialog' : null"
+    [attr.aria-modal]="menuAberto() ? 'true' : null"
+    [cdkTrapFocus]="menuAberto()"
+  >
     <a routerLink="/gestao" class="workspace-brand"
       ><span class="brand-mark"><app-icone nome="marca" /></span
       ><span>{{ marca.nome() }}<small>GESTÃO DO RESTAURANTE</small></span></a
@@ -67,7 +75,10 @@
           routerLink="/gestao/equipe"
           routerLinkActive="active" ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{exact:true}"
-          ><app-icone nome="equipe" />Equipe e acessos</a
+          ><app-icone nome="equipe" />Equipe</a
+        >
+        <a routerLink="/gestao/acessos" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="filtros" />Acessos</a
         >
         <a routerLink="/gestao/equipe/convites" routerLinkActive="active" ariaCurrentWhenActive="page"
           ><app-icone nome="conta" />Convites</a
@@ -92,7 +103,7 @@
       ><small>Uma boa experiência começa nos detalhes.</small>
     </div>
   </aside>
-  <div class="workspace-body">
+  <div class="workspace-body" [inert]="menuAberto()">
     <header class="workspace-header">
       <button
         class="open-menu"
@@ -101,6 +112,7 @@
         variant="ghost"
         size="icon"
         aria-label="Abrir menu de gestão"
+        aria-controls="menu-gestao"
         [attr.aria-expanded]="menuAberto()"
         (click)="alternarMenu()"
       >
@@ -140,7 +152,7 @@
         </button>
       </div>
     </header>
-    <main id="conteudo" class="workspace-main" tabindex="-1">
+    <main id="conteudo" class="workspace-main" tabindex="-1" (focus)="painel.scrollTo(0, 0)">
       <div class="page-heading">
         <div>
           <h1 id="gestao-titulo" tabindex="-1">{{ titulo() }}</h1>
@@ -149,29 +161,31 @@
           <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
         }
       </div>
-      @if (contexto.erro()) {
-        <p class="context-error" role="alert">
-          {{ contexto.erro() }}
-          <button
-            hlmBtn
-            variant="ghost"
-            (click)="contexto.carregar()"
-            [disabled]="contexto.carregando()"
-          >
-            Tentar novamente
-          </button>
-        </p>
-      }
-      @if (autorizado()) {
-        <router-outlet />
-      } @else {
-        <section class="empty-access" role="status">
-          <app-icone nome="conta" />
-          <h2>Seu acesso foi atualizado</h2>
-          <p>Escolha uma área disponível no menu ou entre novamente.</p>
-          <a hlmBtn routerLink="/conta">Ver minha conta</a>
-        </section>
-      }
+      <div #painel class="workspace-content" tabindex="0" role="region" aria-label="Conteúdo da página">
+        @if (contexto.erro()) {
+          <p class="context-error" role="alert">
+            {{ contexto.erro() }}
+            <button
+              hlmBtn
+              variant="ghost"
+              (click)="contexto.carregar()"
+              [disabled]="contexto.carregando()"
+            >
+              Tentar novamente
+            </button>
+          </p>
+        }
+        @if (autorizado()) {
+          <router-outlet />
+        } @else {
+          <section class="empty-access" role="status">
+            <app-icone nome="conta" />
+            <h2>Seu acesso foi atualizado</h2>
+            <p>Escolha uma área disponível no menu ou entre novamente.</p>
+            <a hlmBtn routerLink="/conta">Ver minha conta</a>
+          </section>
+        }
+      </div>
     </main>
   </div>
 </div>

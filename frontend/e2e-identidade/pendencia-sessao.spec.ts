@@ -83,7 +83,7 @@ test('S01-UI07: logout e retry sem reautenticação não descartam intenção in
 test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', async ({ page }) => {
   await page.goto('/gestao/entrar');
   await entrar(page);
-  await navegarGestao(page, '/gestao/equipe');
+  await navegarGestao(page, '/gestao/acessos');
   await confirmar(page);
   let liberar!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -93,26 +93,28 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', 
   const gravada = new Promise<void>((resolve) => {
     gravou = resolve;
   });
-  await page.route(
-    '**/api/v1/configuracoes/acessos',
-    async (route) => {
-      if (route.request().method() !== 'PUT') {
-        await route.continue();
-        return;
-      }
-      const response = await route.fetch();
-      expect(response.status()).toBe(200);
-      gravou();
-      await gate;
-      await route.fulfill({ response });
-    },
-    { times: 1 },
-  );
+  await page.route('**/api/v1/configuracoes/acessos/matriz', async (route) => {
+    if (route.request().method() !== 'PUT') {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    expect(response.status()).toBe(200);
+    gravou();
+    await gate;
+    await route.fulfill({ response });
+  });
   const recebida = page.waitForResponse(
-    (r) => r.url().endsWith('/api/v1/configuracoes/acessos') && r.request().method() === 'PUT',
+    (r) =>
+      r.url().endsWith('/api/v1/configuracoes/acessos/matriz') && r.request().method() === 'PUT',
   );
-  await page.getByRole('button', { name: 'Matriz de permissões', exact: true }).click();
-  await page.getByRole('button', { name: 'Salvar permissões' }).click();
+  const celula = page.getByRole('button', { name: 'Cozinha · Cozinha', exact: true });
+  await celula.click();
+  const iniciar = page.getByRole('checkbox', { name: 'Iniciar preparo', exact: true });
+  const original = await iniciar.isChecked();
+  await iniciar.setChecked(!original);
+  await page.getByRole('button', { name: 'Concluir seleção' }).click();
+  await page.getByRole('button', { name: 'Salvar acessos' }).click();
   await gravada;
   try {
     await confirmarNavegacaoBloqueada(page, '/gestao/unidades');
@@ -120,20 +122,21 @@ test('S01-UI08: gravação de acessos bloqueia navegação até resposta real', 
     liberar();
   }
   const response = await recebida;
+  await page.unroute('**/api/v1/configuracoes/acessos/matriz');
   expect(response.status()).toBe(200);
   await response.finished();
-  // A massa persistente gera milhares de controles de vínculos. O trace mostrou
-  // resposta entregue antes da reconciliação visual; esperar o estado de fim
-  // da operação, sem retry da escrita ou pausa fixa.
-  await expect(page.getByRole('region', { name: 'Configurações de acessos' })).toHaveAttribute(
-    'aria-busy',
-    'false',
-    { timeout: 15000 },
-  );
+  await expect(
+    page.getByRole('region', { name: 'Matriz de acessos', exact: true }),
+  ).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
+  await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
+  await celula.click();
+  await iniciar.setChecked(original);
+  await page.getByRole('button', { name: 'Concluir seleção' }).click();
+  await page.getByRole('button', { name: 'Salvar acessos' }).click();
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
   await navegarGestao(page, '/gestao/unidades');
   await expect(
-    page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
+    page.getByRole('heading', { name: 'Unidades e horários', exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
 });

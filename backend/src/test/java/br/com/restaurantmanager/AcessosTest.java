@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
+import br.com.restaurantmanager.identidade.dtos.MatrizAcessos;
 import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.models.Acao;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
@@ -15,6 +16,7 @@ import br.com.restaurantmanager.unidades.services.ConfiguracaoUnidadeService;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -415,6 +417,115 @@ class AcessosTest {
         assertThat(alterar(token,"/api/v1/configuracoes/acessos",Map.of("versao",version+1,"perfil","ADMINISTRADOR","acoes",List.of())).getResponse().getStatus()).isEqualTo(400);
         assertThat(alterar(token,"/api/v1/configuracoes/acessos",Map.of("versao",version+1,"perfil","COZINHA","acoes",List.of("catalogo.consultar","pedido.consultar","cozinha.iniciar","cozinha.concluir"))).getResponse().getStatus()).isEqualTo(200);
     }
+    private static final String MATRIZ = "/api/v1/configuracoes/acessos";
+    private static final String MATRIZ_COMPLETA = MATRIZ + "/matriz";
+
+    private MatrizAcessos consultarMatriz() throws Exception {
+        var resposta = consultar(token, MATRIZ).getResponse();
+        assertThat(resposta.getStatus()).isEqualTo(200);
+        return mapper.readValue(resposta.getContentAsString(), MatrizAcessos.class);
+    }
+
+    @Test
+    void matrizCompletaAplicaDependenciasAuditaSoMudancasERevogaNaSessaoAtual() throws Exception {
+        var original = consultarMatriz();
+        var perfis = new LinkedHashMap<>(original.perfis());
+        perfis.put("GERENTE", List.of());
+        perfis.put("COZINHA", List.of("cozinha.concluir"));
+        var pedido = Map.of("versao", original.versao(), "perfis", perfis);
+        String cozinheiro = login(criar("COZINHA"));
+
+        assertThat(alterar(token, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(403);
+        reautenticar(cozinheiro);
+        assertThat(alterar(cozinheiro, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(403);
+        reautenticar(token);
+        var resposta = alterar(token, MATRIZ_COMPLETA, pedido).getResponse();
+        assertThat(resposta.getStatus()).isEqualTo(200);
+        var salva = mapper.readValue(resposta.getContentAsString(), MatrizAcessos.class);
+        assertThat(salva.versao()).isEqualTo(original.versao() + 1);
+        perfis.put("COZINHA", List.of("cozinha.concluir", "pedido.consultar"));
+        assertThat(salva.perfis()).isEqualTo(perfis);
+        assertThat(consultarMatriz()).isEqualTo(salva);
+        var efetivo = consultar(cozinheiro, "/api/v1/acessos/efetivos").getResponse();
+        assertThat(mapper.readTree(efetivo.getContentAsString()).get("acoes"))
+                .isEqualTo(mapper.valueToTree(perfis.get("COZINHA")));
+
+        var repetida = alterar(token, MATRIZ_COMPLETA, Map.of("versao", salva.versao(), "perfis", perfis));
+        assertThat(repetida.getResponse().getStatus()).isEqualTo(200);
+        assertThat(consultarMatriz()).isEqualTo(salva);
+        try (var c = banco();
+                var s = c.prepareStatement("select evento, antes, depois from " + schema
+                        + ".auditoria_acesso where ator_id=? order by evento")) {
+            s.setObject(1, admin);
+            try (var linhas = s.executeQuery()) {
+                for (String perfil : List.of("COZINHA", "GERENTE")) {
+                    assertThat(linhas.next()).isTrue();
+                    assertThat(linhas.getString("evento")).isEqualTo("MATRIZ_" + perfil);
+                    assertThat(linhas.getString("antes")).isEqualTo(original.perfis().get(perfil).toString());
+                    assertThat(linhas.getString("depois")).isEqualTo(perfis.get(perfil).toString());
+                }
+                assertThat(linhas.next()).isFalse();
+            }
+        }
+    }
+
+    @Test
+    void matrizCompletaRecusaEntradasInvalidasSemGravacaoParcial() throws Exception {
+        reautenticar(token);
+        var original = consultarMatriz();
+        var perfis = new LinkedHashMap<>(original.perfis());
+        perfis.put("GERENTE", List.of());
+        perfis.remove("EXPEDICAO");
+        var pedido = Map.of("versao", original.versao(), "perfis", perfis);
+        assertThat(alterar(token, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(400);
+        perfis.put("ADMINISTRADOR", List.of());
+        assertThat(alterar(token, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(400);
+        perfis.remove("ADMINISTRADOR");
+        perfis.put("EXPEDICAO", List.of("equipe.editar"));
+        assertThat(alterar(token, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(400);
+        perfis.put("EXPEDICAO", null);
+        assertThat(alterar(token, MATRIZ_COMPLETA, pedido).getResponse().getStatus()).isEqualTo(400);
+        perfis.put("EXPEDICAO", List.of());
+        assertThat(alterar(token, MATRIZ_COMPLETA, Map.of("perfis", perfis)).getResponse().getStatus())
+                .isEqualTo(400);
+        assertThat(consultarMatriz()).isEqualTo(original);
+        try (var c = banco(); var s = c.createStatement();
+                var r = s.executeQuery("select count(*) from " + schema + ".auditoria_acesso")) {
+            r.next();
+            assertThat(r.getInt(1)).isZero();
+        }
+    }
+
+    @Test
+    void matrizCompletaEEdicaoDeUmaColunaCompartilhamConflitoDeVersao() throws Exception {
+        reautenticar(token);
+        var original = consultarMatriz();
+        var varios = new LinkedHashMap<>(original.perfis());
+        varios.put("COZINHA", List.of());
+        varios.put("EXPEDICAO", List.of());
+        var um = new LinkedHashMap<>(original.perfis());
+        um.put("CAIXA", List.of());
+        var inicio = new CyclicBarrier(2);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            var completa = pool.submit(() -> {
+                inicio.await(10, TimeUnit.SECONDS);
+                return alterar(token, MATRIZ_COMPLETA, Map.of("versao", original.versao(), "perfis", varios))
+                        .getResponse().getStatus();
+            });
+            var coluna = pool.submit(() -> {
+                inicio.await(10, TimeUnit.SECONDS);
+                return alterar(token, MATRIZ, Map.of("versao", original.versao(), "perfil", "CAIXA", "acoes", List.of()))
+                        .getResponse().getStatus();
+            });
+            int statusCompleta = completa.get(30, TimeUnit.SECONDS);
+            assertThat(List.of(statusCompleta, coluna.get(30, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(200, 409);
+            var salva = consultarMatriz();
+            assertThat(salva.versao()).isEqualTo(original.versao() + 1);
+            assertThat(salva.perfis()).isEqualTo(statusCompleta == 200 ? varios : um);
+        }
+    }
+
     @Test void revogacaoDaMatrizAfetaAutorizacaoCentralComJwtValido() throws Exception {
         UUID id=criar("COZINHA");String access=login(id);reautenticar(token);
         assertThat(alterar(token,"/api/v1/equipe/"+id,vinculo("COZINHA",true,0,Set.of(U1))).getResponse().getStatus()).isEqualTo(200);

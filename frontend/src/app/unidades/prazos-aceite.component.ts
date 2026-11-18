@@ -9,6 +9,7 @@ import {
   untracked,
 } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
+import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 import { SessaoService } from '../identidade/sessao.service';
 
 interface PrazosAceite {
@@ -21,12 +22,13 @@ interface PrazosAceite {
 @Component({
   selector: 'app-prazos-aceite',
   templateUrl: './prazos-aceite.component.html',
-  styleUrls: ['../operacao.css', './prazos-aceite.component.css'],
+  styleUrls: ['../ui/administracao.css', './prazos-aceite.component.css'],
 })
 export class PrazosAceiteComponent {
   readonly unidadeId = input.required<string>();
   readonly salvo = output<void>();
   readonly bloqueio = output<boolean>();
+  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
   private readonly sessao = inject(SessaoService);
   readonly atual = signal<PrazosAceite | null>(null);
   readonly empresa = signal(false);
@@ -50,7 +52,20 @@ export class PrazosAceiteComponent {
   }
 
   trocarEscopo(select: HTMLSelectElement): void {
+    if (this.ocupado() || this.formulario?.confirmarDescarte('prazos') === false) {
+      select.value = this.empresa() ? 'empresa' : 'unidade';
+      return;
+    }
     this.empresa.set(select.value === 'empresa');
+    this.atual.set(null);
+    this.aviso.set('');
+    void this.carregar();
+  }
+
+  reconsultar(): void {
+    if (this.ocupado() || this.formulario?.confirmarDescarte('prazos') === false) return;
+    this.atual.set(null);
+    this.aviso.set('');
     void this.carregar();
   }
 

@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -99,9 +100,43 @@ public class AcessosService {
         if (!PERFIS.contains(perfil)) {
             throw invalido("Perfil não configurável.");
         }
+        validarVersao(politica, versao);
+        salvarPermissoes(ator, perfil, repository.permissoes(perfil), incluirDependencias(acoes));
+        repository.incrementarPolitica(politica);
+        return matrizAtual(politica);
+    }
+
+    @Transactional
+    public MatrizAcessos atualizarMatrizCompleta(
+            IdentidadeAtual ator, long versao, Map<String, Set<String>> perfis) {
+        var politica = repository.politica(true);
+        administrador(ator, true);
+        if (!perfis.keySet().equals(Set.copyOf(PERFIS))) {
+            throw invalido("Informe as ações dos cinco perfis operacionais.");
+        }
+        validarVersao(politica, versao);
+        boolean alterada = false;
+        for (String perfil : PERFIS) {
+            var novas = incluirDependencias(perfis.get(perfil));
+            var antes = repository.permissoes(perfil);
+            if (!novas.equals(Set.copyOf(antes))) {
+                salvarPermissoes(ator, perfil, antes, novas);
+                alterada = true;
+            }
+        }
+        if (alterada) {
+            repository.incrementarPolitica(politica);
+        }
+        return matrizAtual(politica);
+    }
+
+    private static void validarVersao(PoliticaAcesso politica, long versao) {
         if (politica.getVersao() != versao) {
             throw conflito("A matriz foi alterada. Recarregue antes de salvar.");
         }
+    }
+
+    private static Set<String> incluirDependencias(Set<String> acoes) {
         var novas = new TreeSet<String>();
         for (String codigo : acoes) {
             var acao = Acao.obter(codigo);
@@ -110,12 +145,14 @@ public class AcessosService {
                 novas.add(acao.dependencia());
             }
         }
-        var antes = repository.permissoes(perfil);
+        return novas;
+    }
+
+    private void salvarPermissoes(
+            IdentidadeAtual ator, String perfil, List<String> antes, Set<String> novas) {
         repository.substituirPermissoes(perfil, novas);
-        repository.incrementarPolitica(politica);
         repository.auditar(
                 ator.usuarioId(), null, "MATRIZ_" + perfil, antes.toString(), novas.toString());
-        return matrizAtual(politica);
     }
 
     @Transactional

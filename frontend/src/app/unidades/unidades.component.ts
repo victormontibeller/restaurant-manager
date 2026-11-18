@@ -19,9 +19,9 @@ type EditorUnidade = { tipo: 'novo' } | { tipo: 'dados' | 'horarios'; id: string
   selector: 'app-unidades',
   imports: [FuncionamentoUnidadeComponent],
   template: `
-    <section aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
-      <div class="gestao-toolbar">
-        <h2 id="unidades-titulo">Configurações de unidades</h2>
+    <section class="admin-pagina" aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
+      <header class="admin-cabecalho">
+        <h2 id="unidades-titulo">Unidades cadastradas</h2>
         <div class="gestao-acoes">
           <button #nova type="button" (click)="abrir({ tipo: 'novo' }, nova)"
             [disabled]="ocupado() || !!pendente()" [attr.aria-expanded]="criando()">
@@ -31,9 +31,12 @@ type EditorUnidade = { tipo: 'novo' } | { tipo: 'dados' | 'horarios'; id: string
             Recarregar unidades
           </button>
         </div>
-      </div>
-      <p>Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões de entrega em Regiões e checkout.</p>
-      <form class="gestao-toolbar confirmacao" (submit)="confirmar($event, senha)">
+      </header>
+      <form class="admin-painel admin-filtros" (submit)="confirmar($event, senha)">
+        <div class="contexto-identidade">
+          <h3>Identidade para alterações</h3>
+          <p class="admin-ajuda">A confirmação permite alterar o cadastro, os horários e os canais por cinco minutos.</p>
+        </div>
         <div>
           <label for="unidade-senha">Confirme sua senha</label>
           <input
@@ -88,7 +91,7 @@ type EditorUnidade = { tipo: 'novo' } | { tipo: 'dados' | 'horarios'; id: string
           </form>
         </section>
       }
-      <div class="gestao-lista">
+      <div class="gestao-lista" aria-label="Cadastro de unidades">
         @for (u of unidades(); track u.id) {
           <article>
             <header class="gestao-linha">
@@ -150,22 +153,17 @@ type EditorUnidade = { tipo: 'novo' } | { tipo: 'dados' | 'horarios'; id: string
             }
           </article>
         } @empty {
-          <p class="vazio">Nenhuma unidade nesta página.</p>
+          <p class="admin-vazio">{{ ocupado() ? 'Consultando unidades…' : 'Nenhuma unidade nesta página.' }}</p>
         }
       </div>
-      <nav class="gestao-acoes" aria-label="Páginas de unidades">
+      <nav class="admin-paginacao" aria-label="Páginas de unidades">
         <button data-variant="outline" (click)="mudarPagina(-1)" [disabled]="ocupado() || pagina() === 0">Página anterior de unidades</button>
         <span>Página {{ pagina() + 1 }}</span>
         <button data-variant="outline" (click)="mudarPagina(1)" [disabled]="ocupado() || unidades().length < 50">Próxima página de unidades</button>
       </nav>
     </section>
   `,
-  styles: `
-    :host { display: block; }
-    .confirmacao { justify-content: start; align-items: end; }
-    .gestao-linha h3 { margin: 0; }
-    .gestao-lista + nav { margin-top: var(--gestao-espaco-3, 12px); }
-  `,
+  styleUrls: ['../ui/administracao.css', './unidades.component.css'],
 })
 export class UnidadesComponent implements OnInit {
   private readonly sessao = inject(SessaoService);

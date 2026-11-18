@@ -1,0 +1,104 @@
+<section class="admin-pagina" aria-label="Atualizações cadastrais">
+  <section class="admin-painel" aria-labelledby="acompanhar-unidade">
+    <div class="admin-cabecalho">
+      <h2 id="acompanhar-unidade">Acompanhamento cadastral</h2>
+      <div class="admin-filtros">
+        <div>
+          <label for="unidade-eventos">Unidade acompanhada</label>
+          <select
+            id="unidade-eventos"
+            #seletor
+            [value]="selecionada()"
+            (change)="selecionar(seletor.value)"
+          >
+            <option value="">Selecione uma unidade</option>
+            @for (unidade of unidades(); track unidade.id) {
+              <option [value]="unidade.id">{{ unidade.nome }}</option>
+            }
+          </select>
+        </div>
+        <button
+          type="button"
+          data-variant="outline"
+          (click)="carregar()"
+          [disabled]="ocupado() || exportando()"
+        >
+          Recarregar unidades permitidas
+        </button>
+      </div>
+    </div>
+    <p role="status">{{ estado() }}</p>
+    @if (erro()) {
+      <p #alerta role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
+    }
+    @if (atual(); as unidade) {
+      <dl class="admin-resumo" data-testid="unidade-atual">
+        <div>
+          <dt>Unidade</dt>
+          <dd>{{ unidade.nome }}</dd>
+        </div>
+        <div>
+          <dt>Fuso horário</dt>
+          <dd>{{ unidade.fuso }}</dd>
+        </div>
+        <div>
+          <dt>Versão</dt>
+          <dd>{{ unidade.versao }}</dd>
+        </div>
+        <div>
+          <dt>Última consulta confirmada</dt>
+          <dd>{{ confirmado() }}</dd>
+        </div>
+      </dl>
+    }
+  </section>
+  @if (atual()) {
+    <section class="admin-painel" aria-labelledby="historico-cadastral">
+      <div class="admin-cabecalho">
+        <div>
+          <h2 id="historico-cadastral">Histórico de alterações</h2>
+          <p class="admin-ajuda">
+            Até 50 alterações recentes. A consulta é atualizada a cada cinco segundos.
+          </p>
+        </div>
+        <button
+          type="button"
+          data-variant="outline"
+          (click)="exportar()"
+          [disabled]="ocupado() || exportando()"
+        >
+          {{ exportando() ? 'Consultando para exportar…' : 'Exportar cadastro da unidade (JSON)' }}
+        </button>
+      </div>
+      <p class="admin-ajuda">
+        O arquivo reúne identificação, nome, fuso e versão do cadastro consultado no servidor.
+      </p>
+      @if (eventos().length === 0) {
+        <p class="admin-vazio">Nenhuma alteração registrada desde o início deste acompanhamento.</p>
+      } @else {
+        <ol class="gestao-lista" aria-label="Alterações cadastrais recebidas">
+          @for (evento of eventos(); track evento.versao) {
+            <li class="gestao-linha">
+              <div>
+                <strong
+                  >{{ evento.tipo === 'UNIDADE_CRIADA' ? 'Unidade criada' : 'Cadastro alterado' }}</strong
+                ><br /><span
+                  >{{ evento.nome }} · {{ evento.fuso }} · versão {{ evento.versao }}</span
+                >
+              </div>
+              <span
+                class="gestao-estado"
+                [attr.data-estado]="evento.ativa ? 'ativo' : 'inativo'"
+                >{{ evento.ativa ? 'Ativa' : 'Inativa' }}</span
+              >
+              <time
+                [attr.datetime]="evento.ocorridoEm"
+                >{{ evento.ocorridoEm | date: 'dd/MM/yyyy HH:mm:ss' }}</time
+              >
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+</section>

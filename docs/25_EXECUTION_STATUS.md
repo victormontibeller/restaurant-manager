@@ -1,5 +1,17 @@
 # Checkpoint de execução
 
+## Navegação fixa e administração da Gestão — 2026-11-18
+
+O candidato local deriva de `223feac` na branch `codex/sprint-09-catalogo-ofertas`. A Gestão e a Cozinha ganharam rolagem independente do menu e do conteúdo. A barra superior, o título e a ação principal continuam visíveis durante a rolagem. A administração usa o padrão compacto nos dois temas. **Equipe** reúne os vínculos dos funcionários e **Acessos** abre a matriz de permissões por módulo e perfil.
+
+O novo salvamento da matriz usa a mesma versão da política e grava os perfis alterados numa única transação com auditoria. As permissões existentes foram reaproveitadas sem migração. Os contratos e a interface estão descritos em [Acessos](11_ACCESS_CONTROL.md) e nas [diretrizes da Gestão](09_UI_GUIDELINES.md#densidade-da-gestão).
+
+Build com PWA `f31515c71366d06e41fd`. O ambiente isolado do Mac serviu o JAR `ec5d787883a78cbb7a745fdf16913a9ae7a307a90a714b27698bdbadc2a959f1` por HTTPS, com PostgreSQL de teste. Passaram formatação, tipos, lógica do frontend, o probe Chromium de formulários com API simulada e 27 testes de acesso em PostgreSQL.
+
+Passaram 23 combinações distintas de jornada e navegador no mesmo JAR. Elas cobrem matriz e reautenticação, último administrador, cadastro e horários de unidades, regiões, conexão OAuth fictícia, convites, prazos, eventos e exportação. A rolagem, o salto para o conteúdo e o aviso offline passaram no Chromium desktop, tablet e celular, Firefox e WebKit. A reexecução confirmou a correção do seletor da matriz no celular e usou a massa completa de eventos para validar revogação. A checagem visual com dados simulados cobriu as oito telas nos dois temas em 360, 768, 1280 e 640 pixels CSS. A última largura reproduz o espaço de 1280 pixels a 200% de zoom.
+
+O provedor OAuth dessa rodada é fictício. A homologação integrada no Hermes continua adiada por decisão do proprietário. O próximo marco é executar a matriz completa por perfil e unidade no candidato homologado, com evidências de tela, API e dispositivos físicos.
+
 ## Sprints 06 a 09 na demo local — 2026-11-18
 
 Os quatro incrementos foram publicados em sequência na [demo](https://demo.localhost:8095). O menu Dia a dia inclui a [Cozinha](https://demo.localhost:8095/cozinha), com a mesma navegação e os mesmos temas de Pedidos. A [auditoria de dados por tela e perfil](evidencias/cobertura-pedidos-comandas-2026-11-18.md) também estendeu os detalhes de pedidos, comandas e cobranças.

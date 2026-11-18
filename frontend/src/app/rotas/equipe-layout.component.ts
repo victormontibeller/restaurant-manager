@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import {
   Component,
   DestroyRef,
@@ -12,6 +13,8 @@ import {
 import {
   ActivatedRoute,
   NavigationEnd,
+  NavigationSkipped,
+  NavigationSkippedCode,
   Router,
   RouterLink,
   RouterLinkActive,
@@ -30,6 +33,7 @@ import { TemaService } from '../ui/tema.service';
 @Component({
   selector: 'app-equipe-layout',
   imports: [
+    CdkTrapFocus,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -51,6 +55,7 @@ export class EquipeLayoutComponent {
   readonly tema = inject(TemaService).atual;
   readonly menuAberto = signal(false);
   @ViewChild('abrirMenu') abrirMenu?: ElementRef<HTMLButtonElement>;
+  @ViewChild('painel') painel?: ElementRef<HTMLElement>;
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly pagina = signal<Record<string, unknown>>({});
   readonly titulo = computed(() =>
@@ -75,6 +80,12 @@ export class EquipeLayoutComponent {
       if (evento instanceof NavigationEnd) {
         this.atualizarPagina();
         this.menuAberto.set(false);
+        this.painel?.nativeElement.scrollTo(0, 0);
+      } else if (
+        evento instanceof NavigationSkipped &&
+        evento.code === NavigationSkippedCode.IgnoredSameUrlNavigation
+      ) {
+        this.fecharMenu();
       }
     });
     this.contexto.ativar();
@@ -90,6 +101,11 @@ export class EquipeLayoutComponent {
     });
   }
 
+  @HostListener('window:resize') ajustarMenu(): void {
+    if (this.menuAberto() && !window.matchMedia('(max-width: 800px)').matches)
+      this.menuAberto.set(false);
+  }
+
   alternarMenu(): void {
     if (this.menuAberto()) {
       this.fecharMenu();
@@ -102,7 +118,7 @@ export class EquipeLayoutComponent {
   @HostListener('document:keydown.escape') fecharMenu(): void {
     if (!this.menuAberto()) return;
     this.menuAberto.set(false);
-    this.abrirMenu?.nativeElement.focus();
+    setTimeout(() => this.abrirMenu?.nativeElement.focus());
   }
 
   selecionarUnidade(id: string): void {

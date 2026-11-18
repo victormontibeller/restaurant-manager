@@ -1,360 +1,229 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import {
+  Component,
+  ChangeDetectorRef,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
-import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
-import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
+import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { restaurarFoco } from '../ui/foco-gestao';
+import { PERFIS_OPERACIONAIS } from './perfis';
 
 interface Acao {
   codigo: string;
   descricao: string;
-  escopo: string;
+  escopo: 'EMPRESA' | 'UNIDADE';
   dependencia: string | null;
 }
+
+type Permissoes = Record<string, string[]>;
 
 interface Matriz {
   versao: number;
   acoes: Acao[];
-  perfis: Record<string, string[]>;
+  perfis: Permissoes;
 }
 
-interface Unidade {
-  id: string;
-  nome: string;
-}
+const AREAS = [
+  {
+    nome: 'Dia a dia',
+    modulos: [
+      { nome: 'Pedidos', prefixos: ['pedido'] },
+      { nome: 'Mesas e comandas', prefixos: ['mesa', 'comanda', 'pedido.servir'] },
+      { nome: 'Cozinha', prefixos: ['cozinha'] },
+      {
+        nome: 'Expedição',
+        prefixos: ['entrega', 'pedido.retirar', 'pedido.despachar', 'pedido.entregar'],
+      },
+      { nome: 'Cardápio', prefixos: ['catalogo'] },
+    ],
+  },
+  {
+    nome: 'Financeiro',
+    modulos: [
+      { nome: 'Recebimentos e devoluções', prefixos: ['recebimento', 'financeiro', 'devolucao'] },
+      { nome: 'Pendências e notificações', prefixos: ['pagamento'] },
+      { nome: 'Vendas e movimentos', prefixos: ['relatorio'] },
+    ],
+  },
+  {
+    nome: 'Administração',
+    modulos: [
+      { nome: 'Atualizações', prefixos: ['unidade'] },
+      { nome: 'Auditoria', prefixos: ['auditoria'] },
+      { nome: 'Demais ações', prefixos: [] },
+    ],
+  },
+];
 
-interface Funcionario {
-  nome: string | null;
-  emailVerificado: boolean;
-  criadoEm: string;
-  id: string;
-  email: string;
-  perfil: string;
-  ativo: boolean;
-  versao: number;
-  unidades: string[];
+const MODULOS = AREAS.flatMap((area) => area.modulos);
+
+function normalizarBusca(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim();
 }
 
 @Component({
   selector: 'app-acessos',
-  imports: [RouterLink, DatePipe],
-  template: `
-    <section aria-labelledby="acessos-titulo" [attr.aria-busy]="ocupado()">
-      <div class="gestao-toolbar">
-        <h2 id="acessos-titulo">Configurações de acessos</h2>
-        <div class="gestao-acoes">
-          <a class="spartan-button" routerLink="/gestao/equipe/convites">Gerenciar convites</a>
-          <button #matrizBotao type="button" data-variant="outline" (click)="abrirMatriz(matrizBotao)"
-            [attr.aria-expanded]="matrizAberta()" [disabled]="ocupado() || !matriz()">Matriz de permissões</button>
-          <button type="button" data-variant="ghost" (click)="carregar()" [disabled]="ocupado()">Recarregar acessos</button>
-        </div>
-      </div>
-      <form class="gestao-toolbar confirmacao" (submit)="confirmar($event, senha)">
-        <div>
-          <label for="confirmar-senha">Confirme sua senha</label>
-          <input #senha id="confirmar-senha" type="password" autocomplete="current-password"
-            required maxlength="72" [attr.aria-describedby]="senhaInvalida() ? 'erro-acessos' : null"
-            [attr.aria-invalid]="senhaInvalida() ? true : null" [disabled]="ocupado()">
-        </div>
-        <button data-variant="outline" [disabled]="ocupado()">Confirmar identidade</button>
-      </form>
-      @if (erro()) {
-        <p #alerta id="erro-acessos" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
-      }
-      @if (matriz(); as m) {
-        @if (matrizAberta()) {
-          <section class="gestao-editor" aria-labelledby="matriz-titulo">
-            <h3 id="matriz-titulo" tabindex="-1" data-gestao-foco>Matriz de permissões</h3>
-            <p>Administrador é protegido e cobre todas as unidades. Alterações valem na próxima operação, sem novo login.</p>
-            <p>As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.</p>
-            <div class="gestao-campos" data-sem-rascunho>
-              <div>
-                <label for="perfil-acesso">Perfil operacional</label>
-                <select #perfilSelect id="perfil-acesso" [value]="perfil()"
-                  (change)="selecionarPerfil(perfilSelect)" [disabled]="ocupado()">
-                  @for (p of perfis; track p) {
-                    <option [value]="p" [selected]="perfil() === p">{{ p }}</option>
-                  }
-                </select>
-              </div>
-              <div>
-                <label for="buscar-acao">Buscar ação</label>
-                <input id="buscar-acao" type="search" [value]="busca()" (input)="busca.set($any($event.target).value)">
-              </div>
-            </div>
-            <fieldset data-rascunho="matriz" [disabled]="ocupado()">
-              <legend>Permissões de {{ perfil() }} · versão {{ m.versao }}</legend>
-              @for (a of acoesFiltradas(); track a.codigo) {
-                <div class="acao">
-                  <label class="gestao-opcao"><input type="checkbox" [checked]="escolhidas().has(a.codigo)"
-                    [disabled]="dependenciaObrigatoria(a.codigo)" (change)="marcar(a, $any($event.target).checked)"
-                    [attr.aria-describedby]="'escopo-' + a.codigo">{{ a.descricao }}</label>
-                  <small [id]="'escopo-' + a.codigo">{{ a.escopo === 'EMPRESA' ? 'Afeta toda a empresa' : 'Restrita às unidades atribuídas' }} @if (a.dependencia) {· Inclui consulta mínima: {{ a.dependencia }} }</small>
-                </div>
-              }
-            </fieldset>
-            <div class="gestao-acoes">
-              <button type="button" (click)="salvarMatriz()" [disabled]="ocupado()">Salvar permissões</button>
-              <button type="button" data-variant="ghost" (click)="cancelar(matrizBotao)" [disabled]="ocupado()">Fechar matriz</button>
-            </div>
-          </section>
-        }
-        <div class="gestao-lista" aria-label="Funcionários existentes">
-          @for (f of equipe(); track f.id) {
-            <article>
-              <header class="gestao-linha">
-                <div>
-                  <h3>{{ f.nome || f.email }}</h3>
-                  @if (f.nome) { <p>{{ f.email }}</p> }
-                  <span>{{ f.perfil }} · {{ f.perfil === 'ADMINISTRADOR' ? 'Todas as unidades' : f.unidades.length + (f.unidades.length === 1 ? ' unidade' : ' unidades') }}</span>
-                </div>
-                <span class="gestao-estado" [attr.data-estado]="f.ativo ? 'ativo' : 'inativo'">{{ f.ativo ? 'Ativo' : 'Inativo' }}</span>
-                <button #editar type="button" data-variant="outline"
-                  (click)="abrirFuncionario(f, editar)" [disabled]="ocupado()"
-                  [attr.aria-expanded]="rascunhoFuncionario()?.id === f.id">Editar funcionário</button>
-              </header>
-              @if (rascunhoFuncionario(); as rascunho) {
-                @if (rascunho.id === f.id) {
-                  <section class="gestao-editor" [attr.aria-labelledby]="'editar-funcionario-' + f.id"
-                    [attr.data-rascunho]="'funcionario-' + f.id">
-                    <h4 [id]="'editar-funcionario-' + f.id" tabindex="-1" data-gestao-foco>Editar funcionário</h4>
-                    <p>{{ f.emailVerificado ? 'E-mail verificado' : 'Verificação de e-mail pendente' }} · Cadastro em {{ f.criadoEm | date: 'dd/MM/yyyy' }}</p>
-                    <div class="gestao-campos">
-                      <div>
-                        <label [for]="'perfil-' + f.id">Perfil do funcionário</label>
-                        <select [id]="'perfil-' + f.id" [value]="rascunho.perfil"
-                          (change)="mudarPerfil(rascunho, $any($event.target).value)" [disabled]="ocupado()">
-                          <option value="ADMINISTRADOR" [selected]="rascunho.perfil === 'ADMINISTRADOR'">ADMINISTRADOR</option>
-                          @for (p of perfis; track p) {
-                            <option [value]="p" [selected]="rascunho.perfil === p">{{ p }}</option>
-                          }
-                        </select>
-                      </div>
-                      <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.ativo"
-                        (change)="rascunho.ativo = $any($event.target).checked" [disabled]="ocupado()">Ativo</label>
-                    </div>
-                    @if (rascunho.perfil !== 'ADMINISTRADOR') {
-                      <p>Vínculos nesta edição: {{ rascunho.unidades.length }}. Alterações só valem após salvar o funcionário.</p>
-                      <button type="button" data-variant="outline" (click)="alternarUnidades(f.id)"
-                        [disabled]="ocupado()" [attr.aria-expanded]="funcionarioExpandido() === f.id"
-                        [attr.aria-controls]="'unidades-' + f.id">Editar unidades atribuídas</button>
-                      <div [id]="'unidades-' + f.id">
-                        @if (funcionarioExpandido() === f.id) {
-                          <fieldset [disabled]="ocupado()">
-                            <legend>Unidades atribuídas</legend>
-                            @for (u of unidades(); track u.id) {
-                              <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.unidades.includes(u.id)"
-                                (change)="vincular(rascunho, u.id, $any($event.target).checked)">{{ u.nome }}</label>
-                            }
-                            @for (id of unidadesInativas(f); track id) {
-                              <label class="gestao-opcao"><input type="checkbox" [checked]="rascunho.unidades.includes(id)"
-                                (change)="vincular(rascunho, id, $any($event.target).checked)">Vínculo em unidade inativa · {{ id }}</label>
-                            }
-                            @if (unidadesInativas(f).length) {
-                              <p>Unidades inativas não concedem acesso. Desmarque para remover o vínculo ao salvar; mantê-lo permite acesso quando a unidade for reativada.</p>
-                            }
-                          </fieldset>
-                        }
-                      </div>
-                    } @else {
-                      <p>Cobertura integral da empresa.</p>
-                    }
-                    <div class="gestao-acoes acoes-editor">
-                      <button type="button" (click)="salvarFuncionario(rascunho)" [disabled]="ocupado()">Salvar funcionário</button>
-                      <button type="button" data-variant="ghost" (click)="cancelar(matrizBotao)" [disabled]="ocupado()">Cancelar</button>
-                    </div>
-                  </section>
-                }
-              }
-            </article>
-          } @empty {
-            <p class="vazio">Nenhum funcionário nesta página.</p>
-          }
-        </div>
-        <nav class="gestao-acoes" aria-label="Páginas de funcionários">
-          <button data-variant="outline" (click)="paginaAnterior()" [disabled]="ocupado() || pagina() === 0">Página anterior</button>
-          <span>Página {{ pagina() + 1 }}</span>
-          <button data-variant="outline" (click)="proximaPagina()" [disabled]="ocupado() || equipe().length < 50">Próxima página</button>
-        </nav>
-      }
-    </section>
-  `,
-  styles: `
-    :host { display: block; }
-    .confirmacao { justify-content: start; align-items: end; }
-    .gestao-linha h3 { margin: 0; }
-    .gestao-lista + nav { margin-top: var(--gestao-espaco-3, 12px); }
-    .acoes-editor { margin-top: var(--gestao-espaco-2, 8px); }
-    .acao { border-bottom: 1px solid var(--rm-border); padding-bottom: var(--gestao-espaco-2, 8px); }
-    .acao:last-child { border-bottom: 0; }
-    .acao small { display: block; overflow-wrap: anywhere; }
-  `,
+  templateUrl: './acessos.component.html',
+  styleUrls: ['../ui/administracao.css', './acessos.component.css'],
 })
 export class AcessosComponent implements OnInit {
   private readonly sessao = inject(SessaoService);
-  private readonly formulario = inject(FormularioRotaDirective, { optional: true });
-  private readonly host = inject(ElementRef<HTMLElement>).nativeElement;
-  private origem: HTMLElement | null = null;
-  readonly matrizAberta = signal(false);
-  readonly rascunhoFuncionario = signal<Funcionario | null>(null);
-  readonly perfis = ['GERENTE', 'ATENDIMENTO', 'CAIXA', 'COZINHA', 'EXPEDICAO'];
+  private readonly detector = inject(ChangeDetectorRef);
+  private readonly navegacao = inject(NavegacaoProtegidaService);
+  private readonly chave = 'matriz-' + crypto.randomUUID();
+  private origem?: HTMLElement;
+
+  readonly perfis = PERFIS_OPERACIONAIS;
   readonly matriz = signal<Matriz | null>(null);
-  readonly equipe = signal<Funcionario[]>([]);
-  readonly vinculosOriginais = signal<Record<string, string[]>>({});
-  readonly unidades = signal<Unidade[]>([]);
-  readonly perfil = signal('GERENTE');
-  readonly escolhidas = signal(new Set<string>());
+  readonly rascunho = signal<Permissoes>({});
   readonly busca = signal('');
   readonly ocupado = signal(false);
   readonly erro = signal('');
-  readonly senhaInvalida = signal(false);
   readonly aviso = signal('');
-  readonly pagina = signal(0);
-  readonly funcionarioExpandido = signal<string | null>(null);
-  readonly bloqueio = output<boolean>();
-  readonly salvo = output<string>();
+  readonly senhaInvalida = signal(false);
+  readonly conflito = signal(false);
+  readonly celula = signal<{
+    modulo: string;
+    perfil: string;
+    nomePerfil: string;
+    acoes: Acao[];
+  } | null>(null);
+
+  readonly alterada = computed(() => {
+    const original = this.matriz()?.perfis;
+    const rascunho = this.rascunho();
+    return (
+      !!original &&
+      this.perfis.some(({ codigo }) => {
+        const antes = original[codigo];
+        const depois = rascunho[codigo];
+        return antes.length !== depois.length || depois.some((acao) => !antes.includes(acao));
+      })
+    );
+  });
+
+  readonly areas = computed(() => {
+    const busca = normalizarBusca(this.busca());
+    const porModulo = new Map<string, Acao[]>();
+    for (const acao of this.matriz()?.acoes ?? []) {
+      const prefixo = acao.codigo.split('.')[0];
+      const modulo =
+        MODULOS.find((m) => m.prefixos.includes(acao.codigo)) ??
+        MODULOS.find((m) => m.prefixos.includes(prefixo));
+      const nome = modulo?.nome ?? 'Demais ações';
+      if (!porModulo.has(nome)) porModulo.set(nome, []);
+      porModulo.get(nome)!.push(acao);
+    }
+    return AREAS.map((area) => ({
+      nome: area.nome,
+      modulos: area.modulos.flatMap(({ nome }) => {
+        const acoes = porModulo.get(nome);
+        if (!acoes) return [];
+        const termos = [area.nome, nome, ...acoes.flatMap((acao) => [acao.descricao, acao.codigo])];
+        return normalizarBusca(termos.join(' ')).includes(busca) ? [{ nome, acoes }] : [];
+      }),
+    })).filter((area) => area.modulos.length);
+  });
+
+  private readonly catalogo = computed(
+    () => new Map(this.matriz()?.acoes.map((acao) => [acao.codigo, acao])),
+  );
+
+  @ViewChild('editor', { static: true }) editor!: ElementRef<HTMLDialogElement>;
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
-  @ViewChild('matrizBotao') matrizBotao?: ElementRef<HTMLElement>;
+  @ViewChild('campoBusca') campoBusca?: ElementRef<HTMLInputElement>;
+
+  constructor() {
+    this.navegacao.registrarRascunho(this.chave, this.alterada);
+    inject(DestroyRef).onDestroy(() => {
+      this.navegacao.retirarRascunho(this.chave);
+      this.navegacao.liberar(this.chave);
+    });
+  }
 
   ngOnInit(): void {
     void this.carregar();
   }
 
-  abrirMatriz(origem: HTMLElement): void {
-    if (this.ocupado() || !this.matriz()) return;
-    if (this.matrizAberta()) {
-      this.cancelar(origem);
-      return;
-    }
-    if (!this.confirmarDescarte()) return;
-    this.limparFeedback();
-    this.origem = origem;
-    this.fecharFuncionario();
-    this.matrizAberta.set(true);
-    focarEditor(this.host);
-  }
-
-  abrirFuncionario(funcionario: Funcionario, origem: HTMLElement): void {
+  async carregar(): Promise<void> {
     if (this.ocupado()) return;
-    if (this.rascunhoFuncionario()?.id === funcionario.id) {
-      this.cancelar(origem);
+    if (this.alterada() && !window.confirm('Descartar as alterações e recarregar a matriz?'))
       return;
-    }
-    if (!this.confirmarDescarte()) return;
-    this.limparFeedback();
-    this.origem = origem;
-    this.matrizAberta.set(false);
-    this.selecionar(this.perfil());
-    this.funcionarioExpandido.set(null);
-    this.rascunhoFuncionario.set(this.copiarFuncionario(funcionario));
-    focarEditor(this.host);
-  }
-
-  cancelar(alternativa?: HTMLElement): void {
-    if (this.ocupado() || !this.confirmarDescarte()) return;
-    this.limparFeedback();
-    this.matrizAberta.set(false);
-    this.selecionar(this.perfil());
-    this.fecharFuncionario();
-    restaurarFoco(this.origem, alternativa);
-    this.origem = null;
-  }
-
-  async carregar(pagina = this.pagina()): Promise<void> {
-    if (this.ocupado()) return;
-    const chave = this.chaveEditor();
-    const alterado = chave && this.formulario?.temRascunho(chave);
-    if (!this.confirmarDescarte()) return;
     await this.executar(async () => {
-      try {
-        const m = await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos');
-        const e = await this.sessao.api<Funcionario[]>('/api/v1/equipe?pagina=' + pagina);
-        const u = await this.sessao.api<Unidade[]>('/api/v1/operacao/unidades');
-        this.matriz.set(m);
-        this.equipe.set(e);
-        this.vinculosOriginais.set(Object.fromEntries(e.map((f) => [f.id, [...f.unidades]])));
-        this.unidades.set(u);
-        this.pagina.set(pagina);
-        this.selecionar(this.perfil());
-        this.fecharFuncionario();
-        if (!this.matrizAberta()) this.origem = null;
-      } catch (erro) {
-        if (alterado) this.formulario?.marcarAlterado(chave);
-        throw erro;
-      }
+      this.preencher(await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos'));
     });
   }
 
-  selecionarPerfil(campo: HTMLSelectElement): void {
-    if (!this.confirmarDescarte()) {
-      campo.value = this.perfil();
-      return;
-    }
-    this.selecionar(campo.value);
+  abrir(
+    origem: HTMLElement,
+    modulo: { nome: string; acoes: Acao[] },
+    perfil: { codigo: string; nome: string },
+  ): void {
+    this.origem = origem;
+    this.celula.set({
+      modulo: modulo.nome,
+      perfil: perfil.codigo,
+      nomePerfil: perfil.nome,
+      acoes: modulo.acoes,
+    });
+    this.detector.detectChanges();
+    this.editor.nativeElement.showModal();
   }
 
-  private chaveEditor(): string | undefined {
-    if (this.matrizAberta()) return 'matriz';
-    const rascunho = this.rascunhoFuncionario();
-    return rascunho ? 'funcionario-' + rascunho.id : undefined;
+  fecharEditor(): void {
+    this.celula.set(null);
+    restaurarFoco(this.origem, this.campoBusca?.nativeElement);
+    this.origem = undefined;
   }
 
-  private confirmarDescarte(): boolean {
-    const chave = this.chaveEditor();
-    return !chave || (this.formulario?.confirmarDescarte(chave) ?? true);
+  selecionadas(acoes: Acao[], perfil: string): Acao[] {
+    return acoes.filter((acao) => this.rascunho()[perfil]?.includes(acao.codigo));
   }
 
-  private copiarFuncionario(funcionario: Funcionario): Funcionario {
-    return { ...funcionario, unidades: [...funcionario.unidades] };
+  resumo(acoes: Acao[]): string {
+    return acoes.map((acao) => acao.descricao).join(', ') || 'Sem acesso';
   }
 
-  private fecharFuncionario(): void {
-    this.funcionarioExpandido.set(null);
-    this.rascunhoFuncionario.set(null);
+  descricaoAcao(codigo: string): string {
+    return this.catalogo().get(codigo)?.descricao ?? codigo;
   }
 
-  private limparFeedback(): void {
-    this.erro.set('');
-    this.aviso.set('');
-    this.senhaInvalida.set(false);
-  }
-
-  selecionar(perfil: string): void {
-    this.perfil.set(perfil);
-    this.escolhidas.set(new Set(this.matriz()?.perfis[perfil] ?? []));
-  }
-
-  acoesFiltradas(): Acao[] {
-    const busca = this.busca().toLocaleLowerCase('pt-BR');
-    return (
-      this.matriz()?.acoes.filter((a) =>
-        (a.descricao + ' ' + a.codigo).toLocaleLowerCase('pt-BR').includes(busca),
-      ) ?? []
+  exigida(codigo: string, perfil: string): boolean {
+    return (this.rascunho()[perfil] ?? []).some(
+      (selecionada) => this.catalogo().get(selecionada)?.dependencia === codigo,
     );
   }
 
-  dependenciaObrigatoria(codigo: string): boolean {
-    return (
-      this.matriz()?.acoes.some(
-        (a) => a.dependencia === codigo && this.escolhidas().has(a.codigo),
-      ) ?? false
-    );
+  marcar(acao: Acao, perfil: string, ativa: boolean): void {
+    if (this.ocupado()) return;
+    this.rascunho.update((anterior) => {
+      const novas = new Set(anterior[perfil]);
+      if (ativa) {
+        novas.add(acao.codigo);
+        let dependencia = acao.dependencia;
+        while (dependencia && !novas.has(dependencia)) {
+          novas.add(dependencia);
+          dependencia = this.catalogo().get(dependencia)?.dependencia ?? null;
+        }
+      } else if (!this.exigida(acao.codigo, perfil)) {
+        novas.delete(acao.codigo);
+      }
+      return { ...anterior, [perfil]: [...novas] };
+    });
   }
 
-  marcar(acao: Acao, marcado: boolean): void {
-    const a = new Set(this.escolhidas());
-    if (marcado) {
-      a.add(acao.codigo);
-      if (acao.dependencia) a.add(acao.dependencia);
-    } else a.delete(acao.codigo);
-    this.escolhidas.set(a);
-  }
-
-  async confirmar(event: Event, input: HTMLInputElement): Promise<void> {
-    event.preventDefault();
+  async confirmar(evento: Event, input: HTMLInputElement): Promise<void> {
+    evento.preventDefault();
     const senha = input.value;
     input.value = '';
     await this.executar(async () => {
@@ -363,93 +232,46 @@ export class AcessosComponent implements OnInit {
     });
   }
 
-  async salvarMatriz(): Promise<void> {
+  async salvar(): Promise<void> {
+    const matriz = this.matriz();
+    if (!matriz || !this.alterada() || this.conflito()) return;
     await this.executar(async () => {
-      const m = await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos', 'PUT', {
-        versao: this.matriz()?.versao,
-        perfil: this.perfil(),
-        acoes: [...this.escolhidas()],
+      const atual = await this.sessao.api<Matriz>('/api/v1/configuracoes/acessos/matriz', 'PUT', {
+        versao: matriz.versao,
+        perfis: this.rascunho(),
       });
-      this.matriz.set(m);
-      this.selecionar(this.perfil());
+      this.preencher(atual);
       this.aviso.set('Permissões salvas no servidor.');
-      this.salvo.emit('matriz');
     });
   }
 
-  mudarPerfil(f: Funcionario, perfil: string): void {
-    f.perfil = perfil;
-    if (perfil === 'ADMINISTRADOR') {
-      f.unidades = [];
-      if (this.funcionarioExpandido() === f.id) this.funcionarioExpandido.set(null);
-    }
+  private preencher(matriz: Matriz): void {
+    this.rascunho.set(matriz.perfis);
+    this.matriz.set(matriz);
+    this.conflito.set(false);
   }
 
-  alternarUnidades(id: string): void {
-    if (!this.ocupado()) this.funcionarioExpandido.update((atual) => (atual === id ? null : id));
-  }
-
-  unidadesInativas(f: Funcionario): string[] {
-    return (this.vinculosOriginais()[f.id] ?? []).filter(
-      (id) => !this.unidades().some((u) => u.id === id),
-    );
-  }
-
-  vincular(f: Funcionario, id: string, marcado: boolean): void {
-    f.unidades = marcado ? [...new Set([...f.unidades, id])] : f.unidades.filter((u) => u !== id);
-  }
-
-  async salvarFuncionario(f: Funcionario): Promise<void> {
-    let confirmado = false;
-    await this.executar(async () => {
-      const result = await this.sessao.api<Funcionario>('/api/v1/equipe/' + f.id, 'PUT', {
-        versao: f.versao,
-        perfil: f.perfil,
-        ativo: f.ativo,
-        unidades: f.unidades,
-      });
-      this.equipe.update((rows) => rows.map((row) => (row.id === result.id ? result : row)));
-      this.vinculosOriginais.update((rows) => ({ ...rows, [result.id]: [...result.unidades] }));
-      this.aviso.set('Funcionário atualizado no servidor.');
-      this.salvo.emit('funcionario-' + result.id);
-      confirmado = true;
-      this.fecharFuncionario();
-      await this.sessao.atualizarIdentidade();
-    });
-    if (confirmado && !this.erro()) restaurarFoco(this.origem, this.matrizBotao?.nativeElement);
-    if (confirmado) this.origem = null;
-  }
-
-  paginaAnterior(): void {
-    void this.carregar(Math.max(0, this.pagina() - 1));
-  }
-
-  proximaPagina(): void {
-    void this.carregar(this.pagina() + 1);
-  }
-
-  private async executar(action: () => Promise<void>): Promise<void> {
+  private async executar(acao: () => Promise<void>): Promise<void> {
     if (this.ocupado()) return;
     this.ocupado.set(true);
-    this.bloqueio.emit(true);
-    this.limparFeedback();
+    this.navegacao.bloquear(this.chave, true);
+    this.erro.set('');
+    this.aviso.set('');
+    this.senhaInvalida.set(false);
     try {
-      await action();
-    } catch (error) {
-      this.senhaInvalida.set(
-        error instanceof ApiFailure &&
-          error.status === 422 &&
-          error.codigo === 'CONFIRMACAO_INVALIDA',
-      );
+      await acao();
+    } catch (erro) {
+      if (erro instanceof ApiFailure) {
+        if (erro.status === 409) this.conflito.set(true);
+        this.senhaInvalida.set(erro.status === 422 && erro.codigo === 'CONFIRMACAO_INVALIDA');
+      }
       this.erro.set(
-        error instanceof Error
-          ? error.message
-          : 'Não foi possível concluir. Recarregue para conferir o resultado.',
+        erro instanceof Error ? erro.message : 'Não foi possível concluir. Confira o resultado.',
       );
       setTimeout(() => this.alerta?.nativeElement.focus());
     } finally {
       this.ocupado.set(false);
-      this.bloqueio.emit(false);
+      this.navegacao.bloquear(this.chave, false);
     }
   }
 }

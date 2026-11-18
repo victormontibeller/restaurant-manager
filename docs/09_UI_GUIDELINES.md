@@ -183,7 +183,12 @@ O terracota `#a53e2b` identifica a ação primária e o foco. A escala de espaç
 ponteiro preciso e pelo menos 48 px em telas de toque. O catálogo interno
 `/design-system` demonstra filtros, resumo expansível, estado e formulário.
 Cardápio, gestão e cozinha compartilham um controle de tema no cabeçalho. A escolha persiste entre áreas, abas e recargas pela mesma preferência já usada na gestão, inclusive nos diálogos e avisos da PWA.
-O menu lateral conserva a estrutura e as proporções da versão anterior.
+O menu lateral, a barra superior e a faixa com o título e a ação principal
+permanecem visíveis durante a rolagem do conteúdo da Gestão e da Cozinha. O
+menu lateral rola por conta própria se faltar altura. No celular e no tablet
+estreito, o menu abre sobre o conteúdo e devolve o foco ao botão ao fechar.
+Listas administrativas resumem os registros antes da edição. A matriz de
+permissões tem cabeçalho e primeira coluna fixos e rolagem na própria tabela.
 
 A fila usa um resumo por pedido. Referência, canal, horário, tempo decorrido,
 estado e prazo de aceite aplicável ficam visíveis junto das ações imediatas.

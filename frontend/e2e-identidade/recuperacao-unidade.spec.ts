@@ -23,7 +23,7 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
   await navegarGestao(page, '/gestao/unidades');
   // A tela anterior também contém "Confirme sua senha"; aguarde a navegação real.
   await expect(
-    page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
+    page.getByRole('heading', { name: 'Unidades e horários', exact: true }),
   ).toBeVisible();
   await page.getByLabel('Confirme sua senha').fill(fixture.senha);
   const reauth = page.waitForResponse(
@@ -77,9 +77,9 @@ test('S01-UI06: resposta perdida preserva intenção e reconcilia criação real
   await expect(page.getByRole('heading', { name: nome, exact: true })).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'Nova unidade', exact: true })).toBeEnabled();
   await expect(
-    page.getByRole('link', { name: 'Equipe e acessos', exact: true, includeHidden: true }),
+    page.getByRole('link', { name: 'Equipe', exact: true, includeHidden: true }),
   ).toHaveAttribute('href', '/gestao/equipe');
   await navegarGestao(page, '/gestao/equipe');
-  await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Equipe' })).toBeVisible();
   await page.getByRole('button', { name: 'Sair da conta' }).click();
 });

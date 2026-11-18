@@ -34,6 +34,19 @@ import { PwaComponent } from './app/pwa/pwa.component';
     </div>
   `,
   styles: `
+    :host:has(> app-equipe-layout) {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      position: relative;
+      overflow: clip;
+    }
+    :host:has(> app-equipe-layout) > .app-utilities {
+      max-height: 30dvh;
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: 4px 12px;
+    }
     .demo-banner{padding:.45rem 1rem;text-align:center;background:var(--gestao-alerta-bg, #efe9d8);color:var(--gestao-alerta-fg, #6c5f36);font-size:.66rem;letter-spacing:.04em}
     .demo-banner span{padding:0 .4rem}
     .navigation-notice{position:fixed;top:45px;left:50%;transform:translateX(-50%);width:min(600px,calc(100% - 2rem));padding:1rem 3rem 1rem 1rem;background:var(--gestao-alerta-bg, #fff1d7);color:var(--gestao-alerta-fg, #694d1a);border:1px solid var(--gestao-alerta-borda, #dcc48c);border-radius:12px;z-index:100;box-shadow:0 8px 32px #0002}

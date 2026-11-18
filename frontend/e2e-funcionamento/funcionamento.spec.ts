@@ -114,7 +114,7 @@ test('S02-UI01: horários por UI persistem, rejeitam sobreposição e reconcilia
   const access = await autenticarUi(page);
   const headers = { Authorization: 'Bearer ' + access };
   await navegarUi(page, '/gestao/unidades');
-  const admin = page.getByRole('region', { name: 'Configurações de unidades', exact: true });
+  const admin = page.getByRole('region', { name: 'Unidades cadastradas', exact: true });
   await expect(admin).toBeVisible();
   await admin.getByLabel('Confirme sua senha', { exact: true }).fill(fixture.senha);
   const reauth = resposta(page, '/api/v1/auth/reautenticar', 'POST');

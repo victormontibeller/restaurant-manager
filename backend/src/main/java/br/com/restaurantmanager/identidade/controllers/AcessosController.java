@@ -2,6 +2,7 @@ package br.com.restaurantmanager.identidade.controllers;
 
 import br.com.restaurantmanager.identidade.dtos.AcessosEfetivos;
 import br.com.restaurantmanager.identidade.dtos.AlterarFuncionarioRequest;
+import br.com.restaurantmanager.identidade.dtos.AlterarMatrizCompletaRequest;
 import br.com.restaurantmanager.identidade.dtos.AlterarMatrizRequest;
 import br.com.restaurantmanager.identidade.dtos.AlterarMinhaContaRequest;
 import br.com.restaurantmanager.identidade.dtos.FuncionarioResumo;
@@ -49,6 +50,13 @@ public class AcessosController {
     @PutMapping("/api/v1/configuracoes/acessos")
     public MatrizAcessos matriz(@AuthenticationPrincipal IdentidadeAtual ator, @Valid @RequestBody AlterarMatrizRequest body) {
         return service.atualizarMatriz(ator, body.versao(), body.perfil(), body.acoes());
+    }
+
+    @PutMapping("/api/v1/configuracoes/acessos/matriz")
+    public MatrizAcessos alterarMatrizCompleta(
+            @AuthenticationPrincipal IdentidadeAtual ator,
+            @Valid @RequestBody AlterarMatrizCompletaRequest body) {
+        return service.atualizarMatrizCompleta(ator, body.versao(), body.perfis());
     }
 
     @GetMapping("/api/v1/equipe")
