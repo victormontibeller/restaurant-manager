@@ -21,10 +21,6 @@ export async function abrirConta(page: Page): Promise<void> {
   if (new URL(page.url()).pathname === '/conta') return;
   await expect(page.locator('a[href="/conta"]').first()).toBeAttached();
   if ((await page.locator('a[href="/conta"]:visible').count()) === 0) {
-    if (new URL(page.url()).pathname === '/cozinha') {
-      await page.getByRole('link', { name: 'Gestão', exact: true }).click();
-      await expect(page).toHaveURL(/\/gestao\/pedidos$/);
-    }
     await abrirMenu(page);
   }
   await page.locator('a[href="/conta"]:visible').first().click();
@@ -38,10 +34,6 @@ export async function navegarGestao(page: Page, rota: string): Promise<void> {
   if (await equipe.isVisible()) {
     await equipe.click();
     await expect(page).toHaveURL(/\/(gestao(?:\/[^?]*)?|cozinha)$/);
-  }
-  if (new URL(page.url()).pathname === '/cozinha') {
-    await page.getByRole('link', { name: 'Gestão', exact: true }).click();
-    await expect(page).toHaveURL(/\/gestao\/pedidos$/);
   }
   if (new URL(page.url()).pathname === rota) return;
   await expect(page.locator('app-equipe-layout')).toBeVisible();
@@ -76,10 +68,6 @@ export async function navegarUi(page: Page, rota: string): Promise<void> {
   if (new URL(page.url()).pathname === rota) return;
   if (rota === '/conta') return abrirConta(page);
   if (rota.startsWith('/gestao') && rota !== '/gestao/entrar') return navegarGestao(page, rota);
-  if (new URL(page.url()).pathname === '/cozinha') {
-    await page.getByRole('link', { name: 'Gestão', exact: true }).click();
-    await expect(page).toHaveURL(/\/gestao\/pedidos$/);
-  }
   const links = page.locator('a[href="' + rota + '"]:visible');
   if ((await links.count()) === 0) await abrirMenu(page);
   if (

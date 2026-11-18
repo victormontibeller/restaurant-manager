@@ -1,4 +1,5 @@
 :host {
+  --gestao-controle: 48px;
   display: block;
 }
 .painel {
@@ -12,7 +13,7 @@
   flex-wrap: wrap;
   margin-bottom: 4px;
 }
-h1 {
+.ferramentas h2 {
   font-size: 1.5rem;
   margin: 0;
 }

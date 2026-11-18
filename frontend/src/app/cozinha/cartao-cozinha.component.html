@@ -120,7 +120,6 @@
       }
       @if (tem('concluir') && concluir().length) {
         <button
-          class="concluir"
           (click)="comandar('concluir', parcial())"
           [disabled]="bloqueado() || (parcial() && !selecionadasPara('concluir').length)"
         >
