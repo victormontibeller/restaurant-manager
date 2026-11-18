@@ -4,6 +4,7 @@ import br.com.restaurantmanager.identidade.dtos.AcessosEfetivos;
 import br.com.restaurantmanager.identidade.dtos.DescricaoAcao;
 import br.com.restaurantmanager.identidade.dtos.FuncionarioResumo;
 import br.com.restaurantmanager.identidade.dtos.MatrizAcessos;
+import br.com.restaurantmanager.identidade.dtos.MinhaConta;
 import br.com.restaurantmanager.identidade.dtos.UnidadePermitida;
 import br.com.restaurantmanager.identidade.exceptions.AuthFailure;
 import br.com.restaurantmanager.identidade.models.Acao;
@@ -23,6 +24,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -35,6 +38,51 @@ public class AcessosService {
 
     public AcessosService(AcessosRepository repository) {
         this.repository = repository;
+    }
+
+    @Transactional
+    public MinhaConta minhaConta(IdentidadeAtual ator) {
+        repository.politica(false);
+        return dadosDaConta(usuarioAtual(ator));
+    }
+
+    @Transactional
+    public MinhaConta atualizarMinhaConta(IdentidadeAtual ator, long versao, String nome, String telefone) {
+        repository.politica(false);
+        var usuario = usuarioAtual(ator);
+        String nomeLimpo = opcional(nome);
+        if (nomeLimpo != null && nomeLimpo.codePoints().anyMatch(Character::isISOControl)) {
+            throw invalido("Informe um nome sem caracteres de controle.");
+        }
+        String numero = opcional(telefone);
+        if (numero != null) {
+            numero = numero.replaceAll("[ ().-]", "");
+            if (!numero.matches("[+]?[0-9]{8,15}")) {
+                throw invalido("Informe um telefone com 8 a 15 dígitos.");
+            }
+        }
+        if (versao != usuario.getVersao()) {
+            throw conflito("Os dados da conta mudaram. Consulte a versão atual antes de editar.");
+        }
+        if (!Objects.equals(nomeLimpo, usuario.getNome()) || !Objects.equals(numero, usuario.getTelefone())) {
+            usuario.atualizarDadosPessoais(nomeLimpo, numero, Instant.now());
+            try {
+                repository.flush();
+            } catch (ObjectOptimisticLockingFailureException erro) {
+                throw conflito("Os dados da conta mudaram. Consulte a versão atual antes de editar.");
+            }
+        }
+        return dadosDaConta(usuario);
+    }
+
+    private MinhaConta dadosDaConta(Usuario usuario) {
+        var unidades = usuario.getPerfil().equals("CLIENTE") ? List.<UnidadePermitida>of() : unidadesExistentesDo(usuario);
+        return new MinhaConta(usuario.getNome(), usuario.getTelefone(), usuario.getEmail(),
+                usuario.isEmailVerificado(), usuario.getPerfil(), usuario.getCriadoEm(), usuario.getVersao(), unidades);
+    }
+
+    private static String opcional(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.strip();
     }
 
     @Transactional
@@ -52,9 +100,43 @@ public class AcessosService {
         if (!PERFIS.contains(perfil)) {
             throw invalido("Perfil não configurável.");
         }
+        validarVersao(politica, versao);
+        salvarPermissoes(ator, perfil, repository.permissoes(perfil), incluirDependencias(acoes));
+        repository.incrementarPolitica(politica);
+        return matrizAtual(politica);
+    }
+
+    @Transactional
+    public MatrizAcessos atualizarMatrizCompleta(
+            IdentidadeAtual ator, long versao, Map<String, Set<String>> perfis) {
+        var politica = repository.politica(true);
+        administrador(ator, true);
+        if (!perfis.keySet().equals(Set.copyOf(PERFIS))) {
+            throw invalido("Informe as ações dos cinco perfis operacionais.");
+        }
+        validarVersao(politica, versao);
+        boolean alterada = false;
+        for (String perfil : PERFIS) {
+            var novas = incluirDependencias(perfis.get(perfil));
+            var antes = repository.permissoes(perfil);
+            if (!novas.equals(Set.copyOf(antes))) {
+                salvarPermissoes(ator, perfil, antes, novas);
+                alterada = true;
+            }
+        }
+        if (alterada) {
+            repository.incrementarPolitica(politica);
+        }
+        return matrizAtual(politica);
+    }
+
+    private static void validarVersao(PoliticaAcesso politica, long versao) {
         if (politica.getVersao() != versao) {
             throw conflito("A matriz foi alterada. Recarregue antes de salvar.");
         }
+    }
+
+    private static Set<String> incluirDependencias(Set<String> acoes) {
         var novas = new TreeSet<String>();
         for (String codigo : acoes) {
             var acao = Acao.obter(codigo);
@@ -63,12 +145,14 @@ public class AcessosService {
                 novas.add(acao.dependencia());
             }
         }
-        var antes = repository.permissoes(perfil);
+        return novas;
+    }
+
+    private void salvarPermissoes(
+            IdentidadeAtual ator, String perfil, List<String> antes, Set<String> novas) {
         repository.substituirPermissoes(perfil, novas);
-        repository.incrementarPolitica(politica);
         repository.auditar(
                 ator.usuarioId(), null, "MATRIZ_" + perfil, antes.toString(), novas.toString());
-        return matrizAtual(politica);
     }
 
     @Transactional
@@ -326,7 +410,10 @@ public class AcessosService {
                 u.getPerfil(),
                 u.isAtivo(),
                 u.getVersao(),
-                repository.unidades(u.getId()));
+                repository.unidades(u.getId()),
+                u.getNome(),
+                u.isEmailVerificado(),
+                u.getCriadoEm());
     }
 
     private String estado(Usuario u, List<UUID> unidades) {

@@ -31,8 +31,8 @@ div {
   place-items: center;
   width: 80px;
   height: 80px;
-  background: #eaf0e5;
-  color: #254d36;
+  background: var(--gestao-sucesso-bg, #eaf0e5);
+  color: var(--gestao-sucesso-fg, #254d36);
   border-radius: 24px;
 }
 
@@ -58,7 +58,7 @@ div {
 :host(.informativa-cliente) .illustration {
   width: 48px;
   height: 48px;
-  background: #f5e9e2;
+  background: var(--selecao-bg, #f5e9e2);
   color: var(--primary);
   border-radius: 12px;
 }

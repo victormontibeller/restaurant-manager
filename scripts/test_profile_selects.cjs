@@ -6,6 +6,7 @@ const http = require('node:http');
 const repo = path.resolve(__dirname, '..');
 const { build } = require(repo + '/frontend/node_modules/esbuild');
 const playwright = require(repo + '/frontend/node_modules/playwright');
+const recursosAngular = require('./test_angular_recursos.cjs');
 const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
 (async () => {
   const built = await build({
@@ -15,7 +16,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         import { signal } from '@angular/core';
         import { bootstrapApplication } from '@angular/platform-browser';
         import { provideRouter } from '@angular/router';
-        import { AcessosComponent } from './src/app/acessos/acessos.component';
+        import { EquipeComponent } from './src/app/acessos/equipe.component';
         import { ConvitesComponent } from './src/app/acessos/convites.component';
         import { UnidadesComponent } from './src/app/unidades/unidades.component';
         import { SessaoService } from './src/app/identidade/sessao.service';
@@ -33,18 +34,6 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         const units = Array.from({ length: 100 }, (_, i) => ({ id: 'u' + i, nome: 'Filial ' + i }));
         const writes = [];
         const invitations = [];
-        const matrix = {
-          versao: 0,
-          acoes: [
-            {
-              codigo: 'UNIDADE_CONSULTAR',
-              descricao: 'Consultar unidade',
-              escopo: 'UNIDADE',
-              dependencia: null,
-            },
-          ],
-          perfis: Object.fromEntries(roles.slice(1).map((r) => [r, []])),
-        };
         const mock = {
           identidade: () => ({ usuarioId: 'ficticio' }),
           api: async (path, method = 'GET', body) => {
@@ -59,14 +48,6 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
                   { status: window.confirmFailure },
                 ),
               );
-            if (path.includes('/configuracoes/acessos')) {
-              if (window.failLoad) throw new Error('Falha fictícia de consulta.');
-              if (method === 'PUT') {
-                matrix.perfis[body.perfil] = [...body.acoes];
-                matrix.versao++;
-              }
-              return structuredClone(matrix);
-            }
             if (path.includes('/equipe/convites')) {
               if (method === 'POST' && path.endsWith('/revogar')) {
                 const c = invitations.find((c) => path === '/api/v1/equipe/convites/' + c.id + '/revogar');
@@ -82,6 +63,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
               return structuredClone(invitations);
             }
             if (path.includes('/equipe')) {
+              if (window.failLoad) throw new Error('Falha fictícia de consulta.');
               if (method === 'PUT') {
                 const i = team.findIndex((f) => path.endsWith('/' + f.id));
                 team[i] = { ...team[i], ...body, versao: body.versao + 1 };
@@ -133,7 +115,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
               ? ConvitesComponent
               : window.kind === 'unidades'
                 ? UnidadesComponent
-                : AcessosComponent,
+                : EquipeComponent,
           {
             providers: [
               provideRouter([]),
@@ -153,6 +135,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       resolveDir: repo + '/frontend',
       sourcefile: 'profile-template-probe.ts',
     },
+    plugins: [recursosAngular],
     bundle: true,
     write: false,
     format: 'iife',
@@ -183,7 +166,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
             ? '<app-convites></app-convites>'
             : req.url === '/unidades'
               ? '<app-unidades></app-unidades>'
-              : '<app-acessos></app-acessos>') +
+              : '<app-equipe></app-equipe>') +
         '</section></main>',
     );
   });
@@ -275,12 +258,13 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       exact: true,
     });
     const employeeRole = kitchenCard.getByLabel('Perfil do funcionário');
-    const matrix = page.getByRole('button', { name: 'Matriz de permissões', exact: true });
-    const reload = page.getByRole('button', { name: 'Recarregar acessos' });
+    const reload = page.getByRole('button', { name: 'Recarregar equipe' });
     const assertRoles = async () => {
       await expect(cards).toHaveCount(roles.length);
       for (const [index, role] of roles.entries()) {
-        await expect(cards.nth(index)).toContainText(role);
+        await expect(cards.nth(index)).toContainText(
+          ['Administrador', 'Gerente', 'Atendimento', 'Caixa', 'Cozinha', 'Expedição'][index],
+        );
         await cards
           .nth(index)
           .getByRole('button', { name: 'Editar funcionário', exact: true })
@@ -310,7 +294,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
         altura(edit) && altura(save) && save.y >= edit.y + edit.height + 7,
         `Ações devem ter altura adequada e separação visível a ${width}px: ${JSON.stringify({ edit, save })}`,
       );
-      await capture('lista-' + width, page.locator('app-acessos'));
+      await capture('lista-' + width, page.locator('app-equipe'));
     }
     await page.setViewportSize({ width: 360, height: 800 });
     await editUnits.focus();
@@ -348,11 +332,6 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await reload.click();
     await stable(page);
     await expect(page.locator('article fieldset')).toHaveCount(0);
-    await matrix.click();
-    await page.getByLabel('Perfil operacional').selectOption('COZINHA');
-    await reload.click();
-    await stable(page);
-    await expect(page.getByLabel('Perfil operacional')).toHaveValue('COZINHA');
     await assertRoles();
     await editEmployee.click();
     await employeeRole.selectOption('GERENTE');
@@ -410,19 +389,6 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await editUnits.click();
     await expect(kitchenCard.getByLabel('Filial 7', { exact: true })).not.toBeChecked();
     await editUnits.click();
-    await matrix.click();
-    await page.getByLabel('Consultar unidade', { exact: true }).check();
-    await page.getByRole('button', { name: 'Salvar permissões' }).click();
-    await stable(page);
-    assert.deepEqual(await page.evaluate(() => window.fixture.writes.at(-1)), {
-      path: '/api/v1/configuracoes/acessos',
-      method: 'PUT',
-      body: { versao: 0, perfil: 'COZINHA', acoes: ['UNIDADE_CONSULTAR'] },
-    });
-    await reload.click();
-    await stable(page);
-    await expect(page.getByLabel('Perfil operacional')).toHaveValue('COZINHA');
-    await expect(page.getByLabel('Consultar unidade', { exact: true })).toBeChecked();
     const invitation = await browser.newPage({
       viewport: { width: 360, height: 800 },
       hasTouch: true,
@@ -477,7 +443,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     assert.deepEqual(created.body.unidades, []);
     await invitation.getByRole('button', { name: 'Recarregar convites' }).click();
     await stable(invitation);
-    await expect(invitation.locator('article')).toContainText('GERENTE');
+    await expect(invitation.locator('article')).toContainText('Gerente');
     await expect(invitation.getByRole('heading', { name: longEmail, exact: true })).toBeVisible();
     const revokeInvitation = invitation.getByRole('button', {
       name: 'Revogar convite de ' + longEmail,

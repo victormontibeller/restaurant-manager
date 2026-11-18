@@ -10,4 +10,7 @@ public record ConviteResumo(
         String perfil,
         List<UUID> unidades,
         String estado,
-        Instant expiraEm) {}
+        Instant expiraEm,
+        Instant criadoEm,
+        Instant aceitoEm,
+        Instant revogadoEm) {}

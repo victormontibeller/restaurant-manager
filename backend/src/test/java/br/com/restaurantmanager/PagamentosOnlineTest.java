@@ -648,6 +648,19 @@ class PagamentosOnlineTest {
                 .isEqualTo(403);
         String gerente = p.funcionario("GERENTE");
         assertThat(p.c.enviar("GET", fila, gerente, null).getStatus()).isEqualTo(200);
+        String pagina = fila.replace("pagamentos?", "pagamentos/pagina?");
+        var dados = p.c.json(p.c.enviar("GET", pagina + "&tipo=CHECKOUT&estado=SOLICITADO", gerente, null));
+        assertThat(dados.get("itens").size()).isEqualTo(1);
+        var item = dados.get("itens").get(0);
+        assertThat(item.get("valor").asText()).isEqualTo("20.00");
+        assertThat(item.get("tentativas").asInt()).isZero();
+        assertThat(Instant.parse(item.get("criadoEm").asText())).isBeforeOrEqualTo(Instant.now());
+        assertThat(item.get("proximaTentativaEm").isNull()).isFalse();
+        assertThat(item.get("fuso").asText()).isEqualTo("America/Sao_Paulo");
+        assertThat(dados.get("temMais").asBoolean()).isFalse();
+        assertThat(dados.toString()).doesNotContain("checkoutUrl", "externoId", "leaseId");
+        assertThat(p.c.json(p.c.enviar("GET", pagina + "&tipo=DEVOLUCAO", gerente, null)).get("itens").size()).isZero();
+        assertThat(p.c.enviar("GET", pagina, p.funcionario("COZINHA"), null).getStatus()).isEqualTo(403);
         assertThat(
                         p.c.enviar(
                                         "POST",

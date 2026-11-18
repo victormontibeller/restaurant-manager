@@ -1,45 +1,213 @@
-<section>
-  <h2>Vendas e movimentos financeiros</h2>
-  <form (ngSubmit)="carregar()">
+<section
+  class="painel-financeiro"
+  aria-label="Vendas e movimentos financeiros"
+  [attr.aria-busy]="ocupado()"
+>
+  <form class="filtros-financeiros" (ngSubmit)="carregar()">
     <label
-      >Data inicial<input type="date" name="inicioVendas" [(ngModel)]="inicio" required />
-    </label>
-    <label>Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required /> </label>
+      >Data inicial<input type="date" name="inicioVendas" [(ngModel)]="inicio" required
+    /></label>
+    <label>Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required /></label>
     <button type="submit" [disabled]="ocupado()">Consultar relatório</button>
   </form>
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
   @if (ocupado()) {
     <p role="status">Consultando o período informado…</p>
   }
   @if (dados(); as r) {
-    <p>Período consultado: {{ data(r.inicio) }} a {{ data(r.fim) }}.</p>
-    <p>Fuso da unidade: {{ r.fuso }}. Consulta em {{ r.consultadoEm }}.</p>
-    <dl>
-      <dt>Pedidos criados no período</dt>
-      <dd>{{ r.pedidosCriados }}</dd>
-      <dt>Destes pedidos, cancelados atualmente</dt>
-      <dd>{{ r.canceladosAtualmente }}</dd>
-      <dt>Cobranças originais dos pedidos criados</dt>
-      <dd>{{ moeda(r.cobrancasOriginais) }}</dd>
-      <dt>Ajustes registrados no período</dt>
-      <dd>{{ moeda(r.ajustesNoPeriodo) }}</dd>
-      <dt>Recebimentos confirmados no período</dt>
-      <dd>{{ moeda(r.recebimentosConfirmados) }}</dd>
-      <dt>Devoluções confirmadas no período</dt>
-      <dd>{{ moeda(r.devolucoesConfirmadas) }}</dd>
-      <dt>Saldo atual a receber</dt>
-      <dd>{{ moeda(r.saldoAReceberAtual) }}</dd>
-      <dt>Saldo atual a devolver</dt>
-      <dd>{{ moeda(r.saldoADevolverAtual) }}</dd>
-      <dt>Reservas atuais de devolução</dt>
-      <dd>{{ moeda(r.reservasAtuais) }}</dd>
-    </dl>
-    <p>
-      Os movimentos usam suas datas de confirmação ou registro. Saldos são a posição atual das
-      cobranças com pedidos criados no período; uma comanda é considerada uma vez, incluindo suas
-      outras rodadas. Cobrança e recebimento são indicadores distintos.
-    </p>
-  }
-  @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
+    <div class="metadados">
+      <strong>Período consultado: {{ data(r.inicio) }} a {{ data(r.fim) }}.</strong>
+      <span
+        >Fuso da unidade: {{ r.fuso }} · Atualizado em {{ dataHora(r.consultadoEm, r.fuso) }}</span
+      >
+    </div>
+    <div class="indicadores">
+      <div>
+        <span>Pedidos criados no período</span><strong>{{ r.pedidosCriados }}</strong
+        ><small>Cancelados atualmente · {{ r.canceladosAtualmente }}</small>
+      </div>
+      <div>
+        <span>Cobranças originais</span><strong>{{ moeda(r.cobrancasOriginais) }}</strong
+        ><small>Dos pedidos criados no período</small>
+      </div>
+      <div>
+        <span>Recebimentos confirmados no período</span
+        ><strong>{{ moeda(r.recebimentosConfirmados) }}</strong
+        ><small>Por data de confirmação</small>
+      </div>
+      <div>
+        <span>Devoluções confirmadas no período</span
+        ><strong>{{ moeda(r.devolucoesConfirmadas) }}</strong
+        ><small>Por data de confirmação</small>
+      </div>
+    </div>
+    <section class="bloco-financeiro">
+      <h2>Posição das cobranças</h2>
+      <dl class="resumos">
+        <div>
+          <dt>Saldo atual a receber</dt>
+          <dd>{{ moeda(r.saldoAReceberAtual) }}</dd>
+        </div>
+        <div>
+          <dt>Saldo atual a devolver</dt>
+          <dd>{{ moeda(r.saldoADevolverAtual) }}</dd>
+        </div>
+        <div>
+          <dt>Reservas atuais de devolução</dt>
+          <dd>{{ moeda(r.reservasAtuais) }}</dd>
+        </div>
+        <div>
+          <dt>Ajustes registrados no período</dt>
+          <dd>{{ moeda(r.ajustesNoPeriodo) }}</dd>
+        </div>
+      </dl>
+      <p class="ajuda">
+        Os saldos incluem cada cobrança com pedido criado no período. Uma comanda reúne suas rodadas
+        e entra uma vez no saldo.
+      </p>
+    </section>
+    <div class="analises">
+      <section class="bloco-financeiro">
+        <h2>Vendas por canal</h2>
+        @if (r.canais.length) {
+          <div class="rolagem">
+            <table>
+              <caption class="sr-only">
+                Pedidos do período por canal
+              </caption>
+              <thead>
+                <tr>
+                  <th>Canal</th>
+                  <th>Pedidos</th>
+                  <th>Cancelados</th>
+                  <th>Cobranças originais</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of r.canais; track c.canal) {
+                  <tr>
+                    <th scope="row">{{ nomeCanal(c.canal) }}</th>
+                    <td>{{ c.pedidos }}</td>
+                    <td>{{ c.cancelados }}</td>
+                    <td>{{ moeda(c.cobrancaOriginal) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p>Nenhum pedido criado no período.</p>
+        }
+      </section>
+      <section class="bloco-financeiro">
+        <h2>Movimento por dia</h2>
+        @if (r.dias.length) {
+          <div class="rolagem serie" tabindex="0" aria-label="Movimentos diários">
+            <table>
+              <caption class="sr-only">
+                Dias com movimentos no fuso da unidade
+              </caption>
+              <thead>
+                <tr>
+                  <th>Dia</th>
+                  <th>Recebido</th>
+                  <th>Devolvido</th>
+                  <th>Ajustes</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of r.dias; track d.data) {
+                  <tr>
+                    <th scope="row">{{ data(d.data) }}</th>
+                    <td>{{ moeda(d.recebido) }}</td>
+                    <td>{{ moeda(d.devolvido) }}</td>
+                    <td>{{ moeda(d.ajustes) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p>Nenhum movimento registrado ou confirmado no período.</p>
+        }
+      </section>
+    </div>
+    <section class="bloco-financeiro">
+      <h2>Extrato de movimentos</h2>
+      @for (m of r.movimentos; track m.tipo + m.id) {
+        <details class="linha-operacional">
+          <summary>
+            <span
+              ><strong>{{ rotulo(m.tipo) }}</strong
+              ><small>{{ dataHora(m.registradoEm, r.fuso) }}</small></span
+            >
+            <span
+              ><span>{{ m.mesa || nomeCanal(m.canal) }}</span>
+              <small
+                >{{ m.comandaId ? 'Comanda ' + m.comandaId.slice(0,8) : 'Pedido ' + m.pedidoId?.slice(0,8) }}</small
+              >
+            </span>
+            <strong class="valor">{{ moeda(m.valor) }}</strong>
+          </summary>
+          <dl class="detalhes">
+            <div>
+              <dt>Movimento</dt>
+              <dd>{{ m.id }}</dd>
+            </div>
+            <div>
+              <dt>Canal</dt>
+              <dd>{{ nomeCanal(m.canal) }}</dd>
+            </div>
+            @if (m.pedidoId) {
+              <div>
+                <dt>Pedido</dt>
+                <dd>{{ m.pedidoId }}</dd>
+              </div>
+            }
+            @if (m.comandaId) {
+              <div>
+                <dt>Comanda</dt>
+                <dd>{{ m.comandaId }}{{ m.mesa ? ' · ' + m.mesa : '' }}</dd>
+              </div>
+            }
+            @if (m.metodo) {
+              <div>
+                <dt>Forma de pagamento</dt>
+                <dd>{{ rotulo(m.metodo) }}</dd>
+              </div>
+            }
+            @if (m.metodo === 'DINHEIRO' && m.entregue && m.troco) {
+              <div>
+                <dt>Entregue em dinheiro</dt>
+                <dd>{{ moeda(m.entregue) }}</dd>
+              </div>
+              <div>
+                <dt>Troco</dt>
+                <dd>{{ moeda(m.troco) }}</dd>
+              </div>
+            }
+            @if (m.recebimentoId) {
+              <div>
+                <dt>Recebimento de origem</dt>
+                <dd>{{ m.recebimentoId }}</dd>
+              </div>
+            }
+          </dl>
+        </details>
+      } @empty {
+        <p>Nenhum movimento nesta página.</p>
+      }
+      @if (pagina() || r.maisMovimentos) {
+        <nav class="paginas" aria-label="Páginas do extrato">
+          <button type="button" (click)="paginar(-1)" [disabled]="!pagina()">Anterior</button
+          ><span>Página {{ pagina()+1 }}</span
+          ><button type="button" (click)="paginar(1)" [disabled]="!r.maisMovimentos">
+            Próxima
+          </button>
+        </nav>
+      }
+    </section>
   }
 </section>

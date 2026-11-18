@@ -47,6 +47,30 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Matriz'}
         default: {$ref: '#/components/responses/Erro'}
+  /api/v1/configuracoes/acessos/matriz:
+    put:
+      operationId: substituirMatrizEmpresarial
+      summary: Salvar em conjunto as ações dos cinco perfis operacionais
+      description: >-
+        Somente o Administrador com senha confirmada nos últimos cinco minutos
+        pode salvar. Envie os cinco perfis, inclusive os que têm lista vazia.
+        O servidor verifica a versão global e inclui as dependências de cada
+        perfil. Todas as mudanças entram em vigor na mesma transação, com um
+        registro de auditoria por perfil alterado e um único incremento de
+        versão. Permissões idênticas preservam a versão e a auditoria. Uma
+        entrada inválida ou versão desatualizada preserva a política inteira.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AlterarMatrizCompleta'}
+      responses:
+        '200':
+          description: Matriz efetiva com a versão confirmada pelo servidor
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Matriz'}
+        default: {$ref: '#/components/responses/Erro'}
   /api/v1/equipe:
     get:
       operationId: listarFuncionarios
@@ -186,6 +210,24 @@ components:
         acoes:
           $ref: '#/components/schemas/CodigosAcao'
           maxItems: 80
+    AlterarMatrizCompleta:
+      type: object
+      additionalProperties: false
+      required: [versao, perfis]
+      properties:
+        versao: {type: integer, format: int64, minimum: 0}
+        perfis:
+          $ref: '#/components/schemas/PermissoesPorPerfil'
+    PermissoesPorPerfil:
+      type: object
+      additionalProperties: false
+      required: [GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]
+      properties:
+        GERENTE: {$ref: '#/components/schemas/CodigosAcao', maxItems: 80}
+        ATENDIMENTO: {$ref: '#/components/schemas/CodigosAcao', maxItems: 80}
+        CAIXA: {$ref: '#/components/schemas/CodigosAcao', maxItems: 80}
+        COZINHA: {$ref: '#/components/schemas/CodigosAcao', maxItems: 80}
+        EXPEDICAO: {$ref: '#/components/schemas/CodigosAcao', maxItems: 80}
     AlterarFuncionario:
       type: object
       additionalProperties: false
@@ -217,16 +259,7 @@ components:
         acoes:
           type: array
           items: {$ref: '#/components/schemas/DescricaoAcao'}
-        perfis:
-          type: object
-          additionalProperties: false
-          required: [GERENTE, ATENDIMENTO, CAIXA, COZINHA, EXPEDICAO]
-          properties:
-            GERENTE: {$ref: '#/components/schemas/CodigosAcao'}
-            ATENDIMENTO: {$ref: '#/components/schemas/CodigosAcao'}
-            CAIXA: {$ref: '#/components/schemas/CodigosAcao'}
-            COZINHA: {$ref: '#/components/schemas/CodigosAcao'}
-            EXPEDICAO: {$ref: '#/components/schemas/CodigosAcao'}
+        perfis: {$ref: '#/components/schemas/PermissoesPorPerfil'}
     Funcionario:
       type: object
       additionalProperties: false

@@ -1,8 +1,9 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
 import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
+import { nomePerfil } from './perfis';
 import { ConvitePendenteService } from './convite-pendente.service';
 
 interface Unidade {
@@ -17,22 +18,29 @@ interface Convite {
   unidades: string[];
   estado: string;
   expiraEm: string;
+  criadoEm: string;
+  aceitoEm: string | null;
+  revogadoEm: string | null;
 }
 
 @Component({
   selector: 'app-convites',
-  imports: [DatePipe],
+  imports: [DatePipe, NgTemplateOutlet],
   template: `
-    <section aria-labelledby="convites-titulo" [attr.aria-busy]="ocupado()">
-      <div class="gestao-toolbar">
-        <h2 id="convites-titulo">Convites de funcionários</h2>
+    <section class="admin-pagina" aria-labelledby="convites-titulo" [attr.aria-busy]="ocupado()">
+      <header class="admin-cabecalho">
+        <h2 id="convites-titulo">Convites emitidos</h2>
         <div class="gestao-acoes">
           <button #novo type="button" (click)="abrir(novo)" [disabled]="ocupado() || !!pendente()"
             [attr.aria-expanded]="editorAberto() || !!pendente()">Novo convite</button>
           <button type="button" data-variant="outline" (click)="carregar(pagina())" [disabled]="ocupado()">Recarregar convites</button>
         </div>
-      </div>
-      <form class="gestao-toolbar confirmacao" (submit)="reautenticar($event, senha)">
+      </header>
+      <form class="admin-painel admin-filtros" (submit)="reautenticar($event, senha)">
+        <div class="contexto-identidade">
+          <h3>Identidade para alterações</h3>
+          <p class="admin-ajuda">A confirmação permite emitir e revogar convites por cinco minutos.</p>
+        </div>
         <div>
           <label for="senha-convite-admin">Confirme sua senha para convidar</label>
           <input #senha id="senha-convite-admin" type="password" autocomplete="current-password" required maxlength="72"
@@ -74,7 +82,7 @@ interface Convite {
                   <select id="perfil-convite" [value]="perfil()"
                     (change)="perfil.set($any($event.target).value); vinculos.set([])" [disabled]="ocupado()">
                     @for (p of perfis; track p) {
-                      <option [value]="p" [selected]="perfil() === p">{{ p }}</option>
+                      <option [value]="p" [selected]="perfil() === p">{{ nomePerfil(p) }}</option>
                     }
                   </select>
                 </div>
@@ -99,7 +107,7 @@ interface Convite {
           </div>
         </section>
       }
-      <form class="gestao-toolbar confirmacao" (submit)="buscar($event, id.value)" data-sem-rascunho>
+      <form class="admin-filtros consulta" (submit)="buscar($event, id.value)" data-sem-rascunho>
         <div>
           <label for="id-convite">Identificador do convite</label>
           <input #id id="id-convite" required [disabled]="ocupado()"
@@ -109,40 +117,45 @@ interface Convite {
         <button data-variant="outline" [disabled]="ocupado()">Consultar convite</button>
       </form>
       @if (encontrado(); as c) {
+        <ng-container [ngTemplateOutlet]="dadosConvite" [ngTemplateOutletContext]="{ $implicit: c }"/>
         <p class="consulta-resultado" role="status">{{ c.id }} · {{ c.email }} · {{ c.perfil }} · {{ c.estado }}</p>
       }
+      <ng-template #dadosConvite let-c><details class="detalhes-convite"><summary>Dados do convite</summary>
+              <dl class="admin-resumo">
+                <div><dt>Unidades</dt><dd>{{ nomesUnidades(c) }}</dd></div>
+                <div><dt>Criado em</dt><dd>{{ c.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+                <div><dt>Validade até</dt><dd>{{ c.expiraEm | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+                @if (c.aceitoEm) { <div><dt>Aceito em</dt><dd>{{ c.aceitoEm | date: 'dd/MM/yyyy HH:mm' }}</dd></div> }
+                @if (c.revogadoEm) { <div><dt>Revogado em</dt><dd>{{ c.revogadoEm | date: 'dd/MM/yyyy HH:mm' }}</dd></div> }
+              </dl>
+            </details></ng-template>
       <div class="gestao-lista">
         @for (c of lista(); track c.id) {
           <article class="gestao-linha">
             <div>
               <h3>{{ c.email }}</h3>
-              <span>{{ c.perfil }}</span>
+              <span>{{ nomePerfil(c.perfil) }}</span>
             </div>
             <span class="gestao-estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
             <span class="validade">Expira em <time [attr.datetime]="c.expiraEm">{{ c.expiraEm | date: 'dd/MM/yyyy HH:mm' }}</time></span>
+            <ng-container [ngTemplateOutlet]="dadosConvite" [ngTemplateOutletContext]="{ $implicit: c }"/>
             @if (c.estado === 'PENDENTE') {
               <button type="button" data-variant="outline" [attr.aria-label]="'Revogar convite de ' + c.email"
                 (click)="revogar(c.id)" [disabled]="ocupado()">Revogar</button>
             }
           </article>
         } @empty {
-          <p class="vazio">Nenhum convite nesta página.</p>
+          <p class="admin-vazio">{{ ocupado() ? 'Consultando convites…' : 'Nenhum convite nesta página.' }}</p>
         }
       </div>
-      <nav class="gestao-acoes" aria-label="Páginas de convites">
+      <nav class="admin-paginacao" aria-label="Páginas de convites">
         <button data-variant="outline" (click)="carregar(pagina() - 1)" [disabled]="ocupado() || pagina() === 0">Convites anteriores</button>
         <span>Página {{ pagina() + 1 }}</span>
         <button data-variant="outline" (click)="carregar(pagina() + 1)" [disabled]="ocupado() || lista().length < 50">Próximos convites</button>
       </nav>
     </section>
   `,
-  styles: `
-    :host { display: block; }
-    .confirmacao { justify-content: start; align-items: end; }
-    .gestao-linha h3 { margin: 0; }
-    .gestao-lista + nav { margin-top: var(--gestao-espaco-3, 12px); }
-    .consulta-resultado { overflow-wrap: anywhere; }
-  `,
+  styleUrls: ['../ui/administracao.css', './convites.component.css'],
 })
 export class ConvitesComponent implements OnInit {
   private readonly sessao = inject(SessaoService);
@@ -154,6 +167,7 @@ export class ConvitesComponent implements OnInit {
   readonly identificadorInvalido = signal(false);
   readonly pendente = inject(ConvitePendenteService).daConta(this.sessao.identidade()!.usuarioId);
   readonly perfis = ['COZINHA', 'ATENDIMENTO', 'CAIXA', 'EXPEDICAO', 'GERENTE', 'ADMINISTRADOR'];
+  readonly nomePerfil = nomePerfil;
   readonly perfil = signal('COZINHA');
   readonly vinculos = signal<string[]>([]);
   readonly unidades = signal<Unidade[]>([]);
@@ -209,6 +223,17 @@ export class ConvitesComponent implements OnInit {
 
   vincular(id: string, ativo: boolean): void {
     this.vinculos.update((v) => (ativo ? [...new Set([...v, id])] : v.filter((x) => x !== id)));
+  }
+
+  nomesUnidades(convite: Convite): string {
+    if (convite.perfil === 'ADMINISTRADOR') return 'Todas as unidades';
+    return (
+      convite.unidades
+        .map(
+          (id) => this.unidades().find((u) => u.id === id)?.nome ?? 'Unidade fora da lista ativa',
+        )
+        .join(', ') || 'Nenhuma unidade'
+    );
   }
 
   async carregar(pagina: number): Promise<void> {

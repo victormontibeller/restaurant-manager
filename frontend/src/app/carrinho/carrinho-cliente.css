@@ -28,7 +28,7 @@
   max-width: 100%;
   border-radius: 999px;
   padding: 6px 12px;
-  background: #f6ebe4;
+  background: var(--selecao-bg, #f6ebe4);
   color: var(--primary);
   font-size: 0.875rem;
   font-weight: 650;
@@ -52,7 +52,7 @@
 :host(.carrinho-cliente) .retorno-carrinho p.erro {
   color: var(--destructive);
   border-color: currentColor;
-  background: #fbefea;
+  background: var(--selecao-bg, #fbefea);
 }
 
 :host(.carrinho-cliente) .carrinho-grade {

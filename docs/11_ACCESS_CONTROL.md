@@ -16,9 +16,11 @@
 
 Autorização efetiva = identidade/sessão ativa + tenant correspondente + ação permitida + unidade autorizada quando aplicável + vínculo com recurso + regra de estado. Permissão nunca ignora uma regra financeira ou transição inválida.
 
-## Tela Configurações → Acessos
+## Tela Administração → Acessos
 
-Administrador edita uma matriz com grupos de módulos nas linhas e os cinco perfis operacionais nas colunas. Cada grupo exibe apenas as ações suportadas, com busca, descrição e dependências. Administrador é protegido e não editável. O salvamento exige versão da configuração, registra antes/depois e revalida o ator.
+Administrador abre a matriz diretamente em **Acessos**. Os módulos ocupam as linhas, agrupados por área, e os cinco perfis operacionais ocupam as colunas. Cada célula resume as permissões e abre um seletor com as ações, seus escopos e dependências. A busca por área, módulo ou ação preserva as escolhas em edição. A coluna de módulos e o cabeçalho permanecem visíveis durante a rolagem da tabela. Administrador é protegido. Os vínculos e a situação dos funcionários são gerenciados em **Equipe**.
+
+**Salvar acessos** envia a versão e as escolhas dos cinco perfis. O servidor revalida o ator e a confirmação da senha, valida a matriz inteira e aplica as mudanças em uma transação. A versão avança uma vez e a auditoria registra antes e depois de cada perfil alterado. Um conflito de versão preserva a configuração que já está no servidor.
 
 Permitir uma ação que depende de consulta deve incluir apenas a consulta mínima necessária e deixar essa dependência visível. Mudança de permissão vale na próxima operação, inclusive com JWT ainda válido. Assinaturas de eventos devem ser revistas/revogadas quando perderem acesso. Seeds criam padrões ausentes; não sobrescrevem a configuração do restaurante.
 
@@ -71,7 +73,7 @@ Implementados: catálogo explícito `Acao`, seeds aditivos por migration, matriz
 
 Mutações de equipe/matriz serializam no registro empresarial `politica_acesso`, revalidam ator/sessão e protegem o último Administrador. A política central adquire lock compartilhado dentro da transação do caso de uso e consulta vínculos/permissões atuais. Consumidores futuros precisam chamar essa política e validar recurso/estado/projeções; enumerar uma ação NÃO implementa pedido, catálogo ou finanças. O acompanhamento cadastral abaixo aplica essa política; eventos operacionais de pedidos continuam fora deste incremento.
 
-UI usa um perfil por vez e checkboxes verticais pesquisáveis, sem tabela horizontal obrigatória. Edições sensíveis exigem confirmação explícita da senha na sessão, válida por cinco minutos. Resultado de testes e limitações ficam no checkpoint; não inferir homologação a partir deste contrato.
+Na Sprint 01, a primeira interface exibia as caixas de seleção de um perfil por vez. O contrato de alteração por perfil continua disponível para os consumidores da API. Edições sensíveis exigem confirmação explícita da senha na sessão, válida por cinco minutos. Resultado de testes e limitações ficam no checkpoint.
 
 No incremento local do ciclo20, a lista de funcionários mantém perfil, atividade
 e salvamento visíveis, mas monta os checkboxes de unidades somente para um
@@ -91,6 +93,7 @@ Esquemas de entrada/saída, segurança e erros em [OpenAPI de acessos](api/acess
 login/refresh/confirmação em [OpenAPI de identidade](api/identidade.yaml).
 
 - `GET/PUT /api/v1/configuracoes/acessos`: consulta e substituição das ações de um perfil com `versao`, `perfil`, `acoes`; dependências mínimas são adicionadas pelo servidor.
+- `PUT /api/v1/configuracoes/acessos/matriz`: substituição atômica da matriz dos cinco perfis com `versao` e `perfis`. A resposta traz a matriz vigente.
 - `GET /api/v1/equipe?pagina=0`: até 50 funcionários, sem clientes/segredos.
 - `PUT /api/v1/equipe/{id}`: `versao`, `perfil`, `ativo`, `unidades`; Administrador não recebe vínculos individuais e nunca pode ser eliminado como último ativo.
 - `GET /api/v1/acessos/efetivos` e `GET /api/v1/operacao/unidades[/{id}]`: identidade atual, ações e unidades permitidas. A lista pública `/unidades` permanece somente dados públicos, não é lista operacional.

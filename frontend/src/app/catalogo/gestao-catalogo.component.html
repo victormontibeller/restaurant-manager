@@ -35,27 +35,7 @@
           Categorias
         </button>
       </nav>
-    } @else if (podeConsultar()) {
-      <div class="gestao-toolbar">
-        <div>
-          <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
-          <select
-            #unidade
-            id="catalogo-operacional-unidade"
-            data-sem-rascunho
-            [value]="unidadeOperacional()"
-            [disabled]="travado()"
-            (change)="trocarUnidade(unidade)"
-          >
-            @for (item of acesso.unidades; track item.id) {
-              <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
-                {{ item.nome }}
-              </option>
-            }
-          </select>
-        </div>
-      </div>
-    } @else {
+    } @else if (!podeConsultar()) {
       <p>Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.</p>
     }
     @if (aba() === 'categorias' && podeEditar()) {
@@ -87,22 +67,148 @@
               <h3>{{ categoria.nome }}</h3>
               <span class="gestao-estado">{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</span>
             </div>
-            <button
-              #editar
-              type="button"
-              class="secundario"
-              [attr.aria-label]="'Editar categoria ' + categoria.nome"
-              (click)="editarCategoria(categoria, editar)"
-              [disabled]="travado()"
-            >
-              Editar
-            </button>
+            <div class="gestao-acoes">
+              <button
+                class="secundario"
+                type="button"
+                [attr.aria-label]="'Ver produtos de ' + categoria.nome"
+                (click)="produtosDaCategoria(categoria.id)"
+                [disabled]="travado()"
+              >
+                Ver produtos
+              </button>
+              <button
+                #editar
+                type="button"
+                class="secundario"
+                [attr.aria-label]="'Editar categoria ' + categoria.nome"
+                (click)="editarCategoria(categoria, editar)"
+                [disabled]="travado()"
+              >
+                Editar
+              </button>
+            </div>
           </article>
         } @empty {
           <p class="vazio">Nenhuma categoria cadastrada.</p>
         }
       </div>
     } @else if (podeConsultar()) {
+      <div class="gestao-toolbar">
+        <div>
+          <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
+          <select
+            #unidade
+            id="catalogo-operacional-unidade"
+            data-sem-rascunho
+            [disabled]="travado()"
+            (change)="trocarUnidade(unidade)"
+          >
+            @if (podeEditar()) {
+              <option value="" [selected]="!unidadeOperacional()">
+                Somente cadastro compartilhado
+              </option>
+            }
+            @for (item of acesso.unidades; track item.id) {
+              <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
+                {{ item.nome }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+      <form class="catalogo-filtros" aria-label="Filtros dos produtos" (submit)="filtrar($event)">
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-busca">Buscar produto</label>
+          <input
+            id="catalogo-filtro-busca"
+            data-sem-rascunho
+            #busca
+            type="search"
+            maxlength="120"
+            [value]="filtros.busca"
+            (input)="filtros.busca = busca.value"
+            [disabled]="travado()"
+          />
+        </div>
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-categoria">Categoria</label>
+          <select
+            id="catalogo-filtro-categoria"
+            data-sem-rascunho
+            #cat
+            (change)="filtros.categoriaId = cat.value"
+            [disabled]="travado()"
+          >
+            <option value="" [selected]="!filtros.categoriaId">Todas</option>
+            @for (categoria of categorias(); track categoria.id) {
+              <option [value]="categoria.id" [selected]="filtros.categoriaId === categoria.id">
+                {{ categoria.nome }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="catalogo-campo">
+          <label for="catalogo-filtro-tipo">Tipo</label>
+          <select
+            id="catalogo-filtro-tipo"
+            data-sem-rascunho
+            #tipo
+            [value]="filtros.tipo"
+            (change)="filtros.tipo = tipo.value"
+            [disabled]="travado()"
+          >
+            <option value="">Todos</option>
+            <option value="SIMPLES">Produto simples</option>
+            <option value="COMBO">Combo</option>
+          </select>
+        </div>
+        @if (podeEditar()) {
+          <div class="catalogo-campo">
+            <label for="catalogo-filtro-situacao">Situação do cadastro</label>
+            <select
+              id="catalogo-filtro-situacao"
+              data-sem-rascunho
+              #ativo
+              [value]="filtros.ativo"
+              (change)="filtros.ativo = ativo.value"
+              [disabled]="travado()"
+            >
+              <option value="">Todas</option>
+              <option value="true">Ativo</option>
+              <option value="false">Inativo</option>
+            </select>
+          </div>
+        }
+        @if (unidadeOperacional()) {
+          <div class="catalogo-campo">
+            <label for="catalogo-filtro-oferta">Oferta na unidade</label>
+            <select
+              id="catalogo-filtro-oferta"
+              data-sem-rascunho
+              #disp
+              [value]="filtros.disponivel"
+              (change)="filtros.disponivel = disp.value"
+              [disabled]="travado()"
+            >
+              <option value="">Todas</option>
+              <option value="true">Habilitada</option>
+              <option value="false">Desabilitada ou sem oferta</option>
+            </select>
+          </div>
+        }
+        <div class="gestao-acoes">
+          <button type="submit" [disabled]="travado()">Aplicar filtros</button
+          ><button
+            type="button"
+            class="secundario"
+            [disabled]="travado()"
+            (click)="filtrar($event, true)"
+          >
+            Limpar filtros
+          </button>
+        </div>
+      </form>
       <div class="gestao-toolbar">
         @if (podeEditar()) {
           <button
@@ -145,6 +251,8 @@
         <app-oferta-unidade
           [produtoId]="produto.id"
           [nome]="produto.nome"
+          [unidadeInicial]="unidadeOperacional()"
+          (ofertaConfirmada)="ofertaConfirmada($event)"
           [unidades]="acesso.unidades"
           [podeAlterar]="podeAlterarOferta()"
           (salvo)="salvo.emit($event)"
@@ -154,23 +262,47 @@
         />
       }
       <div class="gestao-lista">
-        @for (produto of produtos(); track produto.id) {
-          <article class="gestao-linha catalogo-linha">
-            <div class="catalogo-dados">
-              <h3>{{ produto.nome }}</h3>
-              <span
-                >{{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</span
-              >
-              @if ('ativo' in produto) {
-                <span class="gestao-estado">{{ produto.ativo ? 'Ativo' : 'Inativo' }}</span>
-              } @else {
+        @for (item of itens(); track item.produto.id) {
+          @let produto = item.produto;
+          <article class="gestao-linha catalogo-linha catalogo-produto">
+            <div class="produto-resumo">
+              @if (produto.midiaId) {
+                <img
+                  [src]="'/api/v1/midias/' + produto.midiaId"
+                  alt=""
+                  width="56"
+                  height="56"
+                  loading="lazy"
+                />
+              }
+              <div>
+                <h3>{{ produto.nome }}</h3>
                 <span
-                  class="gestao-estado"
-                  >{{ produto.disponivel ? 'Disponível' : 'Indisponível' }}</span
+                  >{{ item.categoria.nome }} ·
+                  {{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</span
                 >
-                <span>{{ moeda(produto.preco) }}</span>
+              </div>
+            </div>
+            <div class="produto-situacao">
+              <span>{{ produto.ativo ? 'Ativo' : 'Inativo' }}</span>
+              @if (!item.categoria.ativa) {
+                <span>Categoria inativa</span>
+              }
+              @if (produto.sugerido) {
+                <span>Sugestão da casa</span>
               }
             </div>
+            @if (unidadeOperacional()) {
+              <div class="produto-oferta">
+                @if (item.oferta; as oferta) {
+                  <strong>{{ moeda(oferta.preco) }}</strong>
+                  <span>{{ oferta.disponivel ? 'Oferta habilitada' : 'Oferta desabilitada' }}</span>
+                  <small>{{ canaisDaOferta(oferta) || 'Sem canal habilitado' }}</small>
+                } @else {
+                  <span>Sem oferta nesta unidade</span>
+                }
+              </div>
+            }
             <div class="gestao-acoes">
               @if (podeEditar()) {
                 <button
@@ -195,9 +327,61 @@
                 Oferta
               </button>
             </div>
+            <details
+              #detalhes
+              class="produto-detalhes"
+              name="composicao-catalogo"
+              (toggle)="mostrarDetalhe(produto.id, detalhes.open)"
+            >
+              <summary>Detalhes de {{ produto.nome }}</summary>
+              @if (detalheProduto() === produto.id) {
+                @if (produto.descricao) {
+                  <p>{{ produto.descricao }}</p>
+                }
+                @if (produto.adicionais.length) {
+                  <h4>Adicionais</h4>
+                  <ul>
+                    @for (adicional of produto.adicionais; track adicional.id) {
+                      <li>
+                        {{ adicional.nome }} · {{ moeda(adicional.preco) }} · até
+                        {{ adicional.maximo }} por unidade {{ adicional.ativo ? '' : ' · Inativo' }}
+                      </li>
+                    }
+                  </ul>
+                }
+                @for (grupo of produto.grupos; track grupo.id) {
+                  <h4>{{ grupo.nome }}</h4>
+                  <p>De {{ grupo.minimo }} a {{ grupo.maximo }} escolhas por combo</p>
+                  <ul>
+                    @for (opcao of grupo.opcoes; track opcao.id) {
+                      <li>
+                        <strong>{{ referencias()[opcao.produtoId].nome }}</strong> · acréscimo de
+                        {{ moeda(opcao.acrescimo) }} · até {{ opcao.limite }} por combo
+                        @if (adicionaisDaOpcao(opcao).length) {
+                          <ul>
+                            @for (adicional of adicionaisDaOpcao(opcao); track adicional.id) {
+                              <li>
+                                {{ adicional.nome }} · {{ moeda(adicional.preco) }} · até
+                                {{ adicional.maximo }} {{ adicional.ativo ? '' : ' · Inativo' }}
+                              </li>
+                            }
+                          </ul>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+                @if (!produto.grupos.length && !produto.adicionais.length) {
+                  <p>Sem adicionais ou grupos de escolha cadastrados.</p>
+                }
+                @if (podeEditar()) {
+                  <small>Versão do cadastro {{ produto.versao }}</small>
+                }
+              }
+            </details>
           </article>
         } @empty {
-          <p class="vazio">Nenhum produto nesta página.</p>
+          <p class="vazio">Nenhum produto encontrado nesta consulta.</p>
         }
       </div>
       <nav class="gestao-toolbar" aria-label="Páginas dos produtos">

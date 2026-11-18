@@ -11,6 +11,7 @@ import { APP_ROUTES } from './app/rotas/app.routes';
 import { NavegacaoProtegidaService } from './app/rotas/navegacao-protegida.service';
 import { SessaoNavegacaoService } from './app/identidade/sessao-navegacao.service';
 import { SessaoMesaService } from './app/mesas/sessao-mesa.service';
+import { TemaService } from './app/ui/tema.service';
 import { PwaComponent } from './app/pwa/pwa.component';
 
 @Component({
@@ -33,9 +34,22 @@ import { PwaComponent } from './app/pwa/pwa.component';
     </div>
   `,
   styles: `
-    .demo-banner{padding:.45rem 1rem;text-align:center;background:#efe9d8;color:#6c5f36;font-size:.66rem;letter-spacing:.04em}
+    :host:has(> app-equipe-layout) {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      position: relative;
+      overflow: clip;
+    }
+    :host:has(> app-equipe-layout) > .app-utilities:has(> app-pwa.pwa-com-acoes) {
+      max-height: 30dvh;
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: 4px 12px;
+    }
+    .demo-banner{padding:.45rem 1rem;text-align:center;background:var(--gestao-alerta-bg, #efe9d8);color:var(--gestao-alerta-fg, #6c5f36);font-size:.66rem;letter-spacing:.04em}
     .demo-banner span{padding:0 .4rem}
-    .navigation-notice{position:fixed;top:45px;left:50%;transform:translateX(-50%);width:min(600px,calc(100% - 2rem));padding:1rem 3rem 1rem 1rem;background:#fff1d7;color:#694d1a;border:1px solid #dcc48c;border-radius:12px;z-index:100;box-shadow:0 8px 32px #0002}
+    .navigation-notice{position:fixed;top:45px;left:50%;transform:translateX(-50%);width:min(600px,calc(100% - 2rem));padding:1rem 3rem 1rem 1rem;background:var(--gestao-alerta-bg, #fff1d7);color:var(--gestao-alerta-fg, #694d1a);border:1px solid var(--gestao-alerta-borda, #dcc48c);border-radius:12px;z-index:100;box-shadow:0 8px 32px #0002}
     .navigation-notice button{position:absolute;right:.6rem;top:.5rem;background:none;border:none;font-size:1.5rem;color:inherit;min-height:40px;min-width:40px}
     .app-utilities:not(.app-utilities-internas):has(> app-pwa.pwa-com-acoes) {
       max-width: 1400px;
@@ -67,6 +81,7 @@ class App {
   readonly conectado = signal(false);
   readonly mensagem = signal('Verificando conexão…');
   constructor() {
+    inject(TemaService);
     const router = inject(Router);
     const coordenacao = inject(SessaoNavegacaoService);
     const mesa = inject(SessaoMesaService);

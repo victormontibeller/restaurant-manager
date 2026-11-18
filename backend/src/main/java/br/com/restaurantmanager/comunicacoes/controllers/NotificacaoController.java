@@ -1,5 +1,6 @@
 package br.com.restaurantmanager.comunicacoes.controllers;
 
+import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.comunicacoes.dtos.NotificacaoOperacional;
 import br.com.restaurantmanager.comunicacoes.services.NotificacaoService;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
@@ -25,6 +26,16 @@ public class NotificacaoController {
             @AuthenticationPrincipal IdentidadeAtual ator,
             @RequestParam UUID unidadeId,
             @RequestParam(defaultValue = "0") int pagina) {
-        return service.listar(ator, unidadeId, pagina);
+        return service.listar(ator, unidadeId, pagina, null, null).itens();
+    }
+
+    @GetMapping("/api/v1/operacao/notificacoes/pagina")
+    public Pagina<NotificacaoOperacional> pagina(
+            @AuthenticationPrincipal IdentidadeAtual ator,
+            @RequestParam UUID unidadeId,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estado) {
+        return service.listar(ator, unidadeId, pagina, tipo, estado);
     }
 }

@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import {
   Component,
   DestroyRef,
@@ -12,6 +13,8 @@ import {
 import {
   ActivatedRoute,
   NavigationEnd,
+  NavigationSkipped,
+  NavigationSkippedCode,
   Router,
   RouterLink,
   RouterLinkActive,
@@ -24,19 +27,20 @@ import { IconeComponent } from './icone.component';
 import { MarcaService } from './marca.service';
 import { NavegacaoProtegidaService } from './navegacao-protegida.service';
 
-const CHAVE_TEMA_GESTAO = 'rm-tema-gestao';
-
-function lerTemaGestao(): 'claro' | 'escuro' {
-  try {
-    return localStorage.getItem(CHAVE_TEMA_GESTAO) === 'escuro' ? 'escuro' : 'claro';
-  } catch {
-    return 'claro';
-  }
-}
+import { AlternarTemaComponent } from '../ui/alternar-tema.component';
+import { TemaService } from '../ui/tema.service';
 
 @Component({
   selector: 'app-equipe-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, HlmButton, IconeComponent],
+  imports: [
+    CdkTrapFocus,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    HlmButton,
+    IconeComponent,
+    AlternarTemaComponent,
+  ],
   templateUrl: './equipe-layout.component.html',
   styleUrl: './equipe-layout.css',
 })
@@ -48,9 +52,10 @@ export class EquipeLayoutComponent {
   private readonly router = inject(Router);
   private readonly rota = inject(ActivatedRoute);
   readonly cozinha = this.rota.snapshot.data['cozinha'] === true;
-  readonly tema = signal(lerTemaGestao());
+  readonly tema = inject(TemaService).atual;
   readonly menuAberto = signal(false);
   @ViewChild('abrirMenu') abrirMenu?: ElementRef<HTMLButtonElement>;
+  @ViewChild('painel') painel?: ElementRef<HTMLElement>;
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly pagina = signal<Record<string, unknown>>({});
   readonly titulo = computed(() =>
@@ -75,6 +80,12 @@ export class EquipeLayoutComponent {
       if (evento instanceof NavigationEnd) {
         this.atualizarPagina();
         this.menuAberto.set(false);
+        this.painel?.nativeElement.scrollTo(0, 0);
+      } else if (
+        evento instanceof NavigationSkipped &&
+        evento.code === NavigationSkippedCode.IgnoredSameUrlNavigation
+      ) {
+        this.fecharMenu();
       }
     });
     this.contexto.ativar();
@@ -90,6 +101,11 @@ export class EquipeLayoutComponent {
     });
   }
 
+  @HostListener('window:resize') ajustarMenu(): void {
+    if (this.menuAberto() && !window.matchMedia('(max-width: 800px)').matches)
+      this.menuAberto.set(false);
+  }
+
   alternarMenu(): void {
     if (this.menuAberto()) {
       this.fecharMenu();
@@ -99,20 +115,10 @@ export class EquipeLayoutComponent {
     setTimeout(() => this.elemento.nativeElement.querySelector<HTMLElement>('.sidebar a')?.focus());
   }
 
-  alternarTema(): void {
-    const tema = this.tema() === 'claro' ? 'escuro' : 'claro';
-    this.tema.set(tema);
-    try {
-      localStorage.setItem(CHAVE_TEMA_GESTAO, tema);
-    } catch {
-      // O tema ainda pode ser alternado nesta página.
-    }
-  }
-
   @HostListener('document:keydown.escape') fecharMenu(): void {
     if (!this.menuAberto()) return;
     this.menuAberto.set(false);
-    this.abrirMenu?.nativeElement.focus();
+    setTimeout(() => this.abrirMenu?.nativeElement.focus());
   }
 
   selecionarUnidade(id: string): void {

@@ -43,7 +43,7 @@ h2 app-icone {
 .contagem {
   padding: 3px 8px;
   border-radius: 999px;
-  background: #f4eee6;
+  background: var(--muted, #f4eee6);
   white-space: nowrap;
   font-size: 0.75rem;
   font-weight: 600;

@@ -245,17 +245,27 @@ test('S04-UI02: administrador configura regiões e vê sobreposição rejeitada'
   await page.getByLabel('CEP final', { exact: true }).fill('01999999');
   await page.getByLabel('Taxa fixa em reais', { exact: true }).fill('5.00');
   await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).fill('10.00');
+  await page.getByRole('button', { name: 'Aplicar à lista', exact: true }).click();
   await page.getByLabel('Confirme sua senha', { exact: true }).fill(fixture().senha);
   await page.getByRole('button', { name: 'Salvar regiões e prazo', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('salv');
+  await expect(
+    page.getByText('Regiões e prazo de checkout salvos.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Centro', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Editar região Centro' }).click();
+  await expect(page.getByRole('heading', { name: 'Editar região', exact: true })).toBeFocused();
+  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveValue('Centro');
+  await page.getByRole('button', { name: 'Cancelar', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Editar região Centro' })).toBeFocused();
   await capturar(page, 'regioes');
   await page.getByRole('button', { name: 'Adicionar região', exact: true }).click();
-  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveCount(2);
-  await page.getByLabel('Nome da região', { exact: true }).last().fill('Sobreposta');
-  await page.getByLabel('CEP inicial', { exact: true }).last().fill('01999999');
-  await page.getByLabel('CEP final', { exact: true }).last().fill('02000000');
-  await page.getByLabel('Taxa fixa em reais', { exact: true }).last().fill('1.00');
-  await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).last().fill('0.00');
+  await expect(page.getByLabel('Nome da região', { exact: true })).toHaveCount(1);
+  await page.getByLabel('Nome da região', { exact: true }).fill('Sobreposta');
+  await page.getByLabel('CEP inicial', { exact: true }).fill('01999999');
+  await page.getByLabel('CEP final', { exact: true }).fill('02000000');
+  await page.getByLabel('Taxa fixa em reais', { exact: true }).fill('1.00');
+  await page.getByLabel('Pedido mínimo de itens em reais', { exact: true }).fill('0.00');
+  await page.getByRole('button', { name: 'Aplicar à lista', exact: true }).click();
   await page.getByLabel('Confirme sua senha', { exact: true }).fill(fixture().senha);
   await page.getByRole('button', { name: 'Salvar regiões e prazo', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: /faixas ativas de CEP/ })).toContainText(
@@ -309,7 +319,9 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
   await painel
     .getByRole('button', { name: 'Confirmar recebimento presencial', exact: true })
     .click();
-  await expect(painel.getByText(/troco.*30,00/)).toBeVisible();
+  const recibo = painel.getByRole('listitem').filter({ hasText: /troco.*30,00/ });
+  await expect(recibo).toBeVisible();
+  await expect(recibo.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/);
   await painel.getByText('Ajustar cobrança por valor', { exact: true }).click();
   await selecionarFinanceiro(
     painel,
@@ -327,7 +339,15 @@ test('S04-UI03: administrador registra dinheiro, ajusta e confirma devolução',
     painel.getByRole('button', { name: 'Confirmar devolução realizada externamente' }),
   ).toBeVisible();
   await painel.getByRole('button', { name: 'Confirmar devolução realizada externamente' }).click();
-  await expect(painel.getByText(/CONFIRMADA/)).toBeVisible();
+  const devolucao = painel.getByRole('listitem').filter({ hasText: /CONFIRMADA/ });
+  await expect(devolucao).toContainText('Origem: recebimento 1');
+  await expect(devolucao.locator('time')).toHaveCount(2);
+  await painel.getByText('Composição da cobrança', { exact: true }).click();
+  const parcelas = painel.getByRole('list', { name: 'Parcelas da cobrança' });
+  const item = parcelas
+    .getByRole('listitem')
+    .filter({ hasText: catalogo.simples.nome + ' · item 1 · unidade 1' });
+  await expect(item).toContainText(/abatido.*5,00/);
   const campoValor = painel.getByLabel('Valor aplicado (ex.: 20.00)', { exact: true });
   await campoValor.fill('1.00');
   const detalhe = await ok<{ parcelas: { id: string; descricao: string }[] }>(
@@ -461,6 +481,8 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
   const artigo = page
     .locator('app-expedicao > section > article')
     .filter({ has: page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }) });
+  await expect(artigo.locator('address')).toBeHidden();
+  await artigo.getByRole('button', { name: /Detalhes do pedido/ }).click();
   await expect(artigo.getByText('Rua fictícia Sprint 4', { exact: false })).toBeVisible();
   await artigo.getByRole('button', { name: 'Registrar saída para entrega', exact: true }).click();
   await artigo.getByRole('button', { name: 'Confirmar entrega realizada', exact: true }).click();
@@ -481,6 +503,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
     const decisao = gerente.page.locator('app-expedicao > section > article').filter({
       has: gerente.page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }),
     });
+    await decisao.getByRole('button', { name: /Detalhes do pedido/ }).click();
     await decisao.getByLabel('Motivo da ocorrência ou decisão').fill('Nova tentativa autorizada');
     await decisao
       .getByRole('button', { name: 'Autorizar nova tentativa de entrega', exact: true })
@@ -509,6 +532,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
       await entrega
         .getByRole('button', { name: 'Registrar saída para entrega', exact: true })
         .click();
+      await entrega.getByRole('button', { name: /Detalhes do pedido/ }).click();
       await entrega
         .getByLabel('Motivo da ocorrência ou decisão')
         .fill('Retorno fictício da entrega');
@@ -520,6 +544,7 @@ test('S04-UI05: expedição despacha, registra ocorrência e nega conclusão sem
       const decisao = gerente.page.locator('app-expedicao > section > article').filter({
         has: gerente.page.getByRole('article', { name: 'Pedido ' + excecao.id, exact: true }),
       });
+      await decisao.getByRole('button', { name: /Detalhes do pedido/ }).click();
       await decisao
         .getByLabel('Motivo da ocorrência ou decisão')
         .fill('Cancelamento gerencial fictício');
@@ -571,6 +596,8 @@ test('S04-UI10: revogação da expedição remove endereços da tela já aberta'
   const artigo = page
     .locator('app-expedicao > section > article')
     .filter({ has: page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true }) });
+  await artigo.getByRole('button', { name: /Detalhes do pedido/ }).click();
+  await expect(artigo.locator('address')).toBeVisible();
   await expect(artigo.locator('address')).toContainText('Rua fictícia Sprint 4');
   const admin = await loginApi(request);
   await ok(
@@ -646,6 +673,9 @@ test('S04-UI06: relatório mostra datas, fuso e indicadores separados', async ({
     page.getByText('Recebimentos confirmados no período', { exact: true }),
   ).toBeVisible();
   await expect(page.getByText('Reservas atuais de devolução', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Extrato de movimentos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Vendas por canal' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Movimento por dia' })).toBeVisible();
   await capturar(page, 'relatorio');
   await page.getByLabel('Data inicial', { exact: true }).fill('2026-11-09');
   await page.getByLabel('Data final', { exact: true }).fill('2026-11-01');
@@ -687,7 +717,8 @@ test('S04-UI07: conexão OAuth usa conta fictícia e retorna sem expor segredos'
   await expect(page.getByRole('heading', { name: 'Autorização fictícia local' })).toBeVisible();
   await page.getByRole('link', { name: 'Autorizar conta fictícia' }).click();
   await expect(page).toHaveURL(/\/gestao\/integracoes\?conexao=concluida/);
-  await expect(page.getByText(/Conta vendedora:.*Conectada/)).toBeVisible();
+  await expect(page.getByText('Conta vendedora', { exact: true })).toBeVisible();
+  await expect(page.getByText('Conectada', { exact: true })).toBeVisible();
   await expect(page.getByText(/access_token|refresh_token/)).toHaveCount(0);
   await capturar(page, 'integracao');
 });
@@ -858,13 +889,23 @@ test('S04-UI09: gerente consulta pendências e notificações sem acesso à inte
   await expect(
     page.getByRole('heading', { name: 'Pendências financeiras e notificações' }),
   ).toBeVisible();
-  await expect(page.getByText(/Capturado significa salvo localmente/)).toBeVisible();
+  const pagamentos = page.getByRole('region', { name: 'Pagamentos e devoluções', exact: true });
+  await pagamentos.getByLabel('Tipo', { exact: true }).selectOption('CHECKOUT');
+  await pagamentos.locator('summary').first().click();
+  await expect(pagamentos.getByText('Tentativas', { exact: true }).first()).toBeVisible();
   const reconciliar = page.getByRole('button', { name: 'Reconciliar a mesma operação' }).first();
   await expect(reconciliar).toBeVisible();
   await reconciliar.click();
-  await expect(page.getByRole('status')).toContainText(/reconcilia|solicit/i);
+  await expect(page.getByText(/Reconciliação solicitada para o pedido/)).toBeVisible();
   await capturar(page, 'pendencias');
+  await page.getByRole('button', { name: 'Notificações por e-mail' }).click();
+  await expect(page.getByText(/Capturado significa salvo localmente/)).toBeVisible();
+  const notificacoes = page.getByRole('region', { name: 'Notificações por e-mail', exact: true });
+  await notificacoes.getByLabel('Estado', { exact: true }).selectOption('FALHOU');
+  await expect(notificacoes.getByRole('button', { name: 'Atualizar' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Pendências financeiras' }).click();
+  await expect(pagamentos.getByLabel('Tipo', { exact: true })).toHaveValue('CHECKOUT');
   await page.goto('/gestao/integracoes');
   await expect(page).toHaveURL((url) => url.pathname === '/sem-acesso');
-  await expect(page.getByRole('heading', { name: 'Mercado Pago do restaurante' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Conta de recebimento' })).toBeHidden();
 });

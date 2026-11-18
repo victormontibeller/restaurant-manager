@@ -10,6 +10,7 @@ import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service'
 import { retornoSeguro } from '../rotas/guardas';
 import { HlmButton } from '../ui/button';
 import { RecuperacaoComponent } from './recuperacao.component';
+import { DadosContaComponent } from './dados-conta.component';
 import { CadastroComponent } from './cadastro.component';
 import { AceitarConviteComponent } from './aceitar-convite.component';
 import { VerificacaoComponent } from './verificacao.component';
@@ -22,6 +23,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
   selector: 'app-identidade',
   imports: [
     EnderecosComponent,
+    DadosContaComponent,
     RouterLink,
     HlmButton,
     RecuperacaoComponent,
@@ -34,26 +36,16 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     <section
       class="auth-card"
       [class.auth-cliente]="apresentacaoCliente()"
-      [class.conta-cliente]="apresentacaoCliente() && sessao.identidade()?.perfil === 'CLIENTE'"
+      [class.conta-cliente]="pagina() === 'conta'"
+      [class.conta-equipe]="pagina() === 'conta' && equipe"
       [attr.aria-labelledby]="tituloFormulario()"
       [attr.aria-busy]="ocupado()"
     >
       @if (sessao.identidade(); as pessoa) {
         <div class="account-profile">
-          @if (apresentacaoCliente()) {
-            <h1 id="conta-titulo">Minha conta</h1>
-            <dl class="dados-perfil">
-              <div>
-                <dt>Perfil</dt>
-                <dd>{{ nomePerfil(pessoa.perfil) }}</dd>
-              </div>
-              <div>
-                <dt>Verificação</dt>
-                <dd class="status-email" [class.email-verificado]="pessoa.emailVerificado">
-                  {{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}
-                </dd>
-              </div>
-            </dl>
+          @if (pagina() === 'conta') {
+            @if (!equipe) { <h1 id="conta-titulo">Minha conta</h1> }
+            <app-dados-conta [nomePerfil]="nomePerfil(pessoa.perfil)" />
           } @else {
             <span class="auth-symbol" aria-hidden="true">✓</span>
             <p class="eyebrow">MINHA CONTA</p>
@@ -83,7 +75,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
         @if (pessoa.perfil === 'CLIENTE') {
           <app-enderecos [apresentacaoCliente]="apresentacaoCliente()" />
         }
-        @if (!apresentacaoCliente()) {
+        @if (!apresentacaoCliente() && !(equipe && pagina() === 'conta')) {
           <button hlmBtn variant="ghost" type="button" (click)="sair()" [disabled]="ocupado()">
             Sair da conta
           </button>
@@ -127,6 +119,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
   styles: `
     :host{display:block;padding:clamp(1rem,5vw,4rem) 0}.auth-card{width:min(100%,35rem);margin:auto;background:var(--rm-surface,#fff);padding:clamp(1.25rem,5vw,3rem);border:1px solid var(--rm-border,#e4e8e2);border-radius:24px;box-shadow:0 16px 60px #163d2810}.auth-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#edf3e9;color:#254d36;font-size:1.65rem;margin-bottom:1.75rem}.eyebrow{font-size:.73rem;font-weight:750;letter-spacing:.13em;color:var(--rm-primary,#285139)}h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;letter-spacing:-.045em;margin:.6rem 0 1rem}.auth-intro{color:var(--rm-muted,#6b746c);margin-bottom:2rem}form{display:grid;gap:.65rem}input{width:100%;min-height:50px;border:1px solid var(--rm-border,#dce2d9);border-radius:11px;padding:.8rem 1rem;font:inherit;background:#fcfcfa}label{font-size:.88rem;font-weight:650}.password-label{display:flex;justify-content:space-between;align-items:center;margin-top:.65rem;gap:.5rem}.text-action{background:none;border:0;padding:0;color:var(--rm-primary,#285139);font:inherit;font-size:.85rem;text-decoration:underline;text-underline-offset:4px;min-height:44px}form button[type=submit]{margin-top:.75rem;width:100%}.signup{margin:1.2rem 0;text-align:center;font-size:.88rem;color:var(--rm-muted,#6b746c)}.other-access{border-top:1px solid var(--rm-border,#dce2d9);padding-top:1rem;font-size:.85rem}.other-access summary{min-height:44px;cursor:pointer;align-content:center}.other-access nav,.account-actions{display:flex;gap:.6rem;flex-wrap:wrap}.account-actions{margin:1.5rem 0}.erro{color:#9d2424;font-weight:600}.perfil{font-weight:650}
 
+    :host:has(.conta-equipe) { padding: 0; }
     :host(.identidade-cliente) {
       padding-block: 0 16px;
     }
@@ -190,33 +183,8 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
       border-radius: var(--raio-painel-cliente);
       background: var(--superficie-cliente);
     }
-    .conta-cliente .dados-perfil {
-      display: flex;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 12px 32px;
-      margin: 0;
-    }
-    .conta-cliente dt {
-      color: var(--muted-foreground);
-      font-size: 0.875rem;
-    }
-    .conta-cliente dd {
-      margin: 4px 0 0;
-      font-weight: 650;
-    }
-    .conta-cliente .status-email {
-      width: fit-content;
-      padding: 2px 8px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      background: var(--muted);
-      color: var(--muted-foreground);
-    }
-    .conta-cliente .email-verificado {
-      background: var(--accent);
-      color: var(--accent-foreground);
-    }
+    .conta-equipe { margin-inline: 0; box-shadow: none; }
+    .conta-equipe .account-profile { background: var(--card); border-radius: var(--gestao-raio); }
     .conta-cliente .account-actions {
       gap: var(--espaco-acao-cliente);
       margin: 16px 0 0;
@@ -270,7 +238,8 @@ export class IdentidadeComponent {
   }
 
   tituloFormulario(): string {
-    if (this.sessao.identidade()) return 'conta-titulo';
+    if (this.sessao.identidade())
+      return this.equipe && this.pagina() === 'conta' ? 'gestao-titulo' : 'conta-titulo';
     const pagina = this.pagina();
     return pagina === 'convite'
       ? 'aceitar-convite-titulo'

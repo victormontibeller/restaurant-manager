@@ -5,6 +5,7 @@ import { IntegracaoPagamentoComponent } from '../pagamentos/integracao.component
 import { PendenciasPagamentoComponent } from '../pagamentos/pendencias.component';
 import { Component, DestroyRef, Directive, inject } from '@angular/core';
 import { AcessosComponent } from '../acessos/acessos.component';
+import { EquipeComponent } from '../acessos/equipe.component';
 import { ConvitesComponent } from '../acessos/convites.component';
 import { GestaoCatalogoComponent } from '../catalogo/gestao-catalogo.component';
 import { VitrineComponent } from '../catalogo/vitrine.component';
@@ -61,10 +62,17 @@ export class PaginaCatalogoComponent extends PaginaProtegida {}
 
 @Component({
   selector: 'app-pagina-equipe',
-  imports: [AcessosComponent, FormularioRotaDirective],
-  template: `<div appFormularioRota="marcados" #rascunho="formularioRota"><app-acessos (bloqueio)="bloquear($event)" (salvo)="rascunho.confirmarSalvo($event)"/></div>`,
+  imports: [EquipeComponent, FormularioRotaDirective],
+  template: `<div appFormularioRota="marcados" #rascunho="formularioRota"><app-equipe (bloqueio)="bloquear($event)" (salvo)="rascunho.confirmarSalvo($event)"/></div>`,
 })
 export class PaginaEquipeComponent extends PaginaProtegida {}
+
+@Component({
+  selector: 'app-pagina-acessos',
+  imports: [AcessosComponent],
+  template: '<app-acessos />',
+})
+export class PaginaAcessosComponent {}
 
 @Component({
   selector: 'app-pagina-convites',

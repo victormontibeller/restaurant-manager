@@ -52,15 +52,15 @@
   margin: 0;
   padding: 4px 8px;
   border-radius: 8px;
-  background: #f5e9e2;
-  color: #833322;
+  background: var(--selecao-bg, #f5e9e2);
+  color: var(--primary, #833322);
   font-size: 0.875rem;
   font-weight: 650;
 }
 
 .pagamento-pedido .estado-tentativa[data-estado='CONFIRMADO'] {
-  background: #e6f3e9;
-  color: #28623e;
+  background: var(--gestao-sucesso-bg, #e6f3e9);
+  color: var(--gestao-sucesso-fg, #28623e);
 }
 
 .pagamento-pedido .botao,

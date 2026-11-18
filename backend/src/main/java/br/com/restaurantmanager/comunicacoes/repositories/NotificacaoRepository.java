@@ -1,14 +1,14 @@
 package br.com.restaurantmanager.comunicacoes.repositories;
 
+import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.comunicacoes.dtos.NotificacaoOperacional;
 import br.com.restaurantmanager.comunicacoes.dtos.TrabalhoNotificacao;
+import br.com.restaurantmanager.shared.InstantesSql;
 
 import jakarta.persistence.EntityManager;
-
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -33,25 +33,26 @@ public class NotificacaoRepository {
                 .executeUpdate();
     }
 
-    public List<NotificacaoOperacional> listar(UUID unidade, int pagina) {
-        return em.unwrap(Session.class)
-                .createNativeQuery(
-                        "select id,pedido_id,tipo,estado,tentativas from notificacao_operacional"
-                            + " where unidade_id=:u order by criada_em desc,id",
-                        Object[].class)
-                .setParameter("u", unidade)
-                .setFirstResult(pagina * 50)
-                .setMaxResults(50)
-                .getResultStream()
-                .map(
-                        r ->
-                                new NotificacaoOperacional(
-                                        (UUID) r[0],
-                                        (UUID) r[1],
-                                        (String) r[2],
-                                        (String) r[3],
-                                        ((Number) r[4]).intValue()))
-                .toList();
+    public Pagina<NotificacaoOperacional> listar(UUID unidade, int pagina, String tipo, String estado) {
+        String sql = """
+                select n.id,n.pedido_id,n.tipo,n.estado,n.tentativas,n.criada_em,
+                       case when n.estado='PENDENTE' and n.tentativas<5
+                            and (n.lease_ate is null or n.lease_ate<=now()) then n.proximo_em end proxima,
+                       coalesce(n.lease_ate>now(),false) em_execucao,n.ultima_falha is not null falhou,
+                       p.canal,p.estado estado_pedido,u.fuso
+                from notificacao_operacional n join pedido p on p.id=n.pedido_id join unidade u on u.id=n.unidade_id
+                where n.unidade_id=:u and (cast(:tipo as text) is null or n.tipo=:tipo)
+                    and (cast(:estado as text) is null or n.estado=:estado)
+                order by n.criada_em desc,n.id
+                """;
+        var linhas = em.unwrap(Session.class).createNativeQuery(sql, Object[].class)
+                .setParameter("u", unidade).setParameter("tipo", tipo).setParameter("estado", estado)
+                .setFirstResult(pagina * 50).setMaxResults(51).getResultList();
+        var itens = linhas.stream().limit(50).map(r -> new NotificacaoOperacional(
+                (UUID) r[0], (UUID) r[1], (String) r[2], (String) r[3], ((Number) r[4]).intValue(),
+                InstantesSql.ler(r[5]), InstantesSql.ler(r[6]), (boolean) r[7], (boolean) r[8],
+                (String) r[9], (String) r[10], (String) r[11])).toList();
+        return new Pagina<>(itens, linhas.size() > 50);
     }
 
     public TrabalhoNotificacao reivindicar() {

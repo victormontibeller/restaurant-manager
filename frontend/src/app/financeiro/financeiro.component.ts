@@ -1,6 +1,7 @@
 import {
   Component,
   DestroyRef,
+  computed,
   effect,
   inject,
   input,
@@ -9,8 +10,9 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { horario } from '../pedidos/modelos';
 import { mensagemErro, moeda } from '../catalogo/modelos';
-import { SessaoService } from '../identidade/sessao.service';
+import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
 import { FinanceiroService } from './financeiro.service';
 import { DetalheFinanceiro, IntencaoFinanceira } from './modelos';
@@ -38,6 +40,10 @@ export class FinanceiroComponent {
   readonly aviso = signal('');
   readonly carregando = signal(false);
   readonly moeda = moeda;
+  readonly horario = horario;
+  readonly referenciasRecebimentos = computed(
+    () => new Map(this.dados()?.recebimentos.map((r, indice) => [r.id, indice + 1])),
+  );
   metodo = 'PIX';
   valor = '';
   entregue = '';
@@ -112,7 +118,9 @@ export class FinanceiroComponent {
       this.dados.set(dados);
       this.erroConsulta.set('');
     } catch (erro) {
-      if (consulta === this.consulta) this.erroConsulta.set(mensagemErro(erro));
+      if (consulta !== this.consulta || chave !== this.movimentos.chave(this.base())) return;
+      if (erro instanceof ApiFailure && [401, 403, 404].includes(erro.status)) this.dados.set(null);
+      this.erroConsulta.set(mensagemErro(erro));
     } finally {
       if (consulta === this.consulta) this.carregando.set(false);
     }

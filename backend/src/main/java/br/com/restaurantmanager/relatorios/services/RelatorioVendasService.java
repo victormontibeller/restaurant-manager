@@ -35,20 +35,25 @@ public class RelatorioVendasService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public RelatorioVendas consultar(
-            IdentidadeAtual ator, UUID unidade, LocalDate inicio, LocalDate fim) {
+            IdentidadeAtual ator, UUID unidade, LocalDate inicio, LocalDate fim, int pagina) {
         acessos.autorizarOperacaoExistente(ator, Acao.RELATORIO, unidade);
+        if (pagina < 0 || pagina > 10000) throw ErrosPedido.regra("Página inválida.");
+        String fuso = unidades.fusoOperacional(unidade);
+        ZoneId zona = ZoneId.of(fuso);
+        if (inicio == null && fim == null) {
+            inicio = LocalDate.now(zona);
+            fim = inicio;
+        }
         if (inicio == null
                 || fim == null
                 || fim.isBefore(inicio)
                 || ChronoUnit.DAYS.between(inicio, fim) > 366)
             throw ErrosPedido.regra("Informe um período válido de até 367 dias.");
-        String fuso = unidades.fusoOperacional(unidade);
-        ZoneId zona = ZoneId.of(fuso);
-        Object[] r =
-                repository.consultar(
-                        unidade,
-                        inicio.atStartOfDay(zona).toInstant(),
-                        fim.plusDays(1).atStartOfDay(zona).toInstant());
+        Instant de = inicio.atStartOfDay(zona).toInstant();
+        Instant ate = fim.plusDays(1).atStartOfDay(zona).toInstant();
+        Object[] r = repository.consultar(unidade, de, ate);
+        var movimentos = repository.movimentos(unidade, de, ate, pagina);
+        int tamanho = Math.min(movimentos.size(), RelatorioVendasRepository.TAMANHO_PAGINA);
         return new RelatorioVendas(
                 unidade,
                 inicio,
@@ -63,7 +68,11 @@ public class RelatorioVendasService {
                 texto(r[5]),
                 texto(r[6]),
                 texto(r[7]),
-                texto(r[8]));
+                texto(r[8]),
+                repository.dias(unidade, de, ate, fuso),
+                repository.canais(unidade, de, ate),
+                movimentos.subList(0, tamanho),
+                movimentos.size() > tamanho);
     }
 
     private String texto(Object valor) {

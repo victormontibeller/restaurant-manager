@@ -1,7 +1,7 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
-import { Pedido } from '../pedidos/modelos';
+import { Pedido, horario } from '../pedidos/modelos';
 import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
 import { mensagemErro } from '../catalogo/modelos';
 import { HlmButton } from '../ui/button';
@@ -16,6 +16,8 @@ export class PaginaPedidoComponent {
   private readonly sessao = inject(SessaoService);
   private readonly rota = inject(ActivatedRoute);
   readonly pedido = signal<Pedido | null>(null);
+  readonly ultimaConsulta = signal('');
+  readonly horario = horario;
   readonly erro = signal('');
   readonly carregando = signal(false);
   private contaAtual = this.sessao.identidade()?.usuarioId ?? '';
@@ -62,6 +64,7 @@ export class PaginaPedidoComponent {
         '/api/v1/me/pedidos/' + encodeURIComponent(pedidoId),
       );
       if (!this.destruido && geracao === this.geracao) {
+        this.ultimaConsulta.set(new Date().toISOString());
         this.pedido.set(pedido);
         this.erro.set('');
       }

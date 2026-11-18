@@ -1,5 +1,6 @@
 package br.com.restaurantmanager.pagamentos.controllers;
 
+import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import br.com.restaurantmanager.pagamentos.dtos.PendenciaPagamento;
 import br.com.restaurantmanager.pagamentos.services.PendenciaPagamentoService;
@@ -29,7 +30,17 @@ public class PendenciaPagamentoController {
             @AuthenticationPrincipal IdentidadeAtual ator,
             @RequestParam UUID unidadeId,
             @RequestParam(defaultValue = "0") int pagina) {
-        return service.listar(ator, unidadeId, pagina);
+        return service.listar(ator, unidadeId, pagina, null, null).itens();
+    }
+
+    @GetMapping("/api/v1/operacao/pagamentos/pagina")
+    public Pagina<PendenciaPagamento> pagina(
+            @AuthenticationPrincipal IdentidadeAtual ator,
+            @RequestParam UUID unidadeId,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estado) {
+        return service.listar(ator, unidadeId, pagina, tipo, estado);
     }
 
     @PostMapping("/api/v1/operacao/pagamentos/{tipo:checkout|devolucao}/{id}/reconciliar")

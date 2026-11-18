@@ -3,6 +3,8 @@ package br.com.restaurantmanager.catalogo.repositories;
 import br.com.restaurantmanager.catalogo.dtos.Adicional;
 import br.com.restaurantmanager.catalogo.dtos.Categoria;
 import br.com.restaurantmanager.catalogo.dtos.Grupo;
+import br.com.restaurantmanager.catalogo.dtos.FiltrosCatalogoGestao;
+import br.com.restaurantmanager.catalogo.dtos.ItemCatalogoGestao;
 import br.com.restaurantmanager.catalogo.dtos.Oferta;
 import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.catalogo.dtos.Produto;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -105,6 +108,45 @@ public class CatalogoRepository {
         return new Pagina<>(linhas.stream().limit(50).map(this::produto).toList(), linhas.size() > 50);
     }
 
+    public Pagina<ItemCatalogoGestao> listagem(UUID unidade, boolean editar, FiltrosCatalogoGestao filtros, int pagina) {
+        var sql = new StringBuilder("select " + COLUNAS_PRODUTO + """
+                , c.nome, c.ativa, c.versao, o.versao, o.preco, o.disponivel, o.delivery, o.retirada, o.mesa
+                from produto p join categoria c on c.id = p.categoria_id
+                left join produto_unidade o on o.produto_id = p.id and o.unidade_id = cast(:unidade as uuid)
+                where true
+                """);
+        if (!editar) sql.append(" and p.ativo and c.ativa");
+        if (!filtros.busca().isBlank()) {
+            sql.append(" and (strpos(lower(p.nome),lower(:busca)) > 0 or strpos(lower(p.descricao),lower(:busca)) > 0)");
+        }
+        if (filtros.categoriaId() != null) sql.append(" and p.categoria_id = :categoria");
+        if (filtros.tipo() != null) sql.append(" and p.tipo = :tipo");
+        if (filtros.ativo() != null) sql.append(" and p.ativo = :ativo");
+        if (filtros.disponivel() != null) sql.append(" and coalesce(o.disponivel,false) = :disponivel");
+        sql.append(" order by p.nome, p.id");
+        var query = consulta(sql.toString(), Object[].class).setParameter("unidade", unidade, UUID.class);
+        if (!filtros.busca().isBlank()) query.setParameter("busca", filtros.busca().strip());
+        if (filtros.categoriaId() != null) query.setParameter("categoria", filtros.categoriaId());
+        if (filtros.tipo() != null) query.setParameter("tipo", filtros.tipo().name());
+        if (filtros.ativo() != null) query.setParameter("ativo", filtros.ativo());
+        if (filtros.disponivel() != null) query.setParameter("disponivel", filtros.disponivel());
+        var linhas = query.setFirstResult(pagina * 50).setMaxResults(51).getResultList();
+        var itens = linhas.stream().limit(50).map(linha -> {
+            var produto = produto(linha);
+            var categoria = new Categoria(produto.categoriaId(), (String) linha[11],
+                    (Boolean) linha[12], ((Number) linha[13]).longValue());
+            var oferta = linha[14] == null ? null : lerOferta(produto.id(), unidade, linha, 14);
+            return new ItemCatalogoGestao(produto, categoria, oferta);
+        }).toList();
+        return new Pagina<>(itens, linhas.size() > 50);
+    }
+
+    public List<Produto> componentes(Set<UUID> ids) {
+        if (ids.isEmpty()) return List.of();
+        return consulta("select " + COLUNAS_PRODUTO + " from produto p where p.id in (:ids)", Object[].class)
+                .setParameterList("ids", ids).getResultList().stream().map(this::produto).toList();
+    }
+
     public Pagina<Produto> produtosPublicos(UUID unidade, String busca, UUID categoria, int pagina, boolean operacional) {
         String filtroOferta = operacional ? "" : " and exists (select 1 from produto_unidade o where o.produto_id = p.id and o.unidade_id = :unidade)";
         String filtroCategoria = categoria == null ? "" : " and p.categoria_id = :categoria";
@@ -162,14 +204,17 @@ public class CatalogoRepository {
                 select versao, preco, disponivel, delivery, retirada, mesa from produto_unidade
                  where produto_id = :produto and unidade_id = :unidade
                 """, Object[].class).setParameter("produto", produto).setParameter("unidade", unidade)
-                .getResultStream().findFirst().map(linha -> {
-                    var canais = new ArrayList<CanalAtendimento>();
-                    if ((Boolean) linha[3]) canais.add(CanalAtendimento.DELIVERY);
-                    if ((Boolean) linha[4]) canais.add(CanalAtendimento.RETIRADA);
-                    if ((Boolean) linha[5]) canais.add(CanalAtendimento.MESA);
-                    return new Oferta(produto, unidade, ((Number) linha[0]).longValue(),
-                            Dinheiro.texto((BigDecimal) linha[1]), (Boolean) linha[2], List.copyOf(canais));
-                }).orElseGet(() -> new Oferta(produto, unidade, 0, "0.00", false, List.of()));
+                .getResultStream().findFirst().map(linha -> lerOferta(produto, unidade, linha, 0))
+                .orElseGet(() -> new Oferta(produto, unidade, 0, "0.00", false, List.of()));
+    }
+
+    private Oferta lerOferta(UUID produto, UUID unidade, Object[] linha, int inicio) {
+        var canais = new ArrayList<CanalAtendimento>();
+        if ((Boolean) linha[inicio + 3]) canais.add(CanalAtendimento.DELIVERY);
+        if ((Boolean) linha[inicio + 4]) canais.add(CanalAtendimento.RETIRADA);
+        if ((Boolean) linha[inicio + 5]) canais.add(CanalAtendimento.MESA);
+        return new Oferta(produto, unidade, ((Number) linha[inicio]).longValue(),
+                Dinheiro.texto((BigDecimal) linha[inicio + 1]), (Boolean) linha[inicio + 2], List.copyOf(canais));
     }
 
     public void salvarOferta(Oferta oferta) {

@@ -56,13 +56,13 @@
 .pedido-cliente .etiqueta[data-estado='AGUARDANDO_PAGAMENTO'],
 .pedido-cliente .etiqueta[data-estado='NA_FILA'],
 .pedido-cliente .etiqueta[data-estado='EM_ENTREGA'] {
-  background: #f5e9e2;
-  color: #833322;
+  background: var(--selecao-bg, #f5e9e2);
+  color: var(--primary, #833322);
 }
 
 .pedido-cliente .etiqueta[data-estado='CONCLUIDO'] {
-  background: #e6f3e9;
-  color: #28623e;
+  background: var(--gestao-sucesso-bg, #e6f3e9);
+  color: var(--gestao-sucesso-fg, #28623e);
 }
 
 .pedido-cliente .orientacao-pedido,
@@ -134,8 +134,8 @@
 
 .andamento-pedido .andamento-concluido .marcador-andamento {
   color: var(--primary);
-  border-color: #e9cdc2;
-  background: #f5e9e2;
+  border-color: var(--selecao-borda, #e9cdc2);
+  background: var(--selecao-bg, #f5e9e2);
 }
 
 .andamento-pedido [aria-current='step'] {

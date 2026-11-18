@@ -18,7 +18,7 @@ const context = {
   setTimeout,
   console,
 };
-const source = fs.readFileSync(repo + '/frontend/src/app/acessos/acessos.component.ts', 'utf8');
+const source = fs.readFileSync(repo + '/frontend/src/app/acessos/equipe.component.ts', 'utf8');
 vm.runInNewContext(
   ts.transpileModule(source, {
     compilerOptions: {
@@ -29,7 +29,7 @@ vm.runInNewContext(
   }).outputText,
   context,
 );
-const c = new context.exports.AcessosComponent();
+const c = new context.exports.EquipeComponent();
 c.unidades.set([{ id: 'ativa', nome: 'A1' }]);
 const f = { id: 'ficticio', perfil: 'COZINHA', unidades: ['ativa', 'inativa'] };
 c.vinculosOriginais.set({ ficticio: [...f.unidades] });

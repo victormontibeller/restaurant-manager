@@ -1,134 +1,124 @@
-<div
-  class="workplace"
-  [class.kitchen-workplace]="cozinha"
-  [class.gestao-compacta]="pagina()['compacta']"
-  [attr.data-tema-gestao]="cozinha ? null : tema()"
->
-  @if (!cozinha) {
-    @if (menuAberto()) {
-      <button class="sidebar-overlay" aria-label="Fechar menu" (click)="fecharMenu()"></button>
-    }
-    <aside class="sidebar" [class.open]="menuAberto()">
-      <a routerLink="/gestao" class="workspace-brand"
-        ><span class="brand-mark"><app-icone nome="marca" /></span
-        ><span>{{ marca.nome() }}<small>GESTÃO DO RESTAURANTE</small></span></a
-      >
+<div class="workplace gestao-compacta" [attr.data-tema-gestao]="tema()">
+  @if (menuAberto()) {
+    <button class="sidebar-overlay" tabindex="-1" aria-label="Fechar menu" (click)="fecharMenu()"></button>
+  }
+  <aside
+    id="menu-gestao"
+    class="sidebar"
+    aria-label="Menu de gestão"
+    [class.open]="menuAberto()"
+    [attr.role]="menuAberto() ? 'dialog' : null"
+    [attr.aria-modal]="menuAberto() ? 'true' : null"
+    [cdkTrapFocus]="menuAberto()"
+  >
+    <a routerLink="/gestao" class="workspace-brand"
+      ><span class="brand-mark"><app-icone nome="marca" /></span
+      ><span>{{ marca.nome() }}<small>GESTÃO DO RESTAURANTE</small></span></a
+    >
+    <button
+      class="close-menu"
+      hlmBtn
+      variant="ghost"
+      size="icon"
+      aria-label="Fechar menu"
+      (click)="fecharMenu()"
+    >
+      <app-icone nome="fechar" />
+    </button>
+    <p class="nav-label">DIA A DIA</p>
+    <nav aria-label="Gestão do restaurante">
+      @if (contexto.tem('pedido.consultar')) {
+        <a
+          routerLink="/gestao/pedidos"
+          routerLinkActive="active" ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{exact:true}"
+          ><app-icone nome="pedidos" />Pedidos</a
+        >
+        <a routerLink="/gestao/mesas" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="mesas" />Mesas e comandas</a
+        >
+      }
+      @if (contexto.podeCozinha()) {
+        <a routerLink="/cozinha" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="cozinha" />Cozinha</a
+        >
+      }
+      @if (contexto.podeExpedicao()) {
+        <a routerLink="/gestao/expedicao" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="pedidos" />Expedição</a
+        >
+      }
+      @if (contexto.tem('relatorio.consultar')) {
+        <a routerLink="/gestao/relatorios" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="atualizacoes" />Vendas e movimentos</a
+        >
+      }
+      @if (contexto.tem('pagamento.reconciliar')) {
+        <a routerLink="/gestao/pendencias" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="relogio" />Pendências e notificações</a
+        >
+      }
+      @if (contexto.tem('catalogo.consultar')) {
+        <a routerLink="/gestao/catalogo" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="cardapio" />Cardápio</a
+        >
+      }
+      @if (contexto.administrador()) {
+        <p class="nav-label">ADMINISTRAÇÃO</p>
+        <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="unidade" />Regiões e checkout</a
+        >
+        <a routerLink="/gestao/integracoes" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="conta" />Mercado Pago</a
+        >
+        <a
+          routerLink="/gestao/equipe"
+          routerLinkActive="active" ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{exact:true}"
+          ><app-icone nome="equipe" />Equipe</a
+        >
+        <a routerLink="/gestao/acessos" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="filtros" />Acessos</a
+        >
+        <a routerLink="/gestao/equipe/convites" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="conta" />Convites</a
+        >
+        <a routerLink="/gestao/unidades" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="unidade" />Unidades e horários</a
+        >
+        <a routerLink="/gestao/configuracoes/prazos" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="relogio" />Prazos de aceite</a
+        >
+      }
+      @if (contexto.tem('unidade.acompanhar')) {
+        <a routerLink="/gestao/atualizacoes" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icone nome="atualizacoes" />Atualizações</a
+        >
+      }
+    </nav>
+    <div class="sidebar-bottom">
+      <a routerLink="/conta" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icone nome="conta" />Minha conta</a>
+      <a routerLink="/cardapio"
+        ><app-icone nome="cardapio" />Ver cardápio do cliente<app-icone nome="seta" /></a
+      ><small>Uma boa experiência começa nos detalhes.</small>
+    </div>
+  </aside>
+  <div class="workspace-body" [inert]="menuAberto()">
+    <header class="workspace-header">
       <button
-        class="close-menu"
+        class="open-menu"
+        #abrirMenu
         hlmBtn
         variant="ghost"
         size="icon"
-        aria-label="Fechar menu"
-        (click)="fecharMenu()"
+        aria-label="Abrir menu de gestão"
+        aria-controls="menu-gestao"
+        [attr.aria-expanded]="menuAberto()"
+        (click)="alternarMenu()"
       >
-        <app-icone nome="fechar" />
+        <app-icone nome="menu" />
       </button>
-      <p class="nav-label">DIA A DIA</p>
-      <nav aria-label="Gestão do restaurante">
-        @if (contexto.tem('pedido.consultar')) {
-          <a
-            routerLink="/gestao/pedidos"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact:true}"
-            ><app-icone nome="pedidos" />Pedidos</a
-          >
-          <a routerLink="/gestao/mesas" routerLinkActive="active"
-            ><app-icone nome="mesas" />Mesas e comandas</a
-          >
-        }
-        @if (contexto.podeExpedicao()) {
-          <a routerLink="/gestao/expedicao" routerLinkActive="active"
-            ><app-icone nome="pedidos" />Expedição</a
-          >
-        }
-        @if (contexto.tem('relatorio.consultar')) {
-          <a routerLink="/gestao/relatorios" routerLinkActive="active"
-            ><app-icone nome="atualizacoes" />Vendas e movimentos</a
-          >
-        }
-        @if (contexto.tem('pagamento.reconciliar')) {
-          <a routerLink="/gestao/pendencias" routerLinkActive="active"
-            ><app-icone nome="relogio" />Pendências e notificações</a
-          >
-        }
-        @if (contexto.tem('catalogo.consultar')) {
-          <a routerLink="/gestao/catalogo" routerLinkActive="active"
-            ><app-icone nome="cardapio" />Cardápio</a
-          >
-        }
-        @if (contexto.podeCozinha()) {
-          <a routerLink="/cozinha"
-            ><app-icone nome="cozinha" />Cozinha<app-icone class="external-arrow" nome="seta"
-          /></a>
-        }
-        @if (contexto.administrador()) {
-          <p class="nav-label">ADMINISTRAÇÃO</p>
-          <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active"
-            ><app-icone nome="unidade" />Regiões e checkout</a
-          >
-          <a routerLink="/gestao/integracoes" routerLinkActive="active"
-            ><app-icone nome="conta" />Mercado Pago</a
-          >
-          <a
-            routerLink="/gestao/equipe"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact:true}"
-            ><app-icone nome="equipe" />Equipe e acessos</a
-          >
-          <a routerLink="/gestao/equipe/convites" routerLinkActive="active"
-            ><app-icone nome="conta" />Convites</a
-          >
-          <a routerLink="/gestao/unidades" routerLinkActive="active"
-            ><app-icone nome="unidade" />Unidades e horários</a
-          >
-          <a routerLink="/gestao/configuracoes/prazos" routerLinkActive="active"
-            ><app-icone nome="relogio" />Prazos de aceite</a
-          >
-        }
-        @if (contexto.tem('unidade.acompanhar')) {
-          <a routerLink="/gestao/atualizacoes" routerLinkActive="active"
-            ><app-icone nome="atualizacoes" />Atualizações</a
-          >
-        }
-      </nav>
-      <div class="sidebar-bottom">
-        <a routerLink="/conta"><app-icone nome="conta" />Minha conta</a>
-        <a routerLink="/cardapio"
-          ><app-icone nome="cardapio" />Ver cardápio do cliente<app-icone nome="seta" /></a
-        ><small>Uma boa experiência começa nos detalhes.</small>
-      </div>
-    </aside>
-  }
-  <div class="workspace-body">
-    <header class="workspace-header">
-      @if (!cozinha) {
-        <button
-          class="open-menu"
-          #abrirMenu
-          hlmBtn
-          variant="ghost"
-          size="icon"
-          aria-label="Abrir menu de gestão"
-          [attr.aria-expanded]="menuAberto()"
-          (click)="alternarMenu()"
-        >
-          <app-icone nome="menu" />
-        </button>
-      }
-      @if (cozinha) {
-        <a routerLink="/cozinha" class="kitchen-brand"
-          ><span class="brand-mark"><app-icone nome="cozinha" /></span
-          ><span>{{ marca.nome() }}<small>PAINEL DA COZINHA</small></span></a
-        >
-      } @else {
-        @if (pagina()['compacta']) {
-          <div class="breadcrumb">Gestão</div>
-        } @else {
-          <div class="breadcrumb">
-            Restaurante <span>/</span> <strong>{{ titulo() }}</strong>
-          </div>
-        }
-      }
+      <div class="breadcrumb">Gestão</div>
       <div class="workspace-tools">
         @if (cozinha || pagina()['unidade']) {
           <label class="unit-picker"
@@ -146,23 +136,7 @@
             </select></label
           >
         }
-        @if (cozinha) {
-          <a hlmBtn variant="outline" routerLink="/gestao/pedidos">Gestão</a>
-        }
-        @if (!cozinha) {
-          <button
-            hlmBtn
-            variant="ghost"
-            size="icon"
-            type="button"
-            class="alternar-tema"
-            [attr.aria-label]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
-            [attr.title]="tema() === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro'"
-            (click)="alternarTema()"
-          >
-            <app-icone [nome]="tema() === 'escuro' ? 'sol' : 'lua'" />
-          </button>
-        }
+        <app-alternar-tema />
         <a class="user-avatar" routerLink="/conta" aria-label="Minha conta"
           ><app-icone nome="conta"
         /></a>
@@ -178,38 +152,40 @@
         </button>
       </div>
     </header>
-    <main id="conteudo" class="workspace-main" tabindex="-1">
+    <main id="conteudo" class="workspace-main" tabindex="-1" (focus)="painel.scrollTo(0, 0)">
       <div class="page-heading">
         <div>
           <h1 id="gestao-titulo" tabindex="-1">{{ titulo() }}</h1>
         </div>
-        @if (!cozinha && contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
+        @if (contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
           <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
         }
       </div>
-      @if (contexto.erro()) {
-        <p class="context-error" role="alert">
-          {{ contexto.erro() }}
-          <button
-            hlmBtn
-            variant="ghost"
-            (click)="contexto.carregar()"
-            [disabled]="contexto.carregando()"
-          >
-            Tentar novamente
-          </button>
-        </p>
-      }
-      @if (autorizado()) {
-        <router-outlet />
-      } @else {
-        <section class="empty-access" role="status">
-          <app-icone nome="conta" />
-          <h2>Seu acesso foi atualizado</h2>
-          <p>Escolha uma área disponível no menu ou entre novamente.</p>
-          <a hlmBtn routerLink="/conta">Ver minha conta</a>
-        </section>
-      }
+      <div #painel class="workspace-content" tabindex="0" role="region" aria-label="Conteúdo da página">
+        @if (contexto.erro()) {
+          <p class="context-error" role="alert">
+            {{ contexto.erro() }}
+            <button
+              hlmBtn
+              variant="ghost"
+              (click)="contexto.carregar()"
+              [disabled]="contexto.carregando()"
+            >
+              Tentar novamente
+            </button>
+          </p>
+        }
+        @if (autorizado()) {
+          <router-outlet />
+        } @else {
+          <section class="empty-access" role="status">
+            <app-icone nome="conta" />
+            <h2>Seu acesso foi atualizado</h2>
+            <p>Escolha uma área disponível no menu ou entre novamente.</p>
+            <a hlmBtn routerLink="/conta">Ver minha conta</a>
+          </section>
+        }
+      </div>
     </main>
   </div>
 </div>

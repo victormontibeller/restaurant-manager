@@ -106,7 +106,7 @@
   height: 40px;
   place-items: center;
   border-radius: 50%;
-  background: #f6ebe4;
+  background: var(--selecao-bg, #f6ebe4);
   color: var(--primary);
 }
 

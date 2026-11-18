@@ -200,11 +200,16 @@
         <dd>{{ moeda(conta.totalDevido) }}</dd>
         <dt>Recebido confirmado</dt>
         <dd>{{ moeda(conta.pagoConfirmado) }}</dd>
+        <dt>Devolvido confirmado</dt>
+        <dd>{{ moeda(conta.devolvidoConfirmado) }}</dd>
         <dt>Saldo a receber</dt>
         <dd>{{ moeda(conta.saldoAReceber) }}</dd>
         <dt>Saldo a devolver</dt>
         <dd>{{ moeda(conta.saldoADevolver) }}</dd>
       </dl>
+      @if (conta.pendenciaFinanceira) {
+        <p class="aviso">Há uma operação financeira pendente nesta comanda.</p>
+      }
       @if (
         tem('recebimento.registrar') || tem('financeiro.ajustar') || tem('devolucao.solicitar') || tem('comanda.concluir')
       ) {
@@ -252,6 +257,11 @@
           </header>
           <p>
             {{ solicitacao.tipo === 'AJUDA' ? 'Solicitou ajuda da equipe' : 'Solicitou a conta' }}
+            ·
+            <time
+              [attr.datetime]="solicitacao.criadaEm"
+              >{{ solicitacao.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</time
+            >
           </p>
           @if (solicitacao.estado === 'PENDENTE') {
             <button (click)="atender(solicitacao)" [disabled]="ocupado()">

@@ -79,7 +79,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
     (r) => r.url().endsWith('/auth/login') && r.request().method() === 'POST',
   );
   const loaded = Promise.all(
-    ['/auth/me', '/configuracoes/acessos', '/equipe?pagina=0', '/operacao/unidades'].map((path) =>
+    ['/auth/me', '/equipe?pagina=0', '/operacao/unidades'].map((path) =>
       page.waitForResponse((r) => r.url().endsWith(path) && r.request().method() === 'GET'),
     ),
   );
@@ -90,7 +90,7 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
     expect(result.status()).toBe(200);
     await result.finished();
   }
-  await expect(page.getByRole('button', { name: 'Matriz de permissões' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Recarregar equipe' })).toBeEnabled();
   await page.getByLabel('Confirme sua senha').fill(fixture.admin.senha);
   const reauth = page.waitForResponse((r) => r.url().endsWith('/auth/reautenticar'));
   await page.getByRole('button', { name: 'Confirmar identidade' }).click();
@@ -183,11 +183,11 @@ test('S01-UI35: vínculo inativo visível, reversível e revogação real do fun
   expect(changed.request().postDataJSON().perfil).toBe('EXPEDICAO');
   expect((await changed.json()).perfil).toBe('EXPEDICAO');
   const reload = Promise.all(
-    ['/configuracoes/acessos', '/equipe?pagina=0', '/operacao/unidades'].map((path) =>
+    ['/equipe?pagina=0', '/operacao/unidades'].map((path) =>
       page.waitForResponse((r) => r.url().endsWith(path) && r.request().method() === 'GET'),
     ),
   );
-  await page.getByRole('button', { name: 'Recarregar acessos' }).click();
+  await page.getByRole('button', { name: 'Recarregar equipe' }).click();
   for (const response of await reload) expect(response.status()).toBe(200);
   await editar.click();
   await expect(card.getByLabel('Perfil do funcionário')).toBeEnabled();

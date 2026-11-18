@@ -42,8 +42,14 @@
   border-color: var(--input);
 }
 
-[data-tema-gestao='escuro'] {
+:root[data-tema='escuro'],
+[data-tema='escuro'] .gestao-compacta {
   color-scheme: dark;
+  --primary: #f29b83;
+  --primary-foreground: #321913;
+  --superficie-cliente: #292523;
+  --selecao-bg: #452d26;
+  --selecao-borda: #976654;
   --background: #1d1b1a;
   --card: #262322;
   --card-foreground: #f2efeb;
@@ -76,34 +82,34 @@
   color: var(--foreground);
 }
 
-[data-tema-gestao='escuro'] [data-variant='outline'] {
+[data-tema='escuro'] [data-variant='outline'] {
   background: var(--card);
   color: var(--foreground);
 }
 
-[data-tema-gestao='escuro'] :is(.badge, .badge-verde) {
+[data-tema='escuro'] :is(.badge, .badge-verde) {
   color: var(--gestao-sucesso-fg);
   background: var(--gestao-sucesso-bg);
 }
 
-[data-tema-gestao='escuro'] .badge-ambar {
+[data-tema='escuro'] .badge-ambar {
   color: var(--gestao-alerta-fg);
   background: var(--gestao-alerta-bg);
 }
 
-[data-tema-gestao='escuro'] :is(.aviso, .context-error) {
+[data-tema='escuro'] :is(.aviso, .context-error) {
   color: var(--gestao-alerta-fg);
   background: var(--gestao-alerta-bg);
   border-color: var(--gestao-alerta-borda);
 }
 
-[data-tema-gestao='escuro'] .erro {
+[data-tema='escuro'] .erro {
   color: var(--gestao-erro-fg);
   background: var(--gestao-erro-bg);
   border-color: var(--gestao-erro-borda);
 }
 
-[data-tema-gestao='escuro'] a:not(.spartan-button) {
+[data-tema='escuro'] a:not(.spartan-button) {
   color: var(--ring);
 }
 
@@ -239,4 +245,16 @@
   .gestao-compacta :is(.gestao-linha, .gestao-editor) {
     padding-inline: var(--gestao-espaco-3);
   }
+}
+
+@media (min-width: 801px) {
+  .gestao-compacta :is(input[type='number'], input[type='time'], input[inputmode='decimal']) {
+    max-inline-size: 12ch;
+  }
+  .gestao-compacta :is(input[type='date'], input[type='tel'], input[maxlength='9']) {
+    max-inline-size: 21ch;
+  }
+  .gestao-compacta input[maxlength='2'] { max-inline-size: 7ch; }
+  .gestao-compacta :is(input[type='password'], input[type='email'], select) { max-inline-size: 34ch; }
+  .gestao-compacta textarea { max-inline-size: 72ch; }
 }

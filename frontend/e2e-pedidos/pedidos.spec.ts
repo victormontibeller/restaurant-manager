@@ -125,25 +125,23 @@ test('S03-UI01 cliente, aceite e cozinha preservam três unidades em estados dis
     await expect(rotulo).toHaveText(/Unidade \d+ · (Na fila|Em preparo)/);
     expect(await rotulo.evaluate((texto) => texto.scrollWidth <= texto.clientWidth)).toBe(true);
     await capturar(cozinha.page, preparo, 's03-cozinha-estados-mistos');
-    const remanescentes = misto.unidades
-      .filter((item) => item.estado === 'NA_FILA')
-      .map((item) => item.id);
-    let atual = await comando(
-      request,
-      tokenCozinha,
-      misto,
-      'iniciar',
-      remanescentes,
-      '/api/v1/cozinha/pedidos',
+    await preparo.getByRole('button', { name: 'Fechar seleção', exact: true }).click();
+    await expect(preparo.locator('.alca')).toHaveCount(0);
+    await preparo.getByRole('button', { name: 'Iniciar pedido (2)', exact: true }).click();
+    const concluir = preparo.getByRole('button', { name: 'Concluir em preparo (2)', exact: true });
+    await expect(concluir).toBeEnabled();
+    const respostaPreparo = cozinha.page.waitForResponse(
+      (r) =>
+        new URL(r.url()).pathname === '/api/v1/cozinha/pedidos/' + enviado.id + '/concluir' &&
+        r.request().method() === 'POST',
     );
-    atual = await comando(
-      request,
-      tokenCozinha,
-      atual,
-      'concluir',
-      remanescentes,
-      '/api/v1/cozinha/pedidos',
-    );
+    if (await etapas.isVisible()) {
+      await concluir.focus();
+      await concluir.press('Enter');
+    } else {
+      await preparo.locator('.alca').dragTo(kds.locator('#etapa-prontos'), { steps: 24 });
+    }
+    const atual = await ok<Pedido>(await respostaPreparo);
     expect(atual.estado).toBe('PRONTO');
     await page.getByRole('button', { name: 'Atualizar pedido', exact: true }).click();
     await expect(pedidoCliente.getByText('Pronto', { exact: true }).first()).toBeVisible();
@@ -223,6 +221,11 @@ test('S03-UI02 mesa autoriza rodada, ajuda e fechamento sem liberar sessão anti
     expect(rodada.expirarEm).toBeNull();
     const minhaComanda = page.getByRole('region', { name: 'Minha comanda', exact: true });
     await expect(minhaComanda).toContainText(mesa.nome);
+    for (const campo of ['Recebido confirmado', 'Devolvido confirmado']) {
+      await expect(minhaComanda.getByText(campo, { exact: true }).locator('+ dd')).toHaveText(
+        /0,00/,
+      );
+    }
     await capturar(page, minhaComanda, 't11-mesa-rodadas');
     const participanteB = await playwright.request.newContext({
       baseURL: process.env['RM_BASE_URL'],
@@ -1026,8 +1029,17 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
         name: 'Gestão do restaurante',
         exact: true,
       });
-      if (perfil === 'cozinha') {
-        await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toBeVisible();
+      if (perfil === 'cozinha' || perfil === 'gerente') {
+        const linkCozinha = navegacao.getByRole('link', { name: 'Cozinha', exact: true });
+        await expect(linkCozinha).toBeVisible();
+        await linkCozinha.click();
+        await expect(
+          atual.page.getByRole('heading', { name: 'Cozinha', exact: true }),
+        ).toBeVisible();
+        if (await menu.isVisible()) await menu.click();
+        await expect(linkCozinha).toHaveAttribute('aria-current', 'page');
+        await navegacao.getByRole('link', { name: 'Pedidos', exact: true }).click();
+        await expect(pedido).toBeVisible();
       }
       if (perfil === 'atendimento' || perfil === 'caixa' || perfil === 'expedicao')
         await expect(navegacao.getByRole('link', { name: 'Cozinha', exact: true })).toHaveCount(0);
@@ -1041,6 +1053,9 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
       if (perfil === 'caixa' || perfil === 'cozinha' || perfil === 'expedicao') {
         await pedido.getByRole('button', { name: /^Detalhes do pedido #/ }).click();
         await expect(pedido.getByRole('checkbox')).toHaveCount(0);
+        await expect(
+          pedido.getByText(/Valor por unidade|Taxa de entrega|Total original com entrega/),
+        ).toHaveCount(0);
         await expect(
           pedido.getByLabel('Motivo de recusa, cancelamento ou avaliação', { exact: true }),
         ).toHaveCount(0);
@@ -1143,6 +1158,22 @@ test('S03-UI07 delivery comercial confirma endereço e taxa e admite recusa por 
   const pedido = await enviarUi(page);
   expect(pedido.estado).toBe('AGUARDANDO_ACEITE');
   expect(pedido.saldo!.totalDevido).toBe('15.00');
+  const acompanhamento = page.getByRole('article', { name: 'Pedido ' + pedido.id, exact: true });
+  await acompanhamento.getByRole('link', { name: /^Acompanhar pedido #/ }).click();
+  await expect(page.getByText(/Última consulta confirmada em/)).toBeVisible();
+  await expect(
+    acompanhamento.getByText(/Valor por unidade.*10,00.*Subtotal original.*10,00/),
+  ).toBeVisible();
+  await acompanhamento.getByText('Dados da entrega', { exact: true }).click();
+  for (const [rotulo, valor] of [
+    ['Pedido mínimo da região', '10,00'],
+    ['Taxa de entrega', '5,00'],
+    ['Total original com entrega', '15,00'],
+  ]) {
+    await expect(
+      acompanhamento.locator('dt').filter({ hasText: rotulo }).locator('+ dd'),
+    ).toContainText(valor);
+  }
   const equipe = await loginApi(request, fixture().contas.atendimento);
   const recusado = await comando(request, equipe, pedido, 'recusar');
   expect(recusado.estado).toBe('CANCELADO');

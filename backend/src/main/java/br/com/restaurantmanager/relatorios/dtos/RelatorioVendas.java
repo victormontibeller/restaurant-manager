@@ -2,6 +2,7 @@ package br.com.restaurantmanager.relatorios.dtos;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public record RelatorioVendas(
@@ -18,4 +19,8 @@ public record RelatorioVendas(
         String devolucoesConfirmadas,
         String saldoAReceberAtual,
         String saldoADevolverAtual,
-        String reservasAtuais) {}
+        String reservasAtuais,
+        List<DiaFinanceiro> dias,
+        List<VendasPorCanal> canais,
+        List<MovimentoRelatorio> movimentos,
+        boolean maisMovimentos) {}

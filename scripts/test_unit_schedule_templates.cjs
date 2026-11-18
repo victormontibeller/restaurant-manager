@@ -6,6 +6,7 @@ const path = require('node:path');
 const repo = path.resolve(__dirname, '..');
 const { build } = require(repo + '/frontend/node_modules/esbuild');
 const playwright = require(repo + '/frontend/node_modules/playwright');
+const recursosAngular = require('./test_angular_recursos.cjs');
 const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
 
 (async () => {
@@ -66,6 +67,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       resolveDir: repo + '/frontend',
       sourcefile: 'unit-schedule-template-probe.ts',
     },
+    plugins: [recursosAngular],
     bundle: true,
     write: false,
     format: 'iife',

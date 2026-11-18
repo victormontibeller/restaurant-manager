@@ -21,9 +21,7 @@ async function entrar(page: Page, email = auth.email, senha = auth.senha): Promi
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await r).status()).toBe(200);
   await abrirConta(page);
-  await expect(
-    page.getByRole('heading', { name: 'Que bom ter você por aqui.', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Minha conta', exact: true })).toBeVisible();
 }
 
 async function admin(page: Page): Promise<void> {
@@ -192,7 +190,9 @@ test('S01-UI41: seleção do perfil de convite persiste até aceite e login', as
 
   await page.getByRole('button', { name: 'Voltar ao login', exact: true }).click();
   await entrar(page, email, senha);
-  await expect(page.getByText('Expedição', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Minha conta' }).getByText('Expedição', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('E-mail verificado.', { exact: true })).toBeVisible();
   await navegarGestao(page, '/gestao/pedidos');
   await expect(page.locator('a[href="/gestao/equipe/convites"]')).toHaveCount(0);
@@ -252,7 +252,7 @@ test.describe('Fronteira de rede S01-UI18', () => {
     await page.getByRole('button', { name: 'Entrar', exact: true }).click();
     expect((await login).status()).toBe(200);
     await expect(
-      page.getByRole('heading', { name: 'Convites de funcionários', exact: true }),
+      page.getByRole('heading', { name: 'Convites emitidos', exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole('status').filter({ hasText: 'Convite com resultado pendente' }),
@@ -280,7 +280,7 @@ test.describe('Fronteira de rede S01-UI18', () => {
     // resultado desta intenção em capturas distintas, não em um PNG ilimitado.
     const convites = page.locator('app-convites');
     await page
-      .getByRole('heading', { name: 'Convites de funcionários', exact: true })
+      .getByRole('heading', { name: 'Convites emitidos', exact: true })
       .scrollIntoViewIfNeeded();
     await page.screenshot({
       path: test.info().outputPath('convites-contexto.png'),

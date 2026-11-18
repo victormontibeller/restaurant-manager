@@ -47,7 +47,7 @@ emulação local não comprova instalação em aparelho físico.
 A cor de abertura da PWA e os ícones instaláveis usam terracota `#a53e2b`.
 O rodapé do cliente exibe a instalação como ação discreta quando o navegador
 oferece o recurso. Avisos aparecem quando a conexão cai ou quando uma atualização
-está disponível. A consulta de diagnóstico do servidor fica na área interna.
+está disponível. O diagnóstico manual da equipe fica na tela de entrada.
 Links públicos inexistentes abertos diretamente no navegador recebem uma página
 HTML com status 404, acesso ao cardápio e entrada manual de mesa. O frontend
 usa a mesma mensagem nas navegações internas. A abertura offline de pedidos e
@@ -140,7 +140,7 @@ e conexão continuam visíveis sem substituir silenciosamente o motivo do comand
 
 ## Redesenho por área — 2026-11-08
 
-Implementação validada localmente, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Cliente inicia no cardápio; gestão possui entrada própria e abre pedidos em andamento; cozinha é uma tela dedicada. O tema de bistrô usa a mesma fundação Spartan/Tailwind nas três áreas. Acessos e unidades refletem ações efetivas e continuam garantidos pela API.
+Implementação validada localmente, conforme [ADR 0003](adr/0003-spartan-navegacao-por-area.md). Cliente inicia no cardápio; gestão possui entrada própria e abre pedidos em andamento; a rota dedicada da cozinha usa o mesmo menu, cabeçalho e destaque terracota da gestão. O tema de bistrô usa a mesma fundação Spartan/Tailwind nas três áreas. Acessos e unidades refletem ações efetivas e continuam garantidos pela API.
 
 A navegação mantém sessão, carrinho e pendências em memória. Rascunhos de formulários pedem confirmação ao sair; comandos em andamento impedem saída até reconciliação, e logout permanece possível. Upload confirmado ainda exige salvar a associação ao produto. Recarregar continua descartando o rascunho. Links antigos de mesa e plataforma redirecionam para as novas rotas.
 
@@ -175,17 +175,22 @@ continuam no checkpoint.
 
 ## Densidade da gestão
 
-Pedidos, Cardápio, Mesas e comandas, Unidades e horários, Equipe e acessos e
-Convites usam o tema claro da gestão. Superfícies claras, texto escuro, bordas
+Todas as rotas da gestão usam o padrão compacto. No desktop, datas, horas, quantidades e preços ocupam larguras próprias. No toque, os alvos permanecem com pelo menos 48 px. O tema claro é o padrão inicial. Superfícies claras, texto escuro, bordas
 discretas e cantos de 8 px acompanham a referência visual do Airbnb claro. Os
 filtros têm rótulo visível e texto de 14 px, com espaçamento inspirado no Notion.
 O terracota `#a53e2b` identifica a ação primária e o foco. A escala de espaçamento
 é 4, 8, 12, 16, 24 e 32 px. Controles compactos usam 38 px no desktop com
 ponteiro preciso e pelo menos 48 px em telas de toque. O catálogo interno
 `/design-system` demonstra filtros, resumo expansível, estado e formulário.
-O cabeçalho da gestão oferece um botão para alternar entre tema claro e escuro.
-A preferência é guardada no navegador e o claro é o padrão da primeira visita.
-O menu lateral conserva a estrutura e as proporções da versão anterior.
+Cardápio, gestão e cozinha compartilham um controle de tema no cabeçalho. A escolha persiste entre áreas, abas e recargas pela mesma preferência já usada na gestão, inclusive nos diálogos e avisos da PWA.
+O menu lateral, a barra superior e a faixa com o título e a ação principal
+permanecem visíveis durante a rolagem do conteúdo da Gestão e da Cozinha. O
+menu lateral rola por conta própria se faltar altura. No celular e no tablet
+estreito, o menu abre sobre o conteúdo e devolve o foco ao botão ao fechar.
+Na Gestão, na Cozinha e em Minha conta da equipe, a faixa inferior ocupa
+espaço somente enquanto a PWA exibe um aviso ou uma ação disponível.
+Listas administrativas resumem os registros antes da edição. A matriz de
+permissões tem cabeçalho e primeira coluna fixos e rolagem na própria tabela.
 
 A fila usa um resumo por pedido. Referência, canal, horário, tempo decorrido,
 estado e prazo de aceite aplicável ficam visíveis junto das ações imediatas.
@@ -203,7 +208,7 @@ unidade escolhida, e horários e canais têm controles próprios dentro da unida
 
 ## Cardápio do cliente
 
-A vitrine pública usa superfícies claras, títulos serifados e terracota nas
+A vitrine pública usa as superfícies do tema ativo, títulos serifados e terracota nas
 ações e na categoria selecionada. No desktop, o banner parte de 248 px e
 dedica pouco mais da metade da largura à fotografia. No celular, parte de
 96 px e cresce conforme o texto. A busca e o botão **Filtros** ficam na mesma
@@ -267,8 +272,7 @@ Comanda e rodadas ficam lado a lado no desktop e empilhadas no celular. O
 andamento das rodadas usa o contexto da mesa. Avisos de fechamento, perda
 de conexão e recuperação aparecem próximos das ações correspondentes.
 
-**Minha conta** mostra a situação da verificação do e-mail, atalhos e os
-endereços salvos. A edição usa o formulário de endereço na própria página.
+**Minha conta** mostra nome, telefone, e-mail, verificação, data de cadastro e perfil. O titular pode editar nome e telefone. Clientes consultam os endereços salvos. A equipe vê suas unidades e fusos dentro da gestão. A edição usa o formulário de endereço na própria página.
 Os formulários de entrada, cadastro, recuperação e verificação exibem rótulos
 e feedback junto aos campos. A navegação preserva o destino original da jornada.
 

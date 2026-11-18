@@ -20,10 +20,17 @@ import {
   Categoria,
   Pagina,
   Produto,
-  ProdutoPublico,
+  ComponenteCatalogoGestao,
+  ItemCatalogoGestao,
+  Oferta,
+  Opcao,
+  PaginaCatalogoGestao,
+  nomeCanal,
   mensagemErro,
   moeda,
 } from './modelos';
+
+const filtrosIniciais = { busca: '', categoriaId: '', tipo: '', ativo: '', disponivel: '' };
 
 @Component({
   selector: 'app-gestao-catalogo',
@@ -45,7 +52,15 @@ export class GestaoCatalogoComponent {
   private componentesPagina = 0;
   readonly acessos = signal<AcessosCatalogo | null>(null);
   readonly categorias = signal<Categoria[]>([]);
-  readonly produtos = signal<(Produto | ProdutoPublico)[]>([]);
+  readonly itens = signal<ItemCatalogoGestao[]>([]);
+  readonly detalheProduto = signal('');
+  readonly referencias = signal<Record<string, ComponenteCatalogoGestao>>({});
+  filtros = { ...filtrosIniciais };
+  private aplicados = { ...filtrosIniciais };
+  private revisarOfertas = false;
+  canaisDaOferta(oferta: Oferta): string {
+    return oferta.canais.map((canal) => nomeCanal(canal)).join(' · ');
+  }
   readonly componentes = signal<Produto[]>([]);
   readonly componentesTemMais = signal(true);
   readonly ocupado = signal(false);
@@ -187,12 +202,71 @@ export class GestaoCatalogoComponent {
       return;
     }
     this.unidadeOperacional.set(seletor.value);
+    this.filtros = { ...this.aplicados };
+    if (!seletor.value) this.filtros.disponivel = '';
+    this.aplicados = { ...this.filtros };
+    this.itens.set([]);
+    this.referencias.set({});
+    this.temMais.set(false);
+    this.pagina.set(0);
     await this.carregarProdutos(0);
   }
 
   fecharEditor(): void {
     const origem = this.origemEditor;
-    if (this.prepararEditor()) this.focoNaLista(origem);
+    if (!this.prepararEditor()) return;
+    this.focoNaLista(origem);
+    if (this.revisarOfertas) {
+      this.revisarOfertas = false;
+      void this.carregarProdutos(this.pagina());
+    }
+  }
+
+  async produtosDaCategoria(categoriaId: string): Promise<void> {
+    if (!this.prepararEditor()) return;
+    this.aba.set('produtos');
+    this.filtros = { ...filtrosIniciais, categoriaId };
+    const filtros = { ...this.filtros };
+    await this.executar(async () => {
+      await this.consultarProdutos(0, filtros);
+      if (!this.destruido) this.aplicados = filtros;
+    });
+  }
+
+  async filtrar(event: Event, limpar = false): Promise<void> {
+    event.preventDefault();
+    if (!this.prepararEditor()) return;
+    if (limpar) this.filtros = { ...filtrosIniciais };
+    const propostos = { ...this.filtros, busca: this.filtros.busca.trim() };
+    await this.executar(async () => {
+      await this.consultarProdutos(0, propostos);
+      if (!this.destruido) this.aplicados = propostos;
+    });
+  }
+
+  mostrarDetalhe(produtoId: string, aberto: boolean): void {
+    if (aberto) this.detalheProduto.set(produtoId);
+    else if (this.detalheProduto() === produtoId) this.detalheProduto.set('');
+  }
+
+  adicionaisDaOpcao(opcao: Opcao) {
+    return (
+      this.referencias()[opcao.produtoId]?.adicionais.filter((a) =>
+        opcao.adicionaisPermitidos.includes(a.id),
+      ) ?? []
+    );
+  }
+
+  ofertaConfirmada(oferta: Oferta): void {
+    if (oferta.unidadeId !== this.unidadeOperacional()) return;
+    this.revisarOfertas = true;
+    this.itens.update((itens) =>
+      itens.map((item) =>
+        item.produto.id === oferta.produtoId
+          ? { ...item, oferta: oferta.versao ? oferta : null }
+          : item,
+      ),
+    );
   }
 
   async carregarProdutos(pagina: number): Promise<void> {
@@ -320,8 +394,10 @@ export class GestaoCatalogoComponent {
       confirmado = true;
       this.salvo.emit(pendente.tipo + '-' + pendente.dados.id);
       this.limparEditor();
-      if (pendente.tipo === 'categoria') await this.consultarCategorias();
-      else {
+      if (pendente.tipo === 'categoria') {
+        await this.consultarCategorias();
+        await this.consultarProdutos(this.pagina());
+      } else {
         this.componentes.set([]);
         this.componentesPagina = 0;
         this.componentesTemMais.set(true);
@@ -404,18 +480,35 @@ export class GestaoCatalogoComponent {
     }
   }
 
-  private async consultarProdutos(pagina: number): Promise<void> {
+  private async consultarProdutos(pagina: number, filtros = this.aplicados): Promise<void> {
     if (!this.podeEditar() && !this.unidadeOperacional()) return;
-    const rota = this.podeEditar()
-      ? '/api/v1/gestao/catalogo/produtos?'
-      : '/api/v1/operacao/catalogo?unidadeId=' + this.unidadeOperacional() + '&';
-    const resultado = await this.sessao.api<Pagina<Produto | ProdutoPublico>>(
-      rota + 'pagina=' + pagina,
-    );
+    const params = new URLSearchParams({ pagina: String(pagina) });
+    if (this.unidadeOperacional()) params.set('unidadeId', this.unidadeOperacional());
+    for (const [campo, valor] of Object.entries(filtros)) {
+      if (valor) params.set(campo, valor);
+    }
+    let resultado: PaginaCatalogoGestao;
+    try {
+      resultado = await this.sessao.api<PaginaCatalogoGestao>(
+        '/api/v1/gestao/catalogo/listagem?' + params,
+      );
+    } catch (erro) {
+      if (!this.destruido && erro instanceof ApiFailure && [401, 403, 404].includes(erro.status)) {
+        this.itens.set([]);
+        this.referencias.set({});
+        this.categorias.set([]);
+        this.temMais.set(false);
+        this.limparEditor();
+        this.acessos.set(null);
+      }
+      throw erro;
+    }
     if (this.destruido) return;
-    this.produtos.set(resultado.itens);
-    this.pagina.set(pagina);
+    this.itens.set(resultado.itens);
+    this.referencias.set(resultado.componentes);
+    if (!this.podeEditar()) this.categorias.set(resultado.categorias);
     this.temMais.set(resultado.temMais);
+    this.pagina.set(pagina);
   }
 
   private estadoPendente() {

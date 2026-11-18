@@ -31,73 +31,82 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
     (r) => r.url().endsWith('/auth/login') && r.request().method() === 'POST',
     { timeout: 12000 },
   );
-  const loaded = Promise.all(
-    ['/auth/me', '/configuracoes/acessos', '/equipe?pagina=0', '/operacao/unidades'].map((path) =>
-      page.waitForResponse((r) => r.url().endsWith(path) && r.request().method() === 'GET'),
-    ),
-  );
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   expect((await login).status()).toBe(200);
-  await navegarGestao(page, '/gestao/equipe');
-  for (const response of await loaded) {
-    expect(response.status()).toBe(200);
-    await response.finished();
-  }
-  await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
-  await page.getByRole('button', { name: 'Matriz de permissões', exact: true }).click();
-  const orientacao = page.getByText(
-    'As permissões controlam as operações conforme o perfil e a unidade, incluindo pedidos, pagamentos e delivery.',
-    { exact: true },
-  );
-  await expect(orientacao).toBeVisible();
-  await orientacao.screenshot({ path: test.info().outputPath('s03-texto-acessos.png') });
-  await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
-  await page.getByLabel('Perfil operacional').selectOption('COZINHA');
-  const kitchen = page.getByLabel('Iniciar preparo', { exact: true });
-  await expect(kitchen).toBeChecked();
-  await kitchen.uncheck();
-  await confirmarResposta(page, '/configuracoes/acessos', 'PUT', 403, () =>
-    page.getByRole('button', { name: 'Salvar permissões' }).click(),
-  );
+  await navegarGestao(page, '/gestao/acessos');
+  await expect(page.getByRole('heading', { name: 'Acessos', exact: true })).toBeVisible();
+
+  const celulaCozinha = page.getByRole('button', { name: 'Cozinha · Cozinha', exact: true });
+  const celulaAtualizacoes = page.getByRole('button', {
+    name: 'Atualizações · Atendimento',
+    exact: true,
+  });
+  const iniciar = page.getByRole('checkbox', { name: 'Iniciar preparo', exact: true });
+  const acompanhar = page.getByRole('checkbox', {
+    name: 'Acompanhar atualizações cadastrais da unidade',
+    exact: true,
+  });
+  const concluir = page.getByRole('button', { name: 'Concluir seleção' });
+  const salvar = page.getByRole('button', { name: 'Salvar acessos' });
+  const buscar = page.getByLabel('Buscar módulo ou ação');
+
+  await celulaCozinha.click();
+  const preparoOriginal = await iniciar.isChecked();
+  await iniciar.setChecked(!preparoOriginal);
+  await concluir.click();
+  await expect(celulaCozinha).toBeFocused();
+  await celulaAtualizacoes.click();
+  const atualizacoesOriginal = await acompanhar.isChecked();
+  await acompanhar.setChecked(!atualizacoesOriginal);
+  await concluir.click();
+
+  await buscar.fill('atualizacoes');
+  await expect(celulaCozinha).toHaveCount(0);
+  await expect(celulaAtualizacoes).toBeVisible();
+  await confirmarResposta(page, '/configuracoes/acessos/matriz', 'PUT', 403, () => salvar.click());
   await expect(page.getByRole('alert')).toHaveText('Confirme sua senha antes de alterar acessos.');
-  await page.getByLabel('Confirme sua senha').fill('senha-incorreta');
-  await confirmarResposta(page, '/auth/reautenticar', 'POST', 422, () =>
-    page.getByRole('button', { name: 'Confirmar identidade' }).click(),
-  );
+  const campoSenha = page.getByLabel('Confirme sua senha');
+  const confirmar = page.getByRole('button', { name: 'Confirmar identidade' });
+  await campoSenha.fill('senha-incorreta');
+  await confirmarResposta(page, '/auth/reautenticar', 'POST', 422, () => confirmar.click());
   await expect(page.getByRole('alert')).toHaveText('Senha de confirmação inválida.');
   await expect(page.getByRole('alert')).toBeFocused();
-  await expect(page.getByLabel('Confirme sua senha')).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.getByLabel('Confirme sua senha')).toHaveAccessibleDescription(
-    'Senha de confirmação inválida.',
-  );
-  await expect(kitchen).not.toBeChecked();
-  await page.getByLabel('Confirme sua senha').fill(fixture.senha);
-  await confirmarResposta(page, '/auth/reautenticar', 'POST', 204, () =>
-    page.getByRole('button', { name: 'Confirmar identidade' }).click(),
-  );
+  await expect(campoSenha).toHaveAttribute('aria-invalid', 'true');
+  await expect(campoSenha).toHaveAccessibleDescription('Senha de confirmação inválida.');
+  await campoSenha.fill(fixture.senha);
+  await confirmarResposta(page, '/auth/reautenticar', 'POST', 204, () => confirmar.click());
   await expect(page.getByText('Identidade confirmada por cinco minutos.')).toBeVisible();
-  await expect(page.getByLabel('Confirme sua senha')).not.toHaveAttribute('aria-invalid', 'true');
-  await confirmarResposta(page, '/configuracoes/acessos', 'PUT', 200, () =>
-    page.getByRole('button', { name: 'Salvar permissões' }).click(),
-  );
+  await expect(campoSenha).not.toHaveAttribute('aria-invalid', 'true');
+  await confirmarResposta(page, '/configuracoes/acessos/matriz', 'PUT', 200, () => salvar.click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
-  const reload = Promise.all(
-    ['/configuracoes/acessos', '/equipe?pagina=0', '/operacao/unidades'].map((path) =>
-      page.waitForResponse((r) => r.url().endsWith(path) && r.request().method() === 'GET'),
-    ),
+  await confirmarResposta(page, '/configuracoes/acessos', 'GET', 200, () =>
+    page.getByRole('button', { name: 'Recarregar matriz' }).click(),
   );
-  await page.getByRole('button', { name: 'Recarregar acessos' }).click();
-  for (const response of await reload) {
-    expect(response.status()).toBe(200);
-    await response.finished();
-  }
-  await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
-  await expect(kitchen).not.toBeChecked();
-  await kitchen.check();
-  await confirmarResposta(page, '/configuracoes/acessos', 'PUT', 200, () =>
-    page.getByRole('button', { name: 'Salvar permissões' }).click(),
-  );
+
+  await celulaAtualizacoes.click();
+  await expect(acompanhar).toBeChecked({ checked: !atualizacoesOriginal });
+  await acompanhar.setChecked(atualizacoesOriginal);
+  await concluir.click();
+  await buscar.clear();
+  await celulaCozinha.click();
+  await expect(iniciar).toBeChecked({ checked: !preparoOriginal });
+  await iniciar.setChecked(preparoOriginal);
+  await page.getByRole('dialog').screenshot({ path: test.info().outputPath('acoes-cozinha.png') });
+  await concluir.click();
+  await page
+    .getByRole('table', { name: 'Permissões por módulo e perfil' })
+    .locator('..')
+    .screenshot({
+      path: test.info().outputPath('matriz-acessos.png'),
+    });
+  await confirmarResposta(page, '/configuracoes/acessos/matriz', 'PUT', 200, () => salvar.click());
   await expect(page.getByText('Permissões salvas no servidor.')).toBeVisible();
+  await navegarGestao(page, '/gestao/equipe');
+  await expect(page.getByRole('heading', { name: 'Equipe', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Funcionários' })).toHaveAttribute(
+    'aria-busy',
+    'false',
+  );
   const employee = page.getByRole('article').filter({ hasText: fixture.email });
   // Convites de execuções anteriores permanecem no PostgreSQL. O Administrador
   // não é necessariamente um dos primeiros cinquenta funcionários ordenados.
@@ -107,7 +116,7 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
     await expect(pages.getByRole('button', { name: 'Próxima página', exact: true })).toBeEnabled();
     pagina++;
     const loaded = Promise.all(
-      ['/configuracoes/acessos', '/equipe?pagina=' + pagina, '/operacao/unidades'].map((path) =>
+      ['/equipe?pagina=' + pagina, '/operacao/unidades'].map((path) =>
         page.waitForResponse((r) => r.url().endsWith(path) && r.request().method() === 'GET'),
       ),
     );
@@ -117,7 +126,6 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
       await response.finished();
     }
     await expect(pages.getByText('Página ' + (pagina + 1), { exact: true })).toBeVisible();
-    await expect(page.getByLabel('Perfil operacional')).toBeEnabled();
   }
   await expect(employee).toHaveCount(1);
   const editar = employee.getByRole('button', { name: 'Editar funcionário', exact: true });
@@ -134,27 +142,9 @@ test('S01-UI04: matriz, reautenticação, persistência e último administrador'
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
-  // Capturas por superfície, sem recortar controles abaixo do viewport nem
-  // gerar um bitmap de toda a lista persistente de funcionários/unidades.
-  await page
-    .locator('app-acessos form')
-    .screenshot({ path: test.info().outputPath('reautenticacao-acessos.png') });
   await page
     .getByRole('alert')
     .screenshot({ path: test.info().outputPath('protecao-administrador.png') });
-  await employee.screenshot({ path: test.info().outputPath('administrador-protegido.png') });
-  const descarte = page.waitForEvent('dialog');
-  const abrirMatriz = page
-    .getByRole('button', { name: 'Matriz de permissões', exact: true })
-    .click();
-  await (await descarte).accept();
-  await abrirMatriz;
-  await page
-    .getByRole('group', { name: /^Permissões de COZINHA/ })
-    .screenshot({ path: test.info().outputPath('acessos.png') });
-  await page
-    .getByRole('button', { name: 'Salvar permissões', exact: true })
-    .screenshot({ path: test.info().outputPath('salvar-acessos.png') });
   await page.getByRole('button', { name: 'Sair da conta' }).click();
-  await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Equipe', exact: true })).toHaveCount(0);
 });

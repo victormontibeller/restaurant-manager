@@ -9,7 +9,7 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   // A massa persistente ultrapassa uma página; recarregar ordena no servidor.
   async function recarregarELocalizar(nome: string): Promise<void> {
     const heading = page.getByRole('heading', { name: nome, exact: true });
-    const section = page.getByRole('region', { name: 'Configurações de unidades' });
+    const section = page.getByRole('region', { name: 'Unidades cadastradas' });
     async function carregar(acao: () => Promise<void>): Promise<void> {
       const response = page.waitForResponse(
         (r) =>
@@ -43,9 +43,9 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
   expect(autenticada.status()).toBe(200);
   const access = (await autenticada.json()).accessToken;
   await navegarGestao(page, '/gestao/unidades');
-  await expect(page.getByRole('heading', { name: 'Configurações de unidades' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Unidades cadastradas' })).toBeVisible();
   const orientacao = page.getByText(
-    'Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões de entrega em Regiões e checkout.',
+    'A confirmação permite alterar o cadastro, os horários e os canais por cinco minutos.',
     { exact: true },
   );
   await expect(orientacao).toBeVisible();
@@ -124,5 +124,5 @@ test('S01-UI05: criar, editar, inativar e recuperar unidade com conflito', async
     .getByRole('navigation', { name: 'Páginas de unidades', exact: true })
     .screenshot({ path: test.info().outputPath('paginacao-unidades.png') });
   await page.getByRole('button', { name: 'Sair da conta' }).click();
-  await expect(page.getByRole('heading', { name: 'Configurações de unidades' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Unidades cadastradas' })).toHaveCount(0);
 });

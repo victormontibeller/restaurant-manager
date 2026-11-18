@@ -84,8 +84,10 @@
       </div>
       <div class="estado-e-prazo">
         <ng-container [ngTemplateOutlet]="estadoPedido" />
+        <ng-content select="[estadoExpedicao]" />
       </div>
       <div class="acoes-resumo-pedido">
+        <ng-content select="[acaoExpedicao]" />
         <ng-container [ngTemplateOutlet]="aceitarPedido" />
         <ng-container [ngTemplateOutlet]="servirPedido" />
         <button
@@ -109,6 +111,7 @@
       [id]="'detalhes-pedido-' + pedido().id"
       [hidden]="!detalhesAbertos()"
     >
+      <ng-content select="[detalhesExpedicao]" />
       <ng-container [ngTemplateOutlet]="detalhes" />
     </div>
   } @else {
@@ -218,18 +221,40 @@
         {{ linha.tipo === 'COMBO' ? '(combo completo)' : '' }}
       </h4>
       @if (pessoal() && linha.subtotal) {
-        <p class="texto-secundario">Subtotal original: {{ moeda(linha.subtotal!) }}</p>
+        <p class="texto-secundario">
+          @if (linha.precoBase && linha.precoBase !== linha.precoUnitario) {
+            Preço base: {{ moeda(linha.precoBase) }} ·
+          }
+          @if (linha.precoUnitario) {
+            Valor por unidade: {{ moeda(linha.precoUnitario) }} ·
+          }
+          Subtotal original: {{ moeda(linha.subtotal!) }}
+        </p>
       }
       @for (extra of linha.adicionais; track $index) {
-        <p class="componente-item">Adicional: {{ extra.quantidade }} × {{ extra.nome }}</p>
+        <p class="componente-item">
+          Adicional: {{ extra.quantidade }} × {{ extra.nome }}
+          @if (pessoal() && extra.total) {
+            · {{ moeda(extra.total) }} por unidade do item
+          }
+        </p>
       }
       @for (escolha of linha.escolhas; track $index) {
         <p class="componente-item">
           <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
+          @if (pessoal() && escolha.acrescimo && escolha.acrescimo !== '0.00') {
+            · Acréscimo por escolha: {{ moeda(escolha.acrescimo) }}
+          }
+          @if (pessoal() && escolha.total && escolha.total !== '0.00') {
+            · Total da escolha por combo: {{ moeda(escolha.total) }}
+          }
         </p>
         @for (extra of escolha.adicionais ?? []; track $index) {
           <p class="componente-item">
             Adicional da escolha: {{ extra.quantidade }} × {{ extra.nome }}
+            @if (pessoal() && extra.total) {
+              · {{ moeda(extra.total) }} por escolha
+            }
           </p>
         }
       }
@@ -260,11 +285,39 @@
                   >Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}</span
                 >
               }
+              @if (contexto() === 'operacao' && unidade.iniciadoEm) {
+                <small> · Início {{ horario(unidade.iniciadoEm) }}</small>
+              }
+              @if (contexto() === 'operacao' && unidade.concluidoEm) {
+                <small> · Conclusão {{ horario(unidade.concluidoEm) }}</small>
+              }
             </li>
           }
         }
       </ul>
     </section>
+  }
+  @if (contexto() === 'cliente' && pedido().endereco; as endereco) {
+    <details>
+      <summary>Dados da entrega</summary>
+      <address>
+        {{ endereco.destinatario }} · {{ endereco.contato }}<br />
+        {{ endereco.logradouro }}, {{ endereco.numero }} {{ endereco.complemento }}<br />
+        {{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP {{ endereco.cep }}
+      </address>
+      @if (pedido().entrega; as entrega) {
+        <dl>
+          <dt>Região de entrega</dt>
+          <dd>{{ entrega.regiao }}</dd>
+          <dt>Pedido mínimo da região</dt>
+          <dd>{{ moeda(entrega.minimo) }}</dd>
+          <dt>Taxa de entrega</dt>
+          <dd>{{ moeda(entrega.taxa) }}</dd>
+          <dt>Total original com entrega</dt>
+          <dd>{{ moeda(entrega.total) }}</dd>
+        </dl>
+      }
+    </details>
   }
   @if (pessoal() && pedido().saldo; as saldo) {
     <dl>
@@ -351,8 +404,11 @@
   </div>
   @for (solicitacao of pedido().solicitacoes ?? []; track solicitacao.id) {
     <p>
-      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}. A produção continua até
-      decisão.
+      Solicitação: {{ solicitacao.motivo }} · {{ solicitacao.estado }}
+      @if (solicitacao.criadaEm) {
+        · {{ horario(solicitacao.criadaEm) }}
+      }
+      . A produção continua até decisão.
     </p>
     @if (
       contexto() === 'operacao' && solicitacao.estado === 'PENDENTE' && tem('pedido.cancelar_apos_preparo')

@@ -145,6 +145,8 @@ public class SecurityConfiguration {
                                                 "/api/v1/me/pedidos/*/pagamento",
                                                 "/api/v1/relatorios/vendas",
                                                 "/api/v1/operacao/notificacoes",
+                                                "/api/v1/operacao/notificacoes/pagina",
+                                                "/api/v1/operacao/pagamentos/pagina",
                                                 "/api/v1/operacao/pagamentos")
                                         .authenticated()
                                         .requestMatchers(
@@ -220,6 +222,7 @@ public class SecurityConfiguration {
                                         .authenticated()
                                         .requestMatchers(
                                                 HttpMethod.GET,
+                                                "/api/v1/gestao/catalogo/listagem",
                                                 "/api/v1/gestao/catalogo/categorias",
                                                 "/api/v1/gestao/catalogo/produtos",
                                                 "/api/v1/gestao/catalogo/produtos/*",
@@ -250,6 +253,7 @@ public class SecurityConfiguration {
                                         .requestMatchers(
                                                 HttpMethod.GET,
                                                 "/api/v1/auth/me",
+                                                "/api/v1/me/perfil",
                                                 "/api/v1/configuracoes/acessos",
                                                 "/api/v1/equipe",
                                                 "/api/v1/acessos/efetivos",
@@ -259,7 +263,9 @@ public class SecurityConfiguration {
                                         .authenticated()
                                         .requestMatchers(
                                                 HttpMethod.PUT,
+                                                "/api/v1/me/perfil",
                                                 "/api/v1/configuracoes/acessos",
+                                                "/api/v1/configuracoes/acessos/matriz",
                                                 "/api/v1/equipe/*")
                                         .authenticated()
                                         .requestMatchers(

@@ -1,3 +1,4 @@
+import { CdkDrag, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
@@ -12,7 +13,7 @@ import { GrupoCozinha, GrupoPainel, PainelCozinha } from './modelos';
 
 @Component({
   selector: 'app-cozinha',
-  imports: [CartaoCozinhaComponent, NgTemplateOutlet, RM_TABS],
+  imports: [CdkDropList, CdkDropListGroup, CartaoCozinhaComponent, NgTemplateOutlet, RM_TABS],
   templateUrl: './cozinha.component.html',
   styleUrl: './cozinha.component.css',
 })
@@ -39,6 +40,10 @@ export class CozinhaComponent {
     { id: 'emPreparo' as const, nome: 'Em preparo' },
     { id: 'prontos' as const, nome: 'Prontos' },
   ];
+  readonly aceitarCartao = (
+    origem: CdkDrag<CartaoCozinhaComponent>,
+    destino: CdkDropList<GrupoPainel>,
+  ) => origem.data.destino() === destino.data;
   readonly agora = signal(Date.now());
   readonly online = signal(navigator.onLine);
   readonly som = signal(false);

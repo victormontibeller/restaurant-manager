@@ -23,6 +23,7 @@
     "e2e-pwa/**/*.ts",
     "e2e-catalogo/**/*.ts",
     "e2e-pedidos/**/*.ts",
-    "e2e-sprint04/**/*.ts"
+    "e2e-sprint04/**/*.ts",
+    "e2e-sprint06/**/*.ts"
   ]
 }

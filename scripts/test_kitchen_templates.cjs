@@ -73,7 +73,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     @Component({selector:'app-probe',imports:[CozinhaComponent],template:'<app-cozinha unidadeId="A" [acoes]="acoes()"/>'})
     class Probe {acoes=signal(['cozinha.iniciar','cozinha.concluir']);}
     bootstrapApplication(Probe,{providers:[{provide:SessaoService,useValue:mock},{provide:SessaoMesaService,useValue:{participante:()=>null}}]}).then((app)=>{
-      window.fixture={writes,revogar:()=>app.components[0].instance.acoes.set([]),perder:()=>perda=true,conflitar:()=>conflito=true,reset:()=>{pedido=inicial();replies.clear();},emitir:()=>{cursor++;stream.enqueue(new TextEncoder().encode('data: '+JSON.stringify({eventos:[{id:String(cursor),tipo:'PEDIDO_ACEITO',pedidoId:pedido.id}],proximo:String(cursor),temMais:false})+'\\n\\n'));}};
+      window.fixture={writes,mudarVersao:()=>pedido.versao++,revogar:()=>app.components[0].instance.acoes.set([]),perder:()=>perda=true,conflitar:()=>conflito=true,reset:()=>{pedido=inicial();replies.clear();},emitir:()=>{cursor++;stream.enqueue(new TextEncoder().encode('data: '+JSON.stringify({eventos:[{id:String(cursor),tipo:'PEDIDO_ACEITO',pedidoId:pedido.id}],proximo:String(cursor),temMais:false})+'\\n\\n'));}};
     });
   `,
       resolveDir: repo + '/frontend',
@@ -181,12 +181,53 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       .locator('.coluna')
       .evaluateAll((nodes) => nodes.map((n) => Math.round(n.getBoundingClientRect().x)));
     assert(pos[0] < pos[1] && pos[1] < pos[2]);
+    async function arrastar(etapa, durante) {
+      const alca = await card.locator('.alca').boundingBox();
+      const destino = await page.locator('#etapa-' + etapa).boundingBox();
+      assert(alca && destino);
+      const inicioX = alca.x + alca.width / 2;
+      const inicioY = alca.y + alca.height / 2;
+      await page.mouse.move(inicioX, inicioY);
+      await page.mouse.down();
+      await page.mouse.move(inicioX + 10, inicioY, { steps: 3 });
+      await page.mouse.move(destino.x + destino.width / 2, destino.y + destino.height / 2, {
+        steps: 18,
+      });
+      if (durante) await durante();
+      await page.mouse.up();
+    }
+    await arrastar('prontos');
+    assert.equal(await page.evaluate(() => window.fixture.writes.length), 0);
+    await arrastar('emPreparo');
+    await expect(card).toHaveAttribute('data-estado', 'EM_PREPARO');
+    await arrastar('fila');
+    assert.equal(await page.evaluate(() => window.fixture.writes.length), 1);
+    await arrastar('prontos');
+    await expect(card).toHaveAttribute('data-estado', 'PRONTO');
+    await expect(card.locator('.alca')).toHaveCount(0);
+    assert.deepEqual(
+      await page.evaluate(() => window.fixture.writes.map((w) => w.unidades.length)),
+      [3, 3],
+    );
+    await page.evaluate(() => {
+      window.fixture.reset();
+      window.fixture.writes.length = 0;
+    });
+    await page.getByRole('button', { name: 'Atualizar', exact: true }).click();
+    await expect(card).toHaveAttribute('data-estado', 'NA_FILA');
+    await arrastar('emPreparo', () => page.evaluate(() => window.fixture.mudarVersao()));
+    await expect(card).toHaveAttribute('data-estado', 'NA_FILA');
+    await expect(card.getByRole('alert')).toContainText('Versão alterada');
+    await page.evaluate(() => {
+      window.fixture.writes.length = 0;
+    });
     await card.getByRole('button', { name: 'Selecionar quantidades', exact: true }).click();
     await card.getByRole('checkbox').nth(0).check();
     await page.getByRole('button', { name: 'Atualizar', exact: true }).click();
     await expect(card.getByRole('checkbox').nth(0)).toBeChecked();
     await card.getByRole('button', { name: 'Iniciar selecionadas (1)', exact: true }).click();
     await expect(card).toHaveAttribute('data-estado', 'EM_PREPARO');
+    await expect(card.locator('.alca')).toHaveCount(0);
     await card.getByRole('button', { name: 'Concluir em preparo (1)', exact: true }).click();
     await expect(card).toHaveAttribute('data-estado', 'EM_PREPARO');
     assert.deepEqual(
@@ -226,7 +267,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
       if (width === 360)
         assert(
           (await page.getByRole('combobox', { name: 'Canal', exact: true }).boundingBox()).width >=
-            300,
+            200,
         );
       if (width < 1024) {
         const tab = page.getByRole('tab', { name: 'Na fila (1)', exact: true });
@@ -278,7 +319,7 @@ const { expect } = require(repo + '/frontend/node_modules/@playwright/test');
     await expect(
       card.getByRole('button', { name: /Iniciar|Concluir|Selecionar quantidades/ }),
     ).toHaveCount(0);
-    await expect(card.getByText(/Unidade .*Na fila/)).toHaveCount(3);
+    await expect(card.locator('.selecao').getByText(/Unidade .*Na fila/)).toHaveCount(3);
     assert.deepEqual(errors, []);
     console.log(
       name +

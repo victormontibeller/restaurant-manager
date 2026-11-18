@@ -1,13 +1,3 @@
-@if (modo === 'cardapio' && !cardapioCliente()) {
-  <div class="bistro-hero">
-    <div>
-      <p class="eyebrow">BEM-VINDO À MESA</p>
-      <h1>Uma pausa.<br />Um bom prato.</h1>
-      <p>Escolha com calma. A gente cuida do sabor.</p>
-      <span>Imagem ilustrativa</span>
-    </div>
-  </div>
-}
 <ng-template #listaCategorias>
   <nav class="categorias" aria-label="Categorias do cardápio">
     <button
@@ -63,13 +53,7 @@
           </div>
         </header>
       } @else {
-        <div class="vitrine-cabecalho">
-          <div>
-            <p class="eyebrow">ESCOLHA O SEU FAVORITO</p>
-            <h2 id="vitrine-titulo">Nosso cardápio</h2>
-          </div>
-          <span class="badge">Preparado na sua unidade</span>
-        </div>
+        <h2 id="vitrine-titulo" class="vitrine-cabecalho">Nosso cardápio</h2>
       }
       @if (cardapioCliente()) {
         <dialog

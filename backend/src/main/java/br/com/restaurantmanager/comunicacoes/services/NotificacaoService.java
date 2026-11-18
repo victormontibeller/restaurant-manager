@@ -1,5 +1,6 @@
 package br.com.restaurantmanager.comunicacoes.services;
 
+import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.comunicacoes.dtos.NotificacaoOperacional;
 import br.com.restaurantmanager.comunicacoes.dtos.TrabalhoNotificacao;
 import br.com.restaurantmanager.comunicacoes.repositories.NotificacaoRepository;
@@ -111,10 +112,10 @@ public class NotificacaoService {
     }
 
     @Transactional
-    public List<NotificacaoOperacional> listar(IdentidadeAtual ator, UUID unidade, int pagina) {
+    public Pagina<NotificacaoOperacional> listar(IdentidadeAtual ator, UUID unidade, int pagina, String tipo, String estado) {
         acessos.autorizarOperacaoExistente(ator, Acao.PAGAMENTO_RECONCILIAR, unidade);
         if (pagina < 0 || pagina > 10000) throw ErrosPedido.regra("Página inválida.");
-        return repository.listar(unidade, pagina);
+        return repository.listar(unidade, pagina, tipo, estado);
     }
 
     public boolean processarProxima() {

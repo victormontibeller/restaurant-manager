@@ -162,17 +162,15 @@ for (const [index, account] of fixture.accounts.entries()) {
         ).status(),
       ).toBe(401);
       if (account.perfil === 'ADMINISTRADOR') {
-        await navegarGestao(page, '/gestao/equipe');
-        await expect(page.getByRole('heading', { name: 'Configurações de acessos' })).toBeVisible();
-        const select = page.getByLabel('Perfil operacional');
-        await expect(select).toBeEnabled();
-        await select.selectOption('COZINHA');
-        await expect(select).toHaveValue('COZINHA');
+        await navegarGestao(page, '/gestao/acessos');
+        await expect(page.getByRole('heading', { name: 'Acessos', exact: true })).toBeVisible();
+        await page.getByRole('button', { name: 'Cozinha · Cozinha', exact: true }).click();
         await expect(page.getByLabel('Iniciar preparo', { exact: true })).toBeChecked();
+        await page.getByRole('button', { name: 'Concluir seleção' }).click();
         await screen(page, 'administracao-acessos');
         await navegarGestao(page, '/gestao/unidades');
         await expect(
-          page.getByRole('heading', { name: 'Configurações de unidades', exact: true }),
+          page.getByRole('heading', { name: 'Unidades cadastradas', exact: true }),
         ).toBeVisible();
         const units = await api.get(base + '/api/v1/configuracoes/unidades', { headers });
         expect(units.status()).toBe(200);
@@ -181,7 +179,7 @@ for (const [index, account] of fixture.accounts.entries()) {
         if (account.second_unit) expect(list.map((u) => u.id)).toContain(account.second_unit);
         await navegarGestao(page, '/gestao/equipe/convites');
         await expect(
-          page.getByRole('heading', { name: 'Convites de funcionários', exact: true }),
+          page.getByRole('heading', { name: 'Convites emitidos', exact: true }),
         ).toBeVisible();
         expect((await api.get(base + '/api/v1/equipe/convites', { headers })).status()).toBe(200);
       } else {

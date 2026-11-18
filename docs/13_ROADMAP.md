@@ -1,6 +1,6 @@
 # Roadmap
 
-> **Escopo:** ordem de implementação, dependências e rastreabilidade das seis sprints.
+> **Escopo:** ordem de implementação, dependências e rastreabilidade das sprints do produto.
 > **Situação:** especificação para implementação. Decisões confirmadas e premissas propostas seguem o [registro central](00_PROJECT_VISION.md); não representam funcionalidades já disponíveis.
 
 [Índice da documentação](README.md)
@@ -17,6 +17,10 @@ As sprints abaixo são incrementos de escopo, sem promessa de duração. Estimar
 | [Sprint 03](17_SPRINT_03.md) | Pedidos, mesas e cozinha | 1 e 2 | Fluxos operacionais completos sem depender de provedor financeiro real |
 | [Sprint 04](18_SPRINT_04.md) | Delivery e pagamentos | 3; contratos externos preparados | Cobrança, recebimento, entrega e devolução reconciliáveis |
 | [Sprint 05](19_SPRINT_05.md) | Homologação técnica e preparação do piloto | 0–4 para fechamento técnico; dependências externas para piloto real | Release homologado com matriz completa; piloto real acompanhado quando seus gates forem cumpridos |
+| [Sprint 06](28_SPRINT_06.md) | Gestão compacta, conta e tema | Base integrada das sprints 01–04 | Perfil próprio completo e navegação entre gestão e cardápio no mesmo tema |
+| [Sprint 07](29_SPRINT_07.md) | Cozinha e expedição | Sprint 06 | Avanço por arraste e expedição com resumo por pedido |
+| [Sprint 08](30_SPRINT_08.md) | Vendas, movimentos e triagem | Sprint 06 | Evolução, extrato conciliável e filas independentes por unidade |
+| [Sprint 09](31_SPRINT_09.md) | Catálogo e ofertas | Sprint 06 | Busca no catálogo inteiro, edição de produto e oferta no contexto de unidade |
 
 Para cada sprint: vincular requisitos a cenários, registrar testes executados/resultados, limitações e evidências da demonstração. Bugs que quebram isolamento, autorização, integridade financeira ou recuperação do fluxo entregue impedem aceite. Verificações fora do escopo implementado ficam explicitamente pendentes.
 

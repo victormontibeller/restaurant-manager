@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 
@@ -29,77 +30,10 @@ interface Pagina {
 
 @Component({
   selector: 'app-eventos-unidade',
-  template: `
-    <section aria-labelledby="eventos-titulo">
-      <h3 id="eventos-titulo">Atualizações da unidade</h3>
-      <p>Acompanhamento cadastral com consulta automática. Não inclui pedidos, pagamentos ou dados de clientes.</p>
-      <button type="button" (click)="carregar()" [disabled]="ocupado() || exportando()">Recarregar unidades permitidas</button>
-      <label for="unidade-eventos">Unidade acompanhada</label>
-      <select
-        id="unidade-eventos"
-        #seletor
-        [value]="selecionada()"
-        (change)="selecionar(seletor.value)"
-      >
-        <option value="">Selecione uma unidade</option>
-        @for (unidade of unidades(); track unidade.id) {
-          <option [value]="unidade.id">{{ unidade.nome }}</option>
-        }
-      </select>
-      <p role="status">{{ estado() }}</p>
-      @if (erro()) {
-        <p #alerta role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
-      }
-      @if (atual(); as unidade) {
-        <p data-testid="unidade-atual"><strong>{{ unidade.nome }}</strong> · {{ unidade.fuso }} · versão {{ unidade.versao }}</p>
-        <button type="button" (click)="exportar()" [disabled]="ocupado() || exportando()">{{ exportando() ? 'Consultando para exportar…' : 'Exportar cadastro da unidade (JSON)' }}</button>
-        <p>O arquivo contém somente identificação, nome, fuso e versão, após nova autorização no servidor. Não inclui histórico, funcionários ou dados de clientes.</p>
-        <p>Última consulta confirmada: {{ confirmado() }}. Revalidação a cada cinco segundos enquanto esta tela estiver aberta.</p>
-        @if (eventos().length === 0) {
-          <p>Nenhuma alteração registrada desde o início deste acompanhamento.</p>
-        } @else {
-          <ol aria-label="Alterações cadastrais recebidas">
-            @for (evento of eventos(); track evento.versao) {
-              <li>{{ evento.tipo === 'UNIDADE_CRIADA' ? 'Unidade criada' : 'Cadastro alterado' }}: {{ evento.nome }} · {{ evento.fuso }} · {{ evento.ativa ? 'ativa' : 'inativa' }} · versão {{ evento.versao }}</li>
-            }
-          </ol>
-          <p>Exibidas até cinquenta alterações recentes desta consulta. O histórico permanece no servidor.</p>
-        }
-      }
-    </section>
-  `,
-  styles: `
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    section {
-      margin-top: 1rem;
-    }
-    label,
-    select {
-      display: block;
-      margin-top: 0.6rem;
-    }
-    select {
-      width: 100%;
-      max-width: 32rem;
-      min-height: 48px;
-      font: inherit;
-    }
-    button {
-      max-width: 100%;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    p,
-    li {
-      overflow-wrap: anywhere;
-    }
-    .erro {
-      color: #9d2424;
-    }
-  `,
+  imports: [DatePipe],
+  templateUrl: './eventos-unidade.component.html',
+  styleUrl: '../ui/administracao.css',
+  styles: `ol { list-style: none; margin: 16px 0 0; } .gestao-linha time { font-variant-numeric: tabular-nums; }`,
 })
 export class EventosUnidadeComponent {
   private readonly sessao = inject(SessaoService);

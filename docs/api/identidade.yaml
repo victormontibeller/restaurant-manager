@@ -3,7 +3,7 @@ info:
   title: Restaurant Manager — identidade empresarial
   version: 0.1.0
   description: >-
-    Contrato das rotas empresariais existentes na Sprint 01, derivado dos
+    Contrato de autenticação empresarial e do perfil da própria conta, derivado dos
     controllers/DTOs e serviços. Não concede identidade SaaS ou sessão de mesa.
     HTTPS obrigatório; empresa resolvida pelo domínio cadastrado antes da
     autenticação. Domínio desconhecido falha fechado. Nenhuma rota aceita schema
@@ -114,6 +114,41 @@ paths:
               schema: {$ref: '#/components/schemas/Identidade'}
         '401': {$ref: '#/components/responses/IdentidadeInvalida'}
         default: {$ref: '#/components/responses/Erro'}
+  /api/v1/me/perfil:
+    get:
+      operationId: consultarMinhaConta
+      summary: Consultar dados pessoais e unidades de acesso da conta autenticada
+      security: [{empresarial: []}]
+      responses:
+        '200': {$ref: '#/components/responses/MinhaConta'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        default: {$ref: '#/components/responses/Erro'}
+    put:
+      operationId: atualizarMinhaConta
+      summary: Substituir nome e telefone da própria conta
+      description: >-
+        A ausência de um campo opcional, o valor nulo ou texto em branco remove o valor anterior.
+        A conta e a empresa são obtidas da sessão. O telefone admite espaços, parênteses,
+        ponto e hífen e é devolvido com 8 a 15 dígitos e sinal de mais opcional.
+      security: [{empresarial: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [versao]
+              properties:
+                versao: {type: integer, minimum: 0}
+                nome: {type: [string, 'null'], maxLength: 120}
+                telefone: {type: [string, 'null'], maxLength: 32}
+      responses:
+        '200': {$ref: '#/components/responses/MinhaConta'}
+        '400': {$ref: '#/components/responses/EntradaInvalida'}
+        '401': {$ref: '#/components/responses/IdentidadeInvalida'}
+        '409': {$ref: '#/components/responses/Erro'}
+        default: {$ref: '#/components/responses/Erro'}
   /api/v1/auth/reautenticar:
     post:
       operationId: confirmarSenhaEmpresarial
@@ -201,6 +236,29 @@ components:
       properties:
         accessToken: {type: string, description: JWT; manter somente em memória no navegador}
         expiresIn: {type: integer, format: int64, const: 300, description: Validade do access em segundos}
+    MinhaConta:
+      type: object
+      additionalProperties: false
+      required: [nome, telefone, email, emailVerificado, perfil, criadoEm, versao, unidades]
+      properties:
+        nome: {type: [string, 'null'], maxLength: 120}
+        telefone: {type: [string, 'null'], maxLength: 16}
+        email: {type: string, format: email}
+        emailVerificado: {type: boolean}
+        perfil: {$ref: '#/components/schemas/Identidade/properties/perfil'}
+        criadoEm: {type: string, format: date-time}
+        versao: {type: integer, minimum: 0}
+        unidades:
+          type: array
+          description: Vínculos autorizados na empresa, incluindo unidades inativas; vazio para clientes.
+          items:
+            type: object
+            required: [id, nome, fuso]
+            additionalProperties: false
+            properties:
+              id: {type: string, format: uuid}
+              nome: {type: string}
+              fuso: {type: string}
     Identidade:
       type: object
       additionalProperties: false
@@ -220,6 +278,11 @@ components:
         mensagem: {type: string, description: Mensagem sanitizada em PT-BR}
         correlacao: {type: string, format: uuid}
   responses:
+    MinhaConta:
+      description: Dados atuais do titular
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/MinhaConta'}
     Tokens:
       description: Access no corpo e novo refresh no cookie; refresh nunca é retornado no JSON
       headers:

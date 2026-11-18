@@ -1,12 +1,24 @@
-import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { mensagemErro } from '../catalogo/modelos';
+import { mensagemErro, moeda } from '../catalogo/modelos';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { PedidoDetalheComponent } from '../pedidos/pedido-detalhe.component';
 import { PedidoComandoService } from '../pedidos/pedido-comando.service';
 import { EnderecoPedido, Pedido } from '../pedidos/modelos';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { OrcamentoEntrega } from './modelos';
+
 interface Expedicao {
+  entrega: OrcamentoEntrega | null;
   pedido: Pedido;
   endereco: EnderecoPedido | null;
   ocorrencia: {
@@ -21,7 +33,7 @@ interface Expedicao {
   selector: 'app-expedicao',
   imports: [FormsModule, PedidoDetalheComponent],
   templateUrl: './expedicao.component.html',
-  styleUrl: '../operacao.css',
+  styleUrls: ['../operacao.css', './expedicao.component.css'],
 })
 export class ExpedicaoComponent {
   readonly unidadeId = input.required<string>();
@@ -30,13 +42,20 @@ export class ExpedicaoComponent {
   readonly comandos = inject(PedidoComandoService);
   private readonly nav = inject(NavegacaoProtegidaService);
   private readonly chave = 'expedicao:' + crypto.randomUUID();
+  readonly online = signal(navigator.onLine);
+  readonly moeda = moeda;
   readonly lista = signal<Expedicao[]>([]);
   readonly pagina = signal(0);
   readonly mais = signal(false);
   readonly erro = signal('');
+  readonly erroConsulta = signal('');
   readonly carregando = signal(false);
   motivos: Record<string, string> = {};
   devolverTaxa: Record<string, boolean> = {};
+  readonly pendenciasForaDaLista = computed(() => {
+    const visiveis = new Set(this.lista().map((item) => item.pedido.id));
+    return this.comandos.pendenciasDaFila(this.unidadeId()).filter((id) => !visiveis.has(id));
+  });
   private geracao = 0;
   constructor() {
     effect(() => {
@@ -48,10 +67,15 @@ export class ExpedicaoComponent {
       untracked(() => void this.carregar(0));
     });
     effect(() => this.nav.bloquear(this.chave, this.comandos.ocupado() || this.pendente()));
+    const rede = () => this.online.set(navigator.onLine);
+    window.addEventListener('online', rede);
+    window.addEventListener('offline', rede);
     const timer = setInterval(() => void this.carregar(this.pagina()), 5000);
     inject(DestroyRef).onDestroy(() => {
       this.geracao++;
       clearInterval(timer);
+      window.removeEventListener('online', rede);
+      window.removeEventListener('offline', rede);
       this.nav.liberar(this.chave);
     });
   }
@@ -59,7 +83,7 @@ export class ExpedicaoComponent {
     return this.acoes().includes(acao);
   }
   pendente(): boolean {
-    return this.lista().some((e) => !!this.comandos.pendente(e.pedido.id, false));
+    return this.comandos.pendenciasDaFila(this.unidadeId()).length > 0;
   }
   private limparDados(): void {
     this.lista.set([]);
@@ -67,9 +91,11 @@ export class ExpedicaoComponent {
     this.mais.set(false);
     this.motivos = {};
     this.devolverTaxa = {};
+    this.erro.set('');
+    this.erroConsulta.set('');
   }
   async carregar(pagina: number): Promise<void> {
-    if (pagina < 0 || this.carregando() || this.comandos.ocupado() || this.pendente()) return;
+    if (pagina < 0 || this.carregando() || this.comandos.ocupado()) return;
     const geracao = this.geracao;
     this.carregando.set(true);
     try {
@@ -77,6 +103,7 @@ export class ExpedicaoComponent {
         '/api/v1/expedicao?unidadeId=' + this.unidadeId() + '&pagina=' + pagina,
       );
       if (geracao === this.geracao) {
+        this.erroConsulta.set('');
         this.lista.set(r.itens);
         this.mais.set(r.mais);
         this.pagina.set(pagina);
@@ -84,54 +111,85 @@ export class ExpedicaoComponent {
     } catch (erro) {
       if (geracao === this.geracao) {
         if (erro instanceof ApiFailure && [401, 403, 404].includes(erro.status)) this.limparDados();
-        this.erro.set(mensagemErro(erro));
+        this.erroConsulta.set(mensagemErro(erro));
       }
     } finally {
       if (geracao === this.geracao) this.carregando.set(false);
     }
   }
-  async agir(e: Expedicao, acao: string): Promise<void> {
-    if (this.comandos.ocupado() || this.comandos.pendente(e.pedido.id, false)) return;
-    this.erro.set('');
+  async recuperar(id: string): Promise<void> {
+    const intencao = this.comandos.pendente(id, false);
+    if (!intencao || !this.online() || this.comandos.ocupado()) return;
     try {
-      await this.comandos.executar(e.pedido.id, false, {
-        rota: '/api/v1/operacao/pedidos/' + e.pedido.id + '/' + acao,
-        corpo: {
-          intencaoId: crypto.randomUUID(),
-          versao: e.pedido.versao,
-          motivo: '',
-          unidades: [],
-        },
-      });
-      await this.carregar(this.pagina());
+      await this.comandos.executar(id, false, intencao, this.unidadeId());
+      this.erro.set('');
     } catch (erro) {
       this.erro.set(mensagemErro(erro));
+    } finally {
+      await this.carregar(this.pagina());
+    }
+  }
+
+  async agir(e: Expedicao, acao: string): Promise<void> {
+    if (!this.online() || this.comandos.ocupado() || this.pendente()) return;
+    this.erro.set('');
+    this.geracao++;
+    this.carregando.set(false);
+    try {
+      await this.comandos.executar(
+        e.pedido.id,
+        false,
+        {
+          rota: '/api/v1/operacao/pedidos/' + e.pedido.id + '/' + acao,
+          corpo: {
+            intencaoId: crypto.randomUUID(),
+            versao: e.pedido.versao,
+            motivo: '',
+            unidades: [],
+          },
+        },
+        this.unidadeId(),
+      );
+    } catch (erro) {
+      this.erro.set(mensagemErro(erro));
+    } finally {
+      await this.carregar(this.pagina());
     }
   }
   async ocorrencia(e: Expedicao, decisao?: 'NOVA_TENTATIVA' | 'CANCELAMENTO'): Promise<void> {
-    if (this.comandos.ocupado() || this.comandos.pendente(e.pedido.id, false)) return;
+    if (!this.online() || this.comandos.ocupado() || this.pendente()) return;
     const motivo = this.motivos[e.pedido.id]?.trim();
     if (!motivo) {
       this.erro.set('Informe o motivo da ocorrência ou decisão.');
       return;
     }
     this.erro.set('');
+    this.geracao++;
+    this.carregando.set(false);
     try {
-      await this.comandos.executar(e.pedido.id, false, {
-        rota:
-          '/api/v1/expedicao/pedidos/' + e.pedido.id + '/' + (decisao ? 'decidir' : 'ocorrencia'),
-        corpo: {
-          intencaoId: crypto.randomUUID(),
-          versao: e.pedido.versao,
-          motivo,
-          decisao: decisao ?? null,
-          devolverTaxa:
-            decisao === 'CANCELAMENTO' ? (this.devolverTaxa[e.pedido.id] ?? true) : null,
+      await this.comandos.executar(
+        e.pedido.id,
+        false,
+        {
+          rota:
+            '/api/v1/expedicao/pedidos/' + e.pedido.id + '/' + (decisao ? 'decidir' : 'ocorrencia'),
+          corpo: {
+            intencaoId: crypto.randomUUID(),
+            versao: e.pedido.versao,
+            motivo,
+            decisao: decisao ?? null,
+            devolverTaxa:
+              decisao === 'CANCELAMENTO' ? (this.devolverTaxa[e.pedido.id] ?? true) : null,
+          },
         },
-      });
-      await this.carregar(this.pagina());
+        this.unidadeId(),
+      );
+      delete this.motivos[e.pedido.id];
+      delete this.devolverTaxa[e.pedido.id];
     } catch (erro) {
       this.erro.set(mensagemErro(erro));
+    } finally {
+      await this.carregar(this.pagina());
     }
   }
 }

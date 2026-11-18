@@ -7,7 +7,7 @@
   (brnTabsChange)="aba.set($event || 'fila')"
 >
   <header class="ferramentas">
-    <h1 id="cozinha-titulo">Produção</h1>
+    <h2 id="cozinha-titulo">Produção</h2>
     <div class="controles">
       <label for="cozinha-canal">Canal</label
       ><select id="cozinha-canal" #filtro [value]="canal()" (change)="filtrar(filtro.value)">
@@ -47,16 +47,56 @@
     }
   </div>
   @if (painel(); as dados) {
-    <div class="colunas">
+    <div class="colunas" cdkDropListGroup>
       @for (etapa of etapas; track etapa.id) {
         <section
           class="coluna"
+          cdkDropList
+          [cdkDropListData]="etapa.id"
+          [cdkDropListEnterPredicate]="aceitarCartao"
+          [cdkDropListSortingDisabled]="true"
+          [cdkDropListDisabled]="compacta()"
           [class.mobile-oculta]="aba() !== etapa.id"
           [id]="'brn-tabs-content-' + etapa.id"
           [attr.role]="compacta() ? 'tabpanel' : 'region'"
           [attr.aria-labelledby]="compacta() ? 'brn-tabs-label-' + etapa.id : 'etapa-' + etapa.id"
           [attr.tabindex]="compacta() ? 0 : null"
         >
+          <ng-template #lista let-chave>
+            @for (cartao of grupo(chave).itens; track cartao.pedido.id) {
+              <app-cartao-cozinha
+                [cartao]="cartao"
+                [permiteArrastar]="!compacta()"
+                [fuso]="dados.fuso"
+                [agora]="agora()"
+                [online]="online()"
+                [acoes]="acoes()"
+                [novo]="novos().includes(cartao.pedido.id)"
+                (pendencia)="registrarPendente($event)"
+                (atualizar)="atualizar()"
+              />
+            } @empty {
+              <p class="vazio">
+                {{ grupo(chave).total ? 'Nenhum pedido nesta página. Volte à página anterior.' : 'Nenhum pedido nesta etapa.' }}
+              </p>
+            }
+            @if (grupo(chave).mais || paginaDo(chave) > 0) {
+              <nav class="paginacao" [attr.aria-label]="'Páginas de ' + chave">
+                <button
+                  (click)="navegar(chave, paginaDo(chave)-1)"
+                  [disabled]="ocupado() || paginaDo(chave) === 0"
+                >
+                  Anterior</button
+                ><span>Página {{ paginaDo(chave) + 1 }}</span
+                ><button
+                  (click)="navegar(chave, paginaDo(chave)+1)"
+                  [disabled]="ocupado() || !grupo(chave).mais"
+                >
+                  Próxima
+                </button>
+              </nav>
+            }
+          </ng-template>
           <h2 [id]="'etapa-' + etapa.id">
             {{ etapa.nome }} <span>{{ totalEtapa(etapa.id) }}</span>
           </h2>
@@ -77,40 +117,6 @@
         </section>
       }
     </div>
-    <ng-template #lista let-chave>
-      @for (cartao of grupo(chave).itens; track cartao.pedido.id) {
-        <app-cartao-cozinha
-          [cartao]="cartao"
-          [fuso]="dados.fuso"
-          [agora]="agora()"
-          [online]="online()"
-          [acoes]="acoes()"
-          [novo]="novos().includes(cartao.pedido.id)"
-          (pendencia)="registrarPendente($event)"
-          (atualizar)="atualizar()"
-        />
-      } @empty {
-        <p class="vazio">
-          {{ grupo(chave).total ? 'Nenhum pedido nesta página. Volte à página anterior.' : 'Nenhum pedido nesta etapa.' }}
-        </p>
-      }
-      @if (grupo(chave).mais || paginaDo(chave) > 0) {
-        <nav class="paginacao" [attr.aria-label]="'Páginas de ' + chave">
-          <button
-            (click)="navegar(chave, paginaDo(chave)-1)"
-            [disabled]="ocupado() || paginaDo(chave) === 0"
-          >
-            Anterior</button
-          ><span>Página {{ paginaDo(chave) + 1 }}</span
-          ><button
-            (click)="navegar(chave, paginaDo(chave)+1)"
-            [disabled]="ocupado() || !grupo(chave).mais"
-          >
-            Próxima
-          </button>
-        </nav>
-      }
-    </ng-template>
   } @else {
     <p class="vazio" role="status">
       {{ ocupado() ? 'Carregando produção…' : 'Selecione a unidade ou atualize o painel.' }}

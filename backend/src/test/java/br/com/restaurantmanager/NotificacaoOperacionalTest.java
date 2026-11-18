@@ -106,6 +106,17 @@ class NotificacaoOperacionalTest {
         assertThat(r.getStatus()).as(r.getContentAsString()).isEqualTo(200);
         assertThat(p.c.json(r).get(0).get("estado").asText()).isEqualTo("CAPTURADO");
         assertThat(r.getContentAsString()).doesNotContain("@", "conteudo", "email");
+        String filtrada = "/api/v1/operacao/notificacoes/pagina?unidadeId=" + CatalogoCenario.UNIDADE;
+        var lidas = p.c.json(p.c.enviar("GET", filtrada + "&estado=CAPTURADO&tipo=PEDIDO_ACEITO", p.c.token, null));
+        assertThat(lidas.get("itens").size()).isEqualTo(1);
+        var item = lidas.get("itens").get(0);
+        assertThat(item.get("estadoPedido").asText()).isEqualTo("NA_FILA");
+        assertThat(item.get("proximaTentativaEm").isNull()).isTrue();
+        assertThat(item.get("tentativas").asInt()).isEqualTo(1);
+        assertThat(item.get("criadaEm").asText()).isNotBlank();
+        assertThat(lidas.get("temMais").asBoolean()).isFalse();
+        assertThat(p.c.json(p.c.enviar("GET", filtrada + "&estado=FALHOU", p.c.token, null)).get("itens").size()).isZero();
+        assertThat(p.c.enviar("GET", filtrada, p.funcionario("COZINHA"), null).getStatus()).isEqualTo(403);
         try (var files = Files.list(ROOT.resolve(p.c.schema))) {
             var path = files.findFirst().orElseThrow();
             assertThat(Files.readString(path)).contains("Seu pedido foi aceito", "CAPTURA LOCAL");

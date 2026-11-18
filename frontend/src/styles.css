@@ -30,6 +30,9 @@
   --rm-muted: var(--muted-foreground);
   --rm-border: var(--border);
   --rm-primary: var(--primary);
+  --superficie-cliente: #fffdf9;
+  --selecao-bg: #faeae4;
+  --selecao-borda: #e2b6a8;
   --rm-accent: var(--accent);
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-family: var(--font-sans);
@@ -103,7 +106,7 @@ button.secundario,
   border-color: var(--border);
 }
 [data-variant='outline'] {
-  background: white;
+  background: var(--card);
   color: var(--foreground);
   border-color: var(--input);
 }
@@ -274,7 +277,7 @@ td {
   position: absolute;
   left: 1rem;
   top: -100px;
-  background: white;
+  background: var(--card);
   padding: 1rem;
   z-index: 100;
 }
@@ -292,7 +295,7 @@ details {
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
-  background: white;
+  background: var(--card);
 }
 summary {
   min-height: 32px;
@@ -300,6 +303,8 @@ summary {
   font-weight: 650;
 }
 dialog {
+  background: var(--card);
+  color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
@@ -336,7 +341,7 @@ dialog::backdrop {
   box-shadow: none;
 }
 .rm-tabs-list button[aria-selected='true'] {
-  background: white;
+  background: var(--card);
   border-color: var(--border);
   color: var(--primary);
   box-shadow: 0 2px 5px #2925210a;
@@ -348,7 +353,7 @@ dialog::backdrop {
 }
 .ui-catalogo section {
   padding: 1.5rem;
-  background: white;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 1rem;
   margin: 1rem 0;
@@ -377,7 +382,6 @@ dialog::backdrop {
 
 app-cliente-layout {
   --fonte-editorial: Georgia, 'Times New Roman', serif;
-  --superficie-cliente: #fffdf9;
   --raio-painel-cliente: 16px;
   --espaco-acao-cliente: 8px;
 }

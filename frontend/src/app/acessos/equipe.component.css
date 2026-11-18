@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+.gestao-linha h3 {
+  margin: 0;
+}
+.gestao-linha > div {
+  flex: 1 1 14rem;
+  overflow-wrap: anywhere;
+}
+.gestao-lista .gestao-editor {
+  margin-inline: var(--gestao-espaco-3, 12px);
+}
+.gestao-lista + nav {
+  margin-top: var(--gestao-espaco-3, 12px);
+}
+.acoes-editor {
+  margin-top: var(--gestao-espaco-2, 8px);
+}

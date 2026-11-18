@@ -2,8 +2,8 @@
 openapi: 3.1.1
 info:
   title: Restaurant Manager — vendas e movimentos por unidade
-  version: 0.4.0
-  description: Candidato local da Sprint 4. Tenant pelo domínio, respostas no-store,
+  version: 0.8.0
+  description: Consultas operacionais da Sprint 8. Tenant pelo domínio, respostas no-store,
     autorização por sessão/ação/unidade/recurso. Simulação local não comprova sandbox,
     envio real ou homologação Linux.
 paths:
@@ -13,7 +13,7 @@ paths:
       description: relatorio.consultar na unidade; datas inclusivas no fuso da unidade,
         até 367 dias. Pedidos/cobranças usam criação; ajustes usam registro e movimentos
         confirmação. Saldos/reservas são atuais para cobranças com pedido no período.
-        Cada comanda contada uma vez, incluindo outras rodadas.
+        Cada comanda contada uma vez, incluindo outras rodadas. Sem as duas datas, consulta o dia atual da unidade.
       security:
       - empresarial: []
       responses:
@@ -34,16 +34,17 @@ paths:
           format: uuid
       - name: inicio
         in: query
-        required: true
+        required: false
         schema:
           type: string
           format: date
       - name: fim
         in: query
-        required: true
+        required: false
         schema:
           type: string
           format: date
+      - {name: pagina, in: query, schema: {type: integer, default: 0, minimum: 0, maximum: 10000}}
 components:
   securitySchemes:
     empresarial:
@@ -101,7 +102,15 @@ components:
         reservasAtuais:
           type: string
           pattern: "^[0-9]+(\\.[0-9]{1,2})?$"
+        dias: {type: array, items: {$ref: '#/components/schemas/DiaFinanceiro'}}
+        canais: {type: array, items: {$ref: '#/components/schemas/VendasPorCanal'}}
+        movimentos: {type: array, maxItems: 25, items: {$ref: '#/components/schemas/MovimentoRelatorio'}}
+        maisMovimentos: {type: boolean}
       required:
+      - dias
+      - canais
+      - movimentos
+      - maisMovimentos
       - unidadeId
       - inicio
       - fim
@@ -116,3 +125,38 @@ components:
       - saldoAReceberAtual
       - saldoADevolverAtual
       - reservasAtuais
+    DiaFinanceiro:
+      type: object
+      additionalProperties: false
+      required: [data, recebido, devolvido, ajustes]
+      properties:
+        data: {type: string, format: date}
+        recebido: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        devolvido: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        ajustes: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+    VendasPorCanal:
+      type: object
+      additionalProperties: false
+      required: [canal, pedidos, cancelados, cobrancaOriginal]
+      properties:
+        canal: {type: string}
+        pedidos: {type: integer, minimum: 0}
+        cancelados: {type: integer, minimum: 0}
+        cobrancaOriginal: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+    MovimentoRelatorio:
+      type: object
+      additionalProperties: false
+      required: [id, registradoEm, tipo, valor, metodo, pedidoId, comandaId, mesa, canal, entregue, troco, recebimentoId]
+      properties:
+        id: {type: string, format: uuid}
+        registradoEm: {type: string, format: date-time}
+        tipo: {type: string}
+        valor: {type: string, pattern: '^[0-9]+\.[0-9]{2}$'}
+        metodo: {type: [string, 'null']}
+        pedidoId: {type: [string, 'null'], format: uuid}
+        comandaId: {type: [string, 'null'], format: uuid}
+        mesa: {type: [string, 'null']}
+        canal: {type: string}
+        entregue: {type: [string, 'null']}
+        troco: {type: [string, 'null']}
+        recebimentoId: {type: [string, 'null'], format: uuid}

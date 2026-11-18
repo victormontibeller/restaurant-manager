@@ -1,5 +1,64 @@
 # Checkpoint de execução
 
+## Faixa inferior da Gestão — 2026-11-18
+
+A [demo local](https://demo.localhost:8095/gestao/pedidos) confirmou o commit `f82f286` às 19h24, com PWA `b593797947695774682f` e JAR `237f08d0d4f1ab8c993ccb3bb8baea2e677ff8c9714934db36578dedaa7843a1`. Gestão, Cozinha e Minha conta da equipe ganharam o espaço antes reservado pelo diagnóstico permanente. A faixa inferior aparece quando a PWA tem aviso ou ação disponível. O diagnóstico manual da equipe fica na tela de entrada. As classes Java e as migrações SQL do pacote coincidiram byte a byte com a release anterior.
+
+Formatação, tipos e lógica do frontend passaram. Uma aba Chromium da demo em 360 px permaneceu aberta no serviço anterior até receber o aviso de atualização. Cancelar manteve a versão anterior na aba. Confirmar ativou a PWA publicada e recarregou Pedidos com a faixa recolhida.
+
+Na demo, passaram 12 combinações de Pedidos, Acessos, Cozinha e Minha conta em 360, 768 e 1280 px no Chromium. Em cada uma, o aviso offline apareceu, a faixa voltou a ocupar zero pixels ao reconectar e a barra e o título conservaram suas posições. A consulta manual na entrada da equipe confirmou o acesso ao banco, e o Cardápio abriu sem esse diagnóstico.
+
+O cenário S06-UI03 passou nos cinco projetos de navegador contra o mesmo JAR em HTTPS e PostgreSQL isolado. O cenário verificou rolagem, menu, teclado e recuperação após o modo offline.
+
+## Navegação fixa e administração da Gestão — 2026-11-18
+
+O candidato local deriva de `223feac` na branch `codex/sprint-09-catalogo-ofertas`. A Gestão e a Cozinha ganharam rolagem independente do menu e do conteúdo. A barra superior, o título e a ação principal continuam visíveis durante a rolagem. A administração usa o padrão compacto nos dois temas. **Equipe** reúne os vínculos dos funcionários e **Acessos** abre a matriz de permissões por módulo e perfil.
+
+O novo salvamento da matriz usa a mesma versão da política e grava os perfis alterados numa única transação com auditoria. As permissões existentes foram reaproveitadas sem migração. Os contratos e a interface estão descritos em [Acessos](11_ACCESS_CONTROL.md) e nas [diretrizes da Gestão](09_UI_GUIDELINES.md#densidade-da-gestão).
+
+Build com PWA `f31515c71366d06e41fd`. O ambiente isolado do Mac serviu o JAR `ec5d787883a78cbb7a745fdf16913a9ae7a307a90a714b27698bdbadc2a959f1` por HTTPS, com PostgreSQL de teste. Passaram formatação, tipos, lógica do frontend, o probe Chromium de formulários com API simulada e 27 testes de acesso em PostgreSQL.
+
+Passaram 23 combinações distintas de jornada e navegador no mesmo JAR. Elas cobrem matriz e reautenticação, último administrador, cadastro e horários de unidades, regiões, conexão OAuth fictícia, convites, prazos, eventos e exportação. A rolagem, o salto para o conteúdo e o aviso offline passaram no Chromium desktop, tablet e celular, Firefox e WebKit. A reexecução confirmou a correção do seletor da matriz no celular e usou a massa completa de eventos para validar revogação. A checagem visual com dados simulados cobriu as oito telas nos dois temas em 360, 768, 1280 e 640 pixels CSS. A última largura reproduz o espaço de 1280 pixels a 200% de zoom.
+
+O provedor OAuth dessa rodada é fictício. A homologação integrada no Hermes continua adiada por decisão do proprietário. O próximo marco é executar a matriz completa por perfil e unidade no candidato homologado, com evidências de tela, API e dispositivos físicos.
+
+O publicador do Mac promoveu o commit local `b8eb10c` na [demo](https://demo.localhost:8095) às 18h10, com JAR `b24948fb5b4cca8e7d12b590e7ab6b83e0d0c49d9e7b8131f13f506d79bb3ff8` e a mesma versão da PWA. As 37 migrações coincidiram com a release anterior. O Chromium confirmou a navegação autenticada pelas oito telas em 48 combinações de largura e tema, a posição fixa do menu e do cabeçalho em Pedidos e a abertura da matriz com retorno de foco. A conferência na demo preservou as permissões existentes.
+
+## Sprints 06 a 09 na demo local — 2026-11-18
+
+Os quatro incrementos foram publicados em sequência na [demo](https://demo.localhost:8095). O menu Dia a dia inclui a [Cozinha](https://demo.localhost:8095/cozinha), com a mesma navegação e os mesmos temas de Pedidos. A [auditoria de dados por tela e perfil](evidencias/cobertura-pedidos-comandas-2026-11-18.md) também estendeu os detalhes de pedidos, comandas e cobranças.
+
+| Entrega | Evidência no Mac |
+| --- | --- |
+| [06 · Conta e tema](28_SPRINT_06.md) | 15 combinações de jornada e navegador aprovadas com PostgreSQL. Em 21 pares de rota e perfil, a revisão da demo em três larguras e dois temas passou nas 126 combinações. |
+| [07 · Cozinha e expedição](29_SPRINT_07.md) | 20 combinações aprovadas. A revisão do menu na PWA `6c6e8cc0d33bbdcf84ff` passou nas 42 combinações de sete perfis, três larguras e dois temas. Com as mesmas 12 entregas, a expedição passou de zero para três, cinco e seis pedidos inteiros na primeira tela de celular, tablet e desktop. |
+| [08 · Vendas e pendências](30_SPRINT_08.md) | 32 casos distintos de PostgreSQL aprovados. A primeira execução de navegador encontrou o limite de login. Após o vencimento, a reexecução no mesmo JAR passou nas 10 combinações, sem casos ignorados ou instáveis. |
+| [09 · Catálogo e ofertas](31_SPRINT_09.md) | A consulta paginada e a separação por unidades passaram nos dois testes dedicados em PostgreSQL. Os preços de R$ 14,00 e R$ 17,50 foram conferidos nas filiais correspondentes pela gestão, API e cardápio nos cinco projetos de navegador. |
+
+O commit `d6fb229` inaugurou a [publicação automática no Mac](22_PRODUCTION_RUNBOOK.md#demo-local-do-mac-a-cada-incremento). O serviço confirmou o JAR `9882acdfd4eab2bfa143a74f555447890b55f05938fc4a3ed3bd9a26cf0dc153` e a PWA `bf7521a0469a3964c5a0`. Em abas abertas, o aviso **Nova versão disponível** oferece **Atualizar aplicativo**. A verificação anterior, do commit `b54bd75`, passou nas 20 combinações de navegador das jornadas de composição do pedido, valores de comanda, financeiro e navegação da Cozinha.
+
+A inspeção do pedido assistido encontrou o banner promocional do cardápio ocupando espaço antes dos produtos. Em `b9fd9bc`, **Novo pedido** passou a abrir na seleção dos produtos. O fluxo automático confirmou o novo JAR `f90e180d410eb99a2b8d37642c773d4021234e85b8c4ac73f5006557ab6e89ba` e a PWA `f3d963994bd3cce8f68e` na porta 8095. Os 13 testes do publicador passaram, incluindo um merge por avanço rápido, preservação de alterações apenas documentais e retorno à versão anterior após falha de saúde.
+
+No release `d6fb229`, a seleção integrada local utilizou 38 pares distintos de cenário e navegador. Na primeira rodada passaram 30. O cenário administrativo passou a selecionar a filial da sua própria oferta e o perfil de Expedição passou a ser localizado na região Minha conta. Depois dessas correções de teste e da expiração do limite de login que afetou dois casos financeiros, os oito pares restantes passaram. As reexecuções incluíram cinco pares já aprovados para conferir regressão. O resultado de 38/38 considera cada par uma vez e cobre os percursos alterados de conta, tema, catálogo, preparo, unidades, expedição e financeiro.
+
+No release `b9fd9bc`, o pedido assistido e o serviço de mesa passaram no Chromium desktop e celular. A conferência pelo menu real da demo passou nas 126 combinações de rota e perfil, largura e tema, com um título principal visível por página e sem rolagem horizontal do documento. As larguras foram emuladas no navegador.
+
+No GitHub, as execuções [da Sprint 06](https://github.com/victormontibeller/restaurant-manager/actions/runs/44236868966) e [da Sprint 08](https://github.com/victormontibeller/restaurant-manager/actions/runs/44236868952) passaram em frontend e em 490 e 491 testes de backend, respectivamente. Ambas reprovaram na auditoria npm e passaram na auditoria Java. Em uma execução paralela do mesmo SHA da Sprint 06, o espelho Ubuntu retardou o download dos pacotes de navegador e o limite de vinte minutos interrompeu a suíte Java. As quatro branches receberam uma janela de 45 minutos para executar os mesmos checks.
+
+Os [PRs 06](https://github.com/victormontibeller/restaurant-manager/pull/17), [07](https://github.com/victormontibeller/restaurant-manager/pull/18), [08](https://github.com/victormontibeller/restaurant-manager/pull/19) e [09](https://github.com/victormontibeller/restaurant-manager/pull/20) são cumulativos e estão abertos para revisão. A auditoria npm encontrou o [alerta de severidade alta em picomatch](https://github.com/advisories/GHSA-fc5q-39xc-vjpf). O gate segue obrigatório. A homologação integrada por perfil e unidade no Hermes foi adiada pelo proprietário.
+
+## Sprint 08 — 2026-11-18
+
+A [revisão de vendas e movimentos](30_SPRINT_08.md) amplia consultas por unidade, período e canal e separa as duas filas de triagem. A Sprint 07 passou em 20 combinações de preparo, expedição, unidades e permissões em cinco projetos de navegador contra HTTPS e PostgreSQL reais no Mac. A demo serviu a PWA `f0351ec59583576078d2`.
+
+## Sprint 07 — 2026-11-18
+
+A [cozinha e a expedição](29_SPRINT_07.md) incluem preparo por arraste e consulta compacta. As medições em amostra controlada e os limites da validação constam no documento da sprint. Na revisão integrada da Sprint 06 passaram os 15 cenários por projeto de navegador (Chromium, Firefox e WebKit), além de 126 combinações de navegação e layout na demo.
+
+## Sprint 06 — 2026-11-18
+
+Base `1a3d01f`. Perfil próprio, campos estruturados e tema compartilhado na [Sprint 06](28_SPRINT_06.md). Dois testes de perfil em PostgreSQL passaram. O build da PWA `bbe2c4d7bc0c1b86eb63` e o JAR `d9e6aabcf1da4627a37a41ef57d52e8cfb535c96da6612fa0ce1a262bca36065` estão na demonstração local em 8095. A migração V29 foi aplicada em cópia no cluster dedicado e restaurada em um banco novo, preservando a versão anterior. Validação no Hermes adiada pelo proprietário.
+
 ## Integração da Gestão compacta — 2026-11-16
 
 A branch `codex/integrar-gestao` integra o snapshot local `7f9cfd9` à

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
@@ -10,7 +11,8 @@ interface Conexao {
 }
 @Component({
   selector: 'app-integracao-pagamento',
-  styleUrl: '../operacao.css',
+  imports: [DatePipe],
+  styleUrl: '../ui/administracao.css',
   templateUrl: './integracao.component.html',
 })
 export class IntegracaoPagamentoComponent {
@@ -29,12 +31,17 @@ export class IntegracaoPagamentoComponent {
     });
   }
   async carregar(): Promise<void> {
+    if (this.ocupado()) return;
+    this.erro.set('');
     this.ocupado.set(true);
     try {
       const d = await this.sessao.api<Conexao | null>('/api/v1/integracoes/mercadopago');
       if (!this.destruido) this.dados.set(d ?? null);
     } catch (e) {
-      if (!this.destruido) this.erro.set(mensagemErro(e));
+      if (!this.destruido) {
+        this.dados.set(null);
+        this.erro.set(mensagemErro(e));
+      }
     } finally {
       if (!this.destruido) this.ocupado.set(false);
     }

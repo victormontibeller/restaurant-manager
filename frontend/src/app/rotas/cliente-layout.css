@@ -35,7 +35,7 @@
   place-items: center;
   border-radius: 14px;
   background: var(--rm-primary, #285139);
-  color: white;
+  color: var(--primary-foreground);
   width: 46px;
   height: 46px;
 }
@@ -150,6 +150,7 @@
   }
   .header-actions {
     margin-left: auto;
+    gap: 8px;
   }
   .restaurant-brand {
     font-size: 1rem;
@@ -168,7 +169,7 @@
     left: 0;
     right: 0;
     z-index: 30;
-    background: #fffffff5;
+    background: color-mix(in srgb, var(--card) 96%, transparent);
     backdrop-filter: blur(12px);
     border-top: 1px solid var(--rm-border, #e5e9e1);
     padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
@@ -217,4 +218,9 @@
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+@media (max-width: 420px) {
+  .client-header { flex-wrap: wrap; }
+  .client-header .restaurant-brand { flex: 1 1 8rem; min-width: 0; }
 }

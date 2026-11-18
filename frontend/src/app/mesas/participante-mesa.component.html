@@ -92,6 +92,14 @@
               <dd>{{ moeda(conta.totalDevido) }}</dd>
             </div>
             <div>
+              <dt>Recebido confirmado</dt>
+              <dd>{{ moeda(conta.pagoConfirmado) }}</dd>
+            </div>
+            <div>
+              <dt>Devolvido confirmado</dt>
+              <dd>{{ moeda(conta.devolvidoConfirmado) }}</dd>
+            </div>
+            <div>
               <dt>Saldo a receber</dt>
               <dd>{{ moeda(conta.saldoAReceber) }}</dd>
             </div>
@@ -100,6 +108,9 @@
               <dd>{{ moeda(conta.saldoADevolver) }}</dd>
             </div>
           </dl>
+          @if (conta.pendenciaFinanceira) {
+            <p class="aviso">Há uma operação financeira pendente nesta comanda.</p>
+          }
 
           <div class="acoes-comanda">
             <button

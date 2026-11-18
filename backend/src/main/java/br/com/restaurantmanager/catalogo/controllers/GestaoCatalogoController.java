@@ -3,6 +3,9 @@ package br.com.restaurantmanager.catalogo.controllers;
 import br.com.restaurantmanager.catalogo.dtos.AlterarOferta;
 import br.com.restaurantmanager.catalogo.dtos.Categoria;
 import br.com.restaurantmanager.catalogo.dtos.Oferta;
+import br.com.restaurantmanager.catalogo.dtos.FiltrosCatalogoGestao;
+import br.com.restaurantmanager.catalogo.dtos.PaginaCatalogoGestao;
+import br.com.restaurantmanager.catalogo.models.TipoProduto;
 import br.com.restaurantmanager.catalogo.dtos.Pagina;
 import br.com.restaurantmanager.catalogo.dtos.Produto;
 import br.com.restaurantmanager.catalogo.services.GestaoCatalogoService;
@@ -11,6 +14,7 @@ import br.com.restaurantmanager.identidade.models.IdentidadeAtual;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +35,18 @@ public class GestaoCatalogoController {
     public GestaoCatalogoController(GestaoCatalogoService gestao, OfertaProdutoService ofertas) {
         this.gestao = gestao;
         this.ofertas = ofertas;
+    }
+
+    @GetMapping("/listagem")
+    public PaginaCatalogoGestao listar(@AuthenticationPrincipal IdentidadeAtual ator,
+            @RequestParam(required = false) UUID unidadeId,
+            @RequestParam(defaultValue = "") @Size(max = 120) String busca,
+            @RequestParam(required = false) UUID categoriaId,
+            @RequestParam(required = false) TipoProduto tipo,
+            @RequestParam(required = false) Boolean ativo,
+            @RequestParam(required = false) Boolean disponivel,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(10000) int pagina) {
+        return gestao.listar(ator, unidadeId, new FiltrosCatalogoGestao(busca, categoriaId, tipo, ativo, disponivel), pagina);
     }
 
     @GetMapping("/categorias")

@@ -53,6 +53,10 @@ O [checkpoint](25_EXECUTION_STATUS.md) distingue essa entrega das etapas externa
 | [Sprint 3 — Pedidos, mesas e cozinha](17_SPRINT_03.md) | Implementação e revisão local concluídas; [PR #6 integrado](https://github.com/victormontibeller/restaurant-manager/pull/6); Linux/homologação pendentes |
 | [Sprint 4 — Delivery e pagamentos](18_SPRINT_04.md) | [PR #8 integrado](https://github.com/victormontibeller/restaurant-manager/pull/8) em `8888234`; [435 backend + 405 pares UI locais](evidencias/sprint-04-local-2026-11-09.md); Linux/homologação pendentes |
 | [Sprint 5 — Homologação e piloto](19_SPRINT_05.md) | Preparação e [validação Mac/CI](evidencias/sprint-05-validacao-mac-ci-2026-11-09.md) concluídas; homologação Linux, serviços externos e piloto pendentes |
+| [Sprint 06 — Conta, padrão visual e tema](28_SPRINT_06.md) | Disponível na demo local. [PR 17](https://github.com/victormontibeller/restaurant-manager/pull/17) |
+| [Sprint 07 — Cozinha e expedição](29_SPRINT_07.md) | Disponível na demo local, com a Cozinha no menu da gestão. [PR 18](https://github.com/victormontibeller/restaurant-manager/pull/18) |
+| [Sprint 08 — Vendas, movimentos e pendências](30_SPRINT_08.md) | Disponível na demo local. [PR 19](https://github.com/victormontibeller/restaurant-manager/pull/19) |
+| [Sprint 09 — Catálogo e ofertas por unidade](31_SPRINT_09.md) | Disponível na demo local. [PR 20](https://github.com/victormontibeller/restaurant-manager/pull/20) |
 
 ## Decisões, evidências e manutenção
 

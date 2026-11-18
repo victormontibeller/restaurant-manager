@@ -1,0 +1,173 @@
+<section class="admin-pagina" aria-label="Matriz de acessos" [attr.aria-busy]="ocupado()">
+  <div class="admin-painel painel-matriz">
+    <div class="matriz-controles">
+      <div>
+        <label for="buscar-modulo">Buscar módulo ou ação</label>
+        <input
+          #campoBusca
+          id="buscar-modulo"
+          type="search"
+          [value]="busca()"
+          (input)="busca.set(campoBusca.value)"
+          [disabled]="!matriz()"
+        />
+      </div>
+      <button type="button" data-variant="outline" (click)="carregar()" [disabled]="ocupado()">
+        Recarregar matriz
+      </button>
+    </div>
+
+    <p class="admin-ajuda">
+      As permissões valem para cada perfil nas unidades atribuídas. O Administrador tem acesso a
+      todas as unidades e suas permissões são protegidas.
+    </p>
+
+    @if (matriz()) {
+      <div
+        class="matriz-rolagem"
+        role="region"
+        aria-label="Tabela de permissões por perfil"
+        tabindex="0"
+      >
+        <table aria-label="Permissões por módulo e perfil">
+          <thead>
+            <tr>
+              <th scope="col">Módulo</th>
+              @for (perfil of perfis; track perfil.codigo) {
+                <th scope="col">{{ perfil.nome }}</th>
+              }
+            </tr>
+          </thead>
+          @for (area of areas(); track area.nome) {
+            <tbody>
+              <tr class="area">
+                <th scope="rowgroup" [attr.colspan]="perfis.length + 1">{{ area.nome }}</th>
+              </tr>
+              @for (modulo of area.modulos; track modulo.nome) {
+                <tr>
+                  <th scope="row">{{ modulo.nome }}</th>
+                  @for (perfil of perfis; track perfil.codigo) {
+                    @let concedidas = selecionadas(modulo.acoes, perfil.codigo);
+                    <td>
+                      <button
+                        #abrirCelula
+                        type="button"
+                        data-variant="outline"
+                        aria-haspopup="dialog"
+                        [attr.aria-label]="modulo.nome + ' · ' + perfil.nome"
+                        [attr.title]="resumo(concedidas)"
+                        [attr.aria-describedby]="'resumo-' + modulo.acoes[0].codigo + '-' + perfil.codigo"
+                        [disabled]="ocupado()"
+                        (click)="abrir(abrirCelula, modulo, perfil)"
+                      >
+                        <span aria-hidden="true">
+                          @if (concedidas.length) {
+                            {{ concedidas.length }} de {{ modulo.acoes.length }} ações
+                          } @else {
+                            Sem acesso
+                          }
+                        </span>
+                        <span
+                          class="matriz-leitor"
+                          [id]="'resumo-' + modulo.acoes[0].codigo + '-' + perfil.codigo"
+                        >
+                          {{ resumo(concedidas) }}
+                        </span>
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          } @empty {
+            <tbody>
+              <tr>
+                <td [attr.colspan]="perfis.length + 1">Nenhum módulo encontrado.</td>
+              </tr>
+            </tbody>
+          }
+        </table>
+      </div>
+    } @else if (ocupado()) {
+      <p role="status">Carregando permissões…</p>
+    }
+
+    @if (erro()) {
+      <p #alerta id="erro-matriz" role="alert" class="erro" tabindex="-1">{{ erro() }}</p>
+    }
+    @if (aviso()) {
+      <p role="status">{{ aviso() }}</p>
+    }
+
+    @if (matriz()) {
+      <div class="matriz-rodape">
+        <form class="gestao-acoes" (submit)="confirmar($event, senha)">
+          <div>
+            <label for="senha-matriz">Confirme sua senha</label>
+            <input
+              #senha
+              id="senha-matriz"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength="72"
+              [attr.aria-describedby]="senhaInvalida() ? 'erro-matriz' : null"
+              [attr.aria-invalid]="senhaInvalida() ? true : null"
+              [disabled]="ocupado()"
+            />
+          </div>
+          <button type="submit" data-variant="outline" [disabled]="ocupado()">
+            Confirmar identidade
+          </button>
+        </form>
+        <button
+          type="button"
+          (click)="salvar()"
+          [disabled]="!alterada() || ocupado() || conflito()"
+        >
+          Salvar acessos
+        </button>
+      </div>
+    }
+  </div>
+</section>
+
+<dialog #editor aria-labelledby="titulo-celula" (close)="fecharEditor()">
+  @if (celula(); as atual) {
+    <header>
+      <h2 id="titulo-celula" tabindex="-1" autofocus>
+        {{ atual.modulo }} · {{ atual.nomePerfil }}
+      </h2>
+      <p class="admin-ajuda">Selecione as ações para este perfil.</p>
+    </header>
+    <ul class="editor-acoes">
+      @for (acao of atual.acoes; track acao.codigo; let indice = $index) {
+        @let exigidaPorOutra = exigida(acao.codigo, atual.perfil);
+        <li>
+          <label class="gestao-opcao">
+            <input
+              type="checkbox"
+              [checked]="rascunho()[atual.perfil].includes(acao.codigo)"
+              [disabled]="exigidaPorOutra"
+              [attr.aria-describedby]="'detalhe-acao-' + indice"
+              (change)="marcar(acao, atual.perfil, $any($event.target).checked)"
+            />
+            {{ acao.descricao }}
+          </label>
+          <small [id]="'detalhe-acao-' + indice">
+            {{ acao.escopo === 'EMPRESA' ? 'Toda a empresa' : 'Unidades atribuídas' }}
+            @if (acao.dependencia) {
+              · Inclui {{ descricaoAcao(acao.dependencia) }}
+            }
+            @if (exigidaPorOutra) {
+              · Exigida por outra ação selecionada neste perfil
+            }
+          </small>
+        </li>
+      }
+    </ul>
+    <footer>
+      <button type="button" (click)="editor.close()">Concluir seleção</button>
+    </footer>
+  }
+</dialog>

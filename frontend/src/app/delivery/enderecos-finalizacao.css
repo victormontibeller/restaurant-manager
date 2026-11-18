@@ -164,3 +164,26 @@
     align-items: start;
   }
 }
+
+:host(.enderecos-conta) .detalhe-endereco {
+  grid-column: 1 / -1;
+}
+.detalhe-endereco summary {
+  min-height: 48px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 600;
+}
+.detalhe-endereco dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+.detalhe-endereco dt {
+  color: var(--muted-foreground);
+}
+.detalhe-endereco dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

@@ -1,5 +1,11 @@
 <article
   class="cartao"
+  cdkDrag
+  cdkDragPreviewContainer="parent"
+  [cdkDragData]="this"
+  [cdkDragDisabled]="!destino()"
+  (cdkDragStarted)="iniciarArraste()"
+  (cdkDragDropped)="soltar($event)"
   [class.novo]="novo()"
   [attr.data-estado]="pedido().estado"
   [attr.data-pedido-id]="pedido().id"
@@ -13,6 +19,15 @@
       >
       <h3>Pedido #{{ referencia() }}</h3>
     </div>
+    @if (destino(); as alvo) {
+      <span
+        class="alca"
+        cdkDragHandle
+        aria-hidden="true"
+        [title]="alvo === 'emPreparo' ? 'Arrastar para Em preparo' : 'Arrastar para Prontos'"
+        >⠿</span
+      >
+    }
     @if (novo()) {
       <span class="selo">Novo</span>
     }
@@ -105,7 +120,6 @@
       }
       @if (tem('concluir') && concluir().length) {
         <button
-          class="concluir"
           (click)="comandar('concluir', parcial())"
           [disabled]="bloqueado() || (parcial() && !selecionadasPara('concluir').length)"
         >
@@ -137,7 +151,39 @@
   }
   <details>
     <summary>Histórico e referência</summary>
-    <p class="referencia">{{ pedido().id }}</p>
+    <p class="referencia">Pedido {{ pedido().id }}</p>
+    @if (pedido().comandaId) {
+      <p class="referencia">Comanda {{ pedido().comandaId }}</p>
+    }
+    <p>Criado em {{ horario(pedido().criadoEm) }}</p>
+    @if (pedido().primeiroPreparoEm; as inicio) {
+      <p>Primeiro preparo em {{ horario(inicio) }}</p>
+    }
+    @if (cartao().prontoEm; as pronto) {
+      <p>Pronto em {{ horario(pronto) }}</p>
+    }
+    @for (linha of pedido().linhas; track linha.id) {
+      <h4>{{ linha.nome }}</h4>
+      @for (unidade of pedido().unidades; track unidade.id) {
+        @if (unidade.linhaId === linha.id) {
+          <p>
+            Unidade {{ $index + 1 }} · {{ nomeEstado(unidade.estado) }}
+            @if (unidade.iniciadoEm) {
+              · Início {{ horario(unidade.iniciadoEm) }}
+            }
+            @if (unidade.concluidoEm) {
+              · Conclusão {{ horario(unidade.concluidoEm) }}
+            }
+          </p>
+        }
+      }
+    }
+    @for (solicitacao of pedido().solicitacoes; track solicitacao.id) {
+      <p>
+        Solicitação de cancelamento · {{ horario(solicitacao.criadaEm) }} ·
+        {{ solicitacao.estado }} · {{ solicitacao.motivo }}
+      </p>
+    }
     @for (evento of pedido().historico ?? []; track $index) {
       <p>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</p>
     }
