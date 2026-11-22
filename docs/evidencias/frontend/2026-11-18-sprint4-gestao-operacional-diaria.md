@@ -5,6 +5,8 @@
 - **Área:** Gestão Operacional & Caixa (multi-tenant white-label)
 - **Responsável técnico:** Coordenador (Fase A TypeScript: restauração do canal `MESA` e `modoPdv()` em `vitrine.component.ts`, texto de confirmação em `carrinho.component.ts`, helpers puros sem `inject()`/`computed()` extras em `operacao-pedidos`, `pedido-detalhe`, `mesas`, `expedicao`, `financeiro`, `pendencias` e `vendas`) + subagente `artesao-ux-bistro` (camada visual completa Claro + Escuro)
 - **Arquivos visuais alterados:**
+  - [styles.css](../../../frontend/src/styles.css)
+  - [equipe-layout.component.html](../../../frontend/src/app/rotas/equipe-layout.component.html)
   - [equipe-layout.css](../../../frontend/src/app/rotas/equipe-layout.css)
   - [operacao.css](../../../frontend/src/app/operacao.css)
   - [operacao-pedidos.component.html](../../../frontend/src/app/pedidos/operacao-pedidos.component.html)
@@ -170,6 +172,20 @@ Com base na inspeção das capturas reais em `360×800`, foram aplicados os 4 aj
    - Placeholder de `#motivo-ocorrencia-*` encurtado para `"Descreva o motivo…"` e rótulo `"Prontos p/ sair"` ajustado para `"Prontos para sair"`.
    - `.expedicao-acoes-despacho` simplificado como rodapé limpo separado por `border-top: 1px dashed var(--border, #e5ded3)` (sem borda esquerda espessa), com botão `width: 100%` em `<= 600px`.
 
+### 3.3 Alinhamento de Selects, Reversibilidade do Código da Mesa e Saneamento da Paleta
+
+Na revisão pós-auditoria da Sprint 4, foram aplicados 3 ajustes estruturais de UI (estritamente em `.html` e `.css`) sem alterar lógica TypeScript:
+
+1. **Padronização das caixas de seleção para `.bistro-select-wrap` / `.bistro-select-pill` / `.bistro-select-popover` (`styles.css`, `operacao.css`, `operacao-pedidos.component.html`, `financeiro.component.html`, `equipe-layout.component.html`, `equipe-layout.css`):**
+   - Conversão de `#unidade-operacao`, `#pedidos-estado`, `#pedidos-canal`, `#pedidos-ordem` (em `operacao-pedidos.component.html`), `#fin-meio-*`, `#fin-parcela-*`, `#fin-recebimento-*` (em `financeiro.component.html`) e do seletor de unidade da topbar (`equipe-layout.component.html`) para o padrão oficial de pílula tátil + popover com check circular e contraste Claro/Escuro via tokens de `styles.css`.
+   - Criação da classe `.bistro-select-pill select.bistro-select-native` (`position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; padding: 0 36px 0 40px; font-size: 14px; font-weight: 700;`) com exclusão `:not(.bistro-select-native)` nos estilos globais de `<select>`, preservando 100% o contrato `S03-UI06` (medição de largura interna disponível nos selects de Pedidos), `selectOption(...)` e foco por teclado.
+   - Adição de `overflow: visible` em `.bistro-details`, `.bistro-details-body` e `.bloco-financeiro-fieldset` para os popovers nunca sofrerem corte no painel financeiro, e alinhamento à direita (`right: 0; left: auto`) no popover da topbar (`.unit-select-popover`, com `left: 0; right: auto` no KDS mobile).
+2. **Alternador reversível de código temporário em Salão e Mesas (`mesas.component.html`, `mesas.component.css`):**
+   - Substituído o descarte irreversível (`abertura.set(null)`) por alternância via `#ocultarCodigo` oculto em `<aside class="codigo-atendimento">`: o código alterna entre a exibição real e a máscara `•••-•••` (`.codigo.codigo-oculto`), alternando o botão entre `"Ocultar código"` (`aria-pressed="false"`) e `"Mostrar código"` (`aria-pressed="true"`), mantendo `"Copiar código"` funcional e reiniciando visível ao gerar um novo código.
+3. **Saneamento rigoroso da paleta oficial (`operacao.css`, `pedido-detalhe.component.css`, `mesas.component.css`, `vitrine.css`, `carrinho.css`):**
+   - Remoção completa do azul (`#5364a8`, `--info-bg`, `--info-fg`, `--info-border`) nas etiquetas e bordas de `NA_FILA` (`--secondary` / `--input`) e `EM_ENTREGA` (`--primary-soft` / `--primary`), e substituição do laranja avulso `#c57d1f` por `var(--amber-fg, #684614)`.
+   - Alinhamento de todos os hexadecimais residuais fora do padrão nos 5 arquivos CSS para os tokens e valores exatos definidos em `styles.css` (`0` cores fora da paleta oficial).
+
 ---
 
 ## 4. Por quê
@@ -194,24 +210,23 @@ Nenhuma tela desta Sprint está bloqueada. As evoluções opcionais de API já c
 
 ## 6. Validações executadas
 
-Gates reexecutados sobre a versão final (após os polimentos `3.2` e ajuste final de `.financeiro-cabecalho`):
+Gates reexecutados após os ajustes da seção `3.3` (revisão de selects, código reversível e saneamento da paleta):
 
-- **Prettier (`prettier.cjs --config .prettierrc.json --check ...`):** aprovado (`All matched files use Prettier code style!`, código `0`, incluindo `vitrine.css`, `carrinho.css`, `equipe-layout.css` e este relatório).
-- **`typecheck` (`tsc --noEmit -p tsconfig.app.json && tsc -p tsconfig.e2e.json`):** aprovado (`0` erros).
-- **`ngc -p frontend/tsconfig.app.json --noEmit`:** aprovado (`0` erros de template/AOT estrito).
-- **`test-frontend.cjs` (`test:logic`):** aprovado em Node `v24.21.0` (`0` falhas).
-- **`ng build` + `build-pwa.cjs` (Node `v24.21.0`):** aprovado (`7.013s`; bundle inicial `325.08 kB` / `89.11 kB` transferência; `PWA: 34 arquivos públicos; versão f32e89369392dc408829`).
-- **`node scripts/test_pwa.cjs`:** aprovado (`cache somente do shell, query sensível descartada, APIs/credenciais excluídas...`).
-- **`node scripts/test_mesa_navigation_templates.cjs`:** aprovado (`chromium: geometria estável em360/768/1280 e fontes16/20; clique único durante SSE...`).
+- **Auditoria automatizada de paleta CSS:** `0` cores hexadecimais fora da paleta oficial de `styles.css` em `operacao.css`, `pedido-detalhe.component.css`, `mesas.component.css`, `vitrine.css`, `carrinho.css` e `equipe-layout.css`.
+- **Prettier (`prettier --config .prettierrc.json --check` nos arquivos editados + `npm --prefix frontend run format:check`):** aprovado (`All matched files use Prettier code style!`, código `0`).
+- **`npm --prefix frontend run typecheck` (`tsc --noEmit -p tsconfig.app.json && tsc -p tsconfig.e2e.json`):** aprovado (`0` erros).
+- **`npx --prefix frontend ngc -p frontend/tsconfig.app.json --noEmit`:** aprovado (`0` erros de template/AOT estrito).
+- **`npm --prefix frontend run test:logic` (`scripts/test-frontend.cjs`):** aprovado (`0` falhas).
+- **`node scripts/test_mesa_navigation_templates.cjs`:** aprovado (`chromium: geometria estável em 360/768/1280 e fontes 16/20; clique único durante SSE...`).
 - **`node scripts/test_kitchen_templates.cjs` e `node scripts/test_route_shell.cjs`:** aprovados.
 - **`node scripts/check_contrast.cjs --self-test`:** aprovado (`14 verificações de matemática, limites, destino e reutilização de sessão aprovadas`).
-- **Auditoria visual e capturas (`capture_sprint4.cjs --mode=depois` + `audit_fullpage_sprint4.cjs`):** todas as 36 capturas em `docs/evidencias/frontend/imagens/sprint4-depois-*.png` regeneradas com `overflow=0px`, `/cardapio` preservado (`hero=true, overflow=0px`) e revisão visual em `360px`/`768px`/`1280px` (Claro + Escuro).
-- **`python scripts/check-repository.py`:** aprovado (links locais, imagens referenciadas e padrões de segredo íntegros).
+- **`python scripts/check-repository.py`:** aprovado após esta atualização (links locais, imagens referenciadas e padrões de segredo íntegros).
+- **Build AOT (`ng build`) + auditoria visual (`360×800` / `768×1024` / `1280×900`):** pendentes de reexecução pelo coordenador no ambiente com Node `v24.21.0` (esta estação possui apenas Node `v24.12.0`, abaixo do requisito mínimo `v24.15.0` do Angular CLI).
 
 ---
 
 ## 7. Limites e próximos passos
 
-- Todas as entregas visuais, auditorias `360×800` / `768×1024` / `1280×900` (Claro + Escuro) e builds locais desta Sprint estão concluídos e consolidados em commit na branch `feat/frontend-bistro-sprints`.
+- Após os ajustes `3.3`, o coordenador executará o `ng build` no ambiente Node `v24.21.0`, a nova bateria de capturas e inspeção visual em `360×800` / `768×1024` / `1280×900` (Claro + Escuro) e o commit final na branch `feat/frontend-bistro-sprints`.
 - A homologação integrada ponta a ponta com PostgreSQL real permanece no escopo do pipeline Linux/CI conforme [Estratégia de validação](../../26_TEST_STRATEGY.md).
 - Próxima etapa planejada no roadmap visual: **Sprint 5 — Gestão Comercial e Configurações em Light + Dark** (Catálogo administrativo, Mídia, Regiões/Delivery, Prazos de aceite e Integração Mercado Pago).

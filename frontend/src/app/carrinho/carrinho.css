@@ -77,9 +77,9 @@
   margin: 10px 0 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background-color: var(--amber-bg, #f9f1e2);
-  border: 1px solid var(--amber-border, #ead8b8);
-  color: var(--amber-fg, #694d1a);
+  background-color: var(--amber-bg, #fff8e8);
+  border: 1px solid var(--amber-border, #e6cf9e);
+  color: var(--amber-fg, #684614);
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -498,12 +498,12 @@ dialog.revisao-dlg {
   border-radius: 26px;
   background-color: var(--card, #ffffff);
   color: var(--foreground, #292521);
-  box-shadow: 0 30px 90px #221b1670;
+  box-shadow: 0 30px 90px rgb(41 37 33 / 44%);
   overflow: hidden;
 }
 
 dialog.revisao-dlg::backdrop {
-  background: #221b16a8;
+  background: rgb(41 37 33 / 66%);
 }
 
 .revisao-modal-card {

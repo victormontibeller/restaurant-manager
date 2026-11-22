@@ -36,7 +36,7 @@ div {
   max-width: none;
   box-sizing: border-box;
   padding: 0.95rem 1.1rem;
-  border: 1px solid var(--accent-border, #c3d5c5);
+  border: 1px solid var(--accent-border, #b7d2be);
   border-radius: 0.85rem;
   background: var(--accent, #e8efe7);
   color: var(--accent-foreground, #30523b);
@@ -115,10 +115,30 @@ div {
   font-weight: 700;
   color: var(--muted-foreground, #6e6259);
 }
-.campo-filtro select:not(.sr-only) {
+.campo-filtro select:not(.sr-only):not(.bistro-select-native) {
   font-size: 0.875rem;
   font-weight: 600;
   padding-inline: 0.75rem 2.2rem;
+}
+.bistro-select-pill select.bistro-select-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 36px 0 40px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.campo-filtro .bistro-select-pill,
+.campo-financeiro .bistro-select-pill {
+  min-height: 48px;
 }
 .busca-filtro-linha {
   display: flex;
@@ -293,7 +313,7 @@ label:not(.bistro-select-pill):not(.selecao) {
   color: var(--foreground, #292521);
 }
 input:not([type='checkbox']):not([type='radio']):not([hidden]):not(.bistro-menu-state),
-select:not(.sr-only),
+select:not(.sr-only):not(.bistro-select-native),
 textarea {
   display: block;
   box-sizing: border-box;
@@ -306,7 +326,7 @@ textarea {
   color: var(--foreground, #292521);
   background-color: var(--card, #fff);
 }
-select:not(.sr-only) {
+select:not(.sr-only):not(.bistro-select-native) {
   height: 48px;
   padding-right: 2.5rem;
 }
@@ -348,16 +368,16 @@ button {
 }
 .perigo {
   color: var(--danger-fg, #ad2929);
-  background: var(--danger-bg, #fff5f3);
-  border-color: var(--danger-border, #ebc9c4);
+  background: var(--danger-bg, #fff2f0);
+  border-color: var(--danger-border, #e8c7c1);
 }
 .btn-cancelar-outline {
   color: var(--danger-fg, #ad2929);
-  border-color: var(--danger-border, #e4b7b2);
-  background: var(--card, #fffbfa);
+  border-color: var(--danger-border, #e8c7c1);
+  background: var(--card, #ffffff);
 }
 .btn-cancelar-outline:hover:not(:disabled) {
-  background: var(--danger-bg, #fff5f3);
+  background: var(--danger-bg, #fff2f0);
   border-color: var(--danger-fg, #ad2929);
   filter: none;
 }
@@ -409,21 +429,21 @@ button {
   max-width: none;
   box-sizing: border-box;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--danger-border, #ebc9c4);
+  border: 1px solid var(--danger-border, #e8c7c1);
   border-radius: 0.75rem;
   color: var(--danger-fg, #ad2929);
-  background: var(--danger-bg, #fff5f3);
+  background: var(--danger-bg, #fff2f0);
   font-weight: 600;
 }
 .aviso {
   width: 100%;
   max-width: none;
   box-sizing: border-box;
-  border-left: 3px solid var(--amber-border, #b56c22);
+  border-left: 3px solid var(--amber-border, #e6cf9e);
   padding: 0.85rem 1rem;
   border-radius: 0 0.7rem 0.7rem 0;
-  background: var(--amber-bg, #fff6ea);
-  color: var(--amber-fg, #733f0d);
+  background: var(--amber-bg, #fff8e8);
+  color: var(--amber-fg, #684614);
 }
 .status-consulta {
   display: grid;
@@ -459,15 +479,19 @@ button {
 .etiqueta[data-estado='PENDENTE'],
 .etiqueta[data-estado='SOLICITADA'],
 .etiqueta[data-variante='warn'] {
-  background: var(--amber-bg, #fdf1df);
+  background: var(--amber-bg, #fff8e8);
   border: 1px solid var(--amber-border, #e6cf9e);
-  color: var(--amber-fg, #7a440d);
+  color: var(--amber-fg, #684614);
 }
-.etiqueta[data-estado='NA_FILA'],
+.etiqueta[data-estado='NA_FILA'] {
+  background: var(--secondary, #f0ebe3);
+  border: 1px solid var(--border, #e5ded3);
+  color: var(--secondary-foreground, #44372e);
+}
 .etiqueta[data-estado='EM_ENTREGA'] {
-  background: var(--info-bg, #edf0f8);
-  border: 1px solid var(--info-border, #c5cee6);
-  color: var(--info-fg, #36457d);
+  background: var(--primary-soft, #fbefec);
+  border: 1px solid var(--primary-soft-border, #e3bfb7);
+  color: var(--primary-ink, #a53e2b);
 }
 .etiqueta[data-estado='EM_PREPARO'],
 .etiqueta[data-estado='ABERTA'] {
@@ -488,9 +512,9 @@ button {
 .etiqueta[data-estado='CANCELADO'],
 .etiqueta[data-estado='INATIVA'],
 .etiqueta[data-variante='danger'] {
-  background: var(--danger-bg, #fae9e6);
+  background: var(--danger-bg, #fff2f0);
   border: 1px solid var(--danger-border, #e8c7c1);
-  color: var(--danger-fg, #9c2323);
+  color: var(--danger-fg, #972626);
 }
 .talao-pedido {
   margin: 0.9rem 0;
@@ -502,7 +526,7 @@ button {
   gap: 0.5rem;
 }
 .talao-pedido--salvia {
-  border-color: var(--accent-border, #9ec0a6);
+  border-color: var(--accent-border, #b7d2be);
   background: var(--accent, #e8efe7);
   color: var(--accent-foreground, #30523b);
 }
@@ -539,7 +563,7 @@ button {
 .talao-guia {
   flex: 1 1 1rem;
   min-width: 0.75rem;
-  border-bottom: 1.5px dotted var(--input, #b4a595);
+  border-bottom: 1.5px dotted var(--input, #c6b9aa);
   transform: translateY(-0.22rem);
 }
 .talao-valor {
@@ -597,11 +621,11 @@ button {
 }
 .mp-caixa[data-estado='CONFIRMADO'] {
   background: var(--accent, #e8efe7);
-  border-color: var(--accent-border, #9ec0a6);
+  border-color: var(--accent-border, #b7d2be);
 }
 .mp-caixa[data-estado='RECUSADO'] {
-  background: var(--danger-bg, #fff5f3);
-  border-color: var(--danger-border, #ebc9c4);
+  background: var(--danger-bg, #fff2f0);
+  border-color: var(--danger-border, #e8c7c1);
 }
 .mp-caixa h4 {
   margin: 0;
@@ -618,7 +642,7 @@ button {
   padding: 0.65rem 0.8rem;
   border-radius: 0.65rem;
   background: var(--card, #fff);
-  border: 1px solid var(--danger-border, #ebc9c4);
+  border: 1px solid var(--danger-border, #e8c7c1);
   color: var(--danger-fg, #ad2929);
   font-size: 0.85rem;
 }
@@ -656,11 +680,13 @@ button {
 }
 .pedido-card-resumo[data-estado='AGUARDANDO_PAGAMENTO'],
 .pedido-card-resumo[data-estado='AGUARDANDO_ACEITE'] {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
 }
-.pedido-card-resumo[data-estado='NA_FILA'],
+.pedido-card-resumo[data-estado='NA_FILA'] {
+  border-top-color: var(--input, #c6b9aa);
+}
 .pedido-card-resumo[data-estado='EM_ENTREGA'] {
-  border-top-color: #5364a8;
+  border-top-color: var(--primary, #a53e2b);
 }
 .pedido-card-resumo[data-estado='EM_PREPARO'] {
   border-top-color: var(--primary, #a53e2b);
@@ -823,8 +849,8 @@ button {
   gap: 0.3rem;
   padding: 0.14rem 0.55rem;
   border-radius: 999px;
-  background: var(--amber-bg, #fdf1df);
-  color: var(--amber-fg, #7a440d);
+  background: var(--amber-bg, #fff8e8);
+  color: var(--amber-fg, #684614);
   font-size: 0.74rem;
   font-weight: 700;
   line-height: 1.3;
@@ -834,7 +860,7 @@ button {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--amber-fg, #b56c22);
+  background: var(--amber-fg, #684614);
   flex: none;
 }
 .pedido-resumo-total {
@@ -932,12 +958,12 @@ button {
 .canal-opcao[aria-pressed='true'] {
   border-color: var(--primary-ink, #a53e2b);
   background: var(--primary-soft, #fbefec);
-  color: var(--primary-ink, #7f2f20);
-  box-shadow: 0 0 0 2px var(--primary-soft-border, #f5d8d2);
+  color: var(--primary-ink, #a53e2b);
+  box-shadow: 0 0 0 2px var(--primary-soft-border, #e3bfb7);
 }
 .canal-opcao.ativo small,
 .canal-opcao[aria-pressed='true'] small {
-  color: var(--secondary-foreground, #7f2f20);
+  color: var(--secondary-foreground, #44372e);
 }
 .resumo-itens-checkout {
   display: grid;
@@ -987,7 +1013,7 @@ button {
   padding: 0.85rem 1rem;
   border-radius: 0.85rem;
   background: var(--accent, #e8efe7);
-  border: 1px solid var(--accent-border, #9ec0a6);
+  border: 1px solid var(--accent-border, #b7d2be);
   color: var(--accent-foreground, #30523b);
 }
 .aviso-mesa-ativa strong,
@@ -1005,17 +1031,17 @@ button {
   gap: 0.25rem;
   padding: 0.85rem 1rem;
   border-radius: 0.85rem;
-  background: var(--amber-bg, #fff8ed);
-  border: 1px solid var(--amber-border, #e6cfa9);
-  color: var(--amber-fg, #6f420f);
+  background: var(--amber-bg, #fff8e8);
+  border: 1px solid var(--amber-border, #e6cf9e);
+  color: var(--amber-fg, #684614);
 }
 .aviso-bloqueio-envio {
   margin: 0.25rem 0 0;
   padding: 0.8rem 0.95rem;
   border-radius: 0.8rem;
   border-left: 3px solid var(--primary-ink, #a53e2b);
-  background: var(--primary-soft, #fdf3f0);
-  color: var(--primary-ink, #7f2f20);
+  background: var(--primary-soft, #fbefec);
+  color: var(--primary-ink, #a53e2b);
   font-size: 0.88rem;
   font-weight: 650;
 }
@@ -1202,16 +1228,16 @@ button {
 }
 .mesa-callout--sucesso {
   background: var(--accent, #e8efe7);
-  border: 1px solid var(--accent-border, #8ab494);
+  border: 1px solid var(--accent-border, #b7d2be);
   border-left: 4px solid var(--accent-foreground, #30523b);
-  color: var(--accent-foreground, #213c29);
+  color: var(--accent-foreground, #30523b);
   box-shadow: 0 6px 18px rgb(48 82 59 / 12%);
 }
 .mesa-callout--erro {
-  background: var(--danger-bg, #fff3f1);
-  border: 1px solid var(--danger-border, #e7b5ae);
-  border-left: 4px solid var(--danger-fg, #a53e2b);
-  color: var(--danger-fg, #8f2318);
+  background: var(--danger-bg, #fff2f0);
+  border: 1px solid var(--danger-border, #e8c7c1);
+  border-left: 4px solid var(--danger-fg, #972626);
+  color: var(--danger-fg, #972626);
   box-shadow: 0 6px 18px rgb(165 62 43 / 12%);
 }
 .mesa-fallback-sync {
@@ -1387,6 +1413,11 @@ dd {
   border: 1px solid var(--border, #e5ded3);
   border-radius: 0.95rem;
   background: var(--background, #faf7f2);
+  overflow: visible;
+}
+.painel-financeiro .bistro-details,
+.painel-financeiro .bistro-details-body {
+  overflow: visible;
 }
 .bloco-financeiro-fieldset legend {
   padding: 0 0.4rem;
@@ -1544,10 +1575,10 @@ dd {
   border-top-color: var(--sage-solid, #30523b);
 }
 .expedicao-item[data-estado='EM_ENTREGA'] {
-  border-top-color: var(--info-fg, #36457d);
+  border-top-color: var(--primary, #a53e2b);
 }
 .expedicao-item[data-ocorrencia='PENDENTE'] {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
 }
 .etiqueta-despacho {
   font-style: normal;
@@ -1879,7 +1910,7 @@ dd {
   border-top-color: var(--sage-solid, #30523b);
 }
 .cartao-kpi-vendas--saldos {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
 }
 .cartao-kpi-cabecalho {
   display: flex;

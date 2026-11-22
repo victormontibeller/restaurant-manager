@@ -82,7 +82,7 @@
 }
 .talao-resumo-dl dt {
   font-size: 0.88rem;
-  color: var(--muted-foreground, #594e46);
+  color: var(--muted-foreground, #6e6259);
 }
 .talao-resumo-dl dd {
   color: var(--foreground, #292521);
@@ -116,10 +116,10 @@
 }
 .cartao-pedido[data-estado='AGUARDANDO_PAGAMENTO'],
 .cartao-pedido[data-estado='AGUARDANDO_ACEITE'] {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
 }
 .cartao-pedido[data-estado='NA_FILA'] {
-  border-top-color: #5364a8;
+  border-top-color: var(--input, #c6b9aa);
 }
 .cartao-pedido[data-estado='EM_PREPARO'] {
   border-top-color: var(--primary, #a53e2b);
@@ -186,7 +186,7 @@
   padding-left: 0.7rem;
   border-left: 2px solid var(--border, #e5ded3);
   font-size: 0.86rem;
-  color: var(--muted-foreground, #594e46);
+  color: var(--muted-foreground, #6e6259);
 }
 .componente-sub {
   margin-left: 0.65rem;
@@ -208,11 +208,11 @@
   margin: 0.9rem 0 0;
   padding: 0.65rem 0.9rem;
   border-radius: 0.75rem;
-  background: var(--amber-bg, #fff9f2);
-  border: 1px solid var(--amber-border, #ead8c3);
+  background: var(--amber-bg, #fff8e8);
+  border: 1px solid var(--amber-border, #e6cf9e);
   font-size: 0.84rem;
   font-weight: 650;
-  color: var(--amber-fg, #7a440d);
+  color: var(--amber-fg, #684614);
 }
 .pedido-pagamento-prioritario {
   margin-top: 0.95rem;
@@ -469,7 +469,7 @@
   color: var(--accent-foreground, #30523b);
 }
 .unidade-estatica[data-estado='CANCELADO'] {
-  background: var(--danger-bg, #fae9e6);
+  background: var(--danger-bg, #fff2f0);
   border-color: var(--danger-border, #e8c7c1);
-  color: var(--danger-fg, #9c2323);
+  color: var(--danger-fg, #972626);
 }

@@ -2,7 +2,7 @@
   display: block;
   --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
   --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --shadow-card: 0 1px 2px #2925210d, 0 8px 22px #2925210b;
+  --shadow-card: 0 1px 2px rgb(41 37 33 / 5%), 0 8px 22px rgb(41 37 33 / 4%);
 }
 
 .sr-only {
@@ -289,8 +289,8 @@
 }
 
 .open.closed {
-  background-color: var(--danger-bg, #f6e9e6);
-  color: var(--danger-fg, #8a3324);
+  background-color: var(--danger-bg, #fff2f0);
+  color: var(--danger-fg, #972626);
 }
 
 .dot {
@@ -298,12 +298,12 @@
   height: 8px;
   border-radius: 50%;
   background-color: var(--accent-foreground, #30523b);
-  box-shadow: 0 0 0 3px var(--accent, #30523b2b);
+  box-shadow: 0 0 0 3px var(--accent, #e8efe7);
 }
 
 .open.closed .dot {
-  background-color: var(--danger-fg, #8a3324);
-  box-shadow: 0 0 0 3px var(--danger-bg, #8a33242b);
+  background-color: var(--danger-fg, #972626);
+  box-shadow: 0 0 0 3px var(--danger-bg, #fff2f0);
 }
 
 .ctx.ctx-travado {
@@ -355,7 +355,7 @@
   height: 100%;
   border-radius: 220px 220px 20px 20px;
   background: var(--rm-hero-banner, url('/assets/bistro-banner.jpg')) 70% 50% / cover no-repeat;
-  box-shadow: 0 18px 40px #2925211f;
+  box-shadow: 0 18px 40px rgb(41 37 33 / 12%);
 }
 
 .credit {
@@ -364,8 +364,8 @@
   bottom: 16px;
   padding: 4px 10px;
   border-radius: 999px;
-  background-color: #2b221a;
-  color: #f7efe5;
+  background-color: #292521;
+  color: #faf7f2;
   font-size: 11px;
 }
 
@@ -385,7 +385,7 @@
   box-shadow:
     inset 0 0 0 3px var(--background, #faf7f2),
     inset 0 0 0 4px var(--border, #e5ded3),
-    0 8px 20px #2925211f;
+    0 8px 20px rgb(41 37 33 / 12%);
   overflow: hidden;
 }
 
@@ -579,7 +579,7 @@
   border-radius: 999px;
   border: 1px solid var(--input, #c6b9aa);
   background-color: var(--card, #ffffff);
-  box-shadow: inset 0 1px 3px #2925210f;
+  box-shadow: inset 0 1px 3px rgb(41 37 33 / 6%);
 }
 
 .search svg {
@@ -704,7 +704,7 @@
   line-height: 1 !important;
   display: grid !important;
   place-items: center;
-  box-shadow: 0 2px 6px #2925210a !important;
+  box-shadow: 0 2px 6px rgb(41 37 33 / 4%) !important;
   cursor: pointer;
 }
 
@@ -817,7 +817,7 @@
   color: var(--muted-foreground, #6e6259) !important;
   display: grid !important;
   place-items: center;
-  box-shadow: 0 2px 10px #2925212e !important;
+  box-shadow: 0 2px 10px rgb(41 37 33 / 18%) !important;
 }
 
 .fav.on,
@@ -899,7 +899,7 @@
   white-space: nowrap;
   box-shadow:
     0 3px 0 var(--primary-deep),
-    0 8px 16px #a53e2b30 !important;
+    0 8px 16px rgb(165 62 43 / 19%) !important;
 }
 
 .add .plus {
@@ -988,7 +988,7 @@
 
 .mono.off {
   background-color: var(--muted, #f3eee7);
-  color: var(--muted-foreground, #8f8378);
+  color: var(--muted-foreground, #6e6259);
 }
 
 .r-body {
@@ -1060,8 +1060,8 @@
 }
 
 .chip.warn {
-  background-color: var(--danger-bg, #f6e9e6);
-  color: var(--danger-fg, #8a3324);
+  background-color: var(--danger-bg, #fff2f0);
+  color: var(--danger-fg, #972626);
 }
 
 .r-act {
@@ -1097,7 +1097,7 @@
 
 .fav-sm.on {
   background-color: var(--primary-soft, #fbefec) !important;
-  border-color: var(--primary-soft-border, #ecc9c1) !important;
+  border-color: var(--primary-soft-border, #e3bfb7) !important;
   color: var(--primary-ink, #a53e2b) !important;
 }
 
@@ -1126,7 +1126,7 @@
   border-bottom: 0;
   border-radius: 20px 20px 0 0;
   background-color: var(--card, #ffffff);
-  box-shadow: 0 12px 32px #29252112;
+  box-shadow: 0 12px 32px rgb(41 37 33 / 7%);
 }
 
 .edge {
@@ -1189,12 +1189,12 @@ dialog.configurador-dialogo {
   padding: 0;
   background-color: var(--card, #ffffff);
   color: var(--foreground, #292521);
-  box-shadow: 0 30px 90px #221b1670;
+  box-shadow: 0 30px 90px rgb(41 37 33 / 44%);
   overflow: hidden;
 }
 
 dialog.configurador-dialogo::backdrop {
-  background: #221b16a8;
+  background: rgb(41 37 33 / 66%);
 }
 
 .carrinho-movel {
@@ -1313,7 +1313,7 @@ dialog.configurador-dialogo::backdrop {
     font-size: 15px;
     box-shadow:
       0 4px 0 var(--primary-deep),
-      0 14px 30px #a53e2b4d;
+      0 14px 30px rgb(165 62 43 / 30%);
   }
 
   .carrinho-movel .bagi {

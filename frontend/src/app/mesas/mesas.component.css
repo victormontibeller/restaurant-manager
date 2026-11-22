@@ -11,6 +11,11 @@
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+.codigo.codigo-oculto {
+  color: var(--muted-foreground, #6e6259);
+  background: var(--muted, #f3eee7);
+  letter-spacing: 0.24rem;
+}
 .cadastro-mesa-details {
   margin: 1rem 0;
 }
@@ -58,7 +63,7 @@
   border-top-color: var(--primary, #a53e2b);
 }
 .cartao-mesa[data-mesa-estado='EM_FECHAMENTO'] {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
 }
 .cartao-mesa[data-mesa-estado='INATIVA'] {
   border-style: dashed;
@@ -227,7 +232,7 @@
   margin-top: auto;
 }
 .cartao-solicitacao[data-estado='PENDENTE'] {
-  border-top-color: #c57d1f;
+  border-top-color: var(--amber-fg, #684614);
   background: var(--amber-bg, #fff8e8);
   border-color: var(--amber-border, #e6cf9e);
 }

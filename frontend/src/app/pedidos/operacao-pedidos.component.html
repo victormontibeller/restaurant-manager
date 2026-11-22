@@ -33,17 +33,158 @@
       <div class="filtros">
         <div class="campo-filtro">
           <label for="unidade-operacao">Unidade da operação</label>
-          <select
-            id="unidade-operacao"
-            #unidade
-            [value]="unidadeId()"
-            (change)="selecionarUnidade(unidade.value)"
+          <div
+            class="bistro-select-wrap"
+            (focusout)="
+              !$any($event.currentTarget).contains($event.relatedTarget) &&
+                (menuUnidadeOp.checked = false)
+            "
           >
-            <option value="">Selecione uma unidade</option>
-            @for (item of unidades(); track item.id) {
-              <option [value]="item.id">{{ item.nome }}</option>
+            <input #menuUnidadeOp type="checkbox" hidden />
+            <div
+              class="bistro-select-pill"
+              [class.open]="menuUnidadeOp.checked"
+              (mousedown)="$event.preventDefault()"
+              (click)="unidade.focus(); menuUnidadeOp.checked = !menuUnidadeOp.checked"
+            >
+              <svg
+                class="bistro-select-ico"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 1 1 13 0C18.5 15.4 12 21 12 21z"
+                />
+                <circle
+                  cx="12"
+                  cy="10.5"
+                  r="2.3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+              </svg>
+              <span class="bistro-select-val" aria-hidden="true">
+                @if (!unidadeId()) {
+                  Selecione uma unidade
+                } @else {
+                  @for (item of unidades(); track item.id) {
+                    @if (item.id === unidadeId()) {
+                      {{ item.nome }}
+                    }
+                  }
+                }
+              </span>
+              <select
+                id="unidade-operacao"
+                #unidade
+                class="bistro-select-native"
+                [value]="unidadeId()"
+                (keydown.enter)="$event.preventDefault(); menuUnidadeOp.checked = !menuUnidadeOp.checked"
+                (keydown.space)="$event.preventDefault(); menuUnidadeOp.checked = !menuUnidadeOp.checked"
+                (keydown.escape)="menuUnidadeOp.checked = false"
+                (change)="menuUnidadeOp.checked = false; selecionarUnidade(unidade.value)"
+              >
+                <option value="">Selecione uma unidade</option>
+                @for (item of unidades(); track item.id) {
+                  <option [value]="item.id" [selected]="item.id === unidadeId()">
+                    {{ item.nome }}
+                  </option>
+                }
+              </select>
+              <svg
+                class="bistro-select-chev"
+                [class.rot]="menuUnidadeOp.checked"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+            @if (menuUnidadeOp.checked) {
+              <div class="bistro-select-popover" role="presentation">
+                <p class="bistro-select-popover-title">Unidade da operação</p>
+                <button
+                  type="button"
+                  class="bistro-select-opt"
+                  [class.on]="unidadeId() === ''"
+                  tabindex="-1"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="
+                    menuUnidadeOp.checked = false;
+                    unidade.value = '';
+                    selecionarUnidade('');
+                    unidade.focus()
+                  "
+                >
+                  <span class="bistro-select-opt-main">
+                    <span>Selecione uma unidade</span>
+                  </span>
+                  @if (unidadeId() === '') {
+                    <span class="bistro-select-opt-check" aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24">
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m5 12.5 4.5 4.5L19 7.5"
+                        />
+                      </svg>
+                    </span>
+                  }
+                </button>
+                @for (item of unidades(); track item.id) {
+                  <button
+                    type="button"
+                    class="bistro-select-opt"
+                    [class.on]="item.id === unidadeId()"
+                    tabindex="-1"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="
+                      menuUnidadeOp.checked = false;
+                      unidade.value = item.id;
+                      selecionarUnidade(item.id);
+                      unidade.focus()
+                    "
+                  >
+                    <span class="bistro-select-opt-main">
+                      <span>{{ item.nome }}</span>
+                    </span>
+                    @if (item.id === unidadeId()) {
+                      <span class="bistro-select-opt-check" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m5 12.5 4.5 4.5L19 7.5"
+                          />
+                        </svg>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
             }
-          </select>
+          </div>
         </div>
       </div>
       <p class="texto-secundario">
@@ -148,48 +289,401 @@
           <div class="filtros" aria-label="Filtros da fila de pedidos">
             <div class="campo-filtro">
               <label for="pedidos-estado">Estado dos pedidos</label>
-              <select
-                id="pedidos-estado"
-                #estado
-                [value]="filtroEstado()"
-                (change)="filtrar('estado', estado.value)"
+              <div
+                class="bistro-select-wrap"
+                (focusout)="
+                  !$any($event.currentTarget).contains($event.relatedTarget) &&
+                    (menuEstado.checked = false)
+                "
               >
-                <option value="AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO">Em andamento</option>
-                <option value="">Todos os estados</option>
-                <option value="CONCLUIDO,CANCELADO">Concluídos e cancelados</option>
-                <option value="AGUARDANDO_ACEITE">Aguardando aceite</option>
-                <option value="NA_FILA">Na fila</option>
-                <option value="EM_PREPARO">Em preparo</option>
-                <option value="PRONTO">Prontos</option>
-                <option value="CONCLUIDO">Concluídos</option>
-                <option value="CANCELADO">Cancelados</option>
-              </select>
+                <input #menuEstado type="checkbox" hidden />
+                <div
+                  class="bistro-select-pill"
+                  [class.open]="menuEstado.checked"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="estado.focus(); menuEstado.checked = !menuEstado.checked"
+                >
+                  <svg
+                    class="bistro-select-ico"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 6h16M7 12h10M10 18h4"
+                    />
+                  </svg>
+                  <span class="bistro-select-val" aria-hidden="true">
+                    @switch (filtroEstado()) {
+                      @case ('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO') {
+                        Em andamento
+                      }
+                      @case ('') {
+                        Todos os estados
+                      }
+                      @case ('CONCLUIDO,CANCELADO') {
+                        Concluídos e cancelados
+                      }
+                      @case ('AGUARDANDO_ACEITE') {
+                        Aguardando aceite
+                      }
+                      @case ('NA_FILA') {
+                        Na fila
+                      }
+                      @case ('EM_PREPARO') {
+                        Em preparo
+                      }
+                      @case ('PRONTO') {
+                        Prontos
+                      }
+                      @case ('CONCLUIDO') {
+                        Concluídos
+                      }
+                      @default {
+                        Cancelados
+                      }
+                    }
+                  </span>
+                  <select
+                    id="pedidos-estado"
+                    #estado
+                    class="bistro-select-native"
+                    [value]="filtroEstado()"
+                    (keydown.enter)="$event.preventDefault(); menuEstado.checked = !menuEstado.checked"
+                    (keydown.space)="$event.preventDefault(); menuEstado.checked = !menuEstado.checked"
+                    (keydown.escape)="menuEstado.checked = false"
+                    (change)="menuEstado.checked = false; filtrar('estado', estado.value)"
+                  >
+                    <option value="AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO">
+                      Em andamento
+                    </option>
+                    <option value="">Todos os estados</option>
+                    <option value="CONCLUIDO,CANCELADO">Concluídos e cancelados</option>
+                    <option value="AGUARDANDO_ACEITE">Aguardando aceite</option>
+                    <option value="NA_FILA">Na fila</option>
+                    <option value="EM_PREPARO">Em preparo</option>
+                    <option value="PRONTO">Prontos</option>
+                    <option value="CONCLUIDO">Concluídos</option>
+                    <option value="CANCELADO">Cancelados</option>
+                  </select>
+                  <svg
+                    class="bistro-select-chev"
+                    [class.rot]="menuEstado.checked"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                @if (menuEstado.checked) {
+                  <div class="bistro-select-popover" role="presentation">
+                    <p class="bistro-select-popover-title">Estado dos pedidos</p>
+                    @for (
+                      op of [
+                        {
+                          valor: 'AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO',
+                          rotulo: 'Em andamento',
+                        },
+                        { valor: '', rotulo: 'Todos os estados' },
+                        { valor: 'CONCLUIDO,CANCELADO', rotulo: 'Concluídos e cancelados' },
+                        { valor: 'AGUARDANDO_ACEITE', rotulo: 'Aguardando aceite' },
+                        { valor: 'NA_FILA', rotulo: 'Na fila' },
+                        { valor: 'EM_PREPARO', rotulo: 'Em preparo' },
+                        { valor: 'PRONTO', rotulo: 'Prontos' },
+                        { valor: 'CONCLUIDO', rotulo: 'Concluídos' },
+                        { valor: 'CANCELADO', rotulo: 'Cancelados' },
+                      ];
+                      track op.valor
+                    ) {
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="filtroEstado() === op.valor"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuEstado.checked = false;
+                          estado.value = op.valor;
+                          filtrar('estado', op.valor);
+                          estado.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>{{ op.rotulo }}</span>
+                        </span>
+                        @if (filtroEstado() === op.valor) {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
             <div class="campo-filtro">
               <label for="pedidos-canal">Canal do pedido</label>
-              <select
-                id="pedidos-canal"
-                #canal
-                [value]="filtroCanal()"
-                (change)="filtrar('canal', canal.value)"
+              <div
+                class="bistro-select-wrap"
+                (focusout)="
+                  !$any($event.currentTarget).contains($event.relatedTarget) &&
+                    (menuCanal.checked = false)
+                "
               >
-                <option value="">Todos os canais</option>
-                <option value="MESA">Mesa</option>
-                <option value="RETIRADA">Retirada</option>
-                <option value="DELIVERY">Delivery</option>
-              </select>
+                <input #menuCanal type="checkbox" hidden />
+                <div
+                  class="bistro-select-pill"
+                  [class.open]="menuCanal.checked"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="canal.focus(); menuCanal.checked = !menuCanal.checked"
+                >
+                  <svg
+                    class="bistro-select-ico"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 8h14v10H5zM8 3v3M16 3v3"
+                    />
+                  </svg>
+                  <span class="bistro-select-val" aria-hidden="true">
+                    @switch (filtroCanal()) {
+                      @case ('MESA') {
+                        Mesa
+                      }
+                      @case ('RETIRADA') {
+                        Retirada
+                      }
+                      @case ('DELIVERY') {
+                        Delivery
+                      }
+                      @default {
+                        Todos os canais
+                      }
+                    }
+                  </span>
+                  <select
+                    id="pedidos-canal"
+                    #canal
+                    class="bistro-select-native"
+                    [value]="filtroCanal()"
+                    (keydown.enter)="$event.preventDefault(); menuCanal.checked = !menuCanal.checked"
+                    (keydown.space)="$event.preventDefault(); menuCanal.checked = !menuCanal.checked"
+                    (keydown.escape)="menuCanal.checked = false"
+                    (change)="menuCanal.checked = false; filtrar('canal', canal.value)"
+                  >
+                    <option value="">Todos os canais</option>
+                    <option value="MESA">Mesa</option>
+                    <option value="RETIRADA">Retirada</option>
+                    <option value="DELIVERY">Delivery</option>
+                  </select>
+                  <svg
+                    class="bistro-select-chev"
+                    [class.rot]="menuCanal.checked"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                @if (menuCanal.checked) {
+                  <div class="bistro-select-popover" role="presentation">
+                    <p class="bistro-select-popover-title">Canal do pedido</p>
+                    @for (
+                      op of [
+                        { valor: '', rotulo: 'Todos os canais' },
+                        { valor: 'MESA', rotulo: 'Mesa' },
+                        { valor: 'RETIRADA', rotulo: 'Retirada' },
+                        { valor: 'DELIVERY', rotulo: 'Delivery' },
+                      ];
+                      track op.valor
+                    ) {
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="filtroCanal() === op.valor"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuCanal.checked = false;
+                          canal.value = op.valor;
+                          filtrar('canal', op.valor);
+                          canal.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>{{ op.rotulo }}</span>
+                        </span>
+                        @if (filtroCanal() === op.valor) {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
             <div class="campo-filtro">
               <label for="pedidos-ordem">Ordenar pedidos</label>
-              <select
-                id="pedidos-ordem"
-                #ordem
-                [value]="ordenacao()"
-                (change)="filtrar('ordem', ordem.value)"
+              <div
+                class="bistro-select-wrap"
+                (focusout)="
+                  !$any($event.currentTarget).contains($event.relatedTarget) &&
+                    (menuOrdem.checked = false)
+                "
               >
-                <option value="ANTIGOS">Mais antigos primeiro</option>
-                <option value="RECENTES">Mais recentes primeiro</option>
-              </select>
+                <input #menuOrdem type="checkbox" hidden />
+                <div
+                  class="bistro-select-pill"
+                  [class.open]="menuOrdem.checked"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="ordem.focus(); menuOrdem.checked = !menuOrdem.checked"
+                >
+                  <svg
+                    class="bistro-select-ico"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m7 15 5 5 5-5M7 9l5-5 5 5"
+                    />
+                  </svg>
+                  <span class="bistro-select-val" aria-hidden="true">
+                    {{
+                      ordenacao() === 'RECENTES'
+                        ? 'Mais recentes primeiro'
+                        : 'Mais antigos primeiro'
+                    }}
+                  </span>
+                  <select
+                    id="pedidos-ordem"
+                    #ordem
+                    class="bistro-select-native"
+                    [value]="ordenacao()"
+                    (keydown.enter)="$event.preventDefault(); menuOrdem.checked = !menuOrdem.checked"
+                    (keydown.space)="$event.preventDefault(); menuOrdem.checked = !menuOrdem.checked"
+                    (keydown.escape)="menuOrdem.checked = false"
+                    (change)="menuOrdem.checked = false; filtrar('ordem', ordem.value)"
+                  >
+                    <option value="ANTIGOS">Mais antigos primeiro</option>
+                    <option value="RECENTES">Mais recentes primeiro</option>
+                  </select>
+                  <svg
+                    class="bistro-select-chev"
+                    [class.rot]="menuOrdem.checked"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                @if (menuOrdem.checked) {
+                  <div class="bistro-select-popover" role="presentation">
+                    <p class="bistro-select-popover-title">Ordenação</p>
+                    @for (
+                      op of [
+                        { valor: 'ANTIGOS', rotulo: 'Mais antigos primeiro' },
+                        { valor: 'RECENTES', rotulo: 'Mais recentes primeiro' },
+                      ];
+                      track op.valor
+                    ) {
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="ordenacao() === op.valor"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuOrdem.checked = false;
+                          ordem.value = op.valor;
+                          filtrar('ordem', op.valor);
+                          ordem.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>{{ op.rotulo }}</span>
+                        </span>
+                        @if (ordenacao() === op.valor) {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
             <div class="campo-filtro campo-filtro--largo">
               <label for="pedidos-busca">Buscar na página</label>

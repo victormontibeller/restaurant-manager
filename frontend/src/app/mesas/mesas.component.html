@@ -73,20 +73,31 @@
       </div>
     </details>
   }
-  @if (abertura()?.codigoTemporario; as codigo) {
-    <aside class="codigo-atendimento" aria-label="Código temporário do atendimento">
-      <span class="sobretitulo">Código temporário do grupo</span>
-      <p>Forneça este código apenas ao grupo do atendimento. Ele não faz parte do QR público.</p>
-      <output class="codigo">{{ codigo }}</output>
-      <div class="acoes">
-        <button hlmBtn type="button" (click)="copiarTexto(codigo, 'Código temporário')">
-          Copiar código
-        </button>
-        <button hlmBtn variant="outline" type="button" (click)="abertura.set(null)">
-          Ocultar código temporário
-        </button>
-      </div>
-    </aside>
+  @for (codigo of [abertura()?.codigoTemporario]; track codigo) {
+    @if (codigo) {
+      <aside class="codigo-atendimento" aria-label="Código temporário do atendimento">
+        <input #ocultarCodigo type="checkbox" hidden />
+        <span class="sobretitulo">Código temporário do grupo</span>
+        <p>Forneça este código apenas ao grupo do atendimento. Ele não faz parte do QR público.</p>
+        <output class="codigo" [class.codigo-oculto]="ocultarCodigo.checked">
+          {{ ocultarCodigo.checked ? '•••-•••' : codigo }}
+        </output>
+        <div class="acoes">
+          <button hlmBtn type="button" (click)="copiarTexto(codigo, 'Código temporário')">
+            Copiar código
+          </button>
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            [attr.aria-pressed]="ocultarCodigo.checked"
+            (click)="ocultarCodigo.checked = !ocultarCodigo.checked"
+          >
+            {{ ocultarCodigo.checked ? 'Mostrar código' : 'Ocultar código' }}
+          </button>
+        </div>
+      </aside>
+    }
   }
   <div class="resumo-listagem">
     <span>{{ mesas().length }} {{ mesas().length === 1 ? 'mesa' : 'mesas' }} nesta página</span

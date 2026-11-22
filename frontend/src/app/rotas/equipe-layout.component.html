@@ -159,21 +159,110 @@
       }
       <div class="workspace-tools topbar-controls">
         @if (cozinha || pagina()['unidade']) {
-          <label class="unit-picker" for="unidade-operacao"
-            ><app-icone nome="unidade" /><span class="sr-only">Unidade da operação</span
-            ><select
-              id="unidade-operacao"
-              aria-label="Unidade da operação"
-              #unidade
-              [value]="contexto.unidadeId()"
-              (change)="selecionarUnidade(unidade.value); unidade.value = contexto.unidadeId()"
-            >
-              <option value="" disabled>Selecione a unidade</option>
-              @for (item of contexto.unidades(); track item.id) {
-                <option [value]="item.id">{{ item.nome }}</option>
-              }
-            </select></label
+          <div
+            class="bistro-select-wrap unit-select-wrap"
+            (focusout)="
+              !$any($event.currentTarget).contains($event.relatedTarget) &&
+                (menuUnidadeTop.checked = false)
+            "
           >
+            <input #menuUnidadeTop type="checkbox" hidden />
+            <div
+              class="bistro-select-pill unit-picker"
+              [class.open]="menuUnidadeTop.checked"
+              (mousedown)="$event.preventDefault()"
+              (click)="unidade.focus(); menuUnidadeTop.checked = !menuUnidadeTop.checked"
+            >
+              <app-icone class="bistro-select-ico" nome="unidade" />
+              <span class="bistro-select-val" aria-hidden="true">
+                @if (!contexto.unidadeId()) {
+                  Selecione a unidade
+                } @else {
+                  @for (item of contexto.unidades(); track item.id) {
+                    @if (item.id === contexto.unidadeId()) {
+                      {{ item.nome }}
+                    }
+                  }
+                }
+              </span>
+              <select
+                id="unidade-operacao"
+                aria-label="Unidade da operação"
+                class="bistro-select-native"
+                #unidade
+                [value]="contexto.unidadeId()"
+                (keydown.enter)="$event.preventDefault(); menuUnidadeTop.checked = !menuUnidadeTop.checked"
+                (keydown.space)="$event.preventDefault(); menuUnidadeTop.checked = !menuUnidadeTop.checked"
+                (keydown.escape)="menuUnidadeTop.checked = false"
+                (change)="
+                  menuUnidadeTop.checked = false;
+                  selecionarUnidade(unidade.value);
+                  unidade.value = contexto.unidadeId()
+                "
+              >
+                <option value="" disabled>Selecione a unidade</option>
+                @for (item of contexto.unidades(); track item.id) {
+                  <option [value]="item.id" [selected]="item.id === contexto.unidadeId()">
+                    {{ item.nome }}
+                  </option>
+                }
+              </select>
+              <svg
+                class="bistro-select-chev"
+                [class.rot]="menuUnidadeTop.checked"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+            @if (menuUnidadeTop.checked) {
+              <div class="bistro-select-popover unit-select-popover" role="presentation">
+                <p class="bistro-select-popover-title">Unidade da operação</p>
+                @for (item of contexto.unidades(); track item.id) {
+                  <button
+                    type="button"
+                    class="bistro-select-opt"
+                    [class.on]="item.id === contexto.unidadeId()"
+                    tabindex="-1"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="
+                      menuUnidadeTop.checked = false;
+                      selecionarUnidade(item.id);
+                      unidade.value = contexto.unidadeId();
+                      unidade.focus()
+                    "
+                  >
+                    <span class="bistro-select-opt-main">
+                      <app-icone nome="unidade" />
+                      <span>{{ item.nome }}</span>
+                    </span>
+                    @if (item.id === contexto.unidadeId()) {
+                      <span class="bistro-select-opt-check" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m5 12.5 4.5 4.5L19 7.5"
+                          />
+                        </svg>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
         }
         <button
           type="button"

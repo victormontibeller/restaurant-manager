@@ -59,11 +59,139 @@
           <div class="financeiro-campos-grade">
             <div class="campo-financeiro">
               <label [for]="'fin-meio-' + recurso()">Meio</label>
-              <select [id]="'fin-meio-' + recurso()" name="metodo" [(ngModel)]="metodo">
-                <option value="PIX">Pix presencial conferido</option>
-                <option value="CARTAO">Cartão presencial conferido</option>
-                <option value="DINHEIRO">Dinheiro</option>
-              </select>
+              <div
+                class="bistro-select-wrap"
+                (focusout)="
+                  !$any($event.currentTarget).contains($event.relatedTarget) &&
+                    (menuMeio.checked = false)
+                "
+              >
+                <input #menuMeio type="checkbox" hidden />
+                <div
+                  class="bistro-select-pill"
+                  [class.open]="menuMeio.checked"
+                  [class.disabled]="bloqueado()"
+                  (mousedown)="!bloqueado() && $event.preventDefault()"
+                  (click)="
+                    !bloqueado() && seletorMeio.focus();
+                    !bloqueado() && (menuMeio.checked = !menuMeio.checked)
+                  "
+                >
+                  <svg
+                    class="bistro-select-ico"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="2"
+                      y="5"
+                      width="20"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path fill="none" stroke="currentColor" stroke-width="2" d="M2 10h20" />
+                  </svg>
+                  <span class="bistro-select-val" aria-hidden="true">
+                    @switch (metodo) {
+                      @case ('CARTAO') {
+                        Cartão presencial conferido
+                      }
+                      @case ('DINHEIRO') {
+                        Dinheiro
+                      }
+                      @default {
+                        Pix presencial conferido
+                      }
+                    }
+                  </span>
+                  <select
+                    [id]="'fin-meio-' + recurso()"
+                    #seletorMeio
+                    name="metodo"
+                    class="bistro-select-native"
+                    [(ngModel)]="metodo"
+                    (keydown.enter)="
+                      !bloqueado() && $event.preventDefault();
+                      !bloqueado() && (menuMeio.checked = !menuMeio.checked)
+                    "
+                    (keydown.space)="
+                      !bloqueado() && $event.preventDefault();
+                      !bloqueado() && (menuMeio.checked = !menuMeio.checked)
+                    "
+                    (keydown.escape)="menuMeio.checked = false"
+                    (change)="menuMeio.checked = false"
+                  >
+                    <option value="PIX">Pix presencial conferido</option>
+                    <option value="CARTAO">Cartão presencial conferido</option>
+                    <option value="DINHEIRO">Dinheiro</option>
+                  </select>
+                  <svg
+                    class="bistro-select-chev"
+                    [class.rot]="menuMeio.checked"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                @if (menuMeio.checked && !bloqueado()) {
+                  <div class="bistro-select-popover" role="presentation">
+                    <p class="bistro-select-popover-title">Meio de recebimento</p>
+                    @for (
+                      op of [
+                        { valor: 'PIX', rotulo: 'Pix presencial conferido' },
+                        { valor: 'CARTAO', rotulo: 'Cartão presencial conferido' },
+                        { valor: 'DINHEIRO', rotulo: 'Dinheiro' },
+                      ];
+                      track op.valor
+                    ) {
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="metodo === op.valor"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuMeio.checked = false;
+                          seletorMeio.value = op.valor;
+                          metodo = op.valor;
+                          seletorMeio.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>{{ op.rotulo }}</span>
+                        </span>
+                        @if (metodo === op.valor) {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
             <div class="campo-financeiro">
               <label [for]="'fin-valor-' + recurso()">Valor aplicado (ex.: 20.00)</label>
@@ -143,20 +271,168 @@
               <legend>Abatimento comercial</legend>
               <div class="campo-financeiro">
                 <label [for]="'fin-parcela-' + recurso()">Unidade comercial ou taxa</label>
-                <select
-                  [id]="'fin-parcela-' + recurso()"
-                  name="parcela"
-                  [(ngModel)]="parcela"
-                  required
+                <div
+                  class="bistro-select-wrap"
+                  (focusout)="
+                    !$any($event.currentTarget).contains($event.relatedTarget) &&
+                      (menuParcela.checked = false)
+                  "
                 >
-                  <option value="">Selecione</option>
-                  @for (p of detalhe.parcelas; track p.id) {
-                    <option [value]="p.id">
-                      {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }} ·
-                      original {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
-                    </option>
+                  <input #menuParcela type="checkbox" hidden />
+                  <div
+                    class="bistro-select-pill"
+                    [class.open]="menuParcela.checked"
+                    [class.disabled]="bloqueado()"
+                    (mousedown)="!bloqueado() && $event.preventDefault()"
+                    (click)="
+                      !bloqueado() && seletorParcela.focus();
+                      !bloqueado() && (menuParcela.checked = !menuParcela.checked)
+                    "
+                  >
+                    <svg
+                      class="bistro-select-ico"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"
+                      />
+                    </svg>
+                    <span class="bistro-select-val" aria-hidden="true">
+                      @if (!parcela) {
+                        Selecione
+                      } @else {
+                        @for (p of detalhe.parcelas; track p.id) {
+                          @if (p.id === parcela) {
+                            {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }}
+                          }
+                        }
+                      }
+                    </span>
+                    <select
+                      [id]="'fin-parcela-' + recurso()"
+                      #seletorParcela
+                      name="parcela"
+                      class="bistro-select-native"
+                      [(ngModel)]="parcela"
+                      required
+                      (keydown.enter)="
+                        !bloqueado() && $event.preventDefault();
+                        !bloqueado() && (menuParcela.checked = !menuParcela.checked)
+                      "
+                      (keydown.space)="
+                        !bloqueado() && $event.preventDefault();
+                        !bloqueado() && (menuParcela.checked = !menuParcela.checked)
+                      "
+                      (keydown.escape)="menuParcela.checked = false"
+                      (change)="menuParcela.checked = false"
+                    >
+                      <option value="">Selecione</option>
+                      @for (p of detalhe.parcelas; track p.id) {
+                        <option [value]="p.id">
+                          {{ p.descricao }} · pedido #{{ p.pedidoId.slice(0, 8).toUpperCase() }} ·
+                          original {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
+                        </option>
+                      }
+                    </select>
+                    <svg
+                      class="bistro-select-chev"
+                      [class.rot]="menuParcela.checked"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </div>
+                  @if (menuParcela.checked && !bloqueado()) {
+                    <div class="bistro-select-popover" role="presentation">
+                      <p class="bistro-select-popover-title">Unidade comercial ou taxa</p>
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="parcela === ''"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuParcela.checked = false;
+                          seletorParcela.value = '';
+                          parcela = '';
+                          seletorParcela.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>Selecione</span>
+                        </span>
+                        @if (parcela === '') {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                      @for (p of detalhe.parcelas; track p.id) {
+                        <button
+                          type="button"
+                          class="bistro-select-opt"
+                          [class.on]="parcela === p.id"
+                          tabindex="-1"
+                          (mousedown)="$event.preventDefault()"
+                          (click)="
+                            menuParcela.checked = false;
+                            seletorParcela.value = p.id;
+                            parcela = p.id;
+                            seletorParcela.focus()
+                          "
+                        >
+                          <span class="bistro-select-opt-main">
+                            <span>
+                              {{ p.descricao }} · pedido #{{
+                                p.pedidoId.slice(0, 8).toUpperCase()
+                              }}
+                              · original {{ moeda(p.original) }} · abatido {{ moeda(p.abatido) }}
+                            </span>
+                          </span>
+                          @if (parcela === p.id) {
+                            <span class="bistro-select-opt-check" aria-hidden="true">
+                              <svg width="15" height="15" viewBox="0 0 24 24">
+                                <path
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2.8"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="m5 12.5 4.5 4.5L19 7.5"
+                                />
+                              </svg>
+                            </span>
+                          }
+                        </button>
+                      }
+                    </div>
                   }
-                </select>
+                </div>
               </div>
               @for (p of detalhe.parcelas; track p.id) {
                 @if (p.id === parcela) {
@@ -235,19 +511,164 @@
           </p>
           <div class="campo-financeiro">
             <label [for]="'fin-recebimento-' + recurso()">Recebimento</label>
-            <select
-              [id]="'fin-recebimento-' + recurso()"
-              name="recebimento"
-              [(ngModel)]="recebimento"
-              required
+            <div
+              class="bistro-select-wrap"
+              (focusout)="
+                !$any($event.currentTarget).contains($event.relatedTarget) &&
+                  (menuRecebimento.checked = false)
+              "
             >
-              <option value="">Selecione</option>
-              @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
-                <option [value]="r.id">
-                  Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
-                </option>
+              <input #menuRecebimento type="checkbox" hidden />
+              <div
+                class="bistro-select-pill"
+                [class.open]="menuRecebimento.checked"
+                [class.disabled]="bloqueado()"
+                (mousedown)="!bloqueado() && $event.preventDefault()"
+                (click)="
+                  !bloqueado() && seletorRecebimento.focus();
+                  !bloqueado() && (menuRecebimento.checked = !menuRecebimento.checked)
+                "
+              >
+                <svg
+                  class="bistro-select-ico"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 11l2 2 4-4M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
+                  />
+                </svg>
+                <span class="bistro-select-val" aria-hidden="true">
+                  @if (!recebimento) {
+                    Selecione
+                  } @else {
+                    @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+                      @if (r.id === recebimento) {
+                        Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
+                      }
+                    }
+                  }
+                </span>
+                <select
+                  [id]="'fin-recebimento-' + recurso()"
+                  #seletorRecebimento
+                  name="recebimento"
+                  class="bistro-select-native"
+                  [(ngModel)]="recebimento"
+                  required
+                  (keydown.enter)="
+                    !bloqueado() && $event.preventDefault();
+                    !bloqueado() && (menuRecebimento.checked = !menuRecebimento.checked)
+                  "
+                  (keydown.space)="
+                    !bloqueado() && $event.preventDefault();
+                    !bloqueado() && (menuRecebimento.checked = !menuRecebimento.checked)
+                  "
+                  (keydown.escape)="menuRecebimento.checked = false"
+                  (change)="menuRecebimento.checked = false"
+                >
+                  <option value="">Selecione</option>
+                  @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+                    <option [value]="r.id">
+                      Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
+                    </option>
+                  }
+                </select>
+                <svg
+                  class="bistro-select-chev"
+                  [class.rot]="menuRecebimento.checked"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+              @if (menuRecebimento.checked && !bloqueado()) {
+                <div class="bistro-select-popover" role="presentation">
+                  <p class="bistro-select-popover-title">Recebimento</p>
+                  <button
+                    type="button"
+                    class="bistro-select-opt"
+                    [class.on]="recebimento === ''"
+                    tabindex="-1"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="
+                      menuRecebimento.checked = false;
+                      seletorRecebimento.value = '';
+                      recebimento = '';
+                      seletorRecebimento.focus()
+                    "
+                  >
+                    <span class="bistro-select-opt-main">
+                      <span>Selecione</span>
+                    </span>
+                    @if (recebimento === '') {
+                      <span class="bistro-select-opt-check" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m5 12.5 4.5 4.5L19 7.5"
+                          />
+                        </svg>
+                      </span>
+                    }
+                  </button>
+                  @for (r of detalhe.recebimentos; track r.id; let indice = $index) {
+                    <button
+                      type="button"
+                      class="bistro-select-opt"
+                      [class.on]="recebimento === r.id"
+                      tabindex="-1"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="
+                        menuRecebimento.checked = false;
+                        seletorRecebimento.value = r.id;
+                        recebimento = r.id;
+                        seletorRecebimento.focus()
+                      "
+                    >
+                      <span class="bistro-select-opt-main">
+                        <span>
+                          Recebimento {{ indice + 1 }} · {{ r.metodo }} · {{ moeda(r.valor) }}
+                        </span>
+                      </span>
+                      @if (recebimento === r.id) {
+                        <span class="bistro-select-opt-check" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24">
+                            <path
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.8"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m5 12.5 4.5 4.5L19 7.5"
+                            />
+                          </svg>
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
               }
-            </select>
+            </div>
           </div>
           <div class="financeiro-campos-grade">
             <div class="campo-financeiro">
