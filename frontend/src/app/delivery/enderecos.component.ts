@@ -207,14 +207,14 @@ import { EnderecosService } from './enderecos.service';
       background: var(--primary-hover, #933524);
     }
     .talao-btn--secundario {
-      background: var(--sage-solid, #30523b);
-      border-color: var(--sage-solid-deep, #213a29);
-      color: #ffffff;
+      background: var(--secondary, #f0ebe3);
+      border-color: var(--input, #c6b9aa);
+      color: var(--secondary-foreground, #44372e);
       font-weight: 700;
-      box-shadow: 0 3px 0 var(--sage-solid-deep, #213a29);
+      box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.05));
     }
     .talao-btn--secundario:hover:not(:disabled) {
-      background: var(--sage-solid-hover, #274431);
+      background: var(--muted, #f3eee7);
     }
     .talao-btn:disabled {
       opacity: 1;

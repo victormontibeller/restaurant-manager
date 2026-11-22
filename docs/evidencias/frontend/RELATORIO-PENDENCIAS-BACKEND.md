@@ -223,3 +223,11 @@ Quando o backend implementar qualquer grupo (`BE-01..BE-25`), seguir o protocolo
 1. **Contratos `BE-01` e `BE-03..BE-09` (P0):** o frontend atual já possui as chamadas implementadas e tolerantes; basta subir a nova API e validar os fluxos reais em `/cardapio`, `/conta` e checkout Delivery (removendo mensagens de recurso pendente nos testes E2E).
 2. **Contratos `BE-02` e `BE-10..BE-25` (P1/P2):** abrir microtarefa específica no frontend após o endpoint estar publicado em contrato e testado em Java/PostgreSQL, evitando código morto ou suposições de payload antecipadas. No caso de `BE-23`/`BE-24`, o frontend da Sprint 2.1 já opera com composição segura em `EnviarPedido.observacao` e inferência local até a ativação nativa dos campos no servidor.
 3. **Nunca enfraquecer validação no servidor:** limites de tamanho, máscaras de CPF, concorrência otimista (`versao`), escopo por `empresaId` + `unidadeId` e reautenticação de 5 minutos para ações sensíveis permanecem autoridade exclusiva do backend.
+
+---
+
+## 5. Status Final de Handoff Pós-Sprints de Frontend (1–7)
+
+- **Ciclo visual concluído (2026-11-22):** Sprints 1 a 7 concluídas em `frontend/` nos temas **Claro e Escuro**, com `0` alterações em `backend/`, `0` resíduos da paleta verde legada ou nomes/iniciais fixos em `frontend/src/` e `0` botões verdes em formulários.
+- **Portabilidade e pendências de ambiente local Windows:** as suítes de lógica, `typecheck`, `ngc --noEmit`, `format:check`, sondas `vm`/unitárias (`21` scripts) e verificação em Microsoft Edge passaram; permanecem para o ambiente CI Linux (Node `>= 24.15.0`, Chromium Playwright e backend/PostgreSQL ativos) a execução de `npm --prefix frontend run build` (orçamento AOT + PWA), as sondas Playwright nativas (`test_profile_selects.cjs` e demais) e a bateria E2E integrada antes do PR único da branch.
+- **Próxima frente:** implementação dos itens `BE-01`–`BE-25` no backend conforme prioridades `P0` → `P1` → `P2` acima.

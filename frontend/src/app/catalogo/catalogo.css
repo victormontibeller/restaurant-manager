@@ -77,7 +77,7 @@ button {
   border: 1px solid var(--border);
 }
 .erro {
-  color: var(--danger-fg, #9d2424);
+  color: var(--danger-fg, #972626);
 }
 .aviso {
   padding: 0.75rem;

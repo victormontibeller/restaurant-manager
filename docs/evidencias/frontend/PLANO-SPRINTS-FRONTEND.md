@@ -91,6 +91,11 @@ flowchart LR
    - Orçamento em [`frontend/angular.json`](../../../frontend/angular.json): `maximumWarning: 450kB`, `maximumError: 600kB` para chunk inicial.
    - Escopo real do `npm --prefix frontend run format:check` (em [`frontend/package.json`](../../../frontend/package.json)): rodar Prettier explicitamente também nos arquivos `.html`/`.css` fora do glob padrão (ex.: `rotas/`, `catalogo/`).
    - Em ambiente Windows local com Node `v24.12.0`, validar sempre `typecheck`, `ngc -p frontend/tsconfig.app.json --noEmit`, `test:logic`, sondas JIT e build AOT + `build-pwa.cjs`.
+7. **Regras Anti-Regressão Visuais (Lições Obrigatórias das Sprints 4–6 — Nunca Repetir):**
+   - **Proibido botão verde em formulários/cadastros:** Todo CTA primário de criação, envio ou salvamento em telas administrativas, comerciais, corporativas e da plataforma **deve** usar `[hlmBtn]` padrão (Terracota `--primary`: `#a53e2b` Claro / `#b8432e` Escuro). O verde sálvia (`--sage-solid`) é restrito exclusivamente a ações operacionais positivas de pedido em contraponto a recusa/cancelamento (`Aceitar pedido`, `Marcar servido na mesa`, `Concluir em preparo` no KDS, `Autorizar nova tentativa de entrega`); para status/chips positivos use `--accent` / `--accent-foreground`.
+   - **Proibido `<select>` cru ou `.bistro-select` incompleto (no código e na representação visual):** Todo dropdown visível na plataforma — inclusive nos protótipos HTML do Gate 0 — **deve** seguir o padrão completo `.bistro-select-wrap` > `.bistro-select-pill` (`.bistro-select-ico` + `.bistro-select-val` + `select.bistro-select-native` + `.bistro-select-chev`) + `.bistro-select-popover` (`.bistro-select-popover-title` + `.bistro-select-opt` com `tabindex="-1"`, `.bistro-select-opt-main` e `.bistro-select-opt-check` em `<svg>` check circular terracota), nunca texto `'✓'` avulso nem `<select>` nativo visível. *(Nos cards `<article>` de `acessos.component.ts`, onde `test_profile_selects.cjs` exige `article input[type=checkbox]` == 6 quando fechados, controlar a abertura do popover por `signal`/estado sem `<input type="checkbox" hidden>` dentro de `<article>`, mantendo 100% do mesmo visual `.bistro-select-pill` + `.bistro-select-popover`.)*
+   - **Ordem, alinhamento e inspeção real no Celular (`360px`):** Nunca entregar representação visual nem Sprint sem renderizar e inspecionar visualmente em navegador real (`360×800`, `768×1024`, `1280×900`, Claro + Escuro). Controles do simulador/protótipo nunca podem ser misturados dentro dos cards reais da tela; em `360px`, respeitar ordem lógica vertical (CTA primário sem quebra/esmagamento, botões em `100%` ou pares simétricos `50/50`, sem faixas órfãs `4+3`, sem cabeçalhos desalinhados e com `scrollWidth <= clientWidth`).
+   - **Delegação efetiva ao `artesao-ux-bistro`:** Nunca pular o especialista visual ou improvisar CSS fora do padrão; tanto correções visuais de sprints anteriores quanto a etapa visual da sprint corrente e sua auditoria em `360/768/1280` devem passar pelo `artesao-ux-bistro`.
 
 ---
 
@@ -337,7 +342,7 @@ Valide `format:check` + prettier em `catalogo/`, `typecheck`, `ngc --noEmit`, `t
 
 ---
 
-### Sprint 6 — Gestão Corporativa & Segurança (Light + Dark): Equipe/Acessos, Convites, Unidades, Horários & Auditoria
+### Sprint 6 — Gestão Corporativa & Segurança (Light + Dark): Equipe/Acessos, Convites, Unidades, Horários & Auditoria *(Concluída — [relatório](2026-11-22-sprint6-gestao-corporativa-e-seguranca.md))*
 
 **Objetivo:** Modernizar as telas administrativas de governança (`/gestao/equipe`, `/gestao/equipe/convites`, `/gestao/unidades`, `/gestao/atualizacoes`) nos temas **Claro e Dark**, removendo UUIDs/ISOs crus do destaque visual e organizando a matriz de permissões e a grade horária sem quebrar nenhum contrato JIT `esbuild`.
 
@@ -382,7 +387,7 @@ Valide `format:check`, `typecheck`, `ngc --noEmit`, `test:logic`, todas as sonda
 
 ---
 
-### Sprint 7 — Console da Plataforma SaaS (`/plataforma`) & Auditoria Final Global (Light + Dark WCAG AA, Zero Legado e PWA)
+### Sprint 7 — Console da Plataforma SaaS (`/plataforma`) & Auditoria Final Global (Light + Dark WCAG AA, Zero Legado e PWA) *(Concluída — [relatório](2026-11-22-sprint7-plataforma-e-auditoria-global.md))*
 
 **Objetivo:** Unificar o **Console do Operador SaaS** (`/plataforma`) aos temas **Claro e Dark** da plataforma, limpando excessos visuais nos cards de tenants e provisionamento, e conduzir a **auditoria final ponta a ponta de todo o frontend** nos dois temas.
 
