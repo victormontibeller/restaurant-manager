@@ -1,5 +1,6 @@
 import { Component, DestroyRef, EventEmitter, Output, inject, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 import { CatalogoPendenteService, EdicaoCatalogoPendente } from './catalogo-pendente.service';
 import { MidiaPendenteService } from './midia-pendente.service';
 import { CategoriaEditorComponent } from './categoria-editor.component';
@@ -12,13 +13,14 @@ import {
   Produto,
   ProdutoPublico,
   mensagemErro,
+  moeda,
 } from './modelos';
 
 @Component({
   selector: 'app-gestao-catalogo',
-  imports: [CategoriaEditorComponent, ProdutoEditorComponent, OfertaUnidadeComponent],
+  imports: [HlmButton, CategoriaEditorComponent, ProdutoEditorComponent, OfertaUnidadeComponent],
   templateUrl: './gestao-catalogo.component.html',
-  styleUrl: './catalogo.css',
+  styleUrls: ['./catalogo.css', './gestao-catalogo.css'],
 })
 export class GestaoCatalogoComponent {
   @Output() bloqueio = new EventEmitter<boolean>();
@@ -47,6 +49,9 @@ export class GestaoCatalogoComponent {
   readonly categoriaSelecionada = signal<Categoria | null>(null);
   readonly produtoSelecionado = signal<Produto | null>(null);
   readonly ofertaSelecionada = signal<{ id: string; nome: string } | null>(null);
+  readonly buscaFiltro = signal('');
+  readonly categoriaFiltro = signal('');
+  readonly statusFiltro = signal<'TODOS' | 'ATIVOS' | 'INATIVOS' | 'SUGESTAO'>('TODOS');
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -362,5 +367,61 @@ export class GestaoCatalogoComponent {
 
   private emitirBloqueio(): void {
     this.bloqueio.emit(this.travado());
+  }
+
+  limparFiltros(): void {
+    this.buscaFiltro.set('');
+    this.categoriaFiltro.set('');
+    this.statusFiltro.set('TODOS');
+  }
+
+  ehProdutoAdmin(item: Produto | ProdutoPublico): item is Produto {
+    return 'ativo' in item;
+  }
+
+  produtoAtivo(item: Produto | ProdutoPublico): boolean {
+    return 'ativo' in item ? item.ativo : item.disponivel;
+  }
+
+  precoProduto(item: Produto | ProdutoPublico): string {
+    return 'preco' in item ? moeda(item.preco) : '';
+  }
+
+  nomeCategoria(categoriaId: string): string {
+    return this.categorias().find((c) => c.id === categoriaId)?.nome ?? '';
+  }
+
+  nomeUnidadeOperacional(): string {
+    return this.acessos()?.unidades.find((u) => u.id === this.unidadeOperacional())?.nome ?? '';
+  }
+
+  iniciaisProduto(nome: string): string {
+    return (nome.trim().charAt(0) || 'P').toUpperCase();
+  }
+
+  contagemStatus(filtro: 'TODOS' | 'ATIVOS' | 'INATIVOS' | 'SUGESTAO'): number {
+    const lista = this.produtos();
+    if (filtro === 'TODOS') return lista.length;
+    if (filtro === 'ATIVOS') return lista.filter((p) => this.produtoAtivo(p)).length;
+    if (filtro === 'INATIVOS') return lista.filter((p) => !this.produtoAtivo(p)).length;
+    return lista.filter((p) => p.sugerido).length;
+  }
+
+  produtosFiltrados(): (Produto | ProdutoPublico)[] {
+    const busca = this.buscaFiltro().trim().toLowerCase();
+    const cat = this.categoriaFiltro();
+    const status = this.statusFiltro();
+    return this.produtos().filter((item) => {
+      if (busca) {
+        const texto =
+          `${item.nome} ${item.descricao ?? ''} ${this.nomeCategoria(item.categoriaId)}`.toLowerCase();
+        if (!texto.includes(busca)) return false;
+      }
+      if (cat && item.categoriaId !== cat) return false;
+      if (status === 'ATIVOS' && !this.produtoAtivo(item)) return false;
+      if (status === 'INATIVOS' && this.produtoAtivo(item)) return false;
+      if (status === 'SUGESTAO' && !item.sugerido) return false;
+      return true;
+    });
   }
 }

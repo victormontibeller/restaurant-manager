@@ -1,16 +1,16 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { mensagemErro } from '../catalogo/modelos';
+import { mensagemErro, moeda } from '../catalogo/modelos';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 import { ConfigDelivery, RegiaoDelivery } from './modelos';
 
 @Component({
   selector: 'app-config-delivery',
-  imports: [FormsModule],
+  imports: [FormsModule, HlmButton],
   templateUrl: './config-delivery.component.html',
   styleUrl: '../operacao.css',
-  styles: `form,fieldset{display:grid;gap:.75rem}fieldset{min-width:0}input,button{min-height:48px}input{max-width:100%;width:100%}.checkbox input{width:auto}`,
 })
 export class ConfigDeliveryComponent {
   readonly unidadeId = input.required<string>();
@@ -155,5 +155,47 @@ export class ConfigDeliveryComponent {
     } finally {
       if (geracao === this.geracao) this.ocupado.set(false);
     }
+  }
+
+  regioesAtivasCount(): number {
+    return this.regioes.filter((r) => r.ativa).length;
+  }
+
+  checkoutSegundosResumo(): number {
+    return Math.max(0, Math.round((Number(this.minutos) || 0) * 60));
+  }
+
+  faixaTaxas(): string {
+    const ativas = this.regioes.filter((r) => r.ativa);
+    if (!ativas.length) return 'Nenhuma ativa';
+    const valores = ativas
+      .map((r) => Number(String(r.taxa).replace(',', '.')))
+      .filter((v) => Number.isFinite(v) && v >= 0);
+    if (!valores.length) return '—';
+    const min = Math.min(...valores).toFixed(2);
+    const max = Math.max(...valores).toFixed(2);
+    return min === max ? moeda(min) : `${moeda(min)} – ${moeda(max)}`;
+  }
+
+  sobreposicoesCep(): string[] {
+    const ativas = this.regioes
+      .map((r, i) => ({
+        nome: r.nome.trim() || `Região ${i + 1}`,
+        ativa: r.ativa,
+        ini: r.cepInicial.replace(/\D/g, ''),
+        fim: r.cepFinal.replace(/\D/g, ''),
+      }))
+      .filter((r) => r.ativa && r.ini.length === 8 && r.fim.length === 8);
+    const pares: string[] = [];
+    for (let i = 0; i < ativas.length; i++) {
+      for (let j = i + 1; j < ativas.length; j++) {
+        const a1 = ativas[i].ini <= ativas[i].fim ? ativas[i].ini : ativas[i].fim;
+        const a2 = ativas[i].ini <= ativas[i].fim ? ativas[i].fim : ativas[i].ini;
+        const b1 = ativas[j].ini <= ativas[j].fim ? ativas[j].ini : ativas[j].fim;
+        const b2 = ativas[j].ini <= ativas[j].fim ? ativas[j].fim : ativas[j].ini;
+        if (a1 <= b2 && b1 <= a2) pares.push(`${ativas[i].nome} × ${ativas[j].nome}`);
+      }
+    }
+    return pares;
   }
 }

@@ -1,92 +1,225 @@
-<section aria-labelledby="regioes-titulo">
-  <h2 id="regioes-titulo">Regiões de entrega e checkout</h2>
-  <p>
-    As faixas de CEP são inclusivas e não podem se sobrepor quando ativas. O mínimo considera os
-    itens, sem a taxa de entrega. Os horários seguem a configuração da unidade.
-  </p>
-  <button type="button" (click)="carregar()" [disabled]="ocupado()">
-    Consultar configuração salva
-  </button>
-  <form #form="ngForm" (ngSubmit)="salvar(senha)">
-    <fieldset [disabled]="ocupado() || incerto()">
-      <legend>Configuração da unidade</legend>
-      <label
-        >Prazo para pagar online, em minutos<input
-          type="number"
-          name="minutosCheckout"
-          [(ngModel)]="minutos"
-          min="1"
-          max="1440"
-          step="1"
-          required
-      /></label>
-      @for (r of regioes; track r.id) {
-        <fieldset>
-          <legend>{{ r.nome || 'Nova região' }}</legend>
-          <label
-            >Nome da região<input
-              [name]="'nome-'+r.id"
-              [(ngModel)]="r.nome"
-              required
-              maxlength="100"
-          /></label>
-          <label
-            >CEP inicial<input
-              [name]="'inicio-'+r.id"
-              [(ngModel)]="r.cepInicial"
-              required
-              maxlength="9"
-          /></label>
-          <label
-            >CEP final<input [name]="'fim-'+r.id" [(ngModel)]="r.cepFinal" required maxlength="9"
-          /></label>
-          <label
-            >Taxa fixa em reais<input
-              [name]="'taxa-'+r.id"
-              [(ngModel)]="r.taxa"
-              required
-              inputmode="decimal"
-          /></label>
-          <label
-            >Pedido mínimo de itens em reais<input
-              [name]="'minimo-'+r.id"
-              [(ngModel)]="r.minimo"
-              required
-              inputmode="decimal"
-          /></label>
-          <label class="checkbox"
-            ><input type="checkbox" [name]="'ativa-'+r.id" [(ngModel)]="r.ativa" /> Região
-            ativa</label
-          ><button type="button" (click)="remover(r.id)">Remover região {{ r.nome }}</button>
-        </fieldset>
-      }
-      <button type="button" (click)="adicionar()" [disabled]="regioes.length >= 100">
-        Adicionar região
+<section class="s5-painel" aria-labelledby="regioes-titulo">
+  <h2 id="regioes-titulo" class="sr-only">Regiões de entrega e checkout</h2>
+
+  <div class="del-kpi-strip">
+    <div class="del-kpi-tile">
+      <span>Regiões ativas</span>
+      <strong>{{ regioesAtivasCount() }} de {{ regioes.length }}</strong>
+    </div>
+    <div class="del-kpi-tile">
+      <span>Checkout online</span>
+      <strong>{{ minutos }} min ({{ checkoutSegundosResumo() }} s)</strong>
+    </div>
+    <div class="del-kpi-tile">
+      <span>Faixa de taxas</span>
+      <strong>{{ faixaTaxas() }}</strong>
+    </div>
+  </div>
+
+  @if (incerto()) {
+    <div class="aviso s5-toolbar" role="status">
+      <span>
+        Resultado de salvamento ainda não confirmado. Consulte a configuração antes de outra
+        alteração.
+      </span>
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="usarServidor()"
+        [disabled]="ocupado()"
+      >
+        Usar versão do servidor e descartar rascunho
       </button>
-      <label
-        >Confirme sua senha<input
-          #senha
-          type="password"
-          name="senhaDelivery"
-          autocomplete="current-password"
-          required
-      /></label>
-      <button type="submit" [disabled]="!form.valid">Salvar regiões e prazo</button>
+    </div>
+  }
+
+  @if (erro()) {
+    <p role="alert" class="erro">{{ erro() }}</p>
+  }
+
+  @if (aviso()) {
+    <p role="status" class="sucesso">{{ aviso() }}</p>
+  }
+
+  <form #form="ngForm" class="s5-form-full" (ngSubmit)="salvar(senha)">
+    <fieldset [disabled]="ocupado() || incerto()" class="s5-fieldset-flat">
+      <legend class="sr-only">Configuração da unidade</legend>
+
+      <div class="s5-card">
+        <div class="s5-toolbar">
+          <p class="s5-nota" style="flex: 1 1 18rem">
+            As faixas de CEP são inclusivas e não podem se sobrepor quando ativas. O mínimo
+            considera os itens, sem a taxa de entrega. Os horários seguem a configuração da unidade.
+          </p>
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            (click)="carregar()"
+            [disabled]="ocupado()"
+          >
+            Consultar configuração salva
+          </button>
+        </div>
+
+        <div class="s5-sec-head">
+          <span class="s5-sec-num">01 · PRAZO DO PAGAMENTO ONLINE</span>
+          <span class="s5-sec-dotted"></span>
+        </div>
+
+        <div class="s5-field" style="max-width: 24rem">
+          <label for="del-minutos">Prazo para pagar online, em minutos</label>
+          <div class="s5-input-unit">
+            <input
+              id="del-minutos"
+              type="number"
+              name="minutosCheckout"
+              [(ngModel)]="minutos"
+              min="1"
+              max="1440"
+              step="1"
+              required
+            />
+            <span class="s5-unit-pill">= {{ checkoutSegundosResumo() }} s</span>
+          </div>
+        </div>
+      </div>
+
+      @if (sobreposicoesCep().length > 0) {
+        <div class="aviso" role="status">
+          <strong>Atenção:</strong> faixas ativas com CEPs sobrepostos
+          <span>({{ sobreposicoesCep().join(', ') }})</span>. O botão salvar permanece liberado, mas
+          o servidor recusará sobreposições ativas.
+        </div>
+      }
+
+      <div class="s5-sec-head">
+        <span class="s5-sec-num">02 · REGIÕES DE ENTREGA</span>
+        <span class="s5-sec-dotted"></span>
+        <span class="s5-sec-sub"
+          >{{ regioes.length }} {{ regioes.length === 1 ? 'faixa' : 'faixas' }}</span
+        >
+      </div>
+
+      <div class="del-regioes-lista">
+        @for (r of regioes; track r.id) {
+          <fieldset class="del-regiao-card">
+            <legend>{{ r.nome || 'Nova região' }}</legend>
+
+            <div class="del-regiao-head">
+              <span class="etiqueta" [attr.data-variante]="r.ativa ? 'ok' : null">
+                {{ r.ativa ? 'Ativa' : 'Inativa' }}
+              </span>
+              <div class="del-regiao-actions">
+                <label class="s5-tactile-switch" [class.checked]="r.ativa">
+                  <input type="checkbox" [name]="'ativa-' + r.id" [(ngModel)]="r.ativa" />
+                  <span>Região ativa</span>
+                </label>
+                <button
+                  hlmBtn
+                  variant="outline"
+                  class="btn-cancelar-outline"
+                  type="button"
+                  (click)="remover(r.id)"
+                >
+                  Remover <span class="sr-only">região {{ r.nome }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="del-regiao-top">
+              <div class="s5-field">
+                <label [for]="'nome-' + r.id">Nome da região</label>
+                <input
+                  [id]="'nome-' + r.id"
+                  [name]="'nome-' + r.id"
+                  [(ngModel)]="r.nome"
+                  required
+                  maxlength="100"
+                />
+              </div>
+              <div class="s5-field">
+                <label [for]="'inicio-' + r.id">CEP inicial</label>
+                <input
+                  [id]="'inicio-' + r.id"
+                  [name]="'inicio-' + r.id"
+                  [(ngModel)]="r.cepInicial"
+                  required
+                  maxlength="9"
+                />
+              </div>
+              <div class="s5-field">
+                <label [for]="'fim-' + r.id">CEP final</label>
+                <input
+                  [id]="'fim-' + r.id"
+                  [name]="'fim-' + r.id"
+                  [(ngModel)]="r.cepFinal"
+                  required
+                  maxlength="9"
+                />
+              </div>
+            </div>
+
+            <div class="del-regiao-bot">
+              <div class="s5-field">
+                <label [for]="'taxa-' + r.id">Taxa fixa em reais</label>
+                <input
+                  [id]="'taxa-' + r.id"
+                  [name]="'taxa-' + r.id"
+                  [(ngModel)]="r.taxa"
+                  required
+                  inputmode="decimal"
+                />
+              </div>
+              <div class="s5-field">
+                <label [for]="'minimo-' + r.id">Pedido mínimo de itens em reais</label>
+                <input
+                  [id]="'minimo-' + r.id"
+                  [name]="'minimo-' + r.id"
+                  [(ngModel)]="r.minimo"
+                  required
+                  inputmode="decimal"
+                />
+              </div>
+            </div>
+          </fieldset>
+        }
+      </div>
+
+      <div class="s5-acoes-bloco">
+        <button
+          hlmBtn
+          variant="outline"
+          type="button"
+          (click)="adicionar()"
+          [disabled]="regioes.length >= 100"
+        >
+          Adicionar região
+        </button>
+      </div>
+
+      <div class="s5-talao">
+        <div class="s5-sec-head">
+          <span class="s5-sec-num">03 · CONFIRMAÇÃO</span>
+          <span class="s5-sec-dotted"></span>
+        </div>
+        <div class="s5-grid-2" style="align-items: end">
+          <div class="s5-field">
+            <label for="senha-delivery">Confirme sua senha</label>
+            <input
+              #senha
+              id="senha-delivery"
+              type="password"
+              name="senhaDelivery"
+              autocomplete="current-password"
+              placeholder="Senha atual"
+              required
+            />
+          </div>
+          <button hlmBtn type="submit" [disabled]="!form.valid">Salvar regiões e prazo</button>
+        </div>
+      </div>
     </fieldset>
   </form>
-  @if (incerto()) {
-    <p class="aviso">
-      Resultado de salvamento ainda não confirmado. Consulte a configuração antes de outra
-      alteração.
-    </p>
-    <button type="button" (click)="usarServidor()" [disabled]="ocupado()">
-      Usar versão do servidor e descartar rascunho
-    </button>
-  }
-  @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
-  }
 </section>

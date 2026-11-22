@@ -1,22 +1,94 @@
-<section>
-  <h2>Mercado Pago do restaurante</h2>
-  <p>O restaurante recebe em sua própria conta. Autorize a conexão no ambiente do Mercado Pago.</p>
-  @if (dados(); as c) {
-    <p>
-      Conta vendedora: {{ c.vendedor }}.
-      {{ c.reautorizar ? 'Nova autorização necessária.' : 'Conectada.' }}
+<section class="s5-painel">
+  @if (conexaoConcluida()) {
+    <p class="sucesso" role="status">
+      Conexão com o Mercado Pago concluída. Os dados da conta vendedora foram atualizados abaixo.
     </p>
-  } @else {
-    <p>Nenhuma conta conectada.</p>
   }
-  <form (submit)="autorizar($event,senha)">
-    <label
-      >Confirme sua senha<input #senha type="password" autocomplete="current-password" required />
-    </label>
-    <button type="submit" [disabled]="ocupado()">Conectar ou autorizar novamente</button>
-  </form>
-  <button (click)="carregar()" [disabled]="ocupado()">Consultar conexão</button>
+
   @if (erro()) {
-    <p role="alert">{{ erro() }}</p>
+    <p class="erro" role="alert">{{ erro() }}</p>
   }
+
+  <div class="s5-talao">
+    <div class="mp-status-card">
+      <div>
+        <span class="s5-sec-num">01 · RECEBIMENTO ONLINE</span>
+        <h2>Mercado Pago do restaurante</h2>
+        <p class="s5-nota">
+          O restaurante recebe em sua própria conta. Autorize a conexão no ambiente do Mercado Pago.
+        </p>
+      </div>
+      <span
+        class="etiqueta"
+        [attr.data-variante]="dados() ? (dados()!.reautorizar ? 'warn' : 'ok') : null"
+      >
+        {{ dados() ? (dados()!.reautorizar ? 'Reautorizar' : 'Conectada') : 'Sem conta' }}
+      </span>
+    </div>
+
+    @if (dados(); as c) {
+      <p class="s5-nota" style="color: var(--foreground)">
+        Conta vendedora: <strong>{{ c.vendedor }}</strong
+        >. {{ c.reautorizar ? 'Nova autorização necessária.' : 'Conectada.' }}
+      </p>
+
+      <div class="mp-meta-grid">
+        <div class="mp-meta-item">
+          <span>Conta vendedora</span>
+          <strong>{{ c.vendedor }}</strong>
+        </div>
+        <div class="mp-meta-item">
+          <span>Situação</span>
+          <strong>
+            {{ c.reautorizar ? 'Nova autorização necessária' : 'Ativa e pronta para Checkout Pro' }}
+          </strong>
+        </div>
+        <div class="mp-meta-item">
+          <span>Validade da autorização</span>
+          <strong>{{ validadeFormatada(c.expiraEm) }}</strong>
+        </div>
+      </div>
+    } @else {
+      <p class="vazio" style="padding: 1rem; text-align: left">
+        Nenhuma conta conectada. Autorize abaixo para habilitar pagamentos online.
+      </p>
+    }
+  </div>
+
+  <div class="s5-card">
+    <div class="s5-sec-head">
+      <span class="s5-sec-num">02 · CONECTAR OU RENOVAR</span>
+      <span class="s5-sec-dotted"></span>
+    </div>
+
+    <form class="s5-form-full" (submit)="autorizar($event, senha)">
+      <div class="s5-grid-2" style="align-items: end">
+        <div class="s5-field">
+          <label for="mp-senha">Confirme sua senha</label>
+          <input
+            #senha
+            id="mp-senha"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Reautenticação obrigatória"
+            required
+          />
+        </div>
+        <div class="mp-actions">
+          <button hlmBtn type="submit" [disabled]="ocupado()">
+            Conectar ou autorizar novamente
+          </button>
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            (click)="carregar()"
+            [disabled]="ocupado()"
+          >
+            Consultar conexão
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
 </section>

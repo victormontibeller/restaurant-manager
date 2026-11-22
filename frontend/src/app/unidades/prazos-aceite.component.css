@@ -1,11 +1,7 @@
-.selecao {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-height: 48px;
-}
-.selecao input {
-  flex: 0 0 1.4rem;
-  width: 1.4rem;
-  min-height: 1.4rem;
+/* Estilos específicos de Prazos de Aceite (complementam operacao.css) */
+.sla-preset-btn:disabled {
+  background: var(--disabled-bg, #efe9e0);
+  color: var(--disabled-fg, #594e46);
+  border-color: var(--disabled-border, #d8cfc3);
+  cursor: not-allowed;
 }

@@ -10,101 +10,238 @@ import {
   signal,
 } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 import { CatalogoPendenteService } from './catalogo-pendente.service';
 import { CANAIS, Canal, Oferta, Unidade, mensagemErro } from './modelos';
 
 @Component({
   selector: 'app-oferta-unidade',
+  imports: [HlmButton],
   template: `
-    <section aria-labelledby="oferta-titulo" [attr.aria-busy]="ocupado()">
-      <h3 id="oferta-titulo">Preço e disponibilidade de {{ nome }}</h3>
-      <label for="oferta-unidade">Unidade da oferta</label>
-      <select
-        #unidade
-        id="oferta-unidade"
-        data-sem-rascunho
-        [value]="unidadeId()"
-        [disabled]="ocupado() || incerto() || bloqueado"
-        (change)="selecionarUnidade(unidade.value)"
-      >
-        <option value="">Selecione a unidade</option>
-        @for (item of unidades; track item.id) {
-          <option [value]="item.id" [selected]="item.id === unidadeId()">{{ item.nome }}</option>
+    <section class="gc-form" aria-labelledby="oferta-titulo" [attr.aria-busy]="ocupado()">
+      <h3 id="oferta-titulo" class="gc-editor-titulo">Preço e disponibilidade de {{ nome }}</h3>
+
+      <div class="gc-grid-2" style="align-items: end">
+        <div class="gc-field">
+          <label for="oferta-unidade">Unidade da oferta</label>
+          <div
+            class="bistro-select-wrap"
+            (focusout)="
+              !$any($event.currentTarget).contains($event.relatedTarget) &&
+                (menuOfertaUnidade.checked = false)
+            "
+          >
+            <input #menuOfertaUnidade type="checkbox" hidden />
+            <div
+              class="bistro-select-pill"
+              [class.open]="menuOfertaUnidade.checked"
+              [class.disabled]="ocupado() || incerto() || bloqueado"
+              (mousedown)="!(ocupado() || incerto() || bloqueado) && $event.preventDefault()"
+              (click)="
+                !(ocupado() || incerto() || bloqueado) && unidade.focus();
+                !(ocupado() || incerto() || bloqueado) &&
+                  (menuOfertaUnidade.checked = !menuOfertaUnidade.checked)
+              "
+            >
+              <svg
+                class="bistro-select-ico"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 1 1 13 0C18.5 15.4 12 21 12 21z" />
+                <circle cx="12" cy="10.5" r="2.3" />
+              </svg>
+              <span class="bistro-select-val" aria-hidden="true">
+                {{ nomeUnidadeSelecionada() || 'Selecione a unidade' }}
+              </span>
+              <select
+                #unidade
+                id="oferta-unidade"
+                class="bistro-select-native"
+                data-sem-rascunho
+                [value]="unidadeId()"
+                [disabled]="ocupado() || incerto() || bloqueado"
+                (keydown.enter)="
+                  $event.preventDefault();
+                  !(ocupado() || incerto() || bloqueado) &&
+                    (menuOfertaUnidade.checked = !menuOfertaUnidade.checked)
+                "
+                (keydown.space)="
+                  $event.preventDefault();
+                  !(ocupado() || incerto() || bloqueado) &&
+                    (menuOfertaUnidade.checked = !menuOfertaUnidade.checked)
+                "
+                (keydown.escape)="menuOfertaUnidade.checked = false"
+                (change)="menuOfertaUnidade.checked = false; selecionarUnidade(unidade.value)"
+              >
+                <option value="">Selecione a unidade</option>
+                @for (item of unidades; track item.id) {
+                  <option [value]="item.id" [selected]="item.id === unidadeId()">
+                    {{ item.nome }}
+                  </option>
+                }
+              </select>
+              <svg
+                class="bistro-select-chev"
+                [class.rot]="menuOfertaUnidade.checked"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+            @if (menuOfertaUnidade.checked && !(ocupado() || incerto() || bloqueado)) {
+              <div class="bistro-select-popover" role="presentation">
+                <p class="bistro-select-popover-title">Unidades</p>
+                @for (item of unidades; track item.id) {
+                  <button
+                    type="button"
+                    class="bistro-select-opt"
+                    [class.on]="item.id === unidadeId()"
+                    tabindex="-1"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="
+                      menuOfertaUnidade.checked = false;
+                      unidade.value = item.id;
+                      selecionarUnidade(item.id);
+                      unidade.focus()
+                    "
+                  >
+                    <span class="bistro-select-opt-main">
+                      <span>{{ item.nome }}</span>
+                    </span>
+                    @if (item.id === unidadeId()) {
+                      <span class="bistro-select-opt-check" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24">
+                          <path
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m5 12.5 4.5 4.5L19 7.5"
+                          />
+                        </svg>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (unidadeId()) {
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            (click)="consultar()"
+            [disabled]="ocupado() || bloqueado"
+          >
+            Consultar oferta <span class="sr-only">no servidor</span>
+          </button>
         }
-      </select>
+      </div>
+
       @if (erro()) {
-        <p role="alert" class="erro">{{ erro() }}</p>
+        <p role="alert" class="gc-callout-danger">{{ erro() }}</p>
       }
       @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
+        <p role="status" class="gc-callout-ok">{{ aviso() }}</p>
       }
       @if (incerto()) {
-        <p class="aviso">
-          Consulte a oferta para conferir o resultado antes de editar novamente. A consulta substitui o
-          rascunho.
+        <p class="gc-callout-amber">
+          Consulte a oferta para conferir o resultado antes de editar novamente. A consulta
+          substitui o rascunho.
         </p>
       }
-      @if (unidadeId()) {
-        <button
-          class="secundario"
-          type="button"
-          (click)="consultar()"
-          [disabled]="ocupado() || bloqueado"
-        >
-          Consultar oferta no servidor
-        </button>
-      }
+
       @if (oferta(); as atual) {
-        <form [attr.data-rascunho]="grupoRascunho()" (submit)="salvar($event)">
-          <fieldset [disabled]="ocupado() || incerto() || bloqueado || !podeAlterar" class="campos">
+        <form class="gc-form" [attr.data-rascunho]="grupoRascunho()" (submit)="salvar($event)">
+          <fieldset
+            [disabled]="ocupado() || incerto() || bloqueado || !podeAlterar"
+            class="gc-fieldset-flat"
+          >
             <legend>Oferta desta unidade</legend>
-            <p>
+            <p class="gc-nota">
               Esta alteração afeta somente a unidade selecionada. O horário de atendimento também
               controla a disponibilidade para o carrinho.
             </p>
-            <label for="oferta-preco">Preço base nesta unidade (R$)</label>
-            <input
-              #preco
-              id="oferta-preco"
-              type="number"
-              required
-              min="0"
-              max="999999.99"
-              step="0.01"
-              [value]="atual.preco"
-              (input)="alterar({ preco: preco.value })"
-            />
-            <label class="check"
-              ><input
-                #disponivel
-                type="checkbox"
-                [checked]="atual.disponivel"
-                (change)="alterar({ disponivel: disponivel.checked })"
-              />Disponível nesta unidade</label
-            >
-            <fieldset>
+
+            <div class="gc-grid-2" style="align-items: end">
+              <div class="gc-field">
+                <label for="oferta-preco">Preço base nesta unidade (R$)</label>
+                <input
+                  #preco
+                  id="oferta-preco"
+                  type="number"
+                  required
+                  min="0"
+                  max="999999.99"
+                  step="0.01"
+                  [value]="atual.preco"
+                  (input)="alterar({ preco: preco.value })"
+                />
+              </div>
+
+              <label class="gc-tactile-switch" [class.checked]="atual.disponivel">
+                <input
+                  #disponivel
+                  type="checkbox"
+                  [checked]="atual.disponivel"
+                  (change)="alterar({ disponivel: disponivel.checked })"
+                />
+                <span>Disponível nesta unidade</span>
+              </label>
+            </div>
+
+            <fieldset class="gc-fieldset-flat">
               <legend>Canais desta oferta</legend>
-              @for (canal of canais; track canal.valor) {
-                <label class="check"
-                  ><input
-                    #habilitado
-                    type="checkbox"
-                    [checked]="atual.canais.includes(canal.valor)"
-                    (change)="habilitar(canal.valor, habilitado.checked)"
-                  />{{ canal.nome }}</label
-                >
-              }
+              <div class="gc-chips-wrap">
+                @for (canal of canais; track canal.valor) {
+                  <label
+                    class="gc-check-chip"
+                    [class.on]="atual.canais.includes(canal.valor)"
+                  >
+                    <input
+                      #habilitado
+                      type="checkbox"
+                      [checked]="atual.canais.includes(canal.valor)"
+                      (change)="habilitar(canal.valor, habilitado.checked)"
+                    />
+                    <span>{{ canal.nome }}</span>
+                  </label>
+                }
+              </div>
             </fieldset>
-            <button>Salvar oferta da unidade</button>
+
+            <div class="gc-acoes-rodape">
+              <button hlmBtn type="submit">Salvar oferta da unidade</button>
+            </div>
           </fieldset>
           @if (!podeAlterar) {
-            <p>Seu acesso permite consultar esta oferta, sem alterá-la.</p>
+            <p class="gc-nota">Seu acesso permite consultar esta oferta, sem alterá-la.</p>
           }
         </form>
       }
     </section>
   `,
-  styleUrl: './catalogo.css',
+  styleUrls: ['./catalogo.css', './gestao-catalogo.css'],
 })
 export class OfertaUnidadeComponent implements OnChanges {
   @Input({ required: true }) produtoId = '';
@@ -263,5 +400,9 @@ export class OfertaUnidadeComponent implements OnChanges {
       const estado = this.pendencias.daConta(pessoa.usuarioId);
       if (estado()?.tipo === 'oferta') estado.set(null);
     }
+  }
+
+  nomeUnidadeSelecionada(): string {
+    return this.unidades.find((u) => u.id === this.unidadeId())?.nome ?? '';
   }
 }

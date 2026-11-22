@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 
 interface PrazosAceite {
   versao: number;
@@ -20,6 +21,7 @@ interface PrazosAceite {
 
 @Component({
   selector: 'app-prazos-aceite',
+  imports: [HlmButton],
   templateUrl: './prazos-aceite.component.html',
   styleUrls: ['../operacao.css', './prazos-aceite.component.css'],
 })
@@ -120,5 +122,44 @@ export class PrazosAceiteComponent {
     this.alertaSegundos = String(prazos.alertaSegundos);
     this.expiracaoSegundos = String(prazos.expiracaoSegundos);
     this.herdado = prazos.herdado;
+  }
+
+  trocarEscopoValor(escopo: 'unidade' | 'empresa'): void {
+    if (this.ocupado()) return;
+    this.empresa.set(escopo === 'empresa');
+    void this.carregar();
+  }
+
+  camposBloqueados(): boolean {
+    return this.ocupado() || (!this.empresa() && this.herdado);
+  }
+
+  aplicarPreset(alerta: number, expiracao: number): void {
+    if (this.camposBloqueados()) return;
+    this.alertaSegundos = String(alerta);
+    this.expiracaoSegundos = String(expiracao);
+  }
+
+  formatarDuracao(valor: string | number): string {
+    const s = Number(valor);
+    if (!Number.isFinite(s) || s <= 0) return '—';
+    if (s < 60) return `${Math.floor(s)} s`;
+    const min = Math.floor(s / 60);
+    const resto = Math.floor(s % 60);
+    return resto ? `${min} min ${resto} s` : `${min} min`;
+  }
+
+  percentualAlertaSla(): number {
+    const a = Number(this.alertaSegundos);
+    const e = Number(this.expiracaoSegundos);
+    if (!Number.isFinite(a) || !Number.isFinite(e) || a <= 0 || e <= a) return 40;
+    return Math.min(85, Math.max(15, Math.round((a / e) * 100)));
+  }
+
+  erroInlineSla(): boolean {
+    if (this.camposBloqueados()) return false;
+    const a = Number(this.alertaSegundos);
+    const e = Number(this.expiracaoSegundos);
+    return !Number.isInteger(a) || !Number.isInteger(e) || a <= 0 || a >= e || e > 86400;
   }
 }

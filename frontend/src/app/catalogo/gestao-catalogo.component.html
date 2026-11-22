@@ -1,65 +1,214 @@
-<section aria-labelledby="gestao-catalogo-titulo" [attr.aria-busy]="ocupado()">
-  <h2 id="gestao-catalogo-titulo">Gestão do catálogo</h2>
+<section class="gc-raiz" aria-labelledby="gestao-catalogo-titulo" [attr.aria-busy]="ocupado()">
+  <h2 id="gestao-catalogo-titulo" class="sr-only">Gestão do catálogo</h2>
+
   @if (erro()) {
-    <p role="alert" class="erro">{{ erro() }}</p>
+    <p role="alert" class="gc-callout-danger">{{ erro() }}</p>
   }
+
   @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+    <p role="status" class="gc-callout-ok">{{ aviso() }}</p>
   }
+
   @if (incerto()) {
-    <p class="aviso">
-      Consulte o resultado da alteração antes de editar novamente. A consulta recupera a versão
-      atual do servidor e substitui o rascunho.
-    </p>
-    <button type="button" (click)="reconciliar()" [disabled]="ocupado()">
-      Consultar alteração pendente
-    </button>
+    <div class="gc-callout-amber" role="status">
+      <p>
+        Consulte o resultado da alteração antes de editar novamente. A consulta recupera a versão
+        atual do servidor e substitui o rascunho.
+      </p>
+      <button hlmBtn variant="outline" type="button" (click)="reconciliar()" [disabled]="ocupado()">
+        Consultar alteração pendente
+      </button>
+    </div>
   }
+
   @if (acessos(); as acesso) {
     @if (podeEditar()) {
-      <nav class="acoes" aria-label="Gestão do catálogo">
-        <button
-          type="button"
-          [attr.aria-pressed]="aba() === 'produtos'"
-          [disabled]="travado()"
-          (click)="abrirAba('produtos')"
-        >
-          Produtos e combos
-        </button>
-        <button
-          type="button"
-          [attr.aria-pressed]="aba() === 'categorias'"
-          [disabled]="travado()"
-          (click)="abrirAba('categorias')"
-        >
-          Categorias
-        </button>
-      </nav>
-    } @else if (podeConsultar()) {
-      <p>Seu acesso permite consultar o catálogo operacional das unidades vinculadas.</p>
-      <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
-      <select
-        #unidade
-        id="catalogo-operacional-unidade"
-        [value]="unidadeOperacional()"
-        [disabled]="travado()"
-        (change)="trocarUnidade(unidade.value)"
-      >
-        @for (item of acesso.unidades; track item.id) {
-          <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
-            {{ item.nome }}
-          </option>
-        }
-      </select>
-    } @else {
-      <p>Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.</p>
-    }
-    @if (aba() === 'categorias' && podeEditar()) {
-      <div class="acoes">
-        <button type="button" (click)="novaCategoria()" [disabled]="travado()">
-          Nova categoria
-        </button>
+      <div class="gc-toolbar-row">
+        <nav class="gc-seg-tabs" aria-label="Gestão do catálogo">
+          <button
+            class="gc-seg-tab"
+            type="button"
+            [attr.aria-pressed]="aba() === 'produtos'"
+            [disabled]="travado()"
+            (click)="abrirAba('produtos')"
+          >
+            Produtos e combos
+          </button>
+          <button
+            class="gc-seg-tab"
+            type="button"
+            [attr.aria-pressed]="aba() === 'categorias'"
+            [disabled]="travado()"
+            (click)="abrirAba('categorias')"
+          >
+            Categorias
+          </button>
+        </nav>
+
+        <div class="gc-toolbar-actions">
+          @if (aba() === 'categorias') {
+            <button hlmBtn type="button" (click)="novaCategoria()" [disabled]="travado()">
+              Nova categoria
+            </button>
+          } @else {
+            <button hlmBtn type="button" (click)="novoProduto()" [disabled]="travado()">
+              Novo produto
+            </button>
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="carregarProdutos(pagina())"
+              [disabled]="travado()"
+            >
+              Atualizar <span class="sr-only">lista de produtos</span>
+            </button>
+          }
+        </div>
       </div>
+    } @else if (podeConsultar()) {
+      <div class="gc-card">
+        <p class="gc-nota">
+          Seu acesso permite consultar o catálogo operacional das unidades vinculadas (preço e
+          disponibilidade vigentes).
+        </p>
+        <div class="gc-toolbar-row gc-toolbar-row--end">
+          <div class="gc-field" style="flex: 1 1 18rem; max-width: 24rem">
+            <label for="catalogo-operacional-unidade">Unidade do catálogo operacional</label>
+            <div
+              class="bistro-select-wrap"
+              (focusout)="
+                !$any($event.currentTarget).contains($event.relatedTarget) &&
+                  (menuOpUnidade.checked = false)
+              "
+            >
+              <input #menuOpUnidade type="checkbox" hidden />
+              <div
+                class="bistro-select-pill"
+                [class.open]="menuOpUnidade.checked"
+                [class.disabled]="travado()"
+                (mousedown)="!travado() && $event.preventDefault()"
+                (click)="
+                  !travado() && unidade.focus();
+                  !travado() && (menuOpUnidade.checked = !menuOpUnidade.checked)
+                "
+              >
+                <svg
+                  class="bistro-select-ico"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 1 1 13 0C18.5 15.4 12 21 12 21z" />
+                  <circle cx="12" cy="10.5" r="2.3" />
+                </svg>
+                <span class="bistro-select-val" aria-hidden="true">
+                  {{ nomeUnidadeOperacional() || 'Selecione a unidade' }}
+                </span>
+                <select
+                  #unidade
+                  id="catalogo-operacional-unidade"
+                  class="bistro-select-native"
+                  [value]="unidadeOperacional()"
+                  [disabled]="travado()"
+                  (keydown.enter)="
+                    $event.preventDefault();
+                    !travado() && (menuOpUnidade.checked = !menuOpUnidade.checked)
+                  "
+                  (keydown.space)="
+                    $event.preventDefault();
+                    !travado() && (menuOpUnidade.checked = !menuOpUnidade.checked)
+                  "
+                  (keydown.escape)="menuOpUnidade.checked = false"
+                  (change)="menuOpUnidade.checked = false; trocarUnidade(unidade.value)"
+                >
+                  @for (item of acesso.unidades; track item.id) {
+                    <option [value]="item.id" [selected]="item.id === unidadeOperacional()">
+                      {{ item.nome }}
+                    </option>
+                  }
+                </select>
+                <svg
+                  class="bistro-select-chev"
+                  [class.rot]="menuOpUnidade.checked"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+              @if (menuOpUnidade.checked && !travado()) {
+                <div class="bistro-select-popover" role="presentation">
+                  <p class="bistro-select-popover-title">Unidade operacional</p>
+                  @for (item of acesso.unidades; track item.id) {
+                    <button
+                      type="button"
+                      class="bistro-select-opt"
+                      [class.on]="item.id === unidadeOperacional()"
+                      tabindex="-1"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="
+                        menuOpUnidade.checked = false;
+                        unidade.value = item.id;
+                        trocarUnidade(item.id);
+                        unidade.focus()
+                      "
+                    >
+                      <span class="bistro-select-opt-main">
+                        <span>{{ item.nome }}</span>
+                      </span>
+                      @if (item.id === unidadeOperacional()) {
+                        <span class="bistro-select-opt-check" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24">
+                            <path
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.8"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m5 12.5 4.5 4.5L19 7.5"
+                            />
+                          </svg>
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            (click)="carregarProdutos(pagina())"
+            [disabled]="travado()"
+          >
+            Atualizar <span class="sr-only">lista de produtos</span>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="gc-callout-empty">
+        <p>Seu perfil não tem acesso à gestão ou à consulta operacional do catálogo.</p>
+      </div>
+    }
+
+    @if (aba() === 'categorias' && podeEditar()) {
       @if (categoriaSelecionada(); as categoria) {
         <app-categoria-editor
           [categoria]="categoria"
@@ -69,33 +218,235 @@
           (cancelar)="categoriaSelecionada.set(null)"
         />
       }
-      <div class="grade">
+
+      <div class="gc-cat-grid">
         @for (categoria of categorias(); track categoria.id) {
-          <article class="item">
-            <h3>{{ categoria.nome }}</h3>
-            <p>{{ categoria.ativa ? 'Ativa' : 'Inativa' }}</p>
-            <button type="button" (click)="editarCategoria(categoria)" [disabled]="travado()">
-              Editar categoria {{ categoria.nome }}
+          <article class="gc-cat-card">
+            <div class="gc-cat-top">
+              <h3>{{ categoria.nome }}</h3>
+              <span class="gc-badge" [class.gc-badge-ok]="categoria.ativa">
+                {{ categoria.ativa ? 'Ativa' : 'Inativa' }}
+              </span>
+            </div>
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="editarCategoria(categoria)"
+              [disabled]="travado()"
+            >
+              Editar <span class="sr-only">categoria {{ categoria.nome }}</span>
             </button>
           </article>
         } @empty {
-          <p class="vazio">Nenhuma categoria cadastrada.</p>
+          <div class="gc-callout-empty gc-span-full">
+            <p>Nenhuma categoria cadastrada.</p>
+          </div>
         }
       </div>
     } @else if (podeConsultar()) {
-      <div class="acoes">
-        @if (podeEditar()) {
-          <button type="button" (click)="novoProduto()" [disabled]="travado()">Novo produto</button>
-        }
-        <button
-          class="secundario"
-          type="button"
-          (click)="carregarProdutos(pagina())"
-          [disabled]="travado()"
-        >
-          Atualizar lista de produtos
-        </button>
-      </div>
+      @if (produtos().length > 0) {
+        <div class="gc-filter-bar">
+          <div class="gc-field">
+            <label for="gestao-busca-produto">Buscar na página</label>
+            <input
+              #campoBusca
+              id="gestao-busca-produto"
+              type="search"
+              placeholder="Nome do prato ou combo…"
+              [value]="buscaFiltro()"
+              (input)="buscaFiltro.set(campoBusca.value)"
+            />
+          </div>
+
+          @if (categorias().length > 0) {
+            <div class="gc-field">
+              <label for="gestao-filtro-categoria">Categoria</label>
+              <div
+                class="bistro-select-wrap"
+                (focusout)="
+                  !$any($event.currentTarget).contains($event.relatedTarget) &&
+                    (menuFiltroCat.checked = false)
+                "
+              >
+                <input #menuFiltroCat type="checkbox" hidden />
+                <div
+                  class="bistro-select-pill"
+                  [class.open]="menuFiltroCat.checked"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="filtroCat.focus(); menuFiltroCat.checked = !menuFiltroCat.checked"
+                >
+                  <svg
+                    class="bistro-select-ico"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+                    />
+                    <circle cx="7" cy="7" r="1.5" />
+                  </svg>
+                  <span class="bistro-select-val" aria-hidden="true">
+                    {{
+                      categoriaFiltro()
+                        ? nomeCategoria(categoriaFiltro()) || 'Categoria'
+                        : 'Todas categorias'
+                    }}
+                  </span>
+                  <select
+                    #filtroCat
+                    id="gestao-filtro-categoria"
+                    class="bistro-select-native"
+                    [value]="categoriaFiltro()"
+                    (keydown.enter)="
+                      $event.preventDefault(); menuFiltroCat.checked = !menuFiltroCat.checked
+                    "
+                    (keydown.space)="
+                      $event.preventDefault(); menuFiltroCat.checked = !menuFiltroCat.checked
+                    "
+                    (keydown.escape)="menuFiltroCat.checked = false"
+                    (change)="menuFiltroCat.checked = false; categoriaFiltro.set(filtroCat.value)"
+                  >
+                    <option value="">Todas categorias</option>
+                    @for (cat of categorias(); track cat.id) {
+                      <option [value]="cat.id" [selected]="cat.id === categoriaFiltro()">
+                        {{ cat.nome }}
+                      </option>
+                    }
+                  </select>
+                  <svg
+                    class="bistro-select-chev"
+                    [class.rot]="menuFiltroCat.checked"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                @if (menuFiltroCat.checked) {
+                  <div class="bistro-select-popover" role="presentation">
+                    <p class="bistro-select-popover-title">Categoria</p>
+                    <button
+                      type="button"
+                      class="bistro-select-opt"
+                      [class.on]="!categoriaFiltro()"
+                      tabindex="-1"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="
+                        menuFiltroCat.checked = false;
+                        filtroCat.value = '';
+                        categoriaFiltro.set('');
+                        filtroCat.focus()
+                      "
+                    >
+                      <span class="bistro-select-opt-main">
+                        <span>Todas categorias</span>
+                      </span>
+                      @if (!categoriaFiltro()) {
+                        <span class="bistro-select-opt-check" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24">
+                            <path
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.8"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="m5 12.5 4.5 4.5L19 7.5"
+                            />
+                          </svg>
+                        </span>
+                      }
+                    </button>
+                    @for (cat of categorias(); track cat.id) {
+                      <button
+                        type="button"
+                        class="bistro-select-opt"
+                        [class.on]="cat.id === categoriaFiltro()"
+                        tabindex="-1"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="
+                          menuFiltroCat.checked = false;
+                          filtroCat.value = cat.id;
+                          categoriaFiltro.set(cat.id);
+                          filtroCat.focus()
+                        "
+                      >
+                        <span class="bistro-select-opt-main">
+                          <span>{{ cat.nome }}</span>
+                        </span>
+                        @if (cat.id === categoriaFiltro()) {
+                          <span class="bistro-select-opt-check" aria-hidden="true">
+                            <svg width="15" height="15" viewBox="0 0 24 24">
+                              <path
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m5 12.5 4.5 4.5L19 7.5"
+                              />
+                            </svg>
+                          </span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="gc-status-pills" role="group" aria-label="Status rápido">
+            <button
+              type="button"
+              class="gc-pill-btn"
+              [attr.aria-pressed]="statusFiltro() === 'TODOS'"
+              (click)="statusFiltro.set('TODOS')"
+            >
+              Todos ({{ contagemStatus('TODOS') }})
+            </button>
+            <button
+              type="button"
+              class="gc-pill-btn"
+              [attr.aria-pressed]="statusFiltro() === 'ATIVOS'"
+              (click)="statusFiltro.set('ATIVOS')"
+            >
+              Ativos ({{ contagemStatus('ATIVOS') }})
+            </button>
+            <button
+              type="button"
+              class="gc-pill-btn"
+              [attr.aria-pressed]="statusFiltro() === 'INATIVOS'"
+              (click)="statusFiltro.set('INATIVOS')"
+            >
+              Inativos ({{ contagemStatus('INATIVOS') }})
+            </button>
+            <button
+              type="button"
+              class="gc-pill-btn"
+              [attr.aria-pressed]="statusFiltro() === 'SUGESTAO'"
+              (click)="statusFiltro.set('SUGESTAO')"
+            >
+              Sugestões ({{ contagemStatus('SUGESTAO') }})
+            </button>
+          </div>
+        </div>
+      }
+
       @if (produtoSelecionado(); as produto) {
         <app-produto-editor
           [produto]="produto"
@@ -112,69 +463,154 @@
           (cancelar)="produtoSelecionado.set(null)"
         />
       }
+
       @if (ofertaSelecionada(); as produto) {
-        <app-oferta-unidade
-          [produtoId]="produto.id"
-          [nome]="produto.nome"
-          [unidades]="acesso.unidades"
-          [podeAlterar]="podeAlterarOferta()"
-          (salvo)="salvo.emit($event)"
-          [bloqueado]="ocupado() || incerto()"
-          (bloqueio)="bloquearFilho($event)"
-        />
-        <button
-          class="secundario"
-          type="button"
-          (click)="ofertaSelecionada.set(null)"
-          [disabled]="travado()"
-        >
-          Fechar oferta
-        </button>
+        <div class="gc-editor-panel">
+          <div class="gc-sec-head">
+            <span class="gc-sec-num">OFERTA POR UNIDADE</span>
+            <span class="gc-sec-dotted"></span>
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="ofertaSelecionada.set(null)"
+              [disabled]="travado()"
+            >
+              Fechar oferta
+            </button>
+          </div>
+
+          <app-oferta-unidade
+            [produtoId]="produto.id"
+            [nome]="produto.nome"
+            [unidades]="acesso.unidades"
+            [podeAlterar]="podeAlterarOferta()"
+            (salvo)="salvo.emit($event)"
+            [bloqueado]="ocupado() || incerto()"
+            (bloqueio)="bloquearFilho($event)"
+          />
+        </div>
       }
-      <div class="grade">
-        @for (produto of produtos(); track produto.id) {
-          <article class="item">
-            <h3>{{ produto.nome }}</h3>
-            <p>{{ produto.tipo === 'COMBO' ? 'Combo personalizável' : 'Produto simples' }}</p>
-            <div class="acoes">
+
+      <div class="gc-produtos-grid">
+        @for (produto of produtosFiltrados(); track produto.id) {
+          <article class="gc-prod-card">
+            <div class="gc-prod-top">
+              <div class="gc-prod-thumb" [class.foto]="!!produto.midiaId">
+                @if (produto.midiaId) {
+                  <img
+                    [src]="'/api/v1/midias/' + produto.midiaId"
+                    [alt]="produto.nome"
+                    width="48"
+                    height="48"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <span aria-hidden="true">{{ iniciaisProduto(produto.nome) }}</span>
+                }
+              </div>
+
+              <div class="gc-prod-info">
+                <div class="gc-prod-title-row">
+                  <h3>{{ produto.nome }}</h3>
+                  @if (!ehProdutoAdmin(produto)) {
+                    <span class="gc-prod-price">
+                      {{ produtoAtivo(produto) ? precoProduto(produto) : 'Indisponível' }}
+                    </span>
+                  }
+                </div>
+
+                <div class="gc-prod-meta">
+                  <span class="gc-badge" [class.gc-badge-ok]="produtoAtivo(produto)">
+                    {{
+                      ehProdutoAdmin(produto)
+                        ? produtoAtivo(produto)
+                          ? 'Ativo'
+                          : 'Inativo'
+                        : produtoAtivo(produto)
+                          ? 'Disponível'
+                          : 'Indisponível'
+                    }}
+                  </span>
+                  @if (produto.sugerido) {
+                    <span class="gc-badge gc-badge-warn">Sugestão</span>
+                  }
+                  <span class="gc-badge">
+                    {{ produto.tipo === 'COMBO' ? 'Combo' : 'Simples' }}
+                    @if (nomeCategoria(produto.categoriaId); as catNome) {
+                      · {{ catNome }}
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="gc-prod-actions" [class.single]="!podeEditar()">
               @if (podeEditar()) {
-                <button type="button" (click)="editarProduto(produto.id)" [disabled]="travado()">
-                  Editar produto {{ produto.nome }}
+                <button
+                  hlmBtn
+                  variant="outline"
+                  type="button"
+                  (click)="editarProduto(produto.id)"
+                  [disabled]="travado()"
+                >
+                  Editar <span class="sr-only">produto {{ produto.nome }}</span>
                 </button>
               }
               <button
-                class="secundario"
+                hlmBtn
+                variant="secondary"
                 type="button"
                 (click)="abrirOferta(produto)"
                 [disabled]="travado()"
               >
-                Oferta de {{ produto.nome }}
+                Oferta <span class="sr-only">de {{ produto.nome }}</span>
               </button>
             </div>
           </article>
         } @empty {
-          <p class="vazio">Nenhum produto nesta página.</p>
+          <div class="gc-callout-empty gc-span-full">
+            @if (produtos().length > 0) {
+              <p>Nenhum produto encontrado com os filtros aplicados nesta página.</p>
+              <button hlmBtn variant="outline" type="button" (click)="limparFiltros()">
+                Limpar filtros
+              </button>
+            } @else {
+              <p>Nenhum produto nesta página.</p>
+            }
+          </div>
         }
       </div>
-      <nav class="acoes" aria-label="Páginas dos produtos">
+
+      <nav class="gc-paginacao" aria-label="Páginas dos produtos">
         <button
+          hlmBtn
+          variant="outline"
           type="button"
           (click)="carregarProdutos(pagina() - 1)"
           [disabled]="travado() || pagina() === 0"
         >
-          Página anterior de produtos
+          Página anterior <span class="sr-only">de produtos</span>
         </button>
         <span>Página {{ pagina() + 1 }}</span>
         <button
+          hlmBtn
+          variant="outline"
           type="button"
           (click)="carregarProdutos(pagina() + 1)"
           [disabled]="travado() || !temMais()"
         >
-          Próxima página de produtos
+          Próxima página <span class="sr-only">de produtos</span>
         </button>
       </nav>
     }
   } @else if (!ocupado()) {
-    <button type="button" (click)="iniciar()">Consultar meus acessos ao catálogo</button>
+    <div class="gc-callout-empty">
+      <button hlmBtn variant="outline" type="button" (click)="iniciar()">
+        Consultar meus acessos ao catálogo
+      </button>
+    </div>
   }
 </section>
