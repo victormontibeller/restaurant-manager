@@ -177,22 +177,26 @@ button:not(:disabled):hover,
   filter: brightness(0.94);
 }
 button.secundario,
-[data-variant='secondary'] {
+[data-variant='secondary'],
+[variant='secondary'] {
   background: var(--secondary);
   color: var(--secondary-foreground);
   border-color: var(--border);
 }
-[data-variant='outline'] {
+[data-variant='outline'],
+[variant='outline'] {
   background: var(--card);
   color: var(--foreground);
   border-color: var(--input);
   box-shadow: var(--shadow-soft);
 }
-[data-variant='ghost'] {
+[data-variant='ghost'],
+[variant='ghost'] {
   background: transparent;
   color: var(--foreground);
 }
-[data-variant='destructive'] {
+[data-variant='destructive'],
+[variant='destructive'] {
   background: var(--destructive);
   color: white;
 }
