@@ -30,21 +30,21 @@
   font-size: 0.84rem;
 }
 .cadastro-mesa-linha {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15.5rem;
   align-items: center;
   gap: 0.65rem;
 }
 .cadastro-mesa-linha input {
-  flex: 1 1 14rem;
   min-width: 0;
 }
 .cadastro-mesa-linha button {
-  flex: 0 1 auto;
+  width: 100%;
 }
 .cartao-mesa {
   display: flex;
   flex-direction: column;
+  height: 100%;
   gap: 0.55rem;
   border-top: 4px solid var(--sage-solid, #30523b);
   background: var(--card, #ffffff);
@@ -84,12 +84,21 @@
   margin: 0;
 }
 .cartao-mesa .mesa-acoes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0.55rem;
   margin: auto 0 0;
-  padding-top: 0.65rem;
+  padding-top: 0.75rem;
   border-top: 1px dashed var(--border, #e5ded3);
 }
 .cartao-mesa .mesa-acoes button {
-  flex: 1 1 8.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+}
+.cartao-mesa .mesa-acoes > button:first-child:nth-last-child(odd) {
+  grid-column: 1 / -1;
 }
 .codigo-atendimento,
 .comanda-resumo,
@@ -99,6 +108,8 @@
   padding: 1.25rem;
   background: var(--card, #fff);
   margin: 1.25rem 0;
+  width: 100%;
+  max-width: none;
   box-shadow: var(--shadow-soft, 0 2px 10px -4px rgb(41 37 33 / 6%));
 }
 .codigo-atendimento {
@@ -118,7 +129,6 @@
   margin: 0.2rem 0 0;
 }
 .comanda-resumo {
-  max-width: 56rem;
   border-top: 4px solid var(--primary, #a53e2b);
   display: grid;
   gap: 0.85rem;
@@ -148,11 +158,8 @@
   border-top: 1px dashed var(--border, #e5ded3);
 }
 .qr-painel {
-  max-width: 32rem;
   display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 0.75rem;
+  gap: 1rem;
   border-top: 4px solid var(--primary, #a53e2b);
 }
 .qr-painel-topo {
@@ -171,6 +178,21 @@
   font-size: 1.25rem;
   color: var(--foreground, #292521);
 }
+.qr-painel-corpo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1.35rem;
+}
+.qr-painel-info {
+  display: grid;
+  align-content: center;
+  gap: 0.65rem;
+  text-align: left;
+}
+.qr-painel-info p {
+  margin: 0;
+}
 .qr-moldura {
   display: inline-grid;
   place-items: center;
@@ -188,17 +210,21 @@
   font-weight: 700;
 }
 .qr-acoes {
-  width: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   margin: 0.25rem 0 0;
 }
 .solicitacoes-titulo {
   margin-top: 2.25rem;
 }
 .cartao-solicitacao {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   gap: 0.65rem;
   border-top: 4px solid var(--border, #e5ded3);
+}
+.cartao-solicitacao button {
+  margin-top: auto;
 }
 .cartao-solicitacao[data-estado='PENDENTE'] {
   border-top-color: #c57d1f;
@@ -228,9 +254,25 @@
 .cartao-solicitacao[data-estado='PENDENTE'] .mesa-cabecalho h4 {
   color: var(--amber-fg, #684614);
 }
-@media (max-width: 600px) {
-  .cadastro-mesa-linha button {
-    width: 100%;
+@media (max-width: 640px) {
+  .cadastro-mesa-linha {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .qr-painel-corpo {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .qr-painel-info {
+    text-align: center;
+    justify-items: center;
+  }
+  .qr-acoes {
+    justify-content: center;
+  }
+}
+@media (max-width: 359px) {
+  .cartao-mesa .mesa-acoes {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media print {
@@ -246,10 +288,19 @@
     display: none !important;
   }
   .qr-painel {
+    max-width: 28rem;
     margin: 0 auto;
     border: 1px solid #cccccc !important;
     box-shadow: none !important;
     background: #ffffff !important;
     color: #000000 !important;
+  }
+  .qr-painel-corpo {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .qr-painel-info {
+    text-align: center;
+    justify-items: center;
   }
 }

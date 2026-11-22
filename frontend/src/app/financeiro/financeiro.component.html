@@ -207,12 +207,12 @@
           <li class="movimento-item">
             <span class="movimento-info">
               <strong>Recebimento {{ indice + 1 }}</strong>
-              <span>·</span>
               <span class="etiqueta">{{ r.metodo }}</span>
-              <span>·</span>
               <strong>{{ moeda(r.valor) }}</strong>
               @if (r.metodo === 'DINHEIRO') {
-                <span>· entregue {{ moeda(r.entregue) }} · troco {{ moeda(r.troco) }}</span>
+                <span class="movimento-detalhe"
+                  >Entregue {{ moeda(r.entregue) }} · troco {{ moeda(r.troco) }}</span
+                >
               }
             </span>
             @if (horarioCurto(r.confirmadoEm); as hora) {
@@ -294,10 +294,8 @@
           <li class="movimento-item">
             <span class="movimento-info">
               <strong>{{ moeda(d.valor) }}</strong>
-              <span>·</span>
               <span class="etiqueta" [attr.data-estado]="d.estado">{{ d.estado }}</span>
-              <span>·</span>
-              <span>{{ d.motivo }}</span>
+              <span class="movimento-detalhe">{{ d.motivo }}</span>
             </span>
             @if (
               d.estado === 'SOLICITADA' && tem('devolucao.solicitar') && !online(d.recebimentoId)

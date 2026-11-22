@@ -1650,8 +1650,8 @@ dialog.configurador-dialogo::backdrop {
 /* ---------- Sprint 4 · Modo PDV (Novo Pedido Assistido em /gestao/pedidos/novo) ---------- */
 .vitrine-pdv .masthead {
   display: block;
-  padding: 14px 18px;
-  margin: 0 0 18px;
+  padding: 12px 16px;
+  margin: 0 0 14px;
   border-radius: 18px;
   border: 1px solid var(--border, #e5ded3);
   border-left: 4px solid var(--primary, #a53e2b);
@@ -1698,16 +1698,43 @@ dialog.configurador-dialogo::backdrop {
 }
 
 .vitrine-pdv .layout {
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 332px;
   gap: 20px 24px;
 }
 
 .vitrine-pdv .rail {
   top: 0;
+  z-index: 12;
+  width: auto;
+  max-width: none;
+  margin-inline: -4px;
+  padding: 8px 4px 10px;
+  background-color: var(--background, #faf7f2);
+}
+
+.vitrine-pdv .finder {
+  position: static;
+  z-index: 1;
+}
+
+.vitrine-pdv .sec-categoria .sec-note {
+  display: none;
 }
 
 .vitrine-pdv .ticket-col {
   top: 68px;
+}
+
+@media (min-width: 1080px) {
+  .vitrine-pdv .features {
+    grid-auto-columns: calc((100% - 18px) / 2);
+  }
+}
+
+@media (min-width: 1520px) {
+  .vitrine-pdv .features {
+    grid-auto-columns: calc((100% - 36px) / 3);
+  }
 }
 
 @media (min-width: 1080px) and (max-width: 1519px) {
@@ -1724,8 +1751,8 @@ dialog.configurador-dialogo::backdrop {
       'rail'
       'menu'
       'ticket';
-    gap: 22px;
-    padding-bottom: 104px;
+    gap: 20px;
+    padding-bottom: 100px;
   }
 
   .vitrine-pdv .ticket-col:not(.modo-pagina-carrinho) {
@@ -1739,32 +1766,120 @@ dialog.configurador-dialogo::backdrop {
   .vitrine-pdv .context {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    max-width: 100%;
+  }
+
+  .vitrine-pdv .ctx-word {
+    display: inline;
   }
 
   .vitrine-pdv .ctx-wrap {
     width: auto;
-    flex: 1 1 10rem;
+    max-width: 100%;
+    flex: 0 1 auto;
+  }
+
+  .vitrine-pdv .ctx {
+    width: auto;
+    max-width: 100%;
+  }
+
+  .vitrine-pdv .ctx-val {
+    max-width: 100%;
+    overflow: visible;
+    text-overflow: clip;
   }
 }
 
 @media (max-width: 680px) {
+  .vitrine-pdv .layout {
+    gap: 8px;
+  }
+
   .vitrine-pdv .masthead {
-    padding: 12px 14px;
-    margin-bottom: 14px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+  }
+
+  .vitrine-pdv .mast-controls {
+    gap: 6px 10px;
   }
 
   .vitrine-pdv .context {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 6px;
+  }
+
+  .vitrine-pdv .ctx-word {
+    display: none;
   }
 
   .vitrine-pdv .pdv-selo-contexto {
+    grid-column: 1 / -1;
     justify-self: start;
+    padding: 3px 9px;
+    font-size: 10.5px;
+  }
+
+  .vitrine-pdv .status-hours {
+    display: none;
+  }
+
+  .vitrine-pdv .ctx-wrap,
+  .vitrine-pdv .ctx {
+    width: 100%;
   }
 
   .vitrine-pdv .ctx {
     height: auto;
+    min-height: 48px;
+    padding: 6px 28px 6px 10px;
+    font-size: 13.5px;
+  }
+
+  .vitrine-pdv .ctx.ctx-travado {
+    padding-right: 10px;
+  }
+
+  .vitrine-pdv .ctx-val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .vitrine-pdv .rail {
+    margin-inline: -4px;
+    padding: 4px 4px 6px;
+  }
+
+  .vitrine-pdv .finder {
+    padding: 4px 0 0 !important;
+    margin-bottom: 6px;
+  }
+
+  .vitrine-pdv .sec {
+    margin-bottom: 20px;
+  }
+
+  .vitrine-pdv .sec-head {
+    margin-bottom: 8px;
+  }
+
+  .vitrine-pdv .f-photo {
+    aspect-ratio: 16 / 6.2;
+  }
+
+  .vitrine-pdv .f-body {
+    padding: 10px 12px 12px;
+  }
+}
+
+@media (max-width: 349px) {
+  .vitrine-pdv .context {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

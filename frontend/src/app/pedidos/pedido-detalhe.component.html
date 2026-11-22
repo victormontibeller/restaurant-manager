@@ -349,7 +349,7 @@
           <button
             hlmBtn
             type="button"
-            class="btn-aceitar-pedido"
+            class="btn-servir-mesa btn-aceitar-pedido"
             (click)="comandar('aceitar')"
             [disabled]="bloqueado()"
           >
@@ -359,8 +359,9 @@
         @if (tem('pedido.recusar')) {
           <button
             hlmBtn
-            variant="destructive"
+            variant="outline"
             type="button"
+            class="btn-cancelar-outline"
             (click)="comandar('recusar')"
             [disabled]="bloqueado()"
           >

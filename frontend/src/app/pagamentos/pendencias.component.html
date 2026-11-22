@@ -1,6 +1,18 @@
 <section class="painel-interno painel-pendencias">
   <header class="pendencias-barra-topo">
-    <h2>Pendências financeiras e notificações</h2>
+    <div class="pendencias-barra-status">
+      <span class="pendencias-ponto-sync" aria-hidden="true"></span>
+      <div>
+        <h2>Pendências financeiras e notificações</h2>
+        <p class="pendencias-resumo-curto">
+          {{ lista().length }}
+          {{ lista().length === 1 ? 'pendência financeira' : 'pendências financeiras' }} ·
+          {{ notificacoes().length }}
+          {{ notificacoes().length === 1 ? 'registro de e-mail' : 'registros de e-mail' }} nesta
+          página
+        </p>
+      </div>
+    </div>
     <button
       hlmBtn
       variant="outline"

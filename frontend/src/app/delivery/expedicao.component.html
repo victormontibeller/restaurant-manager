@@ -30,7 +30,7 @@
         [attr.aria-pressed]="filtroRapido() === 'PRONTO_DELIVERY'"
         (click)="filtroRapido.set('PRONTO_DELIVERY')"
       >
-        Prontos p/ sair
+        Prontos para sair
         <span class="filtro-contagem">{{ contarFiltro('PRONTO_DELIVERY') }}</span>
       </button>
       <button
@@ -121,7 +121,7 @@
           e.ocorrencia?.estado !== 'PENDENTE' &&
           tem('pedido.entregar'))
       ) {
-        <div class="acoes">
+        <div class="acoes expedicao-acoes-despacho">
           @if (
             e.pedido.estado === 'PRONTO' && e.pedido.canal === 'RETIRADA' && tem('pedido.retirar')
           ) {
@@ -182,7 +182,7 @@
             [id]="'motivo-ocorrencia-' + e.pedido.id"
             [(ngModel)]="motivos[e.pedido.id]"
             maxlength="500"
-            placeholder="Descreva o motivo da ocorrência ou decisão…"
+            placeholder="Descreva o motivo…"
             [disabled]="comandos.ocupado() || pendente()"
           />
           @if (e.ocorrencia?.estado !== 'PENDENTE' && tem('entrega.registrar_ocorrencia')) {
@@ -208,10 +208,11 @@
               />
               Incluir devolução da taxa no cancelamento
             </label>
-            <div class="acoes">
+            <div class="acoes ocorrencia-decisao-acoes">
               <button
                 hlmBtn
                 type="button"
+                class="btn-servir-mesa"
                 (click)="ocorrencia(e, 'NOVA_TENTATIVA')"
                 [disabled]="comandos.ocupado() || pendente()"
               >
@@ -219,8 +220,9 @@
               </button>
               <button
                 hlmBtn
-                variant="destructive"
+                variant="outline"
                 type="button"
+                class="btn-cancelar-outline"
                 (click)="ocorrencia(e, 'CANCELAMENTO')"
                 [disabled]="comandos.ocupado() || pendente()"
               >

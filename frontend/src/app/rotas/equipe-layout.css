@@ -7,7 +7,15 @@
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100dvh;
-  background: var(--background, #faf7f2);
+  background: linear-gradient(
+    to right,
+    var(--card, #ffffff) 0,
+    var(--card, #ffffff) 259px,
+    var(--border, #e5ded3) 259px,
+    var(--border, #e5ded3) 260px,
+    var(--background, #faf7f2) 260px,
+    var(--background, #faf7f2) 100%
+  );
   color: var(--foreground, #292521);
 }
 
@@ -188,6 +196,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  background: var(--background, #faf7f2);
 }
 
 .workspace-header {
@@ -486,6 +495,15 @@ h1 {
 @media (max-width: 1080px) {
   .workplace {
     grid-template-columns: 230px minmax(0, 1fr);
+    background: linear-gradient(
+      to right,
+      var(--card, #ffffff) 0,
+      var(--card, #ffffff) 229px,
+      var(--border, #e5ded3) 229px,
+      var(--border, #e5ded3) 230px,
+      var(--background, #faf7f2) 230px,
+      var(--background, #faf7f2) 100%
+    );
   }
 
   .sidebar {
@@ -515,6 +533,7 @@ h1 {
   .workplace {
     display: flex;
     flex-direction: column;
+    background: var(--background, #faf7f2);
   }
 
   .sidebar {

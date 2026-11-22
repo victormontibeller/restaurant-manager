@@ -90,6 +90,30 @@
 .cartao-pedido {
   border-top: 4px solid var(--border, #e5ded3);
 }
+.cartao-pedido:not(.cartao-pedido--pessoal) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.cartao-pedido:not(.cartao-pedido--pessoal) > .observacao-pedido,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .prazo-pedido,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .texto-secundario,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .bloco-motivo-operacional,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .acoes-pedido,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .solicitacao-avaliacao-bloco,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .historico-pedido,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .gaveta-financeira,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .aviso,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .erro,
+.cartao-pedido:not(.cartao-pedido--pessoal) > .aviso-pedido {
+  margin: 0;
+}
+.cartao-pedido:not(.cartao-pedido--pessoal) .cabecalho-pedido h3 {
+  margin: 0.2rem 0 0;
+}
+.cartao-pedido:not(.cartao-pedido--pessoal) .linha-pedido {
+  padding: 0.55rem 0 0.7rem;
+}
 .cartao-pedido[data-estado='AGUARDANDO_PAGAMENTO'],
 .cartao-pedido[data-estado='AGUARDANDO_ACEITE'] {
   border-top-color: #c57d1f;
@@ -259,15 +283,18 @@
 .acoes-pedido {
   margin-bottom: 0;
 }
+.acoes-pedido:not(:has(> *)) {
+  display: none;
+}
 .acoes-pedido button {
   flex: 1 1 10rem;
 }
 .btn-aceitar-pedido {
-  box-shadow: 0 2px 0 var(--primary-deep, #7f2f20);
+  box-shadow: 0 2px 0 var(--sage-solid-deep, #203828);
 }
 .btn-aceitar-pedido:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 1px 0 var(--primary-deep, #7f2f20);
+  box-shadow: 0 1px 0 var(--sage-solid-deep, #203828);
 }
 .bloco-motivo-operacional {
   display: grid;
@@ -280,7 +307,7 @@
   color: var(--muted-foreground, #6e6259);
 }
 .bloco-motivo-operacional textarea {
-  min-height: 3.75rem;
+  min-height: 3.5rem;
   padding: 0.55rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -295,6 +322,15 @@
   margin: 0;
   color: var(--amber-fg, #684614);
   font-weight: 650;
+}
+.solicitacao-avaliacao-bloco .acoes {
+  margin: 0.55rem 0 0;
+}
+.solicitacao-avaliacao-bloco .acoes button {
+  flex: 1 1 9.5rem;
+}
+.solicitacao-avaliacao-bloco .acoes button[data-variant='outline'] {
+  background: var(--card, #ffffff);
 }
 .solicitacao-estado,
 .aviso-pedido {

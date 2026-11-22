@@ -213,34 +213,39 @@
           Fechar
         </button>
       </div>
-      <div class="qr-moldura">
-        <img
-          [src]="qrUrl()"
-          [alt]="'QR para abrir a mesa ' + mesa.nome"
-          width="240"
-          height="240"
-          decoding="async"
-          style="max-width: 100%; height: auto; image-rendering: pixelated"
-        />
-      </div>
-      <p class="qr-link-linha">
-        <a [href]="linkMesa(mesa)" target="_blank" rel="noopener"
-          >Abrir o link público de {{ mesa.nome }}</a
-        >
-      </p>
-      <p class="texto-secundario">
-        O QR identifica a mesa. O atendimento exige um código temporário fornecido separadamente.
-      </p>
-      <div class="acoes qr-acoes nao-imprimir">
-        <button
-          hlmBtn
-          variant="outline"
-          type="button"
-          (click)="copiarTexto(linkMesa(mesa), 'Link da mesa')"
-        >
-          Copiar link
-        </button>
-        <button hlmBtn type="button" (click)="imprimirQr()">Imprimir QR</button>
+      <div class="qr-painel-corpo">
+        <div class="qr-moldura">
+          <img
+            [src]="qrUrl()"
+            [alt]="'QR para abrir a mesa ' + mesa.nome"
+            width="220"
+            height="220"
+            decoding="async"
+            style="max-width: 100%; height: auto; image-rendering: pixelated"
+          />
+        </div>
+        <div class="qr-painel-info">
+          <p class="qr-link-linha">
+            <a [href]="linkMesa(mesa)" target="_blank" rel="noopener"
+              >Abrir o link público de {{ mesa.nome }}</a
+            >
+          </p>
+          <p class="texto-secundario">
+            O QR identifica a mesa. O atendimento exige um código temporário fornecido
+            separadamente.
+          </p>
+          <div class="acoes qr-acoes nao-imprimir">
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="copiarTexto(linkMesa(mesa), 'Link da mesa')"
+            >
+              Copiar link
+            </button>
+            <button hlmBtn type="button" (click)="imprimirQr()">Imprimir QR</button>
+          </div>
+        </div>
       </div>
     </section>
   }

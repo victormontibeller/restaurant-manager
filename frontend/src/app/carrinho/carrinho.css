@@ -16,11 +16,17 @@
 
 .t-head {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px 10px;
   padding-bottom: 14px;
   border-bottom: 1px dashed var(--border, #e5ded3);
+}
+
+.t-head > div {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .t-head .kicker {
@@ -49,6 +55,7 @@
   font-weight: 400;
   letter-spacing: -0.015em;
   margin: 0;
+  white-space: nowrap;
   color: var(--foreground, #292521);
 }
 
@@ -59,8 +66,11 @@
   color: var(--accent-foreground, #30523b);
   font-size: 12px;
   font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 0 1 auto;
 }
 
 .aviso-comanda {
@@ -341,7 +351,7 @@
 .cta {
   width: 100%;
   min-height: 54px !important;
-  padding: 0 10px 0 20px !important;
+  padding: 0 10px 0 16px !important;
   border-radius: 16px !important;
   border: 0 !important;
   background-color: var(--primary, #a53e2b) !important;
@@ -349,11 +359,15 @@
   display: flex !important;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 15px !important;
+  gap: 10px;
+  font-size: 14.5px !important;
   font-weight: 700 !important;
   box-shadow: 0 3px 0 var(--primary-deep, #7f2f20) !important;
   cursor: pointer;
+}
+
+.btn-revisar-pedido > span:first-child {
+  white-space: nowrap;
 }
 
 .cta:hover:not(:disabled) {
@@ -478,7 +492,7 @@
 dialog.revisao-dlg {
   width: min(760px, calc(100vw - 40px));
   max-width: 760px;
-  max-height: min(88dvh, 840px);
+  max-height: min(92dvh, 900px);
   padding: 0;
   border: 0;
   border-radius: 26px;
@@ -592,16 +606,26 @@ dialog.revisao-dlg::backdrop {
     border-radius: 24px 24px 0 0;
   }
 
+  :host-context(.vitrine-pdv) dialog.revisao-dlg {
+    margin: 0;
+    max-height: calc(100dvh - 16px);
+    border-radius: 22px 22px 0 0;
+  }
+
   .revisao-modal-topo {
-    padding: 14px 16px;
+    padding: 12px 14px;
   }
 
   .revisao-modal-topo h2 {
-    font-size: 20px;
+    font-size: 19px;
   }
 
   .revisao-modal-corpo {
-    padding: 14px 16px 20px;
-    gap: 14px;
+    padding: 12px 14px 18px;
+    gap: 12px;
+  }
+
+  .revisao-modal-corpo .resumo-comanda {
+    padding: 10px 12px !important;
   }
 }
