@@ -4,10 +4,10 @@
 
 A [PR #23](https://github.com/victormontibeller/restaurant-manager/pull/23)
 integra o visual da PR #22 ao projeto e está aberta para revisão. O commit
-`d7df6d9` foi confirmado na [demo local](https://demo.localhost:8095/cardapio)
-às 18h16, com PWA `33e79deac9c3ce612224`. O JAR servido coincide com o
+`4725422` foi confirmado na [demo local](https://demo.localhost:8095/cardapio)
+às 18h25, com PWA `f59f127e311dfea694fc`. O JAR servido coincide com o
 candidato testado e traz 375 classes Java e 37 migrações SQL idênticas às
-da release anterior. A versão `da80d27` segue disponível para retorno.
+da release anterior. A versão `d7df6d9` segue disponível para retorno.
 
 A revisão cobriu 34 telas e estados de Cliente, Gestão, Cozinha e Plataforma
 em 612 combinações de largura, tema e navegador. Capturas com dados e testes

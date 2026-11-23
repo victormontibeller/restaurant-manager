@@ -138,3 +138,19 @@ SHA-256 do candidato ensaiado e a PWA respondeu com `33e79deac9c3ce612224`.
 O Chromium confirmou Minha conta, Unidades e horários, Cozinha, Pedidos, Mesas,
 Expedição, Vendas, Pendências, Catálogo e Acessos na demo. A release `da80d27`
 segue disponível para retorno com o mesmo banco local.
+
+### Contraste no tema escuro
+
+A inspeção das capturas identificou links com pouco contraste no acesso e no
+acompanhamento do pedido. O commit `4725422` aplica a cor de texto do tema
+aos links, navegação ativa, indicadores e controles afetados. Foram verificados
+quatro pares de cores por tema, todos acima de 4,5:1, e a cor renderizada
+do link de retorno e da navegação móvel no acompanhamento. As quatro etapas
+da jornada de compra foram reexecutadas em 24 combinações. As verificações
+de offline e atualização da PWA passaram novamente.
+
+O ajuste foi confirmado na demo às 18h25. A release `4725422` serve a PWA
+`f59f127e311dfea694fc` e o JAR
+`796623888792cb7787f5ed0a3e1e865701241ff275e6c5e5d4addfca539cd746`.
+O pacote publicado coincide com o ensaiado. A versão `d7df6d9` permanece
+disponível para retorno local.
