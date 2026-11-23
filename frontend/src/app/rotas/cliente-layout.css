@@ -66,7 +66,7 @@
   font-weight: 550;
 }
 .desktop-nav .active {
-  color: var(--rm-primary, #285139);
+  color: var(--primary-ink);
   background: var(--muted);
 }
 .header-actions {
@@ -202,7 +202,7 @@
     min-height: 48px;
   }
   .mobile-nav .active {
-    color: var(--rm-primary, #285139);
+    color: var(--primary-ink);
     font-weight: 750;
   }
   .client-main {

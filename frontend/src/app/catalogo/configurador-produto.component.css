@@ -22,7 +22,7 @@
 }
 
 .configurador-preco strong {
-  color: var(--primary);
+  color: var(--primary-ink);
 }
 
 :host(.configurador-cliente) .configurador-composicao {

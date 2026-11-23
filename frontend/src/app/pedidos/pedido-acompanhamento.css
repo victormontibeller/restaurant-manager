@@ -57,7 +57,7 @@
 .pedido-cliente .etiqueta[data-estado='NA_FILA'],
 .pedido-cliente .etiqueta[data-estado='EM_ENTREGA'] {
   background: var(--selecao-bg, #f5e9e2);
-  color: var(--primary, #833322);
+  color: var(--primary-ink, #833322);
 }
 
 .pedido-cliente .etiqueta[data-estado='CONCLUIDO'] {
@@ -133,7 +133,7 @@
 }
 
 .andamento-pedido .andamento-concluido .marcador-andamento {
-  color: var(--primary);
+  color: var(--primary-ink);
   border-color: var(--selecao-borda, #e9cdc2);
   background: var(--selecao-bg, #f5e9e2);
 }
@@ -151,7 +151,7 @@
 
 .pedido-cliente .link-andamento {
   margin-top: 16px;
-  color: var(--primary);
+  color: var(--primary-ink);
   border-radius: var(--radius);
 }
 
