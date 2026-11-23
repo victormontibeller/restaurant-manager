@@ -203,6 +203,7 @@ import { ItemCarrinho } from './modelos';
             hlmBtn
             class="cta btn-revisar-pedido"
             type="button"
+            aria-label="Revisar meu pedido"
             (click)="abrirRevisao($event.currentTarget)"
             [disabled]="carrinho.ocupado() || !carrinho.online()"
           >
