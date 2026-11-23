@@ -227,6 +227,11 @@ import { ItemCarrinho } from './modelos';
           </header>
 
           <div class="revisao-modal-corpo">
+            @if (!carrinho.online()) {
+              <p role="status" class="aviso-comanda">
+                Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.
+              </p>
+            }
             @if (carrinho.erro()) {
               <p role="alert" class="erro">{{ carrinho.erro() }}</p>
             }
@@ -327,6 +332,8 @@ import { ItemCarrinho } from './modelos';
               </section>
             } @else if (carrinho.ocupado()) {
               <p role="status" class="aviso-comanda">Conferindo preços e disponibilidade atuais…</p>
+            } @else if (carrinho.online() && carrinho.itens().length) {
+              <button hlmBtn type="button" (click)="carrinho.calcular()">Revisar meu pedido</button>
             }
 
             <div [class.confirmacao-oculta]="!exibirConfirmacao()">

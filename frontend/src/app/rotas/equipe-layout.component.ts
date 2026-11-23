@@ -112,7 +112,10 @@ export class EquipeLayoutComponent {
       return;
     }
     this.menuAberto.set(true);
-    setTimeout(() => this.elemento.nativeElement.querySelector<HTMLElement>('.sidebar a')?.focus());
+    requestAnimationFrame(() => {
+      if (this.menuAberto())
+        this.elemento.nativeElement.querySelector<HTMLElement>('.sidebar a')?.focus();
+    });
   }
 
   @HostListener('document:keydown.escape') fecharMenu(): void {

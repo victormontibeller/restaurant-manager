@@ -101,58 +101,58 @@
   </symbol>
 </svg>
 
-@if (selecionado(); as produto) {
-  <dialog
-    #filtros
-    id="vitrine-filtros"
-    class="painel-filtros-cardapio"
-    aria-labelledby="vitrine-filtros-titulo"
-    (close)="devolverFocoDosFiltros()"
-  >
-    <form class="formulario-filtros-cardapio" (submit)="aplicarFiltros($event)">
-      <h2 id="vitrine-filtros-titulo">Filtros do cardápio</h2>
-      <div>
-        <label for="filtros-unidade">Unidade do cardápio</label>
-        <select
-          #unidade
-          id="filtros-unidade"
-          autofocus
-          required
-          [value]="filtrosUnidade()"
-          (change)="filtrosUnidade.set(unidade.value)"
-        >
-          @for (item of unidades(); track item.id) {
-            <option [value]="item.id" [selected]="item.id === filtrosUnidade()">
-              {{ item.nome }}
-            </option>
-          }
-        </select>
-      </div>
-      <div>
-        <label for="filtros-canal">Canal do cardápio</label>
-        <select
-          #canal
-          id="filtros-canal"
-          [value]="filtrosCanal()"
-          (change)="escolherCanalDosFiltros(canal.value)"
-        >
-          @for (item of canais; track item.valor) {
-            <option [value]="item.valor" [selected]="item.valor === filtrosCanal()">
-              {{ item.nome }}
-            </option>
-          }
-        </select>
-      </div>
-      @if (!carrinho.online()) {
-        <p class="aviso" role="status">Conecte-se para aplicar os filtros.</p>
-      }
-      <div class="acoes-filtros-cardapio">
-        <button hlmBtn variant="outline" type="button" (click)="filtros.close()">Cancelar</button>
-        <button hlmBtn type="submit" [disabled]="bloqueiaFiltros()">Aplicar filtros</button>
-      </div>
-    </form>
-  </dialog>
+<dialog
+  #filtros
+  id="vitrine-filtros"
+  class="painel-filtros-cardapio"
+  aria-labelledby="vitrine-filtros-titulo"
+  (close)="devolverFocoDosFiltros()"
+>
+  <form class="formulario-filtros-cardapio" (submit)="aplicarFiltros($event)">
+    <h2 id="vitrine-filtros-titulo">Filtros do cardápio</h2>
+    <div>
+      <label for="filtros-unidade">Unidade do cardápio</label>
+      <select
+        #unidade
+        id="filtros-unidade"
+        autofocus
+        required
+        [value]="filtrosUnidade()"
+        (change)="filtrosUnidade.set(unidade.value)"
+      >
+        @for (item of unidades(); track item.id) {
+          <option [value]="item.id" [selected]="item.id === filtrosUnidade()">
+            {{ item.nome }}
+          </option>
+        }
+      </select>
+    </div>
+    <div>
+      <label for="filtros-canal">Canal do cardápio</label>
+      <select
+        #canal
+        id="filtros-canal"
+        [value]="filtrosCanal()"
+        (change)="escolherCanalDosFiltros(canal.value)"
+      >
+        @for (item of canais; track item.valor) {
+          <option [value]="item.valor" [selected]="item.valor === filtrosCanal()">
+            {{ item.nome }}
+          </option>
+        }
+      </select>
+    </div>
+    @if (!carrinho.online()) {
+      <p class="aviso" role="status">Conecte-se para aplicar os filtros.</p>
+    }
+    <div class="acoes-filtros-cardapio">
+      <button hlmBtn variant="outline" type="button" (click)="filtros.close()">Cancelar</button>
+      <button hlmBtn type="submit" [disabled]="bloqueiaFiltros()">Aplicar filtros</button>
+    </div>
+  </form>
+</dialog>
 
+@if (selecionado(); as produto) {
   <dialog
     #configuracao
     class="configurador-dialogo"
@@ -164,7 +164,8 @@
       [produto]="produto"
       [linha]="linhaEditada()"
       [contexto]="carrinho.contexto()"
-      [permitirAdicionar]="(aberto() || carrinho.online()) && carrinho.online() && !ocupado()"
+      [permitirAdicionar]="aberto() && carrinho.online() && !ocupado()"
+      (salvar)="guardar($event)"
       (cancelar)="fecharConfiguracao()"
     />
   </dialog>
@@ -182,7 +183,7 @@
       <div class="masthead bistro-hero">
         @if (!modoPdv()) {
           <div class="mast-text">
-            <p class="kicker">Cardápio de sexta-feira</p>
+            <p class="kicker">{{ marca.nome() }}</p>
             <h1>Bom de escolher.<br /><em>Melhor de saborear.</em></h1>
           </div>
         }
@@ -408,15 +409,12 @@
           }
 
           @if (consultadoEm()) {
-            <div
-              class="status contexto-status"
-              [class.contexto-aberto]="aberto() || carrinho.online()"
-            >
-              <span class="open" [class.closed]="!aberto() && !carrinho.online()">
+            <div class="status contexto-status" [class.contexto-aberto]="aberto()">
+              <span class="open" [class.closed]="!aberto()">
                 <span class="dot" aria-hidden="true"></span>
-                {{ aberto() || carrinho.online() ? 'Aberto agora' : 'Fechado agora' }}
+                {{ aberto() ? 'Aberto agora' : 'Fechado agora' }}
               </span>
-              <span class="status-hours" aria-hidden="true">Hoje, das 11h às 23h</span>
+              <span class="status-hours">Consulta em {{ horarioConsulta() }}</span>
               <span class="sr-only">
                 Unidade {{ aberto() ? 'aberta' : 'fechada' }} para
                 {{
@@ -1187,6 +1185,7 @@
       }
     </section>
   } @else {
+    <h1 class="sr-only">Meu carrinho</h1>
     <aside class="ticket-col carrinho-lateral modo-pagina-carrinho" aria-label="Resumo do carrinho">
       <div class="ticket comanda-moldura">
         <app-carrinho

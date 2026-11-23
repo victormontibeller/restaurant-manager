@@ -568,9 +568,7 @@ h1 {
     padding: 1.25rem 0.9rem;
     padding-right: 0.9rem;
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
-    transition:
-      transform 0.2s ease,
-      visibility 0.2s ease;
+    transition: transform 0.2s ease;
   }
 
   .sidebar .workspace-brand {

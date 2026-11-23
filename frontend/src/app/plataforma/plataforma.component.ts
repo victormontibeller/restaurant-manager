@@ -104,6 +104,12 @@ import { ProvisionamentoComponent } from './provisionamento.component';
         color: var(--info-fg, #36457d);
         border-color: var(--info-border, #c5cee6);
       }
+      .domain-chips .badge {
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
       .badge-neutral {
         background: var(--secondary, #f0ebe3);
         color: var(--secondary-foreground, #44372e);
