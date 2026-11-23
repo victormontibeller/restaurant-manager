@@ -1113,6 +1113,11 @@
   top: 140px;
 }
 
+.abrir-carrinho-desktop {
+  width: 100%;
+  margin-block: 0.75rem;
+}
+
 .ticket-col.modo-pagina-carrinho {
   max-width: 680px;
   margin: 24px auto;

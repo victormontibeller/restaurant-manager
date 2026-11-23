@@ -332,7 +332,7 @@ import { ItemCarrinho } from './modelos';
               </section>
             } @else if (carrinho.ocupado()) {
               <p role="status" class="aviso-comanda">Conferindo preços e disponibilidade atuais…</p>
-            } @else if (carrinho.online() && carrinho.itens().length) {
+            } @else if (modalRevisaoAberto() && carrinho.online() && carrinho.itens().length) {
               <button hlmBtn type="button" (click)="carrinho.calcular()">Revisar meu pedido</button>
             }
 

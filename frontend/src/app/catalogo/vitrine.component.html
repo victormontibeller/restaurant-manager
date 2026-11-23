@@ -1176,6 +1176,11 @@
               />
             </div>
             <div class="edge comanda-picote" aria-hidden="true"></div>
+            @if (!modoPdv() && quantidadeItens() > 0) {
+              <a hlmBtn variant="outline" routerLink="/carrinho" class="abrir-carrinho-desktop">
+                Ver meu carrinho
+              </a>
+            }
             <p class="t-help">
               Pagamento e endereço ficam na próxima etapa. O pedido só vale após a confirmação do
               restaurante.
