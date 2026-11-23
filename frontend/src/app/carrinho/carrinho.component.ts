@@ -99,7 +99,9 @@ import { ItemCarrinho } from './modelos';
                     >{{ item.linha.quantidade }}×</span
                   >
                   <h3 class="t-name">{{ item.nome }}</h3>
-                  <span class="t-price" aria-hidden="true">{{ moeda(subtotalItem(item)) }}</span>
+                  @if (subtotalItem(item); as subtotal) {
+                    <span class="t-price">{{ moeda(subtotal) }}</span>
+                  }
                 </div>
                 @for (detalhe of detalhesItem(item); track $index) {
                   <p class="t-mods" aria-hidden="true">{{ detalhe }}</p>
@@ -178,15 +180,17 @@ import { ItemCarrinho } from './modelos';
         <div class="t-sum">
           <div class="muted">
             <span>Itens</span>
-            <span>{{ moeda(totalEstimado()) }}</span>
+            <span>{{ totalEstimado() }}</span>
           </div>
-          <div class="muted">
-            <span>Entrega</span>
-            <span>calculada pelo seu endereço</span>
-          </div>
+          @if (carrinho.contexto()?.canal === 'DELIVERY') {
+            <div class="muted">
+              <span>Entrega</span>
+              <span>calculada pelo seu endereço</span>
+            </div>
+          }
           <div class="total">
             <span>Total parcial</span>
-            <span>{{ moeda(totalEstimado()) }}</span>
+            <span>{{ totalEstimado() }}</span>
           </div>
         </div>
         @if (carrinho.confirmado()) {
@@ -203,7 +207,7 @@ import { ItemCarrinho } from './modelos';
             [disabled]="carrinho.ocupado() || !carrinho.online()"
           >
             <span>Revisar meu pedido</span>
-            <span class="amount" aria-hidden="true">{{ moeda(totalEstimado()) }}</span>
+            <span class="amount" aria-hidden="true">{{ totalEstimado() }}</span>
           </button>
         </div>
       }
@@ -476,12 +480,12 @@ export class CarrinhoComponent {
     }
   }
 
-  subtotalItem(item: ItemCarrinho): string {
+  subtotalItem(item: ItemCarrinho): string | null {
     const calculada = this.carrinho.resumo()?.linhas.find((linha) => linha.id === item.linha.id);
     if (calculada) return calculada.subtotal;
 
     const prod = this.catalogoConhecido.get(item.linha.produtoId);
-    if (!prod) return '0.00';
+    if (!prod) return null;
 
     let unitario = Number(prod.preco) || 0;
     for (const sel of item.linha.adicionais) {
@@ -554,11 +558,14 @@ export class CarrinhoComponent {
 
   totalEstimado(): string {
     const resumo = this.carrinho.resumo();
-    if (resumo) return resumo.total;
-    const soma = this.carrinho
-      .itens()
-      .reduce((acc, item) => acc + (Number(this.subtotalItem(item)) || 0), 0);
-    return soma.toFixed(2);
+    if (resumo) return moeda(resumo.total);
+    let centavos = 0;
+    for (const item of this.carrinho.itens()) {
+      const subtotal = this.subtotalItem(item);
+      if (subtotal === null) return 'A consultar';
+      centavos += Math.round(Number(subtotal) * 100);
+    }
+    return moeda((centavos / 100).toFixed(2));
   }
 
   editarComposicao(item: ItemCarrinho, acionador: EventTarget | null): void {

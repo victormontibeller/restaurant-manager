@@ -544,7 +544,7 @@ export class VitrineComponent {
     const mapa = new Map(this.produtos().map((p) => [p.id, p]));
     for (const item of this.carrinho.itens()) {
       const p = mapa.get(item.linha.produtoId);
-      if (!p) continue;
+      if (!p) return 'A consultar';
       let unit = Math.round((Number(p.preco) || 0) * 100);
       for (const esc of item.linha.escolhas) {
         const g = p.grupos?.find((gr) => gr.id === esc.grupoId);
