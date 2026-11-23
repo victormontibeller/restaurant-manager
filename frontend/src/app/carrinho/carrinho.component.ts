@@ -3,8 +3,10 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  Injector,
   Output,
   ViewChild,
+  afterNextRender,
   effect,
   inject,
   input,
@@ -232,7 +234,7 @@ import { ItemCarrinho } from './modelos';
           </header>
 
           <div class="revisao-modal-corpo">
-            @if (!carrinho.online()) {
+            @if (modalRevisaoAberto() && !carrinho.online()) {
               <p role="status" class="aviso-comanda">
                 Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.
               </p>
@@ -324,15 +326,11 @@ import { ItemCarrinho } from './modelos';
                     hlmBtn
                     class="cta btn-confirmar-resumo"
                     type="button"
-                    (click)="carrinho.calcular(true)"
+                    (click)="confirmarResumo()"
                     [disabled]="carrinho.ocupado() || !carrinho.online()"
                   >
                     Confirmar composição e valores
                   </button>
-                } @else {
-                  <p role="status" class="resumo-confirmado">
-                    Resumo confirmado. O envio do pedido exige confirmação separada.
-                  </p>
                 }
               </section>
             } @else if (carrinho.ocupado()) {
@@ -341,12 +339,23 @@ import { ItemCarrinho } from './modelos';
               <button hlmBtn type="button" (click)="carrinho.calcular()">Revisar meu pedido</button>
             }
 
-            <div [class.confirmacao-oculta]="!exibirConfirmacao()">
-              <app-confirmar-pedido [apresentacaoCliente]="apresentacaoCliente()" />
-            </div>
           </div>
         </section>
       </dialog>
+
+      <div #finalizacao [class.confirmacao-oculta]="!exibirConfirmacao() || modalRevisaoAberto()">
+        @if (!modalRevisaoAberto() && !carrinho.online()) {
+          <p role="status" class="aviso-comanda">
+            Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.
+          </p>
+        }
+        @if (carrinho.confirmado()) {
+          <p role="status" class="resumo-confirmado">
+            Resumo confirmado. O envio do pedido exige confirmação separada.
+          </p>
+        }
+        <app-confirmar-pedido [apresentacaoCliente]="apresentacaoCliente()" />
+      </div>
     </section>
   `,
   styleUrls: ['../catalogo/catalogo.css', './carrinho.css'],
@@ -365,6 +374,8 @@ export class CarrinhoComponent {
   @Input() exibirImagens = true;
 
   @Output() editar = new EventEmitter<{ item: ItemCarrinho; acionador: HTMLButtonElement }>();
+  private readonly injector = inject(Injector);
+  @ViewChild('finalizacao') private finalizacao?: ElementRef<HTMLElement>;
   @ViewChild('modalRevisao') private modalRevisao?: ElementRef<HTMLDialogElement>;
   @ViewChild(ConfirmarPedidoComponent) private confirmarComp?: ConfirmarPedidoComponent;
   private readonly catalogoMidia = inject(CatalogoMidiaService, { optional: true });
@@ -441,6 +452,23 @@ export class CarrinhoComponent {
       if (dlg && !dlg.open) dlg.showModal();
     }, 0);
     await this.carrinho.calcular();
+  }
+
+  async confirmarResumo(): Promise<void> {
+    await this.carrinho.calcular(true);
+    if (!this.carrinho.confirmado()) return;
+    this.fecharRevisao();
+    afterNextRender(
+      () => {
+        const titulo =
+          this.finalizacao?.nativeElement.querySelector<HTMLElement>('#enviar-pedido-titulo');
+        if (!titulo) return;
+        titulo.tabIndex = -1;
+        titulo.focus({ preventScroll: true });
+        titulo.scrollIntoView({ block: 'nearest' });
+      },
+      { injector: this.injector },
+    );
   }
 
   fecharRevisao(): void {
