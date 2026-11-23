@@ -236,7 +236,7 @@ import { ItemCarrinho } from './modelos';
           <div class="revisao-modal-corpo">
             @if (modalRevisaoAberto() && !carrinho.online()) {
               <p role="status" class="aviso-comanda">
-                Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.
+                Reconecte para conferir preços e disponibilidade.
               </p>
             }
             @if (carrinho.erro()) {
@@ -344,11 +344,6 @@ import { ItemCarrinho } from './modelos';
       </dialog>
 
       <div #finalizacao [class.confirmacao-oculta]="!exibirConfirmacao() || modalRevisaoAberto()">
-        @if (!modalRevisaoAberto() && !carrinho.online()) {
-          <p role="status" class="aviso-comanda">
-            Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação foi confirmada.
-          </p>
-        }
         @if (carrinho.confirmado()) {
           <p role="status" class="resumo-confirmado">
             Resumo confirmado. O envio do pedido exige confirmação separada.

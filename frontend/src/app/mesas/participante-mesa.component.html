@@ -167,28 +167,31 @@
             anteriores.
           </p>
         }
-        <div class="comanda-metricas">
+        <dl class="comanda-metricas">
           <div class="comanda-metrica">
-            <span class="comanda-metrica-rotulo">Total do atendimento</span>
-            <strong class="comanda-metrica-valor">{{ moeda(conta.totalDevido) }}</strong>
+            <dt class="comanda-metrica-rotulo">Total do atendimento</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.totalDevido) }}</dd>
           </div>
           <div class="comanda-metrica comanda-metrica--destaque">
-            <span class="comanda-metrica-rotulo">Saldo a receber</span>
-            <strong class="comanda-metrica-valor">{{ moeda(conta.saldoAReceber) }}</strong>
+            <dt class="comanda-metrica-rotulo">Saldo a receber</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.saldoAReceber) }}</dd>
           </div>
-          @if (valorPositivo(conta.pagoConfirmado)) {
-            <div class="comanda-metrica">
-              <span class="comanda-metrica-rotulo">Já confirmado</span>
-              <strong class="comanda-metrica-valor">{{ moeda(conta.pagoConfirmado) }}</strong>
-            </div>
-          }
-          @if (valorPositivo(conta.saldoADevolver)) {
-            <div class="comanda-metrica">
-              <span class="comanda-metrica-rotulo">Saldo a devolver</span>
-              <strong class="comanda-metrica-valor">{{ moeda(conta.saldoADevolver) }}</strong>
-            </div>
-          }
-        </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Recebido confirmado</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.pagoConfirmado) }}</dd>
+          </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Devolvido confirmado</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.devolvidoConfirmado) }}</dd>
+          </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Saldo a devolver</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.saldoADevolver) }}</dd>
+          </div>
+        </dl>
+        @if (conta.pendenciaFinanceira) {
+          <p class="aviso" role="status">Há uma operação financeira pendente nesta comanda.</p>
+        }
         <p class="comanda-nota">
           Conta compartilhada da mesa, sem divisão por pessoa. Pagamentos e ajustes são realizados
           diretamente com a equipe.

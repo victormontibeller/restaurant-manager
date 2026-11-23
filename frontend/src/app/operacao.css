@@ -1074,6 +1074,7 @@ button {
   color: var(--muted-foreground, #6e6259);
 }
 .comanda-metrica-valor {
+  margin: 0;
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--foreground, #292521);
