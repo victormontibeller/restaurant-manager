@@ -3,19 +3,23 @@
 ## Editorial Bistrô — 2026-11-23
 
 A [PR #23](https://github.com/victormontibeller/restaurant-manager/pull/23)
-integra o visual da PR #22 aos contratos e fluxos de `68aa587`. O commit
-`5c14d77` está confirmado na [demo local](https://demo.localhost:8095/cardapio)
-desde 17h31, com PWA `df3751a1574508d75e9b`. O JAR servido é idêntico ao
-ensaiado na última reexecução, com 375 classes Java e 37 migrações SQL
-iguais às da demo anterior.
+integra o visual da PR #22 ao projeto e está aberta para revisão. O commit
+`d7df6d9` foi confirmado na [demo local](https://demo.localhost:8095/cardapio)
+às 18h16, com PWA `33e79deac9c3ce612224`. O JAR servido coincide com o
+candidato testado e traz 375 classes Java e 37 migrações SQL idênticas às
+da release anterior. A versão `da80d27` segue disponível para retorno.
 
-Passaram 496 testes Java em PostgreSQL isolado, 72 verificações de layout
-e tema e as jornadas locais dirigidas de conta, pedidos, cozinha,
-expedição, mesa, permissões, ofertas, PWA e provisionamento. As capturas,
-os resultados e seus limites constam nas
-[evidências da integração](evidencias/editorial-bistro-2026-11-23.md).
-O próximo marco é a revisão da PR e dos gates Linux da sua versão atual.
-A homologação completa no Hermes continua pendente.
+A revisão cobriu 34 telas e estados de Cliente, Gestão, Cozinha e Plataforma
+em 612 combinações de largura, tema e navegador. Capturas com dados e testes
+de navegação confirmaram carrinho, checkout, pedido assistido, mesa, preparo
+parcial, despacho, revogação de acesso, relatórios, pendências, ofertas por
+unidade, provisionamento e PWA. Os 496 testes Java são da primeira integração
+com o mesmo backend, em PostgreSQL isolado.
+
+O [relatório da integração](evidencias/editorial-bistro-2026-11-23.md)
+registra capturas, resultados, reexecuções e os limites da verificação. A
+homologação completa no Hermes, em dispositivos físicos e com provedor real
+segue pendente.
 
 ## Faixa inferior da Gestão — 2026-11-18
 
