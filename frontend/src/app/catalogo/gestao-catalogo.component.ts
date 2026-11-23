@@ -36,7 +36,7 @@ const filtrosIniciais = { busca: '', categoriaId: '', tipo: '', ativo: '', dispo
   selector: 'app-gestao-catalogo',
   imports: [CategoriaEditorComponent, ProdutoEditorComponent, OfertaUnidadeComponent],
   templateUrl: './gestao-catalogo.component.html',
-  styleUrls: ['./catalogo.css', './gestao-catalogo.component.css'],
+  styleUrls: ['./catalogo.css', './gestao-catalogo.css', './gestao-catalogo.component.css'],
 })
 export class GestaoCatalogoComponent {
   @Output() bloqueio = new EventEmitter<boolean>();

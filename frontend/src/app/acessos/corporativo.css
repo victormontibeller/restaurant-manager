@@ -1,0 +1,46 @@
+/* Cartões dos fluxos administrativos. */
+.corporativo-identidade,
+.corporativo-registro {
+  min-width: 0;
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.corporativo-identidade {
+  border-top: 3px solid var(--primary);
+  align-content: start;
+}
+
+.corporativo-registro :is(h2, h3),
+.corporativo-identidade :is(h2, h3) {
+  font-family: var(--font-serif);
+  margin: 0;
+}
+
+.corporativo-identidade > :is(h2, .contexto-identidade) {
+  flex-basis: 100%;
+}
+
+.corporativo-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.corporativo-grade > * {
+  margin: 0;
+}
+
+.corporativo-matriz-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px dashed var(--border);
+}

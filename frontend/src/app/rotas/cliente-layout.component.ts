@@ -27,12 +27,18 @@ import { MarcaService } from './marca.service';
   ],
   template: `
     <header class="client-header" [class.vitrine-cliente]="visualCliente(pagina.activatedRouteData)" [class.cabecalho-convite]="pagina.activatedRouteData['formulario'] === 'convite'">
-      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark" aria-hidden="true"><app-icone nome="marca"/></span><span>{{ marca.nome() }}</span></a>
+      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark" aria-hidden="true">
+        @if (marca.logoUrl() && !marca.erroLogo()) {
+          <img [src]="marca.logoUrl()" alt="" width="46" height="46" decoding="async" (error)="marca.marcarErroLogo()" />
+        } @else {
+          <app-icone nome="marca"/>
+        }
+      </span><span>{{ marca.nome() }}</span></a>
       <nav class="desktop-nav" aria-label="Navegação do cliente">
         <a routerLink="/cardapio" routerLinkActive="active" ariaCurrentWhenActive="page">Cardápio</a>
         <a [routerLink]="mesa.participante() ? ['/mesa'] : ['/pedidos']" routerLinkActive="active" ariaCurrentWhenActive="page">{{ mesa.participante() ? 'Minha mesa' : 'Meus pedidos' }}</a>
       </nav>
-      <div class="header-actions"><app-alternar-tema/><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
+      <div class="header-actions"><app-alternar-tema/><a class="account-link" [routerLink]="sessao.identidade() ? '/conta' : '/entrar'"><app-icone nome="conta"/><span>{{ sessao.identidade() ? 'Minha conta' : 'Entrar' }}</span></a><a hlmBtn variant="outline" routerLink="/carrinho" class="cart-link" aria-label="Abrir carrinho"><app-icone nome="sacola"/><span>Carrinho</span><b>{{ quantidade() }}</b></a></div>
     </header>
     <main id="conteudo" class="client-main" [class.vitrine-cliente]="visualCliente(pagina.activatedRouteData)" tabindex="-1"><router-outlet #pagina="outlet"/></main>
     <footer class="client-footer"><span><strong>{{ marca.nome() }}</strong><br>Feito para bons momentos à mesa.</span><a routerLink="/gestao/entrar">Área da equipe <app-icone nome="seta"/></a></footer>

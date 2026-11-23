@@ -36,7 +36,8 @@ interface Convite {
           <button type="button" data-variant="outline" (click)="carregar(pagina())" [disabled]="ocupado()">Recarregar convites</button>
         </div>
       </header>
-      <form class="admin-painel admin-filtros" (submit)="reautenticar($event, senha)">
+      <div class="corporativo-grade">
+      <form class="admin-painel admin-filtros corporativo-identidade" (submit)="reautenticar($event, senha)">
         <div class="contexto-identidade">
           <h3>Identidade para alterações</h3>
           <p class="admin-ajuda">A confirmação permite emitir e revogar convites por cinco minutos.</p>
@@ -56,7 +57,7 @@ interface Convite {
         <p role="status">{{ aviso() }}</p>
       }
       @if (editorAberto() || pendente()) {
-        <section class="gestao-editor" aria-labelledby="novo-convite-titulo">
+        <section class="gestao-editor corporativo-registro" aria-labelledby="novo-convite-titulo">
           <h3 id="novo-convite-titulo" tabindex="-1" data-gestao-foco>Novo convite</h3>
           @if (pendente(); as p) {
             <p role="status">Convite com resultado pendente: {{ p.id }} · {{ p.email }}. Não crie outra intenção. Fechar ou recarregar esta página perde o rascunho; consulte este identificador ao retornar.</p>
@@ -107,7 +108,8 @@ interface Convite {
           </div>
         </section>
       }
-      <form class="admin-filtros consulta" (submit)="buscar($event, id.value)" data-sem-rascunho>
+      </div>
+      <form class="admin-filtros consulta corporativo-registro" (submit)="buscar($event, id.value)" data-sem-rascunho>
         <div>
           <label for="id-convite">Identificador do convite</label>
           <input #id id="id-convite" required [disabled]="ocupado()"
@@ -131,7 +133,7 @@ interface Convite {
             </details></ng-template>
       <div class="gestao-lista">
         @for (c of lista(); track c.id) {
-          <article class="gestao-linha">
+          <article class="gestao-linha corporativo-registro">
             <div>
               <h3>{{ c.email }}</h3>
               <span>{{ nomePerfil(c.perfil) }}</span>
@@ -155,7 +157,7 @@ interface Convite {
       </nav>
     </section>
   `,
-  styleUrls: ['../ui/administracao.css', './convites.component.css'],
+  styleUrls: ['../ui/administracao.css', './corporativo.css', './convites.component.css'],
 })
 export class ConvitesComponent implements OnInit {
   private readonly sessao = inject(SessaoService);

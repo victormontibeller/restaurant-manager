@@ -383,6 +383,7 @@
 }
 
 .workspace-content {
+  grid-row: 2;
   overflow: auto;
   overscroll-behavior: contain;
   min-width: 0;
@@ -479,6 +480,33 @@ h1 {
   display: flex;
   flex-direction: column;
   background: var(--background, #faf7f2);
+}
+
+.kitchen-workplace .workspace-body {
+  flex: 1;
+}
+
+.kitchen-workplace .sidebar:not(.open) {
+  display: none;
+}
+
+.kitchen-workplace .sidebar.open {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(19rem, calc(100% - 3rem));
+  z-index: 51;
+}
+
+.kitchen-workplace :is(.open-menu, .close-menu, .sidebar-overlay) {
+  display: grid;
+}
+
+.kitchen-workplace .sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(20 15 10 / 59%);
+  border: 0;
 }
 
 .kitchen-workplace .workspace-header {
@@ -653,7 +681,7 @@ h1 {
   }
 
   .kitchen-workplace .kitchen-brand {
-    width: 100%;
+    flex: 1;
   }
 
   .kitchen-workplace .brand-mark {

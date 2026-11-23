@@ -1,12 +1,12 @@
 <section
-  class="bloco-financeiro"
+  class="coluna-pendencias"
   [attr.aria-label]="fila()==='pagamentos' ? 'Pagamentos e devoluções' : 'Notificações por e-mail'"
 >
   @if (fila() === 'pagamentos') {
-    <h2>Pagamentos e devoluções online</h2>
+    <header class="coluna-pendencias-topo"><h3>Pagamentos e devoluções online</h3></header>
   } @else {
-    <h2>Histórico de notificações por e-mail</h2>
-    <p class="ajuda">
+    <header class="coluna-pendencias-topo"><h3>Histórico de notificações por e-mail</h3></header>
+    <p class="ajuda nota-capturado">
       Capturado significa salvo localmente. A captura não confirma o envio nem a leitura do e-mail.
     </p>
   }
@@ -57,7 +57,7 @@
     <p role="status">Consultando a fila…</p>
   }
   @for (i of lista(); track i.tipo+i.id) {
-    <details class="linha-operacional">
+    <details class="linha-operacional cartao-pendencia">
       <summary>
         <span
           ><strong>{{ rotulo(i.tipo) }}</strong

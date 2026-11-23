@@ -63,17 +63,27 @@
 .fila-pedidos-compacta .resumo-listagem {
   margin: var(--gestao-espaco-3, 12px) var(--gestao-espaco-1, 4px) var(--gestao-espaco-2, 8px);
 }
+.fila-pedidos-compacta .atalhos-operacao button {
+  border-radius: 999px;
+}
 .fila-pedidos-compacta .grade-pedidos {
-  display: block;
-  border: 1px solid var(--border);
-  border-radius: var(--gestao-raio, 8px);
-  background: var(--card);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+  align-items: start;
 }
 .fila-pedidos-compacta app-pedido-detalhe {
+  min-width: 0;
   display: block;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--primary);
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
 }
-.fila-pedidos-compacta app-pedido-detalhe + app-pedido-detalhe {
-  border-top: 1px solid var(--border);
+.fila-pedidos-compacta .grade-pedidos > .vazio {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  background: var(--card);
 }
 .fila-pedidos-compacta .paginacao {
   margin: var(--gestao-espaco-3, 12px) 0 0;

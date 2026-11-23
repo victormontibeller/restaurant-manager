@@ -1736,7 +1736,9 @@ dd {
   color: var(--muted-foreground, #6e6259);
 }
 .pendencias-barra-topo > button {
-  background: var(--card, #fff);
+  background: var(--card);
+  color: var(--primary-ink);
+  border-color: var(--border);
   flex: 0 0 auto;
 }
 .grade-pendencias {

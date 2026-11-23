@@ -50,12 +50,11 @@ interface Notificacao extends ItemFila {
   selector: 'app-fila-operacional',
   imports: [FormsModule],
   templateUrl: './fila-operacional.component.html',
-  styleUrl: '../relatorios/painel-financeiro.css',
+  styleUrls: ['../operacao.css', '../relatorios/painel-financeiro.css'],
 })
 export class FilaOperacionalComponent {
   readonly fila = input.required<'pagamentos' | 'notificacoes'>();
   readonly unidadeId = input.required<string>();
-  readonly ativa = input.required<boolean>();
   private readonly sessao = inject(SessaoService);
   private readonly navegacao = inject(NavegacaoProtegidaService);
   private readonly chave = 'reconciliacao-' + crypto.randomUUID();
@@ -85,7 +84,6 @@ export class FilaOperacionalComponent {
   constructor() {
     effect(() => {
       const contexto = this.unidadeId() + ':' + this.sessao.identidade()?.usuarioId;
-      const ativa = this.ativa();
       untracked(() => {
         if (contexto !== this.contexto) {
           this.contexto = contexto;
@@ -100,7 +98,7 @@ export class FilaOperacionalComponent {
           this.erro.set('');
           this.ocupado.set(false);
         }
-        if (ativa && !this.reconciliando()) void this.carregar(this.pagina());
+        if (!this.reconciliando()) void this.carregar(this.pagina());
       });
     });
     inject(DestroyRef).onDestroy(() => {

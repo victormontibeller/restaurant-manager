@@ -40,22 +40,34 @@
   color: var(--primary-foreground);
   width: 46px;
   height: 46px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 3px var(--primary),
+    inset 0 0 0 4px var(--primary-soft-border);
+}
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .desktop-nav {
   display: flex;
-  gap: 1.6rem;
-  margin: auto;
+  gap: 0.25rem;
+  margin-right: auto;
   font-size: 0.88rem;
 }
 .desktop-nav a {
-  padding: 1rem 0;
+  align-content: center;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
   color: var(--rm-muted, #6b746c);
   text-decoration: none;
   font-weight: 550;
 }
 .desktop-nav .active {
   color: var(--rm-primary, #285139);
-  box-shadow: 0 2px 0 var(--rm-primary, #285139);
+  background: var(--muted);
 }
 .header-actions {
   display: flex;
@@ -80,7 +92,8 @@
   place-items: center;
   min-width: 22px;
   height: 22px;
-  background: #ffffff25;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
   border-radius: 50%;
   padding: 0 0.25rem;
 }
@@ -134,8 +147,8 @@
 .vitrine-cliente .restaurant-brand small {
   display: none;
 }
-.vitrine-cliente :is(.brand-mark, .cart-link) {
-  border-radius: 8px;
+.cart-link {
+  border-radius: 999px;
 }
 .client-main.vitrine-cliente {
   padding-block-start: 16px;

@@ -85,155 +85,160 @@
         [unidadeDaFila]="unidadeId()"
         [acoes]="acoes()"
         (atualizar)="carregar(pagina())"
-      />
-      @if (e.endereco; as endereco) {
-        <address class="etiqueta-despacho">
-          <div class="etiqueta-despacho-topo">
-            <div class="etiqueta-despacho-destinatario">
-              <span class="etiqueta-despacho-selo">Etiqueta de entrega</span>
-              @if (endereco.destinatario) {
-                <strong class="etiqueta-despacho-nome">{{ endereco.destinatario }}</strong>
-              }
-              @if (endereco.contato; as contato) {
-                <span class="etiqueta-despacho-contato">{{ contato }}</span>
-              }
-            </div>
-            @if (endereco.contato; as contato) {
-              <button hlmBtn variant="outline" type="button" (click)="copiarContato(contato)">
-                Copiar contato
-              </button>
-            }
-          </div>
-          <p class="etiqueta-despacho-endereco">
-            {{ endereco.logradouro }}, {{ endereco.numero }}
-            @if (endereco.complemento) {
-              · {{ endereco.complemento }}
-            }
-            <br />{{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP
-            {{ endereco.cep }}
-          </p>
-        </address>
-      }
-      @if (
-        (e.pedido.estado === 'PRONTO' && e.pedido.canal === 'RETIRADA' && tem('pedido.retirar')) ||
+      >
+        @if (
+          (e.pedido.estado === 'PRONTO' && e.pedido.canal === 'RETIRADA' && tem('pedido.retirar')) ||
         (e.pedido.estado === 'PRONTO' &&
           e.pedido.canal === 'DELIVERY' &&
           tem('pedido.despachar')) ||
         (e.pedido.estado === 'EM_ENTREGA' &&
           e.ocorrencia?.estado !== 'PENDENTE' &&
           tem('pedido.entregar'))
-      ) {
-        <div class="acoes expedicao-acoes-despacho">
-          @if (
-            e.pedido.estado === 'PRONTO' && e.pedido.canal === 'RETIRADA' && tem('pedido.retirar')
-          ) {
-            <button
-              hlmBtn
-              type="button"
-              class="btn-servir-mesa"
-              (click)="agir(e, 'retirar')"
-              [disabled]="comandos.ocupado() || pendente()"
-            >
-              Confirmar retirada entregue
-            </button>
-          }
-          @if (
-            e.pedido.estado === 'PRONTO' &&
-            e.pedido.canal === 'DELIVERY' &&
-            tem('pedido.despachar')
-          ) {
-            <button
-              hlmBtn
-              type="button"
-              (click)="agir(e, 'despachar')"
-              [disabled]="comandos.ocupado() || pendente()"
-            >
-              Registrar saída para entrega
-            </button>
-          }
-          @if (
-            e.pedido.estado === 'EM_ENTREGA' &&
-            e.ocorrencia?.estado !== 'PENDENTE' &&
-            tem('pedido.entregar')
-          ) {
-            <button
-              hlmBtn
-              type="button"
-              class="btn-servir-mesa"
-              (click)="agir(e, 'entregar')"
-              [disabled]="comandos.ocupado() || pendente()"
-            >
-              Confirmar entrega realizada
-            </button>
-          }
-        </div>
-      }
-      @if (e.ocorrencia) {
-        <p class="ocorrencia-alerta">
-          Ocorrência: {{ e.ocorrencia.motivo }} ·
-          {{ e.ocorrencia.estado + (e.ocorrencia.decisao ? ' · ' + e.ocorrencia.decisao : '') }}
-        </p>
-      }
-      @if (
-        e.pedido.estado === 'EM_ENTREGA' &&
-        (tem('entrega.registrar_ocorrencia') || tem('entrega.decidir_ocorrencia'))
-      ) {
-        <div class="ocorrencia-bloco">
-          <label [for]="'motivo-ocorrencia-' + e.pedido.id">Motivo da ocorrência ou decisão</label>
-          <input
-            [id]="'motivo-ocorrencia-' + e.pedido.id"
-            [(ngModel)]="motivos[e.pedido.id]"
-            maxlength="500"
-            placeholder="Descreva o motivo…"
-            [disabled]="comandos.ocupado() || pendente()"
-          />
-          @if (e.ocorrencia?.estado !== 'PENDENTE' && tem('entrega.registrar_ocorrencia')) {
-            <div class="acoes">
-              <button
-                hlmBtn
-                variant="outline"
-                type="button"
-                class="btn-cancelar-outline"
-                (click)="ocorrencia(e)"
-                [disabled]="comandos.ocupado() || pendente()"
-              >
-                Registrar problema na entrega
-              </button>
-            </div>
-          }
-          @if (e.ocorrencia?.estado === 'PENDENTE' && tem('entrega.decidir_ocorrencia')) {
-            <label class="selecao-check-linha">
-              <input
-                type="checkbox"
-                [ngModel]="devolverTaxa[e.pedido.id] ?? true"
-                (ngModelChange)="devolverTaxa[e.pedido.id] = $event"
-              />
-              Incluir devolução da taxa no cancelamento
-            </label>
-            <div class="acoes ocorrencia-decisao-acoes">
+        ) {
+          <div acaoExpedicao class="acao-expedicao">
+            @if (
+              e.pedido.estado === 'PRONTO' && e.pedido.canal === 'RETIRADA' && tem('pedido.retirar')
+            ) {
               <button
                 hlmBtn
                 type="button"
                 class="btn-servir-mesa"
-                (click)="ocorrencia(e, 'NOVA_TENTATIVA')"
-                [disabled]="comandos.ocupado() || pendente()"
+                (click)="agir(e, 'retirar')"
+                [disabled]="!online() || comandos.ocupado() || pendente()"
               >
-                Autorizar nova tentativa de entrega
+                Confirmar retirada entregue
               </button>
+            }
+            @if (
+              e.pedido.estado === 'PRONTO' &&
+            e.pedido.canal === 'DELIVERY' &&
+            tem('pedido.despachar')
+            ) {
               <button
                 hlmBtn
-                variant="outline"
                 type="button"
-                class="btn-cancelar-outline"
-                (click)="ocorrencia(e, 'CANCELAMENTO')"
-                [disabled]="comandos.ocupado() || pendente()"
+                (click)="agir(e, 'despachar')"
+                [disabled]="!online() || comandos.ocupado() || pendente()"
               >
-                Cancelar entrega conforme decisão financeira
+                Registrar saída para entrega
               </button>
+            }
+            @if (
+              e.pedido.estado === 'EM_ENTREGA' &&
+            e.ocorrencia?.estado !== 'PENDENTE' &&
+            tem('pedido.entregar')
+            ) {
+              <button
+                hlmBtn
+                type="button"
+                class="btn-servir-mesa"
+                (click)="agir(e, 'entregar')"
+                [disabled]="!online() || comandos.ocupado() || pendente()"
+              >
+                Confirmar entrega realizada
+              </button>
+            }
+          </div>
+        }
+        @if (e.ocorrencia) {
+          <p estadoExpedicao class="estado-expedicao ocorrencia-alerta">
+            Ocorrência: {{ e.ocorrencia.motivo }} ·
+            {{ e.ocorrencia.estado + (e.ocorrencia.decisao ? ' · ' + e.ocorrencia.decisao : '') }}
+          </p>
+        }
+        <div detalhesExpedicao class="detalhes-expedicao">
+          @if (e.endereco; as endereco) {
+            <address class="etiqueta-despacho">
+              <div class="etiqueta-despacho-topo">
+                <div class="etiqueta-despacho-destinatario">
+                  <span class="etiqueta-despacho-selo">Etiqueta de entrega</span>
+                  @if (endereco.destinatario) {
+                    <strong class="etiqueta-despacho-nome">{{ endereco.destinatario }}</strong>
+                  }
+                  @if (endereco.contato; as contato) {
+                    <span class="etiqueta-despacho-contato">{{ contato }}</span>
+                  }
+                </div>
+                @if (endereco.contato; as contato) {
+                  <button hlmBtn variant="outline" type="button" (click)="copiarContato(contato)">
+                    Copiar contato
+                  </button>
+                }
+              </div>
+              <p class="etiqueta-despacho-endereco">
+                {{ endereco.logradouro }}, {{ endereco.numero }}
+                @if (endereco.complemento) {
+                  · {{ endereco.complemento }}
+                }
+                <br />{{ endereco.bairro }} · {{ endereco.cidade }}/{{ endereco.uf }} · CEP
+                {{ endereco.cep }}
+              </p>
+            </address>
+          }
+          @if (
+            e.pedido.estado === 'EM_ENTREGA' &&
+        (tem('entrega.registrar_ocorrencia') || tem('entrega.decidir_ocorrencia'))
+          ) {
+            <div class="ocorrencia-bloco">
+              <label [for]="'motivo-ocorrencia-' + e.pedido.id"
+                >Motivo da ocorrência ou decisão</label
+              >
+              <input
+                [id]="'motivo-ocorrencia-' + e.pedido.id"
+                [(ngModel)]="motivos[e.pedido.id]"
+                maxlength="500"
+                placeholder="Descreva o motivo…"
+                [disabled]="!online() || comandos.ocupado() || pendente()"
+              />
+              @if (e.ocorrencia?.estado !== 'PENDENTE' && tem('entrega.registrar_ocorrencia')) {
+                <div class="acoes">
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    type="button"
+                    class="btn-cancelar-outline"
+                    (click)="ocorrencia(e)"
+                    [disabled]="!online() || comandos.ocupado() || pendente()"
+                  >
+                    Registrar problema na entrega
+                  </button>
+                </div>
+              }
+              @if (e.ocorrencia?.estado === 'PENDENTE' && tem('entrega.decidir_ocorrencia')) {
+                <label class="selecao-check-linha">
+                  <input
+                    type="checkbox"
+                    [ngModel]="devolverTaxa[e.pedido.id] ?? true"
+                    (ngModelChange)="devolverTaxa[e.pedido.id] = $event"
+                  />
+                  Incluir devolução da taxa no cancelamento
+                </label>
+                <div class="acoes ocorrencia-decisao-acoes">
+                  <button
+                    hlmBtn
+                    type="button"
+                    class="btn-servir-mesa"
+                    (click)="ocorrencia(e, 'NOVA_TENTATIVA')"
+                    [disabled]="!online() || comandos.ocupado() || pendente()"
+                  >
+                    Autorizar nova tentativa de entrega
+                  </button>
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    type="button"
+                    class="btn-cancelar-outline"
+                    (click)="ocorrencia(e, 'CANCELAMENTO')"
+                    [disabled]="!online() || comandos.ocupado() || pendente()"
+                  >
+                    Cancelar entrega conforme decisão financeira
+                  </button>
+                </div>
+              }
             </div>
           }
         </div>
-      }
+      </app-pedido-detalhe>
     </article>
   } @empty {
     @if (lista().length > 0) {

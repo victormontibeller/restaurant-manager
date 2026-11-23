@@ -53,6 +53,7 @@ function fixture() {
     },
     DestroyRef: destroy,
     signal,
+    computed: (callback) => callback,
     effect: (callback) => effects.push(callback),
     afterNextRender: () => {},
     inject: (token, options) =>

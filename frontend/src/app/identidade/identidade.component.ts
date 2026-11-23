@@ -7,6 +7,8 @@ import { CatalogoPendenteService } from '../catalogo/catalogo-pendente.service';
 import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
 import { ContextoOperacaoService } from '../rotas/contexto-operacao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { IconeComponent } from '../rotas/icone.component';
+import { MarcaService } from '../rotas/marca.service';
 import { retornoSeguro } from '../rotas/guardas';
 import { HlmButton } from '../ui/button';
 import { RecuperacaoComponent } from './recuperacao.component';
@@ -26,6 +28,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     DadosContaComponent,
     RouterLink,
     HlmButton,
+    IconeComponent,
     RecuperacaoComponent,
     CadastroComponent,
     AceitarConviteComponent,
@@ -36,6 +39,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     <section
       class="auth-card"
       [class.auth-cliente]="apresentacaoCliente()"
+      [class.auth-login]="pagina() === 'login' && !sessao.identidade()"
       [class.conta-cliente]="pagina() === 'conta'"
       [class.conta-equipe]="pagina() === 'conta' && equipe"
       [attr.aria-labelledby]="tituloFormulario()"
@@ -102,14 +106,19 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
       } @else if (pagina() === 'recuperacao') {
         <app-recuperacao [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else {
-        @if (!apresentacaoCliente()) {
-          <span class="auth-symbol" aria-hidden="true">↗</span>
-          <p class="eyebrow">{{ equipe ? 'ÁREA DA EQUIPE' : 'BEM-VINDO DE VOLTA' }}</p>
-        }
+        <div class="auth-marca-topo">
+          <span class="auth-symbol" aria-hidden="true">
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <img [src]="marca.logoUrl()" alt="" width="48" height="48" decoding="async" (error)="marca.marcarErroLogo()" />
+            } @else {
+              <app-icone nome="marca" />
+            }
+          </span>
+          <span>{{ marca.nome() }}</span>
+        </div>
+        <p class="eyebrow">{{ equipe ? 'Área da equipe' : 'Bem-vindo de volta' }}</p>
         <h1 id="conta-titulo">Entre na sua conta.</h1>
-        @if (!apresentacaoCliente()) {
-          <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
-        }
+        <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
         <form (submit)="entrar($event, email.value, senha)">
           <label for="email-conta">E-mail</label>
           <input #email id="email-conta" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="seu@email.com" [disabled]="ocupado()" [attr.aria-describedby]="erro() ? 'erro-identidade' : null">
@@ -184,6 +193,31 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
       border-radius: 8px;
       background: #fff1ed;
     }
+    .auth-login {
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
+    }
+    .auth-marca-topo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.35rem;
+      font: 500 1.08rem var(--font-serif);
+    }
+    .auth-marca-topo .auth-symbol {
+      flex: none;
+      margin: 0;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--primary-foreground);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 3px var(--primary), inset 0 0 0 4px var(--primary-soft-border);
+    }
+    .auth-marca-topo img { width: 100%; height: 100%; object-fit: cover; }
+    .auth-login .eyebrow { margin: 0 0 .45rem; text-transform: uppercase; }
+    .auth-login h1 { margin: 0 0 .75rem; }
+    .auth-login .signup { text-align: center; }
+    .auth-cliente .erro { background: var(--danger-bg, var(--muted)); }
     .conta-cliente {
       width: min(100%, 1088px);
       padding: clamp(12px, 2.3vw, 30px);
@@ -198,6 +232,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
   `,
 })
 export class IdentidadeComponent {
+  readonly marca = inject(MarcaService);
   readonly sessao = inject(SessaoService);
   readonly coordenacao = inject(SessaoNavegacaoService);
   private readonly rotasConfiguradas = inject(ROUTES, { optional: true });

@@ -20,7 +20,7 @@ import { ConfigDelivery, RegiaoDelivery } from './modelos';
   selector: 'app-config-delivery',
   imports: [FormsModule],
   templateUrl: './config-delivery.component.html',
-  styleUrl: '../ui/administracao.css',
+  styleUrls: ['../ui/administracao.css', '../operacao.css'],
   styles: `
     .lista-regioes { margin-top: 16px; }
     .gestao-editor { display: grid; gap: 12px; }

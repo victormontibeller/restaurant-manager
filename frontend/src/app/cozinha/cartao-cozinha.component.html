@@ -11,8 +11,8 @@
   [attr.data-pedido-id]="pedido().id"
   [attr.aria-label]="'Pedido #' + referencia()"
 >
-  <header>
-    <div>
+  <header class="cartao-topo">
+    <div class="cartao-identificacao">
       <span
         class="canal"
         >{{ cartao().mesaNome || (pedido().canal === 'MESA' ? 'Mesa' : pedido().canal === 'RETIRADA' ? 'Retirada' : 'Delivery') }}</span
@@ -37,9 +37,11 @@
       >Pedido há {{ decorrido(pedido().criadoEm, agora()) }}</span
     >
     @if (pedido().estado === 'PRONTO') {
-      <strong>Pronto há {{ decorrido(cartao().prontoEm, agora()) }}</strong>
+      <strong class="tempo-pronto">Pronto há {{ decorrido(cartao().prontoEm, agora()) }}</strong>
     } @else if (pedido().primeiroPreparoEm) {
-      <strong>Preparo iniciado há {{ decorrido(pedido().primeiroPreparoEm, agora()) }}</strong>
+      <strong class="tempo-preparo"
+        >Preparo iniciado há {{ decorrido(pedido().primeiroPreparoEm, agora()) }}</strong
+      >
     }
   </div>
   @if (pedido().observacao) {
@@ -50,7 +52,7 @@
       <strong>Cancelamento em avaliação.</strong> A produção continua até decisão da equipe.
     </p>
   }
-  <p class="resumo">
+  <p class="resumo-unidades">
     {{ quantidade('NA_FILA') }} na fila · {{ quantidade('EM_PREPARO') }} em preparo ·
     {{ quantidade('PRONTO') }} {{ quantidade('PRONTO') === 1 ? 'pronta' : 'prontas' }}
     @if (quantidade('CANCELADO')) {
@@ -66,14 +68,14 @@
         }
       </h4>
       @for (extra of linha.adicionais; track $index) {
-        <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+        <p class="detalhe-linha">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
       }
       @for (escolha of linha.escolhas; track $index) {
-        <p>
+        <p class="detalhe-linha">
           <strong>{{ escolha.grupo }}:</strong> {{ escolha.quantidade }} × {{ escolha.nome }}
         </p>
         @for (extra of escolha.adicionais ?? []; track $index) {
-          <p>+ {{ extra.quantidade }} × {{ extra.nome }}</p>
+          <p class="detalhe-linha">+ {{ extra.quantidade }} × {{ extra.nome }}</p>
         }
       }
       @if (parcial()) {
@@ -83,7 +85,7 @@
               @if (
                 (unidade.estado === 'NA_FILA' && tem('iniciar')) || (unidade.estado === 'EM_PREPARO' && tem('concluir'))
               ) {
-                <label
+                <label [class.marcada]="selecionadas().includes(unidade.id)"
                   ><input
                     type="checkbox"
                     #marcado
@@ -96,7 +98,7 @@
                   ></label
                 >
               } @else {
-                <span
+                <span class="unidade-fixa"
                   >Unidade {{ $index + 1 }} ·
                   {{ unidade.estado === 'PRONTO' ? 'Pronta' : unidade.estado === 'CANCELADO' ? 'Cancelada' : unidade.estado === 'NA_FILA' ? 'Na fila' : 'Em preparo' }}</span
                 >
@@ -138,22 +140,24 @@
     </div>
   }
   @if (pendente()) {
-    <p class="atencao" role="status">Resultado ainda não confirmado. Não repita a produção.</p>
-    <button (click)="repetir()" [disabled]="!online() || comandos.ocupado()">
-      Recuperar resultado da mesma ação
-    </button>
+    <div class="bloco-pendente">
+      <p class="atencao" role="status">Resultado ainda não confirmado. Não repita a produção.</p>
+      <button type="button" (click)="repetir()" [disabled]="!online() || comandos.ocupado()">
+        Recuperar resultado da mesma ação
+      </button>
+    </div>
   }
   @if (erro()) {
     <p class="erro" role="alert">{{ erro() }}</p>
   }
   @if (aviso()) {
-    <p role="status">{{ aviso() }}</p>
+    <p class="feedback-cartao" role="status">{{ aviso() }}</p>
   }
-  <details>
+  <details class="referencia">
     <summary>Histórico e referência</summary>
-    <p class="referencia">Pedido {{ pedido().id }}</p>
+    <p class="referencia-id">Pedido {{ pedido().id }}</p>
     @if (pedido().comandaId) {
-      <p class="referencia">Comanda {{ pedido().comandaId }}</p>
+      <p class="referencia-id">Comanda {{ pedido().comandaId }}</p>
     }
     <p>Criado em {{ horario(pedido().criadoEm) }}</p>
     @if (pedido().primeiroPreparoEm; as inicio) {
@@ -185,7 +189,9 @@
       </p>
     }
     @for (evento of pedido().historico ?? []; track $index) {
-      <p>{{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}</p>
+      <p class="evento-historico">
+        {{ horario(evento.ocorridoEm) }} · {{ evento.tipo }} · {{ evento.motivo }}
+      </p>
     }
     @if (pedido().primeiroPreparoEm) {
       <p>O preparo já iniciou; cancelamento depende de avaliação da equipe.</p>
