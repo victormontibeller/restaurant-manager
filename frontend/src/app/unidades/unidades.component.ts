@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, output, signal } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
 import { FormularioRotaDirective } from '../rotas/formulario-rota.directive';
+import { HlmButton } from '../ui/button';
 import { focarEditor, restaurarFoco } from '../ui/foco-gestao';
 import { CriacaoPendenteService } from './criacao-pendente.service';
 import { FuncionamentoUnidadeComponent } from './funcionamento.component';
@@ -17,153 +18,9 @@ type EditorUnidade = { tipo: 'novo' } | { tipo: 'dados' | 'horarios'; id: string
 
 @Component({
   selector: 'app-unidades',
-  imports: [FuncionamentoUnidadeComponent],
-  template: `
-    <section class="admin-pagina" aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
-      <header class="admin-cabecalho">
-        <h2 id="unidades-titulo">Unidades cadastradas</h2>
-        <div class="gestao-acoes">
-          <button #nova type="button" (click)="abrir({ tipo: 'novo' }, nova)"
-            [disabled]="ocupado() || !!pendente()" [attr.aria-expanded]="criando()">
-            Nova unidade
-          </button>
-          <button type="button" data-variant="outline" (click)="carregar()" [disabled]="ocupado()">
-            Recarregar unidades
-          </button>
-        </div>
-      </header>
-      <form class="admin-painel admin-filtros" (submit)="confirmar($event, senha)">
-        <div class="contexto-identidade">
-          <h3>Identidade para alterações</h3>
-          <p class="admin-ajuda">A confirmação permite alterar o cadastro, os horários e os canais por cinco minutos.</p>
-        </div>
-        <div>
-          <label for="unidade-senha">Confirme sua senha</label>
-          <input
-            #senha id="unidade-senha" type="password" autocomplete="current-password" required maxlength="72"
-            [attr.aria-describedby]="senhaInvalida() ? 'erro-unidades' : null"
-            [attr.aria-invalid]="senhaInvalida() ? true : null"
-            [disabled]="ocupado()"
-          >
-        </div>
-        <button data-variant="outline" [disabled]="ocupado()">Confirmar identidade</button>
-      </form>
-      @if (erro()) {
-        <p #alerta id="erro-unidades" role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
-      }
-      @if (criando()) {
-        <section class="gestao-editor" aria-labelledby="titulo-nova-unidade">
-          <h3 id="titulo-nova-unidade" tabindex="-1" data-gestao-foco>Nova unidade</h3>
-          @if (pendente()) {
-            <p role="status">Criação pendente de confirmação. Confira o resultado ou reenvie a mesma intenção.</p>
-            <p aria-label="Intenção preservada">{{ pendente()?.nome }} · {{ pendente()?.fuso }}</p>
-          }
-          <form data-rascunho="nova-unidade" (submit)="criar($event, nome, fuso)">
-            <div class="gestao-campos">
-              <div>
-                <label for="nova-unidade-nome">Nome da nova unidade</label>
-                <input #nome id="nova-unidade-nome" required maxlength="120" [disabled]="ocupado() || !!pendente()">
-              </div>
-              <div>
-                <label for="nova-unidade-fuso">Fuso da nova unidade</label>
-                <input #fuso id="nova-unidade-fuso" required maxlength="60" value="America/Sao_Paulo"
-                  [attr.aria-describedby]="fusoInvalido() ? 'fuso-ajuda erro-unidades' : 'fuso-ajuda'"
-                  [attr.aria-invalid]="fusoInvalido() ? true : null"
-                  [disabled]="ocupado() || !!pendente()">
-                <small id="fuso-ajuda">Identificador IANA, como America/Sao_Paulo ou UTC.</small>
-              </div>
-            </div>
-            <div class="gestao-acoes">
-              <button [disabled]="ocupado()">{{ pendente() ? 'Reenviar criação' : 'Criar unidade' }}</button>
-              @if (pendente()) {
-                <button type="button" data-variant="outline" (click)="reconciliar(nome)" [disabled]="ocupado()">
-                  Reconciliar criação
-                </button>
-              } @else {
-                <button type="button" data-variant="ghost" (click)="cancelar(nova)" [disabled]="ocupado()">
-                  Cancelar
-                </button>
-              }
-            </div>
-          </form>
-        </section>
-      }
-      <div class="gestao-lista" aria-label="Cadastro de unidades">
-        @for (u of unidades(); track u.id) {
-          <article>
-            <header class="gestao-linha">
-              <div>
-                <h3>{{ u.nome }}</h3>
-                <span>{{ u.fuso }}</span>
-              </div>
-              <span class="gestao-estado" [attr.data-estado]="u.ativa ? 'ativo' : 'inativo'">
-                {{ u.ativa ? 'Ativa' : 'Inativa' }}
-              </span>
-              <div class="gestao-acoes">
-                <button #editar type="button" data-variant="outline"
-                  (click)="abrir({ tipo: 'dados', id: u.id }, editar)"
-                  [disabled]="ocupado() || !!pendente()"
-                  [attr.aria-expanded]="editorDaUnidade('dados', u.id)">
-                  Editar unidade
-                </button>
-                <button #horarios type="button" data-variant="ghost"
-                  (click)="abrir({ tipo: 'horarios', id: u.id }, horarios)"
-                  [disabled]="ocupado() || !!pendente()"
-                  [attr.aria-expanded]="editorDaUnidade('horarios', u.id)">
-                  Configurar horários e canais
-                </button>
-              </div>
-            </header>
-            @if (editorDaUnidade('dados', u.id)) {
-              <section class="gestao-editor" [attr.aria-labelledby]="'dados-unidade-' + u.id">
-                <h4 [id]="'dados-unidade-' + u.id" tabindex="-1" data-gestao-foco>Dados da unidade</h4>
-                <form [attr.data-rascunho]="u.id" (submit)="salvar($event, u, nomeEditado.value, fusoEditado.value, ativa.checked)">
-                  <div class="gestao-campos">
-                    <div>
-                      <label [for]="'nome-' + u.id">Nome da unidade</label>
-                      <input #nomeEditado [id]="'nome-' + u.id" [value]="u.nome" required maxlength="120" [disabled]="ocupado()">
-                    </div>
-                    <div>
-                      <label [for]="'fuso-' + u.id">Fuso da unidade</label>
-                      <input #fusoEditado [id]="'fuso-' + u.id" [value]="u.fuso" required maxlength="60"
-                        [attr.aria-describedby]="fusoInvalido() ? 'erro-unidades' : null"
-                        [attr.aria-invalid]="fusoInvalido() ? true : null"
-                        [disabled]="ocupado()">
-                    </div>
-                  </div>
-                  <label class="gestao-opcao"><input #ativa type="checkbox" [checked]="u.ativa" [disabled]="ocupado()"> Unidade ativa</label>
-                  <p>Inativar bloqueia novas vendas e remove a unidade da lista pública, preservando o cadastro, os vínculos e a resolução de operações existentes por usuários autorizados.</p>
-                  <div class="gestao-acoes">
-                    <button [disabled]="ocupado()">Salvar unidade</button>
-                    <button type="button" data-variant="ghost" (click)="cancelar(nova)" [disabled]="ocupado()">Cancelar</button>
-                  </div>
-                </form>
-              </section>
-            } @else if (editorDaUnidade('horarios', u.id)) {
-              <div class="gestao-editor">
-                <app-funcionamento-unidade
-                  [unidadeId]="u.id" [nome]="u.nome" [bloqueado]="ocupado() || !!pendente()"
-                  (bloqueio)="bloquearFuncionamento($event)" (salvo)="salvo.emit('funcionamento-' + u.id)"
-                />
-                <button type="button" data-variant="ghost" (click)="cancelar(nova)" [disabled]="ocupado()">Fechar horários</button>
-              </div>
-            }
-          </article>
-        } @empty {
-          <p class="admin-vazio">{{ ocupado() ? 'Consultando unidades…' : 'Nenhuma unidade nesta página.' }}</p>
-        }
-      </div>
-      <nav class="admin-paginacao" aria-label="Páginas de unidades">
-        <button data-variant="outline" (click)="mudarPagina(-1)" [disabled]="ocupado() || pagina() === 0">Página anterior de unidades</button>
-        <span>Página {{ pagina() + 1 }}</span>
-        <button data-variant="outline" (click)="mudarPagina(1)" [disabled]="ocupado() || unidades().length < 50">Próxima página de unidades</button>
-      </nav>
-    </section>
-  `,
-  styleUrls: ['../ui/administracao.css', './unidades.component.css'],
+  imports: [HlmButton, FuncionamentoUnidadeComponent],
+  templateUrl: './unidades.component.html',
+  styleUrl: './unidades.component.css',
 })
 export class UnidadesComponent implements OnInit {
   private readonly sessao = inject(SessaoService);
@@ -171,6 +28,7 @@ export class UnidadesComponent implements OnInit {
   private readonly host = inject(ElementRef<HTMLElement>).nativeElement;
   private origem: HTMLElement | null = null;
   readonly editor = signal<EditorUnidade | null>(null);
+  readonly fusosComuns = ['America/Sao_Paulo', 'America/Manaus', 'America/Belem', 'UTC'];
   readonly fusoInvalido = signal(false);
   readonly unidades = signal<Unidade[]>([]);
   readonly pagina = signal(0);
@@ -183,6 +41,12 @@ export class UnidadesComponent implements OnInit {
   readonly salvo = output<string>();
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
   @ViewChild('nova') nova?: ElementRef<HTMLElement>;
+
+  aplicarFuso(campo: HTMLInputElement, valor: string): void {
+    campo.value = valor;
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+    this.fusoInvalido.set(false);
+  }
 
   ngOnInit(): void {
     void this.carregar();

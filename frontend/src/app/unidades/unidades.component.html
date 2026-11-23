@@ -1,0 +1,350 @@
+<section class="s6-unidades-section" aria-labelledby="unidades-titulo" [attr.aria-busy]="ocupado()">
+  <div class="s6-talao s6-span-all">
+    <div class="s6-head">
+      <div class="s6-title-wrap">
+        <p class="eyebrow">Estrutura multi-unidade</p>
+        <h2 id="unidades-titulo">Configurações de unidades</h2>
+      </div>
+      <button hlmBtn variant="outline" type="button" (click)="carregar()" [disabled]="ocupado()">
+        Recarregar unidades
+      </button>
+    </div>
+    <p class="s6-note">
+      Somente o Administrador configura unidades. Inativar bloqueia novas vendas e remove a unidade
+      da lista pública, preservando o cadastro, os vínculos e a resolução de operações existentes
+      por usuários autorizados.
+    </p>
+    <p class="s6-note">
+      Configure horários e canais em cada unidade. Ajuste os prazos em Prazos de aceite e as regiões
+      de entrega em Regiões e checkout.
+    </p>
+  </div>
+
+  @if (erro()) {
+    <p #alerta id="erro-unidades" role="alert" tabindex="-1" class="erro s6-span-all">
+      {{ erro() }}
+    </p>
+  }
+  @if (aviso()) {
+    <p role="status" class="s6-callout s6-span-all">{{ aviso() }}</p>
+  }
+
+  <form class="s6-card s6-form-card" (submit)="confirmar($event, senha)">
+    <div class="s6-head">
+      <h3 class="s6-subhead">Confirmar identidade</h3>
+      <span class="s6-badge s6-badge-warn">5 min</span>
+    </div>
+    <p class="s6-note">
+      A confirmação permite alterar o cadastro, os horários e os canais por cinco minutos.
+    </p>
+    <div class="s6-field">
+      <label for="unidade-senha">Confirme sua senha</label>
+      <input
+        #senha
+        id="unidade-senha"
+        type="password"
+        autocomplete="current-password"
+        required
+        maxlength="72"
+        [attr.aria-describedby]="senhaInvalida() ? 'erro-unidades' : null"
+        [attr.aria-invalid]="senhaInvalida() ? true : null"
+        [disabled]="ocupado()"
+      />
+    </div>
+    <button hlmBtn class="s6-btn-full s6-push-bottom" [disabled]="ocupado()">
+      Confirmar identidade
+    </button>
+  </form>
+
+  <section class="s6-card s6-form-card" aria-labelledby="titulo-nova-unidade">
+    <div class="s6-head">
+      <h3
+        id="titulo-nova-unidade"
+        class="s6-subhead"
+        tabindex="-1"
+        [attr.data-gestao-foco]="criando() ? '' : null"
+      >
+        Nova unidade
+      </h3>
+      <button
+        #nova
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="abrir({ tipo: 'novo' }, nova)"
+        [disabled]="ocupado() || !!pendente()"
+        [attr.aria-expanded]="criando()"
+      >
+        Nova unidade
+      </button>
+    </div>
+    <p class="s6-note">
+      Após falha de conexão, reenvie a mesma intenção ou reconcilie o resultado.
+    </p>
+    @if (criando()) {
+      @if (pendente()) {
+        <div class="s6-amber" role="status">
+          <p>Criação pendente de confirmação. Confira o resultado ou reenvie a mesma intenção.</p>
+          <p aria-label="Intenção preservada">{{ pendente()?.nome }} · {{ pendente()?.fuso }}</p>
+        </div>
+      }
+      <form class="s6-form-card" data-rascunho="nova-unidade" (submit)="criar($event, nome, fuso)">
+        <div class="s6-grid-2-inner">
+          <div class="s6-field">
+            <label for="nova-unidade-nome">Nome da nova unidade</label>
+            <input
+              #nome
+              id="nova-unidade-nome"
+              placeholder="Ex.: Filial Jardins"
+              required
+              maxlength="120"
+              [disabled]="ocupado() || !!pendente()"
+            />
+          </div>
+          <div class="s6-field">
+            <label for="nova-unidade-fuso">Fuso da nova unidade</label>
+            <input
+              #fuso
+              id="nova-unidade-fuso"
+              required
+              maxlength="60"
+              value="America/Sao_Paulo"
+              [attr.aria-describedby]="fusoInvalido() ? 'fuso-ajuda erro-unidades' : 'fuso-ajuda'"
+              [attr.aria-invalid]="fusoInvalido() ? true : null"
+              [disabled]="ocupado() || !!pendente()"
+            />
+          </div>
+        </div>
+        <small id="fuso-ajuda" class="s6-note"
+          >Identificador IANA, como America/Sao_Paulo ou UTC.</small
+        >
+        <div class="s6-filter-pills" role="group" aria-label="Fusos IANA frequentes">
+          @for (opcao of fusosComuns; track opcao) {
+            <button
+              type="button"
+              class="s6-pill-btn"
+              [disabled]="ocupado() || !!pendente()"
+              (click)="aplicarFuso(fuso, opcao)"
+            >
+              {{ opcao }}
+            </button>
+          }
+        </div>
+        <div class="s6-unit-save-row">
+          <button hlmBtn [disabled]="ocupado()">
+            {{ pendente() ? 'Reenviar criação' : 'Criar unidade' }}
+          </button>
+          @if (pendente()) {
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="reconciliar(nome)"
+              [disabled]="ocupado()"
+            >
+              Reconciliar criação
+            </button>
+          } @else {
+            <button
+              hlmBtn
+              variant="ghost"
+              type="button"
+              (click)="cancelar(nova)"
+              [disabled]="ocupado()"
+            >
+              Cancelar
+            </button>
+          }
+        </div>
+      </form>
+    } @else {
+      <div class="s6-grid-2-inner">
+        <label class="s6-field"
+          >Nome da nova unidade<input placeholder="Ex.: Filial Jardins" disabled
+        /></label>
+        <label class="s6-field"
+          >Fuso da nova unidade<input value="America/Sao_Paulo" disabled
+        /></label>
+      </div>
+    }
+  </section>
+
+  <section
+    class="s6-card s6-span-all"
+    aria-labelledby="unidades-cadastradas-titulo"
+    [attr.aria-busy]="ocupado()"
+  >
+    <div class="s6-sec-line">
+      <span class="s6-sec-num">Cadastro e funcionamento</span>
+      <span class="s6-sec-dotted" aria-hidden="true"></span>
+      <span class="s6-badge s6-badge-ok">{{ unidades().length }} na página</span>
+    </div>
+    <h3 class="s6-subhead" id="unidades-cadastradas-titulo">Unidades cadastradas</h3>
+    <div class="s6-cards-list" aria-label="Cadastro de unidades">
+      @for (u of unidades(); track u.id) {
+        <article class="s6-emp-card">
+          <header class="s6-emp-head">
+            <div class="s6-unit-title-meta">
+              <h4 class="s6-unit-name">{{ u.nome }}</h4>
+              <p class="s6-note">
+                Versão {{ u.versao }} · Fuso <span>{{ u.fuso }}</span>
+              </p>
+            </div>
+            <span class="s6-badge" [class.s6-badge-ok]="u.ativa" [class.s6-badge-danger]="!u.ativa">
+              {{ u.ativa ? 'Ativa' : 'Inativa' }}
+            </span>
+          </header>
+          @if (editorDaUnidade('dados', u.id)) {
+            <section [attr.aria-labelledby]="'dados-unidade-' + u.id">
+              <h4 [id]="'dados-unidade-' + u.id" tabindex="-1" data-gestao-foco>
+                Dados da unidade
+              </h4>
+              <form
+                class="s6-unit-form"
+                [attr.data-rascunho]="u.id"
+                (submit)="salvar($event, u, nomeEditado.value, fusoEditado.value, ativa.checked)"
+              >
+                <div class="s6-grid-2-inner">
+                  <label class="s6-field"
+                    >Nome da unidade<input
+                      #nomeEditado
+                      [value]="u.nome"
+                      required
+                      maxlength="120"
+                      [disabled]="ocupado()"
+                  /></label>
+                  <label class="s6-field"
+                    >Fuso da unidade<input
+                      #fusoEditado
+                      [value]="u.fuso"
+                      required
+                      maxlength="60"
+                      [attr.aria-describedby]="fusoInvalido() ? 'erro-unidades' : null"
+                      [attr.aria-invalid]="fusoInvalido() ? true : null"
+                      [disabled]="ocupado()"
+                  /></label>
+                </div>
+                <div
+                  class="s6-filter-pills"
+                  role="group"
+                  [attr.aria-label]="'Atalhos de fuso de ' + u.nome"
+                >
+                  @for (opcao of fusosComuns; track opcao) {
+                    <button
+                      type="button"
+                      class="s6-pill-btn"
+                      [disabled]="ocupado()"
+                      (click)="aplicarFuso(fusoEditado, opcao)"
+                    >
+                      {{ opcao }}
+                    </button>
+                  }
+                </div>
+                <p class="s6-note">
+                  Inativar bloqueia novas vendas e remove a unidade da lista pública, preservando o
+                  cadastro, os vínculos e a resolução de operações existentes por usuários
+                  autorizados.
+                </p>
+                <div class="s6-unit-save-row">
+                  <label class="s6-tactile-row s6-tactile-center"
+                    ><input
+                      #ativa
+                      type="checkbox"
+                      [checked]="u.ativa"
+                      [disabled]="ocupado()"
+                    /><span>Unidade ativa</span></label
+                  >
+                  <button hlmBtn [disabled]="ocupado()">Salvar unidade</button>
+                  <button
+                    hlmBtn
+                    variant="ghost"
+                    type="button"
+                    (click)="cancelar(nova)"
+                    [disabled]="ocupado()"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </section>
+          } @else {
+            <div class="s6-unit-form">
+              <div class="s6-grid-2-inner">
+                <label class="s6-field">Nome da unidade<input [value]="u.nome" readonly /></label>
+                <label class="s6-field">Fuso da unidade<input [value]="u.fuso" readonly /></label>
+              </div>
+            </div>
+          }
+          <div class="s6-unit-save-row">
+            <button
+              #editar
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="abrir({ tipo: 'dados', id: u.id }, editar)"
+              [disabled]="ocupado() || !!pendente()"
+              [attr.aria-expanded]="editorDaUnidade('dados', u.id)"
+              [hidden]="editorDaUnidade('dados', u.id)"
+            >
+              Editar unidade
+            </button>
+            <button
+              #horarios
+              hlmBtn
+              variant="outline"
+              type="button"
+              (click)="abrir({ tipo: 'horarios', id: u.id }, horarios)"
+              [disabled]="ocupado() || !!pendente()"
+              [attr.aria-expanded]="editorDaUnidade('horarios', u.id)"
+            >
+              Configurar horários e canais
+            </button>
+          </div>
+          @if (editorDaUnidade('horarios', u.id)) {
+            <div class="gestao-editor">
+              <app-funcionamento-unidade
+                [unidadeId]="u.id"
+                [nome]="u.nome"
+                [bloqueado]="ocupado() || !!pendente()"
+                (bloqueio)="bloquearFuncionamento($event)"
+                (salvo)="salvo.emit('funcionamento-' + u.id)"
+              />
+              <button
+                hlmBtn
+                variant="ghost"
+                type="button"
+                (click)="cancelar(nova)"
+                [disabled]="ocupado()"
+              >
+                Fechar horários
+              </button>
+            </div>
+          }
+        </article>
+      } @empty {
+        <p>{{ ocupado() ? 'Consultando unidades…' : 'Nenhuma unidade nesta página.' }}</p>
+      }
+    </div>
+    <nav class="s6-pager" aria-label="Páginas de unidades">
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="mudarPagina(-1)"
+        [disabled]="ocupado() || pagina() === 0"
+      >
+        Página anterior de unidades
+      </button>
+      <span>Página {{ pagina() + 1 }}</span>
+      <button
+        hlmBtn
+        variant="outline"
+        type="button"
+        (click)="mudarPagina(1)"
+        [disabled]="ocupado() || unidades().length < 50"
+      >
+        Próxima página de unidades
+      </button>
+    </nav>
+  </section>
+</section>

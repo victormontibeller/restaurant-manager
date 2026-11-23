@@ -7,6 +7,7 @@ import {
   Output,
   ViewChild,
   afterNextRender,
+  computed,
   effect,
   inject,
   signal,
@@ -40,6 +41,7 @@ interface Funcionamento {
   selector: 'app-funcionamento-unidade',
   template: `
     <section [attr.data-rascunho]="'funcionamento-' + unidadeId" [attr.aria-labelledby]="'funcionamento-titulo-' + unidadeId" [attr.aria-busy]="ocupado()">
+      <header class="funcionamento-cabecalho">
       <h4 [id]="'funcionamento-titulo-' + unidadeId" tabindex="-1" data-gestao-foco>Horários e canais de {{ nome }}</h4>
       <button
         type="button"
@@ -47,6 +49,7 @@ interface Funcionamento {
         [disabled]="bloqueado || ocupado()"
         [attr.aria-controls]="'funcionamento-editor-' + unidadeId"
       >{{ aberto() ? 'Consultar funcionamento no servidor' : 'Configurar horários e canais' }}</button>
+      </header>
       @if (aberto()) {
         <div [id]="'funcionamento-editor-' + unidadeId">
           @if (versao() !== null) {
@@ -63,12 +66,20 @@ interface Funcionamento {
             <p>Consulte o funcionamento no servidor para conferir o resultado e a versão atual antes de editar ou salvar novamente. A consulta substitui o rascunho exibido.</p>
           }
           @if (versao() !== null) {
-            <p>Versão do funcionamento: {{ versao() }}.</p>
+            <p class="versao-funcionamento">Versão do funcionamento: {{ versao() }}.</p>
+            <ul class="dias-funcionamento" aria-label="Inícios de turnos no rascunho">
+              @for (dia of dias; track dia.valor) {
+                <li [class.com-turno]="diasComTurno().has(dia.valor)">
+                  <strong>{{ dia.rotulo.split('-')[0] }}</strong>
+                  <span>{{ diasComTurno().has(dia.valor) ? 'Com início' : 'Sem início' }}</span>
+                </li>
+              }
+            </ul>
             <form (submit)="salvar($event)">
-              <fieldset [disabled]="bloqueado || ocupado() || reconsultaObrigatoria()">
+              <fieldset class="canais-funcionamento" [disabled]="bloqueado || ocupado() || reconsultaObrigatoria()">
                 <legend>Canais habilitados</legend>
                 @for (canal of opcoesCanais; track canal.valor) {
-                  <label class="canal"><input
+                  <label class="canal" [class.canal-ativo]="canais().includes(canal.valor)"><input
                     #habilitado
                     type="checkbox"
                     [checked]="canais().includes(canal.valor)"
@@ -163,7 +174,26 @@ interface Funcionamento {
   `,
   styles: `
     :host { display: block; min-width: 0; }
-    h4 { margin-top: 0; }
+    .funcionamento-cabecalho { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.7rem; }
+    .funcionamento-cabecalho h4 { margin: 0; }
+    .versao-funcionamento { width: fit-content; font-size: 0.78rem; font-weight: 650; border: 1px solid var(--border); border-radius: 999px; background: var(--secondary); padding: 0.35rem 0.65rem; }
+    .dias-funcionamento {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 5rem), 1fr));
+      gap: 0.4rem; list-style: none; padding: 0; margin-block: 0.85rem;
+    }
+    .dias-funcionamento li {
+      display: grid; gap: 0.15rem; text-align: center; padding: 0.5rem;
+      border-radius: 12px; border: 1px solid var(--border); background: var(--card);
+      font-size: 0.77rem;
+    }
+    .dias-funcionamento .com-turno { background: var(--accent); border-color: var(--accent-border); color: var(--accent-foreground); }
+    fieldset { border: 1px solid var(--border); background: var(--card); border-radius: var(--radius-lg); }
+    legend { font-weight: 700; color: var(--primary-ink); }
+    .canais-funcionamento { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); gap: 0.55rem; }
+    .canais-funcionamento .canal { margin: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--background); padding-inline: 0.7rem; }
+    .canais-funcionamento .canal-ativo { background: var(--primary-soft); border-color: var(--primary-soft-border); }
+    .horario small { padding: 0.65rem; border-radius: 10px; background: var(--amber-bg); color: var(--amber-fg); }
+
     .horario { align-items: end; }
     .horario small, .remover-horario { grid-column: 1 / -1; }
     .remover-horario { justify-self: start; }
@@ -197,6 +227,14 @@ export class FuncionamentoUnidadeComponent {
   readonly fusoConsultado = signal('');
   readonly canais = signal<Canal[]>([]);
   readonly horarios = signal<LinhaHorario[]>([]);
+  readonly diasComTurno = computed(() => {
+    const canais = this.canais();
+    return new Set(
+      this.horarios()
+        .filter((horario) => canais.includes(horario.canal))
+        .map((horario) => horario.diaSemana),
+    );
+  });
   readonly erro = signal('');
   readonly aviso = signal('');
   readonly reconsultaObrigatoria = signal(false);
