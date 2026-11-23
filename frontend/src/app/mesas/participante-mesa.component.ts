@@ -1,3 +1,4 @@
+import { IconeComponent } from '../rotas/icone.component';
 import {
   Component,
   DestroyRef,
@@ -22,7 +23,7 @@ import { HlmButton } from '../ui/button';
 
 @Component({
   selector: 'app-participante-mesa',
-  imports: [HlmButton, MeusPedidosComponent, NgTemplateOutlet, RouterLink],
+  imports: [IconeComponent, HlmButton, MeusPedidosComponent, NgTemplateOutlet, RouterLink],
   templateUrl: './participante-mesa.component.html',
   styleUrls: ['../operacao.css', './participante-mesa.component.css'],
 })
@@ -184,5 +185,8 @@ export class ParticipanteMesaComponent {
     } finally {
       this.ocupado.set(false);
     }
+  }
+  valorPositivo(valor: string): boolean {
+    return Number(valor) > 0;
   }
 }

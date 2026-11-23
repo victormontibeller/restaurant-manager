@@ -3,6 +3,7 @@
   min-width: 0;
 }
 .cartao {
+  box-shadow: var(--shadow-soft);
   background: var(--card, #fff);
   border: 1px solid var(--border, #dedad6);
   border-top: 4px solid #7b8995;

@@ -1,4 +1,6 @@
 .catalogo-titulo {
+  font-family: var(--font-serif);
+  font-weight: 500;
   position: absolute;
   width: 1px;
   height: 1px;
@@ -30,6 +32,8 @@
 }
 
 .catalogo-linha {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
   justify-content: space-between;
 }
 

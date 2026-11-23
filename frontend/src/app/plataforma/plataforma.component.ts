@@ -1,164 +1,794 @@
-import { Component, ElementRef, ViewChild, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { ApiFailure } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 
 import { EmpresaSaas, PlataformaSessaoService } from './plataforma-sessao.service';
 import { ProvisionamentoComponent } from './provisionamento.component';
 
 @Component({
   selector: 'app-plataforma',
-  imports: [ProvisionamentoComponent],
+  imports: [ProvisionamentoComponent, HlmButton],
   styles: [
     `
       :host {
         display: block;
       }
-      label {
-        display: block;
-        margin: 1rem 0 0.35rem;
-      }
-      input,
-      select {
-        font: inherit;
-        max-width: 100%;
+      .plat-btn-block {
         width: 100%;
-        padding: 0.65rem;
-        border: 1px solid #627367;
-        border-radius: 0.4rem;
+      }
+      .plat-btn-primary {
+        box-shadow: 0 3px 0 var(--primary-deep, #7f2f20);
+      }
+      .plat-btn-primary:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      .bistro-card {
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #e5ded3);
+        border-radius: 1rem;
+        padding: 1.15rem;
+        box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.06));
+        min-width: 0;
+      }
+      .bistro-talao {
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #e5ded3);
+        border-top: 3px solid var(--primary, #a53e2b);
+        border-radius: 1rem;
+        padding: 1.15rem;
+        box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.06));
+        min-width: 0;
+      }
+      .sec-line {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .sec-num {
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--primary-ink, #a53e2b);
+      }
+      .sec-dotted {
+        flex: 1;
+        min-width: 1.25rem;
+        border-bottom: 1px dotted var(--border, #e5ded3);
+      }
+      .card-title {
+        margin: 0 0 0.3rem;
+        font-size: 1.08rem;
+        font-weight: 750;
+        color: var(--foreground, #292521);
+      }
+      .eyebrow {
+        margin: 0 0 0.25rem;
+        color: var(--primary-ink, #a53e2b);
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        font-weight: 750;
+        text-transform: uppercase;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.24rem 0.62rem;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .badge-ok {
+        background: var(--accent, #e8efe7);
+        color: var(--accent-foreground, #30523b);
+        border-color: var(--accent-border, #b7d2be);
+      }
+      .badge-warn {
+        background: var(--amber-bg, #fff8e8);
+        color: var(--amber-fg, #684614);
+        border-color: var(--amber-border, #e6cf9e);
+      }
+      .badge-danger {
+        background: var(--danger-bg, #fff2f0);
+        color: var(--danger-fg, #972626);
+        border-color: var(--danger-border, #e8c7c1);
+      }
+      .badge-info {
+        background: var(--info-bg, #edf0f8);
+        color: var(--info-fg, #36457d);
+        border-color: var(--info-border, #c5cee6);
+      }
+      .badge-neutral {
+        background: var(--secondary, #f0ebe3);
+        color: var(--secondary-foreground, #44372e);
+        border-color: var(--border, #e5ded3);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 0.85rem;
+        min-width: 0;
+      }
+      .field label {
+        display: block;
+        margin: 0;
+        font-size: 0.86rem;
+        font-weight: 650;
+        color: var(--foreground, #292521);
+      }
+      .field input {
+        width: 100%;
+        max-width: 100%;
         min-height: 48px;
+        padding: 0.65rem 0.85rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--input, #c6b9aa);
+        background: var(--card, #ffffff);
+        color: var(--foreground, #292521);
+        font: inherit;
+        font-size: 0.94rem;
       }
-      button {
-        margin: 0.5rem 0.5rem 0.5rem 0;
+      .field input:disabled {
+        background: var(--disabled-bg, #efe9e0);
+        color: var(--disabled-fg, #594e46);
+        border-color: var(--disabled-border, #d8cfc3);
       }
-      article {
-        border: 1px solid #d4ddd5;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
+      .hint {
+        margin: 0;
+        font-size: 0.84rem;
+        color: var(--muted-foreground, #6e6259);
         overflow-wrap: anywhere;
       }
       [role='alert'] {
-        border-left: 4px solid #a33;
-        padding: 0.8rem;
-        background: #fff1ed;
+        border-left: 4px solid var(--destructive, #ad2929);
+        background: var(--danger-bg, #fff2f0);
+        color: var(--danger-fg, #972626);
+        border-radius: 0.6rem;
+        padding: 0.8rem 0.95rem;
+        margin: 0 0 0.95rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        overflow-wrap: anywhere;
       }
-      nav {
+      .warn-box {
+        border-left: 4px solid var(--amber-fg, #684614);
+        background: var(--amber-bg, #fff8e8);
+        color: var(--amber-fg, #684614);
+        border-radius: 0.6rem;
+        padding: 0.8rem 0.95rem;
+        margin: 0.75rem 0 0;
+        font-size: 0.86rem;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .status-box {
+        border: 1px solid var(--border, #e5ded3);
+        background: var(--muted, #f3eee7);
+        color: var(--foreground, #292521);
+        border-radius: 0.65rem;
+        padding: 0.65rem 0.85rem;
+        margin: 0.65rem 0 1rem;
+        font-size: 0.85rem;
+      }
+      .status-box:empty {
+        display: none;
+      }
+      .login-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        gap: 1.25rem;
+        align-items: stretch;
+      }
+      .login-aside {
+        background: var(--secondary, #f0ebe3);
+        border: 1px solid var(--border, #e5ded3);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
+        min-width: 0;
+      }
+      .login-aside h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1.02rem;
+        font-weight: 750;
+        color: var(--foreground, #292521);
+      }
+      .aside-list {
+        margin: 0;
+        padding-left: 1.15rem;
+        color: var(--muted-foreground, #6e6259);
+        font-size: 0.86rem;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .aside-note {
+        padding: 0.75rem 0.85rem;
+        border-radius: 0.7rem;
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #e5ded3);
+        font-size: 0.82rem;
+        color: var(--muted-foreground, #6e6259);
+      }
+      .session-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #e5ded3);
+        border-radius: 1rem;
+        padding: 0.85rem 1.15rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-soft, 0 1px 2px rgba(41, 37, 33, 0.06));
+      }
+      .session-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        min-width: 0;
+      }
+      .session-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 750;
+        color: var(--foreground, #292521);
+      }
+      .console-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+        gap: 1.25rem;
+        align-items: start;
+        margin-bottom: 1.5rem;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        min-width: 0;
+      }
+      .step-box {
+        margin-top: 0.95rem;
+        padding-top: 0.95rem;
+        border-top: 1px dotted var(--border, #e5ded3);
+      }
+      .step-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.55rem;
+      }
+      .step-kicker {
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground, #6e6259);
+      }
+      article.item-card {
+        background: var(--card, #ffffff);
+        border: 1px solid var(--border, #e5ded3);
+        border-radius: 0.9rem;
+        padding: 0.95rem;
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.45rem;
+      }
+      .card-head h4 {
+        margin: 0;
+        flex: 1 1 0;
+        min-width: 0;
+        font-size: 1rem;
+        font-weight: 750;
+        color: var(--foreground, #292521);
+        overflow-wrap: anywhere;
+      }
+      .meta-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        font-size: 0.82rem;
+        color: var(--muted-foreground, #6e6259);
+        overflow-wrap: anywhere;
+      }
+      .mono-chip {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.76rem;
+        background: var(--muted, #f3eee7);
+        border: 1px solid var(--border, #e5ded3);
+        color: var(--foreground, #292521);
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.45rem;
+        overflow-wrap: anywhere;
+      }
+      .meta-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.65rem;
+      }
+      .domain-chips {
         display: flex;
         flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.6rem;
+      }
+      .toolbar-row {
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 0.65rem;
+      }
+      .filter-pills {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.4rem;
+        margin: 0.7rem 0 0.85rem;
+      }
+      .pill-btn {
+        min-height: 48px;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.6rem;
+        border: 1px solid var(--border, #e5ded3);
+        background: var(--secondary, #f0ebe3);
+        color: var(--secondary-foreground, #44372e);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 650;
+        cursor: pointer;
+        text-align: center;
+        box-shadow: none;
+      }
+      .pill-btn[aria-pressed='true'] {
+        background: var(--primary, #a53e2b);
+        color: var(--primary-foreground, #ffffff);
+        border-color: var(--primary, #a53e2b);
+      }
+      .paginacao {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.6rem;
+        padding-top: 0.85rem;
+        margin-top: 0.85rem;
+        border-top: 1px dotted var(--border, #e5ded3);
+      }
+      .paginacao span {
+        font-size: 0.84rem;
+        font-weight: 650;
+        color: var(--muted-foreground, #6e6259);
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+        padding: 0 0.35rem;
+      }
+      .env-footnote {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--muted-foreground, #6e6259);
+        text-align: center;
+      }
+      @media (max-width: 900px) {
+        .login-grid,
+        .console-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        .filter-pills {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .session-bar > button,
+        .toolbar-row > button {
+          width: 100%;
+        }
+        .paginacao {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .paginacao > span {
+          grid-column: 1 / -1;
+          order: -1;
+        }
       }
     `,
   ],
   template: `
     <section aria-labelledby="plataforma-titulo" [attr.aria-busy]="ocupado()">
-      <h2 id="plataforma-titulo">Administração SaaS</h2>
-      <p>Acesso separado das contas dos restaurantes. Somente metadados de empresas; sem acesso a clientes, pedidos ou pagamentos.</p>
       @if (erro()) {
         <p id="erro-plataforma" role="alert" tabindex="-1" #alerta>{{ erro() }}</p>
       }
       @if (!sessao.autenticado()) {
-        <form (submit)="entrar($event, emailInput.value, senhaInput)">
-          <label for="saas-email">E-mail do operador</label>
-          <input
-            #emailInput
-            id="saas-email"
-            name="email"
-            type="email"
-            autocomplete="username"
-            required
-            maxlength="254"
-            [disabled]="ocupado() || saidaPendente()"
-          >
-          <label for="saas-senha">Senha do operador</label>
-          <input
-            #senhaInput
-            id="saas-senha"
-            name="senha"
-            type="password"
-            autocomplete="current-password"
-            required
-            maxlength="72"
-            [disabled]="ocupado() || saidaPendente()"
-          >
-          <button type="submit" [disabled]="ocupado() || saidaPendente()">Entrar na plataforma</button>
-        </form>
-        @if (saidaPendente()) {
-          <p>A saída no servidor não foi confirmada. Conclua antes de entrar novamente.</p>
-          <button (click)="sair()" [disabled]="ocupado()">Tentar encerrar sessão SaaS</button>
-        }
-      } @else {
-        <p>Perfil: OPERADOR_SAAS</p>
-        <button (click)="sair()" [disabled]="ocupado()">Sair da plataforma</button>
-        <section aria-labelledby="estado-comercial-titulo">
-          <h3 id="estado-comercial-titulo">Estado comercial da empresa</h3>
-          <p>Suspensão comercial bloqueia novas vendas e preserva consulta e resolução das operações existentes por usuários autorizados. Não revoga contas nem permite impersonação.</p>
-          <form (submit)="consultar($event, empresaId.value)">
-            <label for="saas-empresa-id">Identificador da empresa</label>
-            <input
-              #empresaId
-              id="saas-empresa-id"
-              required
-              pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-              [disabled]="ocupado()"
-            >
-            <button [disabled]="ocupado()">Consultar estado comercial</button>
-          </form>
-          @if (selecionada(); as empresa) {
-            <p data-testid="empresa-estado">{{ empresa.nome }} · {{ empresa.estado }} · versão {{ empresa.versao }}</p>
-            @if (empresa.estado === 'ATIVO' || empresa.estado === 'SUSPENSO') {
-              <form (submit)="confirmar($event, confirmacaoSenha)">
-                <label for="saas-confirmacao">Senha de confirmação do operador</label>
+        <div class="login-grid">
+          <div class="bistro-talao">
+            <div class="sec-line">
+              <span class="sec-num">01 · ACESSO DO OPERADOR SAAS</span>
+              <span class="sec-dotted"></span>
+              <span class="badge badge-neutral">Sessão isolada</span>
+            </div>
+            <h2 id="plataforma-titulo" class="card-title">Administração SaaS</h2>
+            <p class="hint" style="margin-bottom: 1rem;">
+              Acesso separado das contas dos restaurantes. Somente metadados de empresas; sem acesso a clientes, pedidos ou pagamentos.
+            </p>
+            <form (submit)="entrar($event, emailInput.value, senhaInput)">
+              <div class="field">
+                <label for="saas-email">E-mail do operador</label>
                 <input
-                  #confirmacaoSenha
-                  id="saas-confirmacao"
+                  #emailInput
+                  id="saas-email"
+                  name="email"
+                  type="email"
+                  autocomplete="username"
+                  required
+                  maxlength="254"
+                  [disabled]="ocupado() || saidaPendente()"
+                />
+              </div>
+              <div class="field">
+                <label for="saas-senha">Senha do operador</label>
+                <input
+                  #senhaInput
+                  id="saas-senha"
+                  name="senha"
                   type="password"
                   autocomplete="current-password"
                   required
                   maxlength="72"
-                  [attr.aria-describedby]="erro() && senhaInvalida() ? 'erro-plataforma' : null"
-                  [attr.aria-invalid]="erro() && senhaInvalida() ? true : null"
+                  [disabled]="ocupado() || saidaPendente()"
+                />
+              </div>
+              <button
+                type="submit"
+                hlmBtn
+                class="plat-btn-block plat-btn-primary"
+                [disabled]="ocupado() || saidaPendente()"
+              >
+                Entrar na plataforma
+              </button>
+            </form>
+            @if (saidaPendente()) {
+              <div class="warn-box">
+                <p style="margin: 0 0 0.75rem;">
+                  A saída no servidor não foi confirmada. Conclua antes de entrar novamente.
+                </p>
+                <button
+                  type="button"
+                  hlmBtn
+                  variant="outline"
+                  class="plat-btn-block"
+                  (click)="sair()"
                   [disabled]="ocupado()"
                 >
-                <button [disabled]="ocupado()">Confirmar senha SaaS</button>
-              </form>
-              <form (submit)="alterar($event, empresa, motivo.value)">
-                <p>Próximo estado: {{ empresa.estado === 'ATIVO' ? 'SUSPENSO' : 'ATIVO' }}. Confirme o motivo antes de aplicar.</p>
-                <label for="saas-motivo">Motivo da alteração comercial</label>
-                <input
-                  #motivo
-                  id="saas-motivo"
-                  required
-                  maxlength="240"
-                  [disabled]="ocupado() || consultaObrigatoria()"
-                >
-                <button [disabled]="ocupado() || consultaObrigatoria()">Aplicar estado comercial</button>
-              </form>
-              @if (consultaObrigatoria()) {
-                <p>Consulte novamente pelo identificador antes de outra alteração. Não reenviaremos a escrita automaticamente.</p>
-              }
-            } @else {
-              <p>Empresa incompleta: use o provisionamento assistido. Esta ação não permite ativá-la.</p>
+                  Tentar encerrar sessão SaaS
+                </button>
+              </div>
             }
-          }
-        </section>
-        <h3>Empresas cadastradas</h3>
-        <button (click)="carregar(pagina())" [disabled]="ocupado()">Atualizar empresas</button>
-        <p role="status" aria-live="polite">{{ mensagem() }}</p>
-        @for (empresa of empresas(); track empresa.id) {
-          <article>
-            <h4>{{ empresa.nome }}</h4>
-            <p>Estado: {{ empresa.estado }}</p>
-            <p>Identificador: {{ empresa.id }}</p>
-            <p>Domínios: {{ empresa.dominios.join(', ') || 'Nenhum domínio cadastrado' }}</p>
-          </article>
-        }
-        <nav aria-label="Páginas de empresas">
-          <button (click)="carregar(pagina() - 1)" [disabled]="ocupado() || pagina() === 0">Página anterior</button>
-          <span>Página {{ pagina() + 1 }}</span>
-          <button (click)="carregar(pagina() + 1)" [disabled]="ocupado() || empresas().length < 50">Próxima página</button>
-        </nav>
-        <app-provisionamento/>
-        <p>Não há operação comercial neste ambiente.</p>
+          </div>
+          <aside class="login-aside">
+            <div>
+              <p class="eyebrow">GOVERNANÇA MULTI-TENANT</p>
+              <h3>Escopo estrito de plataforma</h3>
+              <ul class="aside-list">
+                <li>Autenticação própria em memória e cookie restrito ao caminho da plataforma.</li>
+                <li>
+                  Consulta e alteração de estado comercial (<strong>Ativo</strong> /
+                  <strong>Suspenso</strong>) com confirmação recente de senha.
+                </li>
+                <li>Provisionamento assistido com identificador idempotente de intenção.</li>
+                <li>Sem leitura de cardápios, clientes, pedidos ou transações financeiras das lojas.</li>
+              </ul>
+            </div>
+            <div class="aside-note">
+              Nenhum dado de sessão comercial é compartilhado com o painel dos restaurantes.
+            </div>
+          </aside>
+        </div>
+      } @else {
+        <div class="session-bar">
+          <div class="session-meta">
+            <h2 id="plataforma-titulo" class="session-title">Administração SaaS</h2>
+            <span class="badge badge-info">Perfil: OPERADOR_SAAS</span>
+          </div>
+          <button type="button" hlmBtn variant="outline" (click)="sair()" [disabled]="ocupado()">
+            Sair da plataforma
+          </button>
+        </div>
+
+        <p class="status-box" role="status" aria-live="polite">{{ mensagem() }}</p>
+
+        <div class="console-grid">
+          <section class="bistro-talao" aria-labelledby="estado-comercial-titulo">
+            <div class="sec-line">
+              <span class="sec-num">01 · ESTADO COMERCIAL DA EMPRESA</span>
+              <span class="sec-dotted"></span>
+            </div>
+            <h3 id="estado-comercial-titulo" class="card-title">Estado comercial da empresa</h3>
+            <p class="hint" style="margin-bottom: 0.95rem;">
+              Suspensão comercial bloqueia novas vendas e preserva consulta e resolução das operações existentes por usuários autorizados. Não revoga contas nem permite impersonação.
+            </p>
+            <form (submit)="consultar($event, empresaId.value)">
+              <div class="field">
+                <label for="saas-empresa-id">Identificador da empresa</label>
+                <input
+                  #empresaId
+                  id="saas-empresa-id"
+                  required
+                  pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+                  [disabled]="ocupado()"
+                />
+              </div>
+              <button
+                type="submit"
+                hlmBtn
+                variant="outline"
+                class="plat-btn-block"
+                [disabled]="ocupado()"
+              >
+                Consultar estado comercial
+              </button>
+            </form>
+
+            @if (selecionada(); as empresa) {
+              <div class="step-box">
+                <div class="card-head" data-testid="empresa-estado">
+                  <div>
+                    <strong>{{ empresa.nome }}</strong>
+                    <p class="hint">Versão {{ empresa.versao }}</p>
+                  </div>
+                  <span
+                    class="badge"
+                    [class.badge-ok]="empresa.estado === 'ATIVO'"
+                    [class.badge-danger]="empresa.estado === 'SUSPENSO'"
+                    [class.badge-warn]="empresa.estado !== 'ATIVO' && empresa.estado !== 'SUSPENSO'"
+                  >
+                    {{ empresa.estado }}
+                  </span>
+                </div>
+
+                @if (empresa.estado === 'ATIVO' || empresa.estado === 'SUSPENSO') {
+                  <form (submit)="confirmar($event, confirmacaoSenha)" class="step-box">
+                    <div class="step-head">
+                      <span class="step-kicker">Passo A · Confirmação de segurança</span>
+                      <span class="badge badge-neutral">Requer senha</span>
+                    </div>
+                    <div class="field">
+                      <label for="saas-confirmacao">Senha de confirmação do operador</label>
+                      <input
+                        #confirmacaoSenha
+                        id="saas-confirmacao"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                        maxlength="72"
+                        [attr.aria-describedby]="erro() && senhaInvalida() ? 'erro-plataforma' : null"
+                        [attr.aria-invalid]="erro() && senhaInvalida() ? true : null"
+                        [disabled]="ocupado()"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      hlmBtn
+                      variant="secondary"
+                      class="plat-btn-block"
+                      [disabled]="ocupado()"
+                    >
+                      Confirmar senha SaaS
+                    </button>
+                  </form>
+
+                  <form (submit)="alterar($event, empresa, motivo.value)" class="step-box">
+                    <div class="step-head">
+                      <span class="step-kicker">Passo B · Alteração comercial</span>
+                    </div>
+                    <p class="hint" style="margin-bottom: 0.65rem;">
+                      Próximo estado:
+                      <strong>{{ empresa.estado === 'ATIVO' ? 'SUSPENSO' : 'ATIVO' }}</strong>.
+                      Confirme o motivo antes de aplicar.
+                    </p>
+                    <div class="field">
+                      <label for="saas-motivo">Motivo da alteração comercial</label>
+                      <input
+                        #motivo
+                        id="saas-motivo"
+                        required
+                        maxlength="240"
+                        [disabled]="ocupado() || consultaObrigatoria()"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      hlmBtn
+                      class="plat-btn-block plat-btn-primary"
+                      [disabled]="ocupado() || consultaObrigatoria()"
+                    >
+                      Aplicar estado comercial
+                    </button>
+                  </form>
+
+                  @if (consultaObrigatoria()) {
+                    <p class="warn-box">
+                      Consulte novamente pelo identificador antes de outra alteração. Não reenviaremos a escrita automaticamente.
+                    </p>
+                  }
+                } @else {
+                  <p class="warn-box">
+                    Empresa incompleta: use o provisionamento assistido. Esta ação não permite ativá-la.
+                  </p>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="bistro-card" aria-labelledby="empresas-titulo">
+            <div class="sec-line">
+              <span class="sec-num">02 · EMPRESAS CADASTRADAS</span>
+              <span class="sec-dotted"></span>
+              <span class="badge badge-neutral">
+                {{ empresasFiltradas().length }}
+                {{ empresasFiltradas().length === 1 ? 'empresa' : 'empresas' }}
+              </span>
+            </div>
+
+            <div class="toolbar-row">
+              <h3 id="empresas-titulo" class="card-title" style="margin: 0;">Empresas cadastradas</h3>
+              <button
+                type="button"
+                hlmBtn
+                variant="outline"
+                (click)="carregar(pagina())"
+                [disabled]="ocupado()"
+              >
+                Atualizar empresas
+              </button>
+            </div>
+
+            <div class="field" style="margin-bottom: 0.25rem;">
+              <label for="busca-empresa">Filtrar por nome ou domínio</label>
+              <input
+                id="busca-empresa"
+                type="search"
+                placeholder="Ex.: Forneria ou porto.localhost"
+                [value]="termoBusca()"
+                (input)="termoBusca.set($any($event.target).value)"
+              />
+            </div>
+
+            <div class="filter-pills" role="group" aria-label="Filtrar empresas por estado">
+              <button
+                type="button"
+                class="pill-btn"
+                [attr.aria-pressed]="filtroEstado() === 'TODOS'"
+                (click)="filtroEstado.set('TODOS')"
+              >
+                Todas
+              </button>
+              <button
+                type="button"
+                class="pill-btn"
+                [attr.aria-pressed]="filtroEstado() === 'ATIVO'"
+                (click)="filtroEstado.set('ATIVO')"
+              >
+                Ativas
+              </button>
+              <button
+                type="button"
+                class="pill-btn"
+                [attr.aria-pressed]="filtroEstado() === 'SUSPENSO'"
+                (click)="filtroEstado.set('SUSPENSO')"
+              >
+                Suspensas
+              </button>
+              <button
+                type="button"
+                class="pill-btn"
+                [attr.aria-pressed]="filtroEstado() === 'INCOMPLETA'"
+                (click)="filtroEstado.set('INCOMPLETA')"
+              >
+                Incompletas
+              </button>
+            </div>
+
+            <div class="stack">
+              @for (empresa of empresasFiltradas(); track empresa.id) {
+                <article class="item-card">
+                  <div class="card-head">
+                    <h4>{{ empresa.nome }}</h4>
+                    <span
+                      class="badge"
+                      [class.badge-ok]="empresa.estado === 'ATIVO'"
+                      [class.badge-danger]="empresa.estado === 'SUSPENSO'"
+                      [class.badge-warn]="empresa.estado !== 'ATIVO' && empresa.estado !== 'SUSPENSO'"
+                    >
+                      <span class="sr-only">Estado: </span>{{ empresa.estado }}
+                    </span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="mono-chip" [title]="empresa.id">
+                      <span class="sr-only">{{ empresa.id }}</span>{{ idCurto(empresa.id) }}
+                    </span>
+                  </div>
+                  <div class="domain-chips">
+                    @for (dom of empresa.dominios; track dom) {
+                      <span class="badge badge-neutral">{{ dom }}</span>
+                    } @empty {
+                      <span class="hint">Nenhum domínio cadastrado</span>
+                    }
+                  </div>
+                  <div class="meta-actions">
+                    <button
+                      type="button"
+                      hlmBtn
+                      variant="outline"
+                      (click)="copiarId(empresa.id)"
+                    >
+                      Copiar ID
+                    </button>
+                    <button
+                      type="button"
+                      hlmBtn
+                      variant="outline"
+                      (click)="selecionarEmpresa(empresa, empresaId)"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+                </article>
+              } @empty {
+                <p class="hint">
+                  {{ empresas().length ? 'Nenhuma empresa corresponde ao filtro.' : 'Nenhuma empresa nesta página.' }}
+                </p>
+              }
+            </div>
+
+            <nav class="paginacao" aria-label="Páginas de empresas">
+              <button
+                type="button"
+                hlmBtn
+                variant="outline"
+                (click)="carregar(pagina() - 1)"
+                [disabled]="ocupado() || pagina() === 0"
+              >
+                Página anterior
+              </button>
+              <span>Página {{ pagina() + 1 }}</span>
+              <button
+                type="button"
+                hlmBtn
+                variant="outline"
+                (click)="carregar(pagina() + 1)"
+                [disabled]="ocupado() || empresas().length < 50"
+              >
+                Próxima página
+              </button>
+            </nav>
+          </section>
+        </div>
+
+        <app-provisionamento />
+
+        <p class="env-footnote">Não há operação comercial neste ambiente.</p>
       }
     </section>
   `,
@@ -174,6 +804,21 @@ export class PlataformaComponent {
   readonly senhaInvalida = signal(false);
   readonly selecionada = signal<EmpresaSaas | null>(null);
   readonly consultaObrigatoria = signal(false);
+  readonly filtroEstado = signal<'TODOS' | 'ATIVO' | 'SUSPENSO' | 'INCOMPLETA'>('TODOS');
+  readonly termoBusca = signal('');
+  readonly empresasFiltradas = computed(() => {
+    const estado = this.filtroEstado();
+    const termo = this.termoBusca().trim().toLowerCase();
+    return this.empresas().filter((e) => {
+      const okEstado = estado === 'TODOS' || e.estado === estado;
+      const okTermo =
+        !termo ||
+        e.nome.toLowerCase().includes(termo) ||
+        e.id.toLowerCase().includes(termo) ||
+        e.dominios.some((d) => d.toLowerCase().includes(termo));
+      return okEstado && okTermo;
+    });
+  });
   private geracao = 0;
   @ViewChild('alerta') alerta?: ElementRef<HTMLElement>;
   @ViewChild('emailInput') emailInput?: ElementRef<HTMLInputElement>;
@@ -186,10 +831,30 @@ export class PlataformaComponent {
         this.pagina.set(0);
         this.selecionada.set(null);
         this.consultaObrigatoria.set(false);
+        this.filtroEstado.set('TODOS');
+        this.termoBusca.set('');
         this.mensagem.set('');
       }
     });
     void this.iniciar();
+  }
+
+  idCurto(id: string): string {
+    return '#' + id.slice(0, 8) + '…' + id.slice(-4);
+  }
+
+  copiarId(id: string): void {
+    try {
+      void navigator.clipboard?.writeText(id);
+    } catch {
+      /* Clipboard indisponível em contexto restrito. */
+    }
+    this.mensagem.set('Identificador copiado: ' + this.idCurto(id));
+  }
+
+  selecionarEmpresa(empresa: EmpresaSaas, input: HTMLInputElement): void {
+    input.value = empresa.id;
+    void this.consultar(new Event('submit'), empresa.id);
   }
 
   private async iniciar(): Promise<void> {

@@ -1,25 +1,40 @@
-<section class="pagamento-pedido" aria-label="Pagamento online">
-  <header>
-    <h3>Pagamento online</h3>
-    @if (prazo()) {
-      <p class="prazo-pagamento">Pague até {{ prazo() }}.</p>
-    }
-  </header>
-  @if (aguardando()) {
-    <p class="orientacao-pagamento">Aguarde a confirmação do servidor ao voltar do checkout.</p>
-  }
-
+<section
+  class="mp-caixa"
+  aria-label="Pagamento online"
+  [attr.data-estado]="tentativas()[0]?.estado ?? null"
+>
+  <h4>Pagamento online</h4>
+  <p class="mp-nota">
+    Após concluir no Mercado Pago, a confirmação do pagamento aparece aqui automaticamente ou ao
+    conferir abaixo.
+  </p>
   <!-- A API lista as tentativas por criado_em desc, id. -->
   @if (tentativas()[0]; as atual) {
-    <section class="tentativa-pagamento" aria-label="Tentativa mais recente">
-      <p class="titulo-tentativa"><strong>Tentativa mais recente</strong></p>
-      <p class="estado-tentativa" [attr.data-estado]="atual.estado" aria-live="polite">
-        {{ estado(atual.estado) }}
-      </p>
+    <section class="mp-tentativa" aria-label="Tentativa mais recente">
+      <div class="mp-tentativa-topo">
+        <strong>Tentativa mais recente</strong>
+        <span
+          class="etiqueta"
+          [attr.data-estado]="
+            atual.estado === 'CONFIRMADO'
+              ? 'PRONTO'
+              : atual.estado === 'RECUSADO'
+                ? 'CANCELADO'
+                : 'AGUARDANDO_ACEITE'
+          "
+        >
+          {{ estado(atual.estado) }}
+        </span>
+      </div>
+      @if (atual.estado === 'RECUSADO' && atual.ultimaFalha) {
+        <p class="mp-falha">{{ atual.ultimaFalha }}</p>
+      }
       @if (
-        atual.checkoutUrl && ['AGUARDANDO','SOLICITADO'].includes(atual.estado) && aguardando()
+        atual.checkoutUrl && ['AGUARDANDO', 'SOLICITADO'].includes(atual.estado) && aguardando()
       ) {
-        <a hlmBtn class="botao" [href]="atual.checkoutUrl"> Abrir checkout do Mercado Pago </a>
+        <div class="acoes">
+          <a hlmBtn variant="default" [href]="atual.checkoutUrl">Abrir checkout do Mercado Pago</a>
+        </div>
       }
     </section>
   } @else if (aguardando() && !erro()) {
@@ -27,24 +42,35 @@
       {{ consultando() ? 'Consultando pagamento…' : 'Aguardando dados do checkout.' }}
     </p>
   }
-
-  <div class="acoes-pagamento">
-    <button
-      type="button"
-      hlmBtn
-      variant="secondary"
-      (click)="carregar()"
-      [disabled]="consultando()"
-    >
-      Conferir pagamento
-    </button>
+  <div class="acoes">
+    @if (!algumConfirmado()) {
+      <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        type="button"
+        (click)="carregar(true)"
+        [disabled]="consultando()"
+      >
+        {{ consultando() ? 'Conferindo pagamento…' : 'Conferir pagamento' }}
+      </button>
+    }
     @if (aguardando() && tentativas().length && podeTentar()) {
-      <button hlmBtn type="button" (click)="tentar()" [disabled]="consultando()">
+      <button
+        hlmBtn
+        variant="default"
+        size="sm"
+        type="button"
+        (click)="tentar()"
+        [disabled]="consultando()"
+      >
         Tentar pagamento novamente
       </button>
     }
   </div>
-
+  @if (statusConferencia()) {
+    <p role="status" class="mp-nota">{{ statusConferencia() }}</p>
+  }
   @if (tentativas().length > 1) {
     <details>
       <summary>Histórico de tentativas anteriores</summary>

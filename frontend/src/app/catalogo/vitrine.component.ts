@@ -1,3 +1,5 @@
+import { ItemCarrinho } from '../carrinho/modelos';
+import { IconeComponent } from '../rotas/icone.component';
 import {
   Component,
   Input,
@@ -10,16 +12,16 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '../ui/button';
 import { ApiFailure } from '../identidade/sessao.service';
-import { IconeComponent } from '../rotas/icone.component';
+import { MarcaService } from '../rotas/marca.service';
+import { SessaoMesaService } from '../mesas/sessao-mesa.service';
 import { CarrinhoComponent } from '../carrinho/carrinho.component';
-import { CarrinhoPreviaComponent } from '../carrinho/carrinho-previa.component';
 import { CarrinhoService } from '../carrinho/carrinho.service';
 import { ContextoCarrinho, LinhaCarrinho } from '../carrinho/modelos';
 import { CatalogoApiService } from './catalogo-api.service';
+import { CatalogoMidiaService } from './catalogo-midia.service';
 import { ConfiguradorProdutoComponent } from './configurador-produto.component';
 import { FavoritosService } from './favoritos.service';
 import {
@@ -36,15 +38,7 @@ import {
 
 @Component({
   selector: 'app-vitrine',
-  imports: [
-    ConfiguradorProdutoComponent,
-    CarrinhoComponent,
-    CarrinhoPreviaComponent,
-    RouterLink,
-    HlmButton,
-    NgTemplateOutlet,
-    IconeComponent,
-  ],
+  imports: [ConfiguradorProdutoComponent, CarrinhoComponent, RouterLink, HlmButton, IconeComponent],
   templateUrl: './vitrine.component.html',
   styleUrls: ['./catalogo.css', './vitrine.css', './vitrine-filtros.css'],
   host: { '[class.cardapio-cliente]': 'cardapioCliente()' },
@@ -55,19 +49,23 @@ export class VitrineComponent {
   readonly unidadeExterna = input<string | undefined>();
   private focoAnterior: HTMLElement | null = null;
   @ViewChild('configuracao') private configuracao?: ElementRef<HTMLDialogElement>;
+  @ViewChild('carrinhoLateral') private carrinhoLateral?: CarrinhoComponent;
   @ViewChild('alerta') private alerta?: ElementRef<HTMLElement>;
   @ViewChild('filtros') private filtros?: ElementRef<HTMLDialogElement>;
   @ViewChild('abrirFiltros') private botaoFiltros?: ElementRef<HTMLButtonElement>;
   @ViewChild('avisoTroca') private avisoTroca?: ElementRef<HTMLElement>;
   private readonly api = inject(CatalogoApiService);
+  private readonly catalogoMidia = inject(CatalogoMidiaService, { optional: true });
   readonly carrinho = inject(CarrinhoService);
   readonly favoritos = inject(FavoritosService);
+  readonly marca = inject(MarcaService);
+  readonly mesaSessao = inject(SessaoMesaService);
   private geracao = 0;
   private destruido = false;
   private requisicao: AbortController | null = null;
   readonly unidades = signal<Unidade[]>([]);
   readonly unidadeId = signal('');
-  readonly canalSelecionado = signal<Canal>('RETIRADA');
+  readonly canalSelecionado = signal<Canal>('DELIVERY');
   readonly trocaPendente = signal<ContextoCarrinho | null>(null);
   readonly filtrosUnidade = signal('');
   readonly filtrosCanal = signal<Canal>('RETIRADA');
@@ -76,6 +74,12 @@ export class VitrineComponent {
   readonly selecionado = signal<ProdutoPublico | null>(null);
   readonly linhaEditada = signal<LinhaCarrinho | null>(null);
   readonly somenteFavoritos = signal(false);
+  readonly somenteSugestoes = signal(false);
+  readonly arrastandoCarrossel = signal(false);
+  private dragAtivo = false;
+  private dragStartX = 0;
+  private dragScrollLeft = 0;
+  private dragMoveu = false;
   readonly ocupado = signal(false);
   readonly aberto = signal(false);
   readonly consultadoEm = signal('');
@@ -124,6 +128,21 @@ export class VitrineComponent {
             canal: this.canalSelecionado(),
           }),
         );
+    });
+    effect(() => {
+      const participante = this.mesaSessao.participante();
+      const unidades = this.unidades();
+      if (!participante || !unidades.length) return;
+      const unidadeMesa = unidades.find((u) => u.id === participante.unidadeId) ?? unidades[0];
+      if (this.unidadeId() !== unidadeMesa.id || this.canalSelecionado() !== 'MESA') {
+        untracked(() =>
+          this.aplicarContexto({
+            unidadeId: unidadeMesa.id,
+            unidadeNome: unidadeMesa.nome,
+            canal: 'MESA',
+          }),
+        );
+      }
     });
     void this.carregarUnidades();
   }
@@ -191,20 +210,87 @@ export class VitrineComponent {
       if (!signal.aborted && !this.destruido) this.unidades.set(unidades);
     });
     if (!this.destruido && !this.unidadeId() && this.unidades().length) {
+      const participante = this.mesaSessao.participante();
       const contexto = this.carrinho.contexto();
-      const unidade =
-        this.unidades().find((u) => u.id === contexto?.unidadeId) ?? this.unidades()[0];
+      if (participante) {
+        const unidadeMesa =
+          this.unidades().find((u) => u.id === participante.unidadeId) ?? this.unidades()[0];
+        this.aplicarContexto({
+          unidadeId: unidadeMesa.id,
+          unidadeNome: unidadeMesa.nome,
+          canal: 'MESA',
+        });
+        return;
+      }
+      const preferida = this.unidadeExterna() ?? contexto?.unidadeId;
+      const unidade = this.unidades().find((u) => u.id === preferida) ?? this.unidades()[0];
+      const canalInicial: Canal =
+        this.unidadeExterna() && contexto?.canal
+          ? contexto.canal
+          : contexto?.canal && contexto.canal !== 'MESA'
+            ? contexto.canal
+            : this.canalSelecionado() === 'MESA' && !this.unidadeExterna()
+              ? 'DELIVERY'
+              : this.canalSelecionado();
       this.aplicarContexto({
         unidadeId: unidade.id,
         unidadeNome: unidade.nome,
-        canal: contexto?.canal ?? this.canalSelecionado(),
+        canal: canalInicial,
       });
     }
   }
 
   escolherCategoria(id: string): void {
+    this.somenteSugestoes.set(false);
+    this.somenteFavoritos.set(false);
     this.categoriaId = id;
     void this.carregar(0);
+  }
+
+  deslizarSugestoes(trilho: HTMLElement, direcao: -1 | 1): void {
+    const passo = Math.max(240, Math.round(trilho.clientWidth * 0.72));
+    trilho.scrollBy({ left: passo * direcao, behavior: 'smooth' });
+  }
+
+  iniciarArrasteCarrossel(evento: MouseEvent, trilho: HTMLElement): void {
+    if (evento.button !== 0) return;
+    const alvo = evento.target as HTMLElement | null;
+    if (alvo?.closest('button, a, input, select')) return;
+    this.dragAtivo = true;
+    this.dragMoveu = false;
+    this.dragStartX = evento.pageX;
+    this.dragScrollLeft = trilho.scrollLeft;
+    this.arrastandoCarrossel.set(true);
+  }
+
+  moverArrasteCarrossel(evento: MouseEvent, trilho: HTMLElement): void {
+    if (!this.dragAtivo) return;
+    const delta = evento.pageX - this.dragStartX;
+    if (Math.abs(delta) > 6) this.dragMoveu = true;
+    if (this.dragMoveu) {
+      evento.preventDefault();
+      trilho.scrollLeft = this.dragScrollLeft - delta;
+    }
+  }
+
+  finalizarArrasteCarrossel(): void {
+    if (!this.dragAtivo) return;
+    this.dragAtivo = false;
+    this.arrastandoCarrossel.set(false);
+    setTimeout(() => {
+      this.dragMoveu = false;
+    }, 60);
+  }
+
+  aoClicarCartaoSugestao(produto: ProdutoPublico, evento: Event): void {
+    if (this.dragMoveu) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      return;
+    }
+    if (evento.currentTarget instanceof HTMLButtonElement) {
+      void this.configurar(produto.id, null, evento.currentTarget);
+    }
   }
 
   selecionarUnidade(select: HTMLSelectElement): void {
@@ -246,6 +332,26 @@ export class VitrineComponent {
   async abrirFavoritos(ativar: boolean): Promise<void> {
     if (this.ocupado() || (ativar && !this.favoritos.cliente())) return;
     this.somenteFavoritos.set(ativar);
+    if (ativar) {
+      this.somenteSugestoes.set(false);
+      this.categoriaId = '';
+    }
+    await this.carregar(0);
+  }
+
+  async escolherSugestoes(): Promise<void> {
+    if (this.ocupado()) return;
+    this.somenteSugestoes.set(true);
+    this.somenteFavoritos.set(false);
+    this.categoriaId = '';
+    await this.carregar(0);
+  }
+
+  async limparFiltrosVitrine(): Promise<void> {
+    this.somenteSugestoes.set(false);
+    this.somenteFavoritos.set(false);
+    this.categoriaId = '';
+    this.termo = '';
     await this.carregar(0);
   }
 
@@ -285,8 +391,11 @@ export class VitrineComponent {
         );
         produtos = filtrados.slice(pagina * 50, (pagina + 1) * 50);
         temMais = filtrados.length > (pagina + 1) * 50;
+      } else if (this.somenteSugestoes()) {
+        produtos = produtos.filter((item) => item.sugerido);
       }
       if (signal.aborted || this.destruido) return;
+      this.catalogoMidia?.registrar?.(produtos);
       this.produtos.set(produtos);
       this.categorias.set(resultado.categorias);
       this.aberto.set(resultado.aberto);
@@ -299,13 +408,13 @@ export class VitrineComponent {
   async configurar(
     id: string,
     linha: LinhaCarrinho | null,
-    acionador: HTMLButtonElement,
+    acionador: EventTarget | null,
   ): Promise<void> {
     if (this.ocupado() || !this.carrinho.online()) return;
     await this.executar(async (signal) => {
       const produto = await this.api.consultar<ProdutoPublico>(this.rotaProduto(id), signal);
       if (signal.aborted || this.destruido) return;
-      this.focoAnterior = acionador;
+      this.focoAnterior = acionador instanceof HTMLElement ? acionador : null;
       this.selecionado.set(produto);
       this.linhaEditada.set(linha ? structuredClone(linha) : null);
       setTimeout(() => {
@@ -314,6 +423,12 @@ export class VitrineComponent {
       }, 0);
     });
   }
+
+  editarItem({ item, acionador }: { item: ItemCarrinho; acionador: HTMLButtonElement }): void {
+    void this.configurar(item.linha.produtoId, item.linha, acionador);
+  }
+
+  readonly quantidadeItens = this.carrinho.quantidadeItens;
 
   guardar(linha: LinhaCarrinho): void {
     const produto = this.selecionado();
@@ -412,5 +527,109 @@ export class VitrineComponent {
     this.geracao++;
     this.requisicao?.abort();
     this.ocupado.set(false);
+  }
+  quantidadeDoProdutoNoCarrinho(produtoId: string): number {
+    return this.carrinho
+      .itens()
+      .reduce(
+        (soma, item) => (item.linha.produtoId === produtoId ? soma + item.linha.quantidade : soma),
+        0,
+      );
+  }
+
+  totalEstimadoCarrinho(): string {
+    const resumo = this.carrinho.resumo();
+    if (resumo) return moeda(resumo.total);
+    let centavos = 0;
+    const mapa = new Map(this.produtos().map((p) => [p.id, p]));
+    for (const item of this.carrinho.itens()) {
+      const p = mapa.get(item.linha.produtoId);
+      if (!p) continue;
+      let unit = Math.round((Number(p.preco) || 0) * 100);
+      for (const esc of item.linha.escolhas) {
+        const g = p.grupos?.find((gr) => gr.id === esc.grupoId);
+        const op = g?.opcoes.find((o) => o.id === esc.opcaoId);
+        if (op) {
+          unit += Math.round((Number(op.acrescimo) || 0) * 100) * esc.quantidade;
+          for (const ad of esc.adicionais) {
+            const a = op.adicionais.find((x) => x.id === ad.adicionalId);
+            if (a) unit += Math.round((Number(a.preco) || 0) * 100) * ad.quantidade;
+          }
+        }
+      }
+      for (const ad of item.linha.adicionais) {
+        const a = p.adicionais?.find((x) => x.id === ad.adicionalId);
+        if (a) unit += Math.round((Number(a.preco) || 0) * 100) * ad.quantidade;
+      }
+      centavos += unit * item.linha.quantidade;
+    }
+    return centavos > 0
+      ? moeda((centavos / 100).toFixed(2))
+      : `${this.quantidadeItens()} ${this.quantidadeItens() === 1 ? 'item' : 'itens'}`;
+  }
+
+  private normalizarTexto(texto: string): string {
+    const base = (texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    return base.replace(/oes\b/g, 'ao').replace(/aes\b/g, 'ao').replace(/ais\b/g, 'al');
+  }
+
+  correspondeBusca(produto: ProdutoPublico, extra = ''): boolean {
+    const busca = this.normalizarTexto(this.termo.trim());
+    if (!busca) return true;
+    const alvo = this.normalizarTexto(produto.nome + ' ' + produto.descricao + ' ' + extra);
+    return alvo.includes(busca);
+  }
+
+  temSugestoesVisiveis(): boolean {
+    if (
+      !this.somenteSugestoes() &&
+      (this.somenteFavoritos() || !!this.categoriaId || !!this.termo.trim())
+    ) {
+      return false;
+    }
+    return this.produtos().some(
+      (p) =>
+        p.sugerido &&
+        (!this.categoriaId || p.categoriaId === this.categoriaId) &&
+        this.correspondeBusca(p),
+    );
+  }
+
+  temProdutosNaCategoria(cat: Categoria): boolean {
+    if (this.somenteSugestoes()) return false;
+    if (this.categoriaId && this.categoriaId !== cat.id) return false;
+    return this.produtos().some(
+      (p) => p.categoriaId === cat.id && this.correspondeBusca(p, cat.nome),
+    );
+  }
+
+  temQualquerProdutoVisivel(): boolean {
+    return this.produtos().some(
+      (p) =>
+        (!this.somenteSugestoes() || p.sugerido) &&
+        (!this.categoriaId || p.categoriaId === this.categoriaId) &&
+        this.correspondeBusca(p),
+    );
+  }
+
+  modoPdv(): boolean {
+    return !!this.unidadeExterna();
+  }
+
+  abrirRevisaoPdv(acionador?: EventTarget | null): void {
+    void this.carrinhoLateral?.abrirRevisao(acionador);
+  }
+
+  canaisDisponiveis(): readonly { valor: Canal; nome: string }[] {
+    if (this.mesaSessao.participante()) {
+      return this.canais.filter((c) => c.valor === 'MESA');
+    }
+    if (this.unidadeExterna()) {
+      return this.canais;
+    }
+    return this.canais.filter((c) => c.valor !== 'MESA');
   }
 }

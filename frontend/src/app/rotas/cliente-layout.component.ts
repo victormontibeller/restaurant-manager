@@ -27,7 +27,7 @@ import { MarcaService } from './marca.service';
   ],
   template: `
     <header class="client-header" [class.vitrine-cliente]="visualCliente(pagina.activatedRouteData)" [class.cabecalho-convite]="pagina.activatedRouteData['formulario'] === 'convite'">
-      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark"><app-icone nome="marca"/></span><span>{{ marca.nome() }}<small>Bom de escolher. Melhor de saborear.</small></span></a>
+      <a routerLink="/cardapio" class="restaurant-brand" aria-label="Ir ao cardápio"><span class="brand-mark" aria-hidden="true"><app-icone nome="marca"/></span><span>{{ marca.nome() }}</span></a>
       <nav class="desktop-nav" aria-label="Navegação do cliente">
         <a routerLink="/cardapio" routerLinkActive="active" ariaCurrentWhenActive="page">Cardápio</a>
         <a [routerLink]="mesa.participante() ? ['/mesa'] : ['/pedidos']" routerLinkActive="active" ariaCurrentWhenActive="page">{{ mesa.participante() ? 'Minha mesa' : 'Meus pedidos' }}</a>

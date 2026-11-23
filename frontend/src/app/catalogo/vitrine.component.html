@@ -1,34 +1,162 @@
-<ng-template #listaCategorias>
-  <nav class="categorias" aria-label="Categorias do cardápio">
-    <button
-      hlmBtn
-      variant="outline"
-      type="button"
-      [attr.aria-pressed]="!categoriaId"
-      (click)="escolherCategoria('')"
-      [disabled]="ocupado() || !carrinho.online()"
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 1 1 13 0C18.5 15.4 12 21 12 21z"
+    />
+    <circle cx="12" cy="10.5" r="2.3" fill="none" stroke="currentColor" stroke-width="2" />
+  </symbol>
+  <symbol id="i-moto" viewBox="0 0 24 24">
+    <g
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
     >
-      Todos
-    </button>
-    @for (categoria of categorias(); track categoria.id) {
-      <button
-        hlmBtn
-        variant="outline"
-        type="button"
-        [attr.aria-pressed]="categoriaId === categoria.id"
-        (click)="escolherCategoria(categoria.id)"
-        [disabled]="ocupado() || !carrinho.online()"
-      >
-        {{ categoria.nome }}
-      </button>
-    }
-  </nav>
-</ng-template>
+      <circle cx="5.5" cy="17" r="3" />
+      <circle cx="18.5" cy="17" r="3" />
+      <path d="M8.5 17h5l3-7h-4M15 6h3l1.5 4M5.5 14l3-4h4" />
+    </g>
+  </symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="m6 9 6 6 6-6"
+    />
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.6-3.6" />
+    </g>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"
+    />
+  </symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linejoin="round"
+      d="M12 20s-7.5-4.6-9.2-9.3C1.6 7.2 3.9 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.1 0 5.4 2.7 4.2 6.2C19.5 15.4 12 20 12 20z"
+    />
+  </symbol>
+  <symbol id="i-heart-f" viewBox="0 0 24 24">
+    <path
+      fill="currentColor"
+      d="M12 20s-7.5-4.6-9.2-9.3C1.6 7.2 3.9 4.5 7 4.5c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.1 0 5.4 2.7 4.2 6.2C19.5 15.4 12 20 12 20z"
+    />
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.8"
+      stroke-linecap="round"
+      d="M12 5v14M5 12h14"
+    />
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="m5 12.5 4.5 4.5L19 7.5"
+    />
+  </symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+      <path d="M5 8h14l-1 12H6z" />
+      <path d="M9 8V6.5a3 3 0 0 1 6 0V8" stroke-linecap="round" />
+    </g>
+  </symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24">
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M5 12h14m-5-5 5 5-5 5"
+    />
+  </symbol>
+</svg>
+
 @if (selecionado(); as produto) {
   <dialog
+    #filtros
+    id="vitrine-filtros"
+    class="painel-filtros-cardapio"
+    aria-labelledby="vitrine-filtros-titulo"
+    (close)="devolverFocoDosFiltros()"
+  >
+    <form class="formulario-filtros-cardapio" (submit)="aplicarFiltros($event)">
+      <h2 id="vitrine-filtros-titulo">Filtros do cardápio</h2>
+      <div>
+        <label for="filtros-unidade">Unidade do cardápio</label>
+        <select
+          #unidade
+          id="filtros-unidade"
+          autofocus
+          required
+          [value]="filtrosUnidade()"
+          (change)="filtrosUnidade.set(unidade.value)"
+        >
+          @for (item of unidades(); track item.id) {
+            <option [value]="item.id" [selected]="item.id === filtrosUnidade()">
+              {{ item.nome }}
+            </option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="filtros-canal">Canal do cardápio</label>
+        <select
+          #canal
+          id="filtros-canal"
+          [value]="filtrosCanal()"
+          (change)="escolherCanalDosFiltros(canal.value)"
+        >
+          @for (item of canais; track item.valor) {
+            <option [value]="item.valor" [selected]="item.valor === filtrosCanal()">
+              {{ item.nome }}
+            </option>
+          }
+        </select>
+      </div>
+      @if (!carrinho.online()) {
+        <p class="aviso" role="status">Conecte-se para aplicar os filtros.</p>
+      }
+      <div class="acoes-filtros-cardapio">
+        <button hlmBtn variant="outline" type="button" (click)="filtros.close()">Cancelar</button>
+        <button hlmBtn type="submit" [disabled]="bloqueiaFiltros()">Aplicar filtros</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog
     #configuracao
+    class="configurador-dialogo"
     aria-label="Configurar produto"
-    [class.produto-dialogo]="cardapioCliente() || modo === 'carrinho'"
     (cancel)="fecharConfiguracao()"
   >
     <app-configurador-produto
@@ -36,120 +164,350 @@
       [produto]="produto"
       [linha]="linhaEditada()"
       [contexto]="carrinho.contexto()"
-      [permitirAdicionar]="aberto() && carrinho.online() && !ocupado()"
-      (salvar)="guardar($event)"
+      [permitirAdicionar]="(aberto() || carrinho.online()) && carrinho.online() && !ocupado()"
       (cancelar)="fecharConfiguracao()"
     />
   </dialog>
 }
-<div class="experiencia-cardapio" [class.somente-carrinho]="modo === 'carrinho'">
+
+<div
+  class="experiencia-cardapio"
+  [class.somente-carrinho]="modo === 'carrinho'"
+  [class.vitrine-pdv]="modoPdv()"
+>
   @if (modo === 'cardapio') {
     <section class="vitrine-painel" aria-labelledby="vitrine-titulo" [attr.aria-busy]="ocupado()">
-      @if (cardapioCliente()) {
-        <header class="bistro-hero">
-          <div>
-            <h1 id="vitrine-titulo">Nosso cardápio</h1>
-            <span>Imagem ilustrativa</span>
+      <h2 id="vitrine-titulo" class="sr-only">Nosso cardápio</h2>
+
+      <div class="masthead bistro-hero">
+        @if (!modoPdv()) {
+          <div class="mast-text">
+            <p class="kicker">Cardápio de sexta-feira</p>
+            <h1>Bom de escolher.<br /><em>Melhor de saborear.</em></h1>
           </div>
-        </header>
-      } @else {
-        <h2 id="vitrine-titulo" class="vitrine-cabecalho">Nosso cardápio</h2>
-      }
-      @if (cardapioCliente()) {
-        <dialog
-          #filtros
-          id="vitrine-filtros"
-          class="painel-filtros-cardapio"
-          aria-labelledby="vitrine-filtros-titulo"
-          (close)="devolverFocoDosFiltros()"
-        >
-          <form class="formulario-filtros-cardapio" (submit)="aplicarFiltros($event)">
-            <h2 id="vitrine-filtros-titulo">Filtros do cardápio</h2>
-            <div>
-              <label for="filtros-unidade">Unidade do cardápio</label>
-              <select
-                #unidade
-                id="filtros-unidade"
-                autofocus
-                required
-                [value]="filtrosUnidade()"
-                (change)="filtrosUnidade.set(unidade.value)"
-              >
-                @for (item of unidades(); track item.id) {
-                  <option [value]="item.id" [selected]="item.id === filtrosUnidade()">
-                    {{ item.nome }}
-                  </option>
-                }
-              </select>
-            </div>
-            <div>
-              <label for="filtros-canal">Canal do cardápio</label>
-              <select
-                #canal
-                id="filtros-canal"
-                [value]="filtrosCanal()"
-                (change)="escolherCanalDosFiltros(canal.value)"
-              >
-                @for (item of canais; track item.valor) {
-                  <option [value]="item.valor" [selected]="item.valor === filtrosCanal()">
-                    {{ item.nome }}
-                  </option>
-                }
-              </select>
-            </div>
-            @if (!carrinho.online()) {
-              <p class="aviso" role="status">Conecte-se para aplicar os filtros.</p>
+        }
+
+        <div class="mast-controls contexto-mesa">
+          <div class="context">
+            @if (modoPdv()) {
+              <span class="pdv-selo-contexto">Atendimento assistido</span>
+            } @else {
+              <span class="ctx-word">Pedido na</span>
             }
-            <div class="acoes-filtros-cardapio">
-              <button hlmBtn variant="outline" type="button" (click)="filtros.close()">
-                Cancelar
-              </button>
-              <button hlmBtn type="submit" [disabled]="bloqueiaFiltros()">Aplicar filtros</button>
+            <div
+              class="ctx-wrap"
+              (focusout)="
+                !$any($event.currentTarget).contains($event.relatedTarget) &&
+                  (menuUnidade.checked = false)
+              "
+            >
+              <input #menuUnidade type="checkbox" hidden />
+              <label
+                class="ctx"
+                [class.ctx-open]="menuUnidade.checked"
+                [class.ctx-travado]="!!unidadeExterna()"
+                for="vitrine-unidade"
+                (mousedown)="
+                  !ocupado() && !trocaPendente() && !unidadeExterna() && $event.preventDefault()
+                "
+                (click)="
+                  $event.preventDefault();
+                  !ocupado() && !trocaPendente() && !unidadeExterna() && unidade.focus();
+                  !ocupado() &&
+                    !trocaPendente() &&
+                    !unidadeExterna() &&
+                    (menuUnidade.checked = !menuUnidade.checked);
+                  menuCanal.checked = false
+                "
+              >
+                <svg class="ico" width="18" height="18" aria-hidden="true">
+                  <use href="#i-pin" />
+                </svg>
+                <span class="sr-only">Unidade do cardápio</span>
+                <span class="ctx-val" aria-hidden="true">
+                  {{ unidadeAtual()?.nome || 'Selecione a unidade' }}
+                </span>
+                <select
+                  #unidade
+                  id="vitrine-unidade"
+                  class="sr-only"
+                  aria-label="Unidade do cardápio"
+                  [value]="unidadeId()"
+                  [disabled]="ocupado() || !!trocaPendente() || !!unidadeExterna()"
+                  (keydown.enter)="$event.preventDefault(); menuUnidade.checked = !menuUnidade.checked"
+                  (keydown.space)="$event.preventDefault(); menuUnidade.checked = !menuUnidade.checked"
+                  (keydown.escape)="menuUnidade.checked = false"
+                  (change)="menuUnidade.checked = false; selecionarUnidade(unidade)"
+                >
+                  <option value="">Selecione a unidade</option>
+                  @for (item of unidades(); track item.id) {
+                    <option [value]="item.id" [selected]="item.id === unidadeId()">
+                      {{ item.nome }}
+                    </option>
+                  }
+                </select>
+                @if (!unidadeExterna()) {
+                  <svg
+                    class="chev"
+                    [class.rot]="menuUnidade.checked"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <use href="#i-chev" />
+                  </svg>
+                }
+              </label>
+
+              @if (menuUnidade.checked) {
+                <div class="ctx-popover" role="presentation">
+                  <p class="ctx-popover-title">Escolha a unidade</p>
+                  @for (item of unidades(); track item.id) {
+                    <button
+                      type="button"
+                      class="ctx-opt"
+                      [class.on]="item.id === unidadeId()"
+                      tabindex="-1"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="
+                        menuUnidade.checked = false;
+                        unidade.value = item.id;
+                        selecionarUnidade(unidade)
+                      "
+                    >
+                      <span class="ctx-opt-main">
+                        <svg width="16" height="16" aria-hidden="true"><use href="#i-pin" /></svg>
+                        <span>{{ item.nome }}</span>
+                      </span>
+                      @if (item.id === unidadeId()) {
+                        <span class="ctx-opt-check" aria-hidden="true">
+                          <svg width="15" height="15"><use href="#i-check" /></svg>
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
             </div>
-          </form>
-        </dialog>
-      } @else {
-        <div class="linha">
-          <div>
-            <label for="vitrine-unidade">Unidade do cardápio</label>
-            <select
-              #unidade
-              id="vitrine-unidade"
-              [value]="unidadeId()"
-              [disabled]="ocupado() || !!trocaPendente() || !!unidadeExterna()"
-              (change)="selecionarUnidade(unidade)"
+
+            <span class="ctx-word">para</span>
+            <div
+              class="ctx-wrap"
+              (focusout)="
+                !$any($event.currentTarget).contains($event.relatedTarget) &&
+                  (menuCanal.checked = false)
+              "
             >
-              <option value="">Selecione a unidade</option>
-              @for (item of unidades(); track item.id) {
-                <option [value]="item.id" [selected]="item.id === unidadeId()">
-                  {{ item.nome }}
-                </option>
+              <input #menuCanal type="checkbox" hidden />
+              <label
+                class="ctx"
+                [class.ctx-open]="menuCanal.checked && !mesaSessao.participante()"
+                [class.ctx-travado]="!!mesaSessao.participante()"
+                for="vitrine-canal"
+                (mousedown)="
+                  !ocupado() &&
+                    !trocaPendente() &&
+                    !mesaSessao.participante() &&
+                    $event.preventDefault()
+                "
+                (click)="
+                  $event.preventDefault();
+                  !ocupado() && !trocaPendente() && canal.focus();
+                  !ocupado() &&
+                    !trocaPendente() &&
+                    !mesaSessao.participante() &&
+                    (menuCanal.checked = !menuCanal.checked);
+                  menuUnidade.checked = false
+                "
+              >
+                <svg class="ico" width="18" height="18" aria-hidden="true">
+                  <use href="#i-moto" />
+                </svg>
+                <span class="sr-only">Canal do cardápio</span>
+                <span class="ctx-val" aria-hidden="true">
+                  @for (item of canaisDisponiveis(); track item.valor) {
+                    @if (item.valor === canalSelecionado()) {
+                      {{ item.nome }}
+                    }
+                  }
+                </span>
+                <select
+                  #canal
+                  id="vitrine-canal"
+                  class="sr-only"
+                  aria-label="Canal do cardápio"
+                  [value]="canalSelecionado()"
+                  [disabled]="ocupado() || !!trocaPendente()"
+                  (keydown.enter)="
+                    $event.preventDefault();
+                    !mesaSessao.participante() && (menuCanal.checked = !menuCanal.checked)
+                  "
+                  (keydown.space)="
+                    $event.preventDefault();
+                    !mesaSessao.participante() && (menuCanal.checked = !menuCanal.checked)
+                  "
+                  (keydown.escape)="menuCanal.checked = false"
+                  (change)="menuCanal.checked = false; selecionarCanal(canal)"
+                >
+                  @for (item of canaisDisponiveis(); track item.valor) {
+                    <option [value]="item.valor" [selected]="item.valor === canalSelecionado()">
+                      {{ item.nome }}
+                    </option>
+                  }
+                </select>
+                @if (!mesaSessao.participante()) {
+                  <svg
+                    class="chev"
+                    [class.rot]="menuCanal.checked"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <use href="#i-chev" />
+                  </svg>
+                }
+              </label>
+
+              @if (menuCanal.checked && !mesaSessao.participante()) {
+                <div class="ctx-popover" role="presentation">
+                  <p class="ctx-popover-title">Como prefere receber</p>
+                  @for (item of canaisDisponiveis(); track item.valor) {
+                    <button
+                      type="button"
+                      class="ctx-opt"
+                      [class.on]="item.valor === canalSelecionado()"
+                      tabindex="-1"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="
+                        menuCanal.checked = false;
+                        canal.value = item.valor;
+                        selecionarCanal(canal)
+                      "
+                    >
+                      <span class="ctx-opt-main">
+                        <svg width="16" height="16" aria-hidden="true"><use href="#i-moto" /></svg>
+                        <span>{{ item.nome }}</span>
+                      </span>
+                      @if (item.valor === canalSelecionado()) {
+                        <span class="ctx-opt-check" aria-hidden="true">
+                          <svg width="15" height="15"><use href="#i-check" /></svg>
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
               }
-            </select>
+            </div>
           </div>
-          <div>
-            <label for="vitrine-canal">Canal do cardápio</label>
-            <select
-              #canal
-              id="vitrine-canal"
-              [value]="canalSelecionado()"
-              [disabled]="ocupado() || !!trocaPendente()"
-              (change)="selecionarCanal(canal)"
+
+          @if (mesaSessao.participante()) {
+            <p class="selo-mesa-qr" role="status">
+              <svg width="15" height="15" aria-hidden="true"><use href="#i-check" /></svg>
+              Mesa vinculada via QR Code (comanda ativa)
+            </p>
+          }
+
+          @if (consultadoEm()) {
+            <div
+              class="status contexto-status"
+              [class.contexto-aberto]="aberto() || carrinho.online()"
             >
-              @for (item of canais; track item.valor) {
-                <option [value]="item.valor" [selected]="item.valor === canalSelecionado()">
-                  {{ item.nome }}
-                </option>
+              <span class="open" [class.closed]="!aberto() && !carrinho.online()">
+                <span class="dot" aria-hidden="true"></span>
+                {{ aberto() || carrinho.online() ? 'Aberto agora' : 'Fechado agora' }}
+              </span>
+              <span class="status-hours" aria-hidden="true">Hoje, das 11h às 23h</span>
+              <span class="sr-only">
+                Unidade {{ aberto() ? 'aberta' : 'fechada' }} para
+                {{
+                  canalSelecionado() === 'DELIVERY'
+                    ? 'delivery'
+                    : canalSelecionado() === 'MESA'
+                      ? 'mesa'
+                      : 'retirada'
+                }}
+                (consulta em {{ horarioConsulta() }}).
+              </span>
+              @if (!modoPdv()) {
+                <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
               }
-            </select>
-          </div>
+            </div>
+          } @else {
+            <div class="status contexto-status">
+              <span class="status-hours">Horários sujeitos à unidade</span>
+              @if (!modoPdv()) {
+                <a class="status-ver-horarios" routerLink="/horarios">Ver horários</a>
+              }
+            </div>
+          }
         </div>
-      }
-      @if (trocaPendente()) {
-        <div #avisoTroca class="aviso" tabindex="-1">
+
+        @if (!modoPdv()) {
+          <figure class="mast-photo" aria-hidden="true">
+            <div
+              class="arch"
+              [style.--rm-hero-banner]="marca.bannerCss()"
+              role="img"
+              aria-label="Risoto de cogumelos servido em prato de cerâmica"
+            ></div>
+            <span class="credit">Imagem ilustrativa</span>
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <div class="stamp stamp--logo">
+                <img
+                  [src]="marca.logoUrl()!"
+                  [alt]="'Logo de ' + marca.nome()"
+                  width="120"
+                  height="120"
+                  decoding="async"
+                  (error)="marca.marcarErroLogo()"
+                />
+              </div>
+            } @else {
+              <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <path id="ring" d="M60,60 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" />
+                </defs>
+                <circle cx="60" cy="60" r="58" fill="#faf7f2" stroke="#a53e2b" stroke-width="1.6" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="34"
+                  fill="none"
+                  stroke="#a53e2b"
+                  stroke-width="1"
+                  stroke-dasharray="2 3"
+                />
+                <text
+                  font-family="Segoe UI, sans-serif"
+                  font-size="10"
+                  font-weight="700"
+                  fill="#a53e2b"
+                >
+                  <textPath href="#ring" textLength="276" lengthAdjust="spacing">
+                    FEITO NA CASA · TODO DIA · COM CALMA ·
+                  </textPath>
+                </text>
+                <g transform="translate(42 42) scale(1.5)">
+                  <path
+                    d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M20 21V3c-5 3-5 10 0 10"
+                    fill="none"
+                    stroke="#a53e2b"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+              </svg>
+            }
+          </figure>
+        }
+      </div>
+
+      @if (trocaPendente(); as pendente) {
+        <div role="alert" class="aviso-troca">
           <p>
-            Trocar de unidade ou canal esvazia o carrinho e consulta as ofertas do novo contexto.
-            Deseja continuar?
+            Trocar para {{ pendente.unidadeNome }} ({{ pendente.canal }}) esvaziará o carrinho
+            atual.
           </p>
           <div class="acoes">
             <button
@@ -160,98 +518,177 @@
             >
               Trocar e esvaziar carrinho
             </button>
-            <button class="secundario" type="button" (click)="manterContexto()">
+            <button hlmBtn class="secundario" type="button" (click)="trocaPendente.set(null)">
               Manter unidade, canal e carrinho
             </button>
           </div>
         </div>
       }
+
       @if (!carrinho.online()) {
-        <p role="status" class="aviso">
-          Sem conexão. Conecte-se para consultar disponibilidade e calcular o carrinho. Nenhum
-          pedido pode ser confirmado offline.
+        <p role="status" class="aviso-offline">
+          Você está offline. Reconecte para consultar o cardápio e enviar pedidos. Nenhuma operação
+          foi confirmada.
         </p>
       }
+
       @if (erro()) {
-        <p #alerta role="alert" tabindex="-1" class="erro">{{ erro() }}</p>
-      }
-      @if (aviso()) {
-        <p role="status">{{ aviso() }}</p>
-      }
-      @if (!unidades().length && !ocupado()) {
-        <p>Nenhuma unidade disponível para consulta.</p>
-        <button hlmBtn type="button" (click)="carregarUnidades()" [disabled]="!carrinho.online()">
-          Consultar unidades novamente
-        </button>
-      }
-      @if (unidadeId()) {
-        @if (cardapioCliente()) {
-          <div class="barra-filtros-cardapio">
-            <form
-              class="busca-publica-cardapio"
-              (submit)="filtrar($event)"
-              aria-label="Busca do cardápio"
-            >
-              <label for="vitrine-busca" class="sr-only">Buscar produtos</label>
-              <input
-                #busca
-                id="vitrine-busca"
-                type="search"
-                enterkeyhint="search"
-                maxlength="120"
-                placeholder="Buscar produtos"
-                [value]="termo"
-                (input)="termo = busca.value"
-              />
-              <button
-                hlmBtn
-                variant="ghost"
-                size="icon"
-                type="submit"
-                aria-label="Buscar no cardápio"
-                [disabled]="ocupado() || !carrinho.online()"
-              >
-                <app-icone nome="lupa" />
-              </button>
-            </form>
+        <div #alerta role="alert" tabindex="-1" class="erro">
+          <p>{{ erro() }}</p>
+          @if (somenteFavoritos() && favoritos.incerto()) {
             <button
-              #abrirFiltros
               hlmBtn
               variant="outline"
               type="button"
-              class="abrir-filtros-cardapio"
-              aria-haspopup="dialog"
-              aria-controls="vitrine-filtros"
-              [attr.aria-disabled]="bloqueiaFiltros() ? 'true' : null"
-              (click)="abrirPainelFiltros()"
+              (click)="carregar(0)"
+              [disabled]="ocupado() || !carrinho.online()"
             >
-              <app-icone nome="filtros" /> Filtros
+              Consultar favoritos novamente
             </button>
+          }
+        </div>
+      }
+
+      @if (aviso()) {
+        <p role="status" class="aviso-suave sr-only">{{ aviso() }}</p>
+      }
+
+      @if (!unidades().length && !ocupado()) {
+        <div class="sem-unidades">
+          <p>Nenhuma unidade disponível para consulta.</p>
+          <button hlmBtn type="button" (click)="carregarUnidades()" [disabled]="!carrinho.online()">
+            Consultar unidades novamente
+          </button>
+        </div>
+      }
+
+      @if (unidadeId()) {
+        <div class="layout cardapio-workspace">
+          <div class="rail indice-lateral">
+            <p class="rail-title">Seções</p>
+            <nav class="categorias" aria-label="Categorias do cardápio">
+              <button
+                type="button"
+                class="rail-link"
+                [class.on]="!categoriaId && !somenteFavoritos() && !somenteSugestoes()"
+                [attr.aria-pressed]="!categoriaId && !somenteFavoritos() && !somenteSugestoes()"
+                (click)="limparFiltrosVitrine()"
+                [disabled]="ocupado()"
+              >
+                <span class="n" aria-hidden="true">—</span>Todos
+              </button>
+              <button
+                type="button"
+                class="rail-link"
+                [class.on]="somenteSugestoes()"
+                [attr.aria-pressed]="somenteSugestoes()"
+                (click)="escolherSugestoes()"
+                [disabled]="ocupado()"
+              >
+                <span class="n" aria-hidden="true">01</span>Sugestões da casa
+              </button>
+              @for (categoria of categorias(); track categoria.id; let idx = $index) {
+                <button
+                  type="button"
+                  class="rail-link"
+                  [class.on]="
+                    !somenteFavoritos() && !somenteSugestoes() && categoriaId === categoria.id
+                  "
+                  [attr.aria-pressed]="
+                    !somenteFavoritos() && !somenteSugestoes() && categoriaId === categoria.id
+                  "
+                  (click)="escolherCategoria(categoria.id)"
+                  [disabled]="ocupado()"
+                >
+                  <span class="n" aria-hidden="true">{{
+                    idx + 2 < 10 ? '0' + (idx + 2) : idx + 2
+                  }}</span>
+                  {{ categoria.nome }}
+                </button>
+              }
+            </nav>
+
+            @if (!modoPdv()) {
+              <hr class="rail-hr" />
+
+              <div class="acoes-indice">
+                @if (favoritos.cliente()) {
+                  <button
+                    type="button"
+                    class="rail-link fav-link"
+                    [class.on]="somenteFavoritos()"
+                    (click)="abrirFavoritos(!somenteFavoritos())"
+                    [attr.aria-pressed]="somenteFavoritos()"
+                    [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">♥</span>Meus favoritos
+                  </button>
+                  <button
+                    type="button"
+                    class="rail-link rail-sub sr-only"
+                    (click)="abrirFavoritos(false)"
+                    [attr.aria-pressed]="!somenteFavoritos()"
+                    [disabled]="ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">•</span>Todos os produtos
+                  </button>
+                  <button
+                    type="button"
+                    class="rail-link rail-sub"
+                    [class.sr-only]="!favoritos.incerto()"
+                    (click)="consultarFavoritos()"
+                    [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                  >
+                    <span class="n" aria-hidden="true">↻</span>Consultar favoritos no servidor
+                  </button>
+                } @else {
+                  <span class="rail-link fav-link rail-fav-static" aria-hidden="true">
+                    <span class="n">♥</span>Meus favoritos
+                  </span>
+                  <p class="nota-favoritos">
+                    Entre em uma conta de cliente para guardar seus favoritos pessoais.
+                  </p>
+                }
+                @if (favoritos.erro()) {
+                  <p role="alert" class="erro">{{ favoritos.erro() }}</p>
+                }
+              </div>
+            }
           </div>
-          <p class="contexto-publico-cardapio">
-            {{ unidadeAtual()?.nome }} <span aria-hidden="true">·</span> {{ nomeCanalAtual() }}
-          </p>
-          <ng-container [ngTemplateOutlet]="listaCategorias" />
-        } @else {
-          <form (submit)="filtrar($event)" aria-label="Busca do cardápio">
-            <div class="linha">
-              <div>
-                <label for="vitrine-busca">Buscar produtos</label>
+
+          <div class="menu coluna-pratos">
+            <form
+              class="finder busca-cardapio"
+              (submit)="filtrar($event)"
+              aria-label="Busca do cardápio"
+            >
+              <div class="search">
+                <svg width="19" height="19" aria-hidden="true"><use href="#i-search" /></svg>
+                <label class="sr-only" for="vitrine-busca">Buscar produtos</label>
                 <input
                   #busca
                   id="vitrine-busca"
                   type="search"
                   maxlength="120"
+                  placeholder="Buscar prato, bebida…"
                   [value]="termo"
-                  (input)="termo = busca.value"
+                  (input)="termo = busca.value; !termo.trim() && carregar(0)"
                 />
-              </div>
-              <div>
-                <label for="vitrine-categoria">Categoria do cardápio</label>
+                @if (termo.trim()) {
+                  <button
+                    type="button"
+                    class="clear-search"
+                    aria-label="Limpar busca"
+                    (click)="busca.value = ''; termo = ''; carregar(0)"
+                  >
+                    ×
+                  </button>
+                }
+                <label class="sr-only" for="vitrine-categoria">Categoria do cardápio</label>
                 <select
                   #categoria
                   id="vitrine-categoria"
-                  aria-label="Categoria do cardápio"
+                  class="sr-select"
                   [value]="categoriaId"
                   (change)="categoriaId = categoria.value"
                 >
@@ -262,221 +699,547 @@
                     </option>
                   }
                 </select>
-              </div>
-            </div>
-            <button [disabled]="ocupado() || !carrinho.online()">Buscar no cardápio</button>
-          </form>
-        }
-        @if (!cardapioCliente() || favoritos.cliente()) {
-          <div class="acoes modos-cardapio">
-            @if (!cardapioCliente()) {
-              <button
-                hlmBtn
-                class="secundario"
-                type="button"
-                (click)="abrirFavoritos(false)"
-                [attr.aria-pressed]="!somenteFavoritos()"
-                [disabled]="ocupado() || !carrinho.online()"
-              >
-                Todos os produtos
-              </button>
-            }
-            @if (favoritos.cliente()) {
-              <button
-                hlmBtn
-                class="secundario"
-                type="button"
-                (click)="abrirFavoritos(!cardapioCliente() || !somenteFavoritos())"
-                [attr.aria-pressed]="somenteFavoritos()"
-                [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
-              >
-                Meus favoritos
-              </button>
-              @if (!cardapioCliente() || favoritos.erro() || favoritos.incerto()) {
                 <button
-                  hlmBtn
-                  class="secundario"
-                  type="button"
-                  (click)="consultarFavoritos()"
-                  [disabled]="ocupado() || favoritos.ocupado() || !carrinho.online()"
+                  class="go botao-buscar"
+                  type="submit"
+                  aria-label="Buscar no cardápio"
+                  [disabled]="ocupado() || !carrinho.online()"
                 >
-                  Consultar favoritos no servidor
+                  <span class="go-t">Buscar<span class="sr-only"> no cardápio</span></span>
+                  <svg class="go-i" width="18" height="18" aria-hidden="true">
+                    <use href="#i-arrow" />
+                  </svg>
+                </button>
+              </div>
+              @if (!modoPdv()) {
+                <button
+                  #abrirFiltros
+                  hlmBtn
+                  variant="outline"
+                  type="button"
+                  class="abrir-filtros-cardapio"
+                  aria-haspopup="dialog"
+                  aria-controls="vitrine-filtros"
+                  [attr.aria-disabled]="bloqueiaFiltros() ? 'true' : null"
+                  (click)="abrirPainelFiltros()"
+                >
+                  <app-icone nome="filtros" /> Filtros
                 </button>
               }
-            }
-            @if (!cardapioCliente()) {
-              <ng-container [ngTemplateOutlet]="atualizarCardapio" />
-            }
-          </div>
-        }
-        @if (!cardapioCliente() && !favoritos.cliente()) {
-          <p>Entre em uma conta de cliente para guardar seus favoritos pessoais.</p>
-        }
-        @if (favoritos.erro()) {
-          <p role="alert" class="erro">{{ favoritos.erro() }}</p>
-        }
-        @if (consultadoEm()) {
-          <p
-            role="status"
-            class="estado-cardapio"
-            [class.aviso]="cardapioCliente() && !aberto() && carrinho.online()"
-          >
-            @if (aberto()) {
-              {{ cardapioCliente() ? 'Aberto para pedidos' : 'Canal aberto para montar o carrinho.' }}
-            } @else if (cardapioCliente()) {
-              Canal fechado ou disponibilidade desatualizada. Você pode consultar os pratos e
-              atualizar o cardápio para verificar o atendimento.
-            } @else {
-              Canal fechado ou consulta expirada. Você pode consultar o cardápio; o carrinho exige
-              uma nova validação durante o atendimento.
-            }
-          </p>
-          @if (!cardapioCliente()) {
-            <p>Horário da unidade: {{ horarioConsulta() }} · Fuso {{ unidadeAtual()?.fuso }}.</p>
-          }
-        }
-        @if (cardapioCliente() && !aberto() && consultadoEm()) {
-          <ng-container [ngTemplateOutlet]="atualizarCardapio" />
-        }
-        @if (!cardapioCliente()) {
-          <ng-container [ngTemplateOutlet]="listaCategorias" />
-        }
-        <div class="grade produtos">
-          @for (produto of produtos(); track produto.id) {
-            <article
-              class="item produto-card"
-              [class.produto-com-foto]="produto.midiaId"
-              [attr.aria-label]="produto.nome"
-            >
-              @if (produto.midiaId) {
-                <img
-                  [src]="'/api/v1/midias/' + produto.midiaId"
-                  [alt]="produto.nome"
-                  loading="lazy"
-                />
-              }
-              @if (!produto.midiaId && !cardapioCliente()) {
-                <div class="produto-sem-foto" aria-hidden="true">
-                  <svg viewBox="0 0 80 80" fill="none">
-                    <circle cx="40" cy="42" r="23" stroke="currentColor" stroke-width="2" />
-                    <circle cx="40" cy="42" r="16" stroke="currentColor" />
-                    <path
-                      d="M9 16v18m-4-18v12c0 8 8 8 8 0V16m-4 18v33M68 16v51m0-51c-10 6-10 24 0 24"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    /></svg
-                  ><span>Feito na casa</span>
-                </div>
-              }
-              <div class="produto-corpo">
-                <ng-template #precoProduto>
-                  <p class="produto-preco">
-                    {{ (produto.tipo === 'COMBO' ? 'Combo a partir de ' : 'A partir de ') + moeda(produto.preco) }}
-                  </p>
-                </ng-template>
-                <h3>{{ produto.nome }}</h3>
-                @if (cardapioCliente()) {
-                  <ng-container [ngTemplateOutlet]="precoProduto" />
-                }
-                @if (produto.sugerido) {
-                  <p><strong>Sugestão da casa</strong></p>
-                }
-                <p class="produto-descricao">{{ produto.descricao }}</p>
-                @if (!cardapioCliente()) {
-                  <ng-container [ngTemplateOutlet]="precoProduto" />
-                }
-                @if (!produto.disponivel) {
-                  <p>Indisponível neste canal e unidade.</p>
-                }
-                <div class="acoes">
-                  <button
-                    hlmBtn
-                    type="button"
-                    [attr.aria-label]="'Ver opções de ' + produto.nome"
-                    #origemConfiguracao
-                    (click)="configurar(produto.id, null, origemConfiguracao)"
-                    [disabled]="ocupado() || !carrinho.online()"
+              <button
+                class="tool"
+                type="button"
+                aria-label="Atualizar cardápio"
+                (click)="carregar(0)"
+                [disabled]="ocupado() || !carrinho.online()"
+              >
+                <svg width="20" height="20" aria-hidden="true"><use href="#i-refresh" /></svg>
+              </button>
+            </form>
+
+            @if (temSugestoesVisiveis()) {
+              <section class="sec sec-sugestoes">
+                <header class="sec-head">
+                  <span class="sec-n">01</span>
+                  <h2>Sugestões da casa</h2>
+                  <span class="sec-rule" aria-hidden="true"></span>
+                  <span class="sec-note">Escolhidas pela cozinha</span>
+                  <div
+                    class="carrossel-controles"
+                    role="group"
+                    aria-label="Navegar sugestões da casa"
                   >
-                    {{ cardapioCliente() ? 'Ver opções' : 'Ver opções de ' + produto.nome }}
-                  </button>
-                  @if (favoritos.cliente()) {
                     <button
-                      hlmBtn
-                      class="secundario"
                       type="button"
-                      (click)="favoritos.alternar(produto.id)"
-                      [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
-                      [disabled]="favoritos.ocupado() || favoritos.incerto() || !carrinho.online()"
+                      class="carrossel-seta"
+                      aria-label="Sugestões anteriores"
+                      (click)="deslizarSugestoes(trilhoSugestoes, -1)"
                     >
-                      {{ (favoritos.ids().includes(produto.id) ? 'Remover dos favoritos: ' : 'Favoritar: ') + produto.nome }}
+                      <span aria-hidden="true">‹</span>
                     </button>
+                    <button
+                      type="button"
+                      class="carrossel-seta"
+                      aria-label="Próximas sugestões"
+                      (click)="deslizarSugestoes(trilhoSugestoes, 1)"
+                    >
+                      <span aria-hidden="true">›</span>
+                    </button>
+                  </div>
+                </header>
+                <div
+                  #trilhoSugestoes
+                  class="features"
+                  [class.arrastando]="arrastandoCarrossel()"
+                  (mousedown)="iniciarArrasteCarrossel($event, trilhoSugestoes)"
+                  (mousemove)="moverArrasteCarrossel($event, trilhoSugestoes)"
+                  (mouseup)="finalizarArrasteCarrossel()"
+                  (mouseleave)="finalizarArrasteCarrossel()"
+                >
+                  @for (produto of produtos(); track produto.id) {
+                    @if (
+                      produto.sugerido &&
+                      (!categoriaId || produto.categoriaId === categoriaId) &&
+                      correspondeBusca(produto)
+                    ) {
+                      <article
+                        class="feature item produto-card produto-sugerido"
+                        [class.produto-esgotado]="!produto.disponivel"
+                        [attr.aria-label]="produto.nome"
+                        (click)="
+                          produto.disponivel &&
+                            !ocupado() &&
+                            carrinho.online() &&
+                            aoClicarCartaoSugestao(produto, $event)
+                        "
+                      >
+                        <div class="f-photo">
+                          @if (produto.midiaId) {
+                            <img
+                              class="produto-foto"
+                              [src]="'/api/v1/midias/' + produto.midiaId"
+                              [alt]="produto.nome"
+                              width="400"
+                              height="300"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          } @else {
+                            <div class="produto-sem-foto f-placeholder" aria-hidden="true">
+                              <span>{{ produto.nome.slice(0, 1) }}</span>
+                            </div>
+                          }
+                          <span class="f-tag selo-sugestao" aria-hidden="true">
+                            {{ produto.tipo === 'COMBO' ? 'Combo para montar' : 'Sugestão do chef' }}
+                          </span>
+                          <p class="sr-only">Sugestão da casa</p>
+                          @if (!modoPdv()) {
+                            @if (favoritos.cliente()) {
+                              <button
+                                class="fav botao-favorito"
+                                [class.on]="favoritos.ids().includes(produto.id)"
+                                type="button"
+                                (click)="$event.stopPropagation(); favoritos.alternar(produto.id)"
+                                [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
+                                [disabled]="
+                                  favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
+                                "
+                              >
+                                <span class="sr-only">
+                                  {{
+                                    (favoritos.ids().includes(produto.id)
+                                      ? 'Remover dos favoritos: '
+                                      : 'Favoritar: ') + produto.nome
+                                  }}
+                                </span>
+                                <svg width="20" height="20" aria-hidden="true">
+                                  <use
+                                    [attr.href]="
+                                      favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
+                                    "
+                                  />
+                                </svg>
+                              </button>
+                            } @else {
+                              <span class="fav" aria-hidden="true">
+                                <svg width="20" height="20"><use href="#i-heart" /></svg>
+                              </span>
+                            }
+                          }
+                        </div>
+                        <div class="f-body produto-corpo">
+                          <h3>{{ produto.nome }}</h3>
+                          <p class="desc produto-descricao">{{ produto.descricao }}</p>
+                          @if (!produto.disponivel) {
+                            <p class="produto-indisponivel">Indisponível neste canal e unidade.</p>
+                          }
+                          <div class="f-foot produto-rodape">
+                            <div class="price produto-preco">
+                              <small>{{
+                                produto.tipo === 'COMBO' ? 'Combo a partir de ' : 'A partir de '
+                              }}</small>
+                              <b>{{ moeda(produto.preco) }}</b>
+                            </div>
+                            @if (produto.disponivel) {
+                              <button
+                                class="add botao-configurar"
+                                type="button"
+                                (click)="
+                                  $event.stopPropagation();
+                                  configurar(produto.id, null, $event.currentTarget)
+                                "
+                                [disabled]="ocupado() || !carrinho.online()"
+                              >
+                                <span class="plus" aria-hidden="true">
+                                  <svg width="16" height="16"><use href="#i-plus" /></svg>
+                                </span>
+                                <span aria-hidden="true">{{
+                                  produto.tipo === 'COMBO' ? 'Montar' : 'Escolher'
+                                }}</span>
+                                <span class="sr-only">Ver opções de {{ produto.nome }}</span>
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      </article>
+                    }
                   }
                 </div>
-              </div>
-            </article>
-          } @empty {
-            @if (!ocupado()) {
-              <p class="vazio">
-                {{
-              somenteFavoritos()
-                ? 'Nenhum favorito encontrado para estes filtros.'
-                : 'Nenhum produto encontrado para estes filtros.'
-                }}
-              </p>
+              </section>
             }
-          }
-        </div>
-        @if (!cardapioCliente() || temMais() || pagina() > 0) {
-          <nav class="acoes" aria-label="Páginas do cardápio">
-            <button
-              hlmBtn
-              type="button"
-              (click)="carregar(pagina() - 1)"
-              [disabled]="ocupado() || pagina() === 0 || !carrinho.online()"
+
+            @for (cat of categorias(); track cat.id; let idx = $index) {
+              @if (temProdutosNaCategoria(cat)) {
+                <section class="sec sec-categoria">
+                  <header class="sec-head">
+                    <span class="sec-n">{{ idx + 2 < 10 ? '0' + (idx + 2) : idx + 2 }}</span>
+                    <h2>{{ cat.nome }}</h2>
+                    <span class="sec-rule" aria-hidden="true"></span>
+                    <span class="sec-note">Na brasa e da casa</span>
+                  </header>
+                  <div class="rows">
+                    @if (
+                      !termo.trim() && !categoriaId && !somenteFavoritos() && !somenteSugestoes()
+                    ) {
+                      @for (produto of produtos(); track produto.id) {
+                        @if (produto.sugerido && produto.categoriaId === cat.id) {
+                          <div
+                            class="row item produto-card"
+                            [class.off]="!produto.disponivel"
+                            [class.produto-esgotado]="!produto.disponivel"
+                          >
+                            @if (produto.midiaId) {
+                              <div class="thumb">
+                                <img
+                                  class="produto-foto"
+                                  [src]="'/api/v1/midias/' + produto.midiaId"
+                                  [alt]="produto.nome"
+                                  loading="lazy"
+                                  decoding="async"
+                                />
+                              </div>
+                            } @else {
+                              <div
+                                class="thumb mono produto-sem-foto"
+                                [class.off]="!produto.disponivel"
+                                aria-hidden="true"
+                              >
+                                {{ produto.nome.slice(0, 1) }}
+                              </div>
+                            }
+                            <div class="r-body produto-corpo">
+                              <div class="r-top produto-topo">
+                                <h3>{{ produto.nome }}</h3>
+                                <span class="leader produto-pontilhado" aria-hidden="true"></span>
+                                <span
+                                  class="r-price produto-preco"
+                                  >{{ moeda(produto.preco) }}</span
+                                >
+                              </div>
+                              <p class="desc produto-descricao">{{ produto.descricao }}</p>
+                              <div class="r-meta">
+                                @if (quantidadeDoProdutoNoCarrinho(produto.id); as qtdNoPedido) {
+                                  <span class="chip ok">
+                                    <svg width="12" height="12" aria-hidden="true">
+                                      <use href="#i-check" />
+                                    </svg>
+                                    {{ qtdNoPedido }} no seu pedido
+                                  </span>
+                                }
+                                @if (produto.disponivel) {
+                                  <span class="chip">{{
+                                    produto.tipo === 'COMBO' ? 'Combo para montar' : 'Aceita adicionais'
+                                  }}</span>
+                                } @else {
+                                  <span class="chip warn">Indisponível nesta unidade agora</span>
+                                }
+                              </div>
+                            </div>
+                            <div class="r-act produto-acoes" aria-hidden="true">
+                              @if (produto.disponivel) {
+                                <button
+                                  class="add round botao-configurar"
+                                  type="button"
+                                  tabindex="-1"
+                                  (click)="configurar(produto.id, null, $event.currentTarget)"
+                                  [disabled]="ocupado() || !carrinho.online()"
+                                >
+                                  <span class="plus">
+                                    <svg width="20" height="20"><use href="#i-plus" /></svg>
+                                  </span>
+                                </button>
+                              }
+                              @if (!modoPdv() && favoritos.cliente()) {
+                                <button
+                                  class="fav-sm botao-favorito"
+                                  [class.on]="favoritos.ids().includes(produto.id)"
+                                  type="button"
+                                  tabindex="-1"
+                                  (click)="favoritos.alternar(produto.id)"
+                                  [disabled]="
+                                    favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
+                                  "
+                                >
+                                  <svg width="19" height="19">
+                                    <use
+                                      [attr.href]="
+                                        favoritos.ids().includes(produto.id)
+                                          ? '#i-heart-f'
+                                          : '#i-heart'
+                                      "
+                                    />
+                                  </svg>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      }
+                    }
+
+                    @for (produto of produtos(); track produto.id) {
+                      @if (
+                        (!produto.sugerido || !temSugestoesVisiveis()) &&
+                        produto.categoriaId === cat.id &&
+                        correspondeBusca(produto, cat.nome)
+                      ) {
+                        <article
+                          class="row item produto-card"
+                          [class.off]="!produto.disponivel"
+                          [class.produto-esgotado]="!produto.disponivel"
+                          [attr.aria-label]="produto.nome"
+                        >
+                          @if (produto.midiaId) {
+                            <div class="thumb">
+                              <img
+                                class="produto-foto"
+                                [src]="'/api/v1/midias/' + produto.midiaId"
+                                [alt]="produto.nome"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          } @else {
+                            <div
+                              class="thumb mono produto-sem-foto"
+                              [class.off]="!produto.disponivel"
+                              aria-hidden="true"
+                            >
+                              {{ produto.nome.slice(0, 1) }}
+                            </div>
+                          }
+                          <div class="r-body produto-corpo">
+                            <div class="r-top produto-topo">
+                              <h3>{{ produto.nome }}</h3>
+                              <span class="leader produto-pontilhado" aria-hidden="true"></span>
+                              <span class="r-price produto-preco">
+                                <span class="sr-only">{{
+                                  produto.tipo === 'COMBO' ? 'Combo a partir de ' : 'A partir de '
+                                }}</span
+                                >{{ moeda(produto.preco) }}
+                              </span>
+                            </div>
+                            <p class="desc produto-descricao">{{ produto.descricao }}</p>
+                            <div class="r-meta">
+                              @if (quantidadeDoProdutoNoCarrinho(produto.id); as qtdNoPedido) {
+                                <span class="chip ok">
+                                  <svg width="12" height="12" aria-hidden="true">
+                                    <use href="#i-check" />
+                                  </svg>
+                                  {{ qtdNoPedido }} no seu pedido
+                                </span>
+                              }
+                              @if (produto.disponivel) {
+                                <span class="chip">{{
+                                  produto.tipo === 'COMBO' ? 'Combo para montar' : 'Aceita adicionais'
+                                }}</span>
+                              } @else {
+                                <span class="chip warn" aria-hidden="true">
+                                  Indisponível nesta unidade agora
+                                </span>
+                                <p class="sr-only produto-indisponivel">
+                                  Indisponível neste canal e unidade.
+                                </p>
+                              }
+                            </div>
+                          </div>
+                          <div class="r-act produto-acoes">
+                            @if (!modoPdv()) {
+                              @if (favoritos.cliente()) {
+                                <button
+                                  class="fav-sm botao-favorito"
+                                  [class.on]="favoritos.ids().includes(produto.id)"
+                                  type="button"
+                                  (click)="favoritos.alternar(produto.id)"
+                                  [attr.aria-pressed]="favoritos.ids().includes(produto.id)"
+                                  [disabled]="
+                                    favoritos.ocupado() || favoritos.incerto() || !carrinho.online()
+                                  "
+                                >
+                                  <span class="sr-only">
+                                    {{
+                                      (favoritos.ids().includes(produto.id)
+                                        ? 'Remover dos favoritos: '
+                                        : 'Favoritar: ') + produto.nome
+                                    }}
+                                  </span>
+                                  <svg width="19" height="19" aria-hidden="true">
+                                    <use
+                                      [attr.href]="
+                                        favoritos.ids().includes(produto.id) ? '#i-heart-f' : '#i-heart'
+                                      "
+                                    />
+                                  </svg>
+                                </button>
+                              } @else {
+                                <span class="fav-sm" aria-hidden="true">
+                                  <svg width="19" height="19"><use href="#i-heart" /></svg>
+                                </span>
+                              }
+                            }
+                            @if (produto.disponivel) {
+                              <button
+                                class="add round botao-configurar"
+                                type="button"
+                                (click)="configurar(produto.id, null, $event.currentTarget)"
+                                [disabled]="ocupado() || !carrinho.online()"
+                              >
+                                <span class="plus" aria-hidden="true">
+                                  <svg width="20" height="20"><use href="#i-plus" /></svg>
+                                </span>
+                                <span class="sr-only">Ver opções de {{ produto.nome }}</span>
+                              </button>
+                            }
+                          </div>
+                        </article>
+                      }
+                    }
+                  </div>
+                </section>
+              }
+            }
+
+            @if (!ocupado() && !temQualquerProdutoVisivel()) {
+              <div class="vazio" role="status">
+                <p>
+                  {{
+                    somenteFavoritos()
+                      ? 'Nenhum favorito encontrado para estes filtros.'
+                      : 'Nenhum produto encontrado para estes filtros.'
+                  }}
+                </p>
+                <button
+                  hlmBtn
+                  variant="outline"
+                  type="button"
+                  (click)="limparFiltrosVitrine()"
+                  [disabled]="ocupado()"
+                >
+                  Ver todo o cardápio
+                </button>
+              </div>
+            }
+
+            <nav
+              class="acoes paginacao-cardapio"
+              [class.sr-only]="pagina() === 0 && !temMais()"
+              aria-label="Páginas do cardápio"
             >
-              Página anterior do cardápio
-            </button>
-            <span>Página {{ pagina() + 1 }}</span>
-            <button
-              hlmBtn
-              type="button"
-              (click)="carregar(pagina() + 1)"
-              [disabled]="ocupado() || !temMais() || !carrinho.online()"
-            >
-              Próxima página do cardápio
-            </button>
-          </nav>
-        }
-        @if (cardapioCliente() && aberto()) {
-          <div class="rodape-cardapio">
-            <ng-container [ngTemplateOutlet]="atualizarCardapio" />
-            <p>Horário da unidade: {{ horarioConsulta() }} · Fuso {{ unidadeAtual()?.fuso }}.</p>
+              <button
+                hlmBtn
+                class="secundario"
+                type="button"
+                (click)="carregar(pagina() - 1)"
+                [disabled]="ocupado() || pagina() === 0 || !carrinho.online()"
+              >
+                Página anterior do cardápio
+              </button>
+              <span class="pagina-atual">Página {{ pagina() + 1 }}</span>
+              <button
+                hlmBtn
+                class="secundario"
+                type="button"
+                (click)="carregar(pagina() + 1)"
+                [disabled]="ocupado() || !temMais() || !carrinho.online()"
+              >
+                Próxima página do cardápio
+              </button>
+            </nav>
           </div>
-        }
+
+          <aside class="ticket-col carrinho-lateral" aria-label="Resumo do carrinho">
+            <div class="ticket comanda-moldura">
+              <app-carrinho
+                #carrinhoLateral
+                [produtos]="produtos()"
+                [exibirImagens]="false"
+                [consultandoCatalogo]="ocupado()"
+                (editar)="editarItem($event)"
+              />
+            </div>
+            <div class="edge comanda-picote" aria-hidden="true"></div>
+            <p class="t-help">
+              Pagamento e endereço ficam na próxima etapa. O pedido só vale após a confirmação do
+              restaurante.
+            </p>
+          </aside>
+        </div>
       }
     </section>
+  } @else {
+    <aside class="ticket-col carrinho-lateral modo-pagina-carrinho" aria-label="Resumo do carrinho">
+      <div class="ticket comanda-moldura">
+        <app-carrinho
+          [produtos]="produtos()"
+          [apresentacaoCliente]="true"
+          [consultandoCatalogo]="ocupado()"
+          (editar)="editarItem($event)"
+        />
+      </div>
+      <div class="edge comanda-picote" aria-hidden="true"></div>
+      <p class="t-help">
+        Pagamento e endereço ficam na próxima etapa. O pedido só vale após a confirmação do
+        restaurante.
+      </p>
+    </aside>
   }
-  <aside class="carrinho-lateral" aria-label="Resumo do carrinho">
-    @if (cardapioCliente() && modo === 'cardapio') {
-      <app-carrinho-previa />
-    } @else {
-      <app-carrinho
-        [apresentacaoCliente]="modo === 'carrinho'"
-        [consultandoCatalogo]="ocupado()"
-        (editar)="configurar($event.item.linha.produtoId, $event.item.linha, $event.acionador)"
-      />
-    }
-  </aside>
 </div>
-@if (modo === 'cardapio' && carrinho.quantidadeItens() > 0) {
-  <a hlmBtn routerLink="/carrinho" class="carrinho-movel"
-    ><span>Ver meu carrinho</span
-    ><span class="carrinho-contagem"
-      >{{ carrinho.quantidadeItens() }}
-      {{ carrinho.quantidadeItens() === 1 ? 'item' : 'itens' }}</span
-    ></a
-  >
+
+@if (modo === 'cardapio' && quantidadeItens() > 0) {
+  @if (modoPdv()) {
+    <button
+      hlmBtn
+      type="button"
+      class="carrinho-movel dock-cart dock-cart-pdv"
+      (click)="abrirRevisaoPdv($event.currentTarget)"
+    >
+      <span class="bagi" aria-hidden="true">
+        <svg width="20" height="20"><use href="#i-bag" /></svg>
+        <b>{{ quantidadeItens() }}</b>
+      </span>
+      <span class="lbl">Conferir comanda</span>
+      <span class="sr-only">
+        ({{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }})
+      </span>
+      <span class="amount carrinho-contagem" aria-hidden="true">
+        {{ totalEstimadoCarrinho() }}
+      </span>
+    </button>
+  } @else {
+    <a hlmBtn routerLink="/carrinho" class="carrinho-movel dock-cart">
+      <span class="bagi" aria-hidden="true">
+        <svg width="20" height="20"><use href="#i-bag" /></svg>
+        <b>{{ quantidadeItens() }}</b>
+      </span>
+      <span class="lbl">Ver meu carrinho</span>
+      <span class="sr-only">
+        ({{ quantidadeItens() }} {{ quantidadeItens() === 1 ? 'item' : 'itens' }})
+      </span>
+      <span class="amount carrinho-contagem" aria-hidden="true">
+        {{ totalEstimadoCarrinho() }}
+      </span>
+    </a>
+  }
 }
 <ng-template #atualizarCardapio>
   <button

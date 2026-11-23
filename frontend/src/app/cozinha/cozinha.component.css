@@ -11,9 +11,13 @@
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--border);
 }
 .ferramentas h2 {
+  font-family: var(--font-serif);
+  font-weight: 500;
   font-size: 1.5rem;
   margin: 0;
 }
@@ -96,6 +100,7 @@ summary:focus-visible {
   min-height: 36px;
 }
 .coluna h2 span {
+  font-variant-numeric: tabular-nums;
   background: var(--card, #fff);
   border-radius: 20px;
   padding: 4px 10px;

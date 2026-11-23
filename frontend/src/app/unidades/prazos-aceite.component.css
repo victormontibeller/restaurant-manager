@@ -1,5 +1,7 @@
-form {
-  max-width: 48rem;
-  gap: var(--gestao-espaco-3, 12px);
-  margin-top: var(--gestao-espaco-3, 12px);
+/* Estilos específicos de Prazos de Aceite (complementam operacao.css) */
+.sla-preset-btn:disabled {
+  background: var(--disabled-bg, #efe9e0);
+  color: var(--disabled-fg, #594e46);
+  border-color: var(--disabled-border, #d8cfc3);
+  cursor: not-allowed;
 }

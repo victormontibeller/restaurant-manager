@@ -57,6 +57,7 @@ function fixture() {
     exports: {},
     require: (modulo) => {
       if (modulo === '../catalogo/modelos') return modelos.exports;
+      if (modulo === '../ui/button') return { HlmButton: class {} };
       assert.equal(modulo, '@angular/core');
       return { Component: () => (component) => component, signal };
     },
