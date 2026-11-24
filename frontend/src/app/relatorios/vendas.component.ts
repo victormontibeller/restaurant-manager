@@ -38,7 +38,7 @@ interface Relatorio {
 @Component({
   selector: 'app-vendas',
   imports: [FormsModule],
-  styleUrl: './painel-financeiro.css',
+  styleUrls: ['../operacao.css', './painel-financeiro.css'],
   templateUrl: './vendas.component.html',
 })
 export class VendasComponent {
@@ -74,6 +74,11 @@ export class VendasComponent {
   data(valor: string): string {
     return valor.split('-').reverse().join('/');
   }
+  ticketMedio(relatorio: Relatorio): string {
+    const pedidos = relatorio.pedidosCriados;
+    return moeda(pedidos ? (Number(relatorio.cobrancasOriginais) / pedidos).toFixed(2) : '0.00');
+  }
+
   paginar(delta: number): void {
     const atual = this.dados();
     if (atual) void this.carregar(this.pagina() + delta, atual.inicio, atual.fim);

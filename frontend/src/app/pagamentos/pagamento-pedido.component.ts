@@ -23,9 +23,13 @@ export class PagamentoPedidoComponent {
   private readonly sessao = inject(SessaoService);
   readonly tentativas = signal<Checkout[]>([]);
   readonly erro = signal('');
+  readonly statusConferencia = signal('');
   readonly consultando = signal(false);
   podeTentar(): boolean {
     return this.tentativas().every((c) => c.estado === 'RECUSADO');
+  }
+  algumConfirmado(): boolean {
+    return this.tentativas().some((c) => c.estado === 'CONFIRMADO');
   }
   private consulta = 0;
   private intencao: string | null = null;
@@ -53,7 +57,7 @@ export class PagamentoPedidoComponent {
           AGUARDANDO: 'Aguardando confirmação de pagamento',
           CONFIRMADO: 'Pagamento confirmado',
           RECUSADO: 'Tentativa recusada ou encerrada',
-          EM_RECONCILIACAO: 'Conferindo o resultado com o provedor',
+          EM_RECONCILIACAO: 'Conferindo pagamento com o Mercado Pago',
           BLOQUEADO: 'Pagamento exige análise da equipe',
         } as Record<string, string>
       )[estado] ?? estado
@@ -62,11 +66,12 @@ export class PagamentoPedidoComponent {
   private rota(): string {
     return '/api/v1/me/pedidos/' + this.pedidoId() + '/pagamento';
   }
-  async carregar(): Promise<void> {
+  async carregar(explicito = false): Promise<void> {
     if (this.consultando()) return;
     const consulta = ++this.consulta;
     const pedido = this.pedidoId();
     this.consultando.set(true);
+    if (explicito) this.statusConferencia.set('');
     try {
       const dados = await this.sessao.api<Checkout[]>(this.rota());
       if (consulta === this.consulta && pedido === this.pedidoId()) {

@@ -1,5 +1,19 @@
-<section class="admin-pagina" aria-label="Configuração de entrega" [attr.aria-busy]="ocupado()">
-  <section class="admin-painel" aria-labelledby="regioes-titulo">
+<section
+  class="admin-pagina s5-painel"
+  aria-label="Configuração de entrega"
+  [attr.aria-busy]="ocupado()"
+>
+  @if (servidor()) {
+    <div class="del-kpi-strip">
+      <div class="del-kpi-tile">
+        <span>Regiões de entrega</span><strong>{{ regioes.length }}</strong>
+      </div>
+      <div class="del-kpi-tile">
+        <span>Prazo de pagamento online</span><strong>{{ minutos }} min</strong>
+      </div>
+    </div>
+  }
+  <section class="admin-painel s5-card" aria-labelledby="regioes-titulo">
     <div class="admin-cabecalho">
       <div>
         <h2 id="regioes-titulo">Áreas atendidas</h2>
@@ -20,20 +34,25 @@
       </div>
     </div>
     @if (servidor()) {
-      <div class="gestao-lista lista-regioes">
+      <div class="del-regioes-lista">
         @for (r of regioes; track r.id) {
-          <article class="gestao-linha">
-            <div>
-              <h3>{{ r.nome }}</h3>
-              <span>CEP {{ r.cepInicial }} a {{ r.cepFinal }}</span>
+          <article class="del-regiao-card">
+            <div class="del-regiao-head">
+              <div>
+                <h3>{{ r.nome }}</h3>
+                <span>CEP {{ r.cepInicial }} a {{ r.cepFinal }}</span>
+              </div>
+              <span
+                class="gestao-estado"
+                [attr.data-estado]="r.ativa ? 'ativo' : 'inativo'"
+                >{{ r.ativa ? 'Ativa' : 'Inativa' }}</span
+              >
             </div>
-            <span>Taxa {{ moeda(r.taxa) }} · Mínimo {{ moeda(r.minimo) }}</span>
-            <span
-              class="gestao-estado"
-              [attr.data-estado]="r.ativa ? 'ativo' : 'inativo'"
-              >{{ r.ativa ? 'Ativa' : 'Inativa' }}</span
-            >
-            <div class="gestao-acoes">
+            <div class="del-regiao-bot">
+              <span>Taxa {{ moeda(r.taxa) }}</span
+              ><span>Pedido mínimo {{ moeda(r.minimo) }}</span>
+            </div>
+            <div class="del-regiao-actions">
               <button
                 #editar
                 type="button"
@@ -65,14 +84,14 @@
     @if (editor(); as r) {
       <form
         #formRegiao="ngForm"
-        class="gestao-editor"
+        class="gestao-editor del-regiao-card"
         (ngSubmit)="aplicarRegiao()"
         aria-labelledby="regiao-editor"
       >
         <h3 id="regiao-editor" data-gestao-foco tabindex="-1">
           {{ original ? 'Editar região' : 'Nova região' }}
         </h3>
-        <div class="gestao-campos">
+        <div class="del-regiao-top">
           <label
             >Nome da região<input name="nome" [(ngModel)]="r.nome" required maxlength="100"
           /></label>
@@ -94,6 +113,8 @@
               pattern="[0-9]{5}-?[0-9]{3}"
               inputmode="numeric"
           /></label>
+        </div>
+        <div class="del-regiao-bot">
           <label
             >Taxa fixa em reais<input
               name="taxa"
@@ -127,7 +148,7 @@
     }
   </section>
   @if (servidor()) {
-    <section class="admin-painel" aria-labelledby="checkout-titulo">
+    <section class="admin-painel s5-talao" aria-labelledby="checkout-titulo">
       <h2 id="checkout-titulo">Checkout da unidade</h2>
       <p class="admin-ajuda">O prazo e a lista de regiões entram em vigor juntos ao salvar.</p>
       <form ngNativeValidate #formConfig="ngForm" class="admin-filtros" (ngSubmit)="salvar(senha)">

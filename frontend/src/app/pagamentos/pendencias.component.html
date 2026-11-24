@@ -1,33 +1,15 @@
-<section class="painel-financeiro">
-  <h2 class="sr-only">Pendências financeiras e notificações</h2>
-  <nav aria-label="Filas operacionais" class="abas">
-    <button
-      type="button"
-      [attr.aria-pressed]="aba() === 'pagamentos'"
-      (click)="aba.set('pagamentos')"
-    >
-      Pendências financeiras
-    </button>
-    <button
-      type="button"
-      [attr.aria-pressed]="aba() === 'notificacoes'"
-      (click)="aba.set('notificacoes')"
-    >
-      Notificações por e-mail
-    </button>
+<section class="painel-pendencias" aria-labelledby="pendencias-titulo">
+  <h2 id="pendencias-titulo" class="sr-only">Pendências financeiras e notificações</h2>
+  <nav class="pendencias-barra-topo" aria-label="Filas operacionais">
+    <button type="button" (click)="financeiras.focus()">Pendências financeiras</button>
+    <button type="button" (click)="notificacoes.focus()">Notificações por e-mail</button>
   </nav>
-  <div [hidden]="aba() !== 'pagamentos'">
-    <app-fila-operacional
-      fila="pagamentos"
-      [ativa]="aba() === 'pagamentos'"
-      [unidadeId]="unidadeId()"
-    />
-  </div>
-  <div [hidden]="aba() !== 'notificacoes'">
-    <app-fila-operacional
-      fila="notificacoes"
-      [ativa]="aba() === 'notificacoes'"
-      [unidadeId]="unidadeId()"
-    />
+  <div class="grade-pendencias">
+    <div tabindex="-1" #financeiras>
+      <app-fila-operacional fila="pagamentos" [unidadeId]="unidadeId()" />
+    </div>
+    <div tabindex="-1" #notificacoes>
+      <app-fila-operacional fila="notificacoes" [unidadeId]="unidadeId()" />
+    </div>
   </div>
 </section>

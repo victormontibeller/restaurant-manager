@@ -3,6 +3,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { mensagemErro } from '../catalogo/modelos';
 import { SessaoService } from '../identidade/sessao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { HlmButton } from '../ui/button';
 interface Conexao {
   id: string;
   vendedor: string;
@@ -11,8 +12,8 @@ interface Conexao {
 }
 @Component({
   selector: 'app-integracao-pagamento',
-  imports: [DatePipe],
-  styleUrl: '../ui/administracao.css',
+  imports: [HlmButton],
+  styleUrl: '../operacao.css',
   templateUrl: './integracao.component.html',
 })
 export class IntegracaoPagamentoComponent {
@@ -67,5 +68,22 @@ export class IntegracaoPagamentoComponent {
       this.ocupado.set(false);
       this.nav.liberar(this.chave);
     }
+  }
+
+  conexaoConcluida(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('conexao') === 'concluida'
+    );
+  }
+
+  validadeFormatada(expiraEm: string): string {
+    if (!expiraEm) return '—';
+    const data = new Date(expiraEm);
+    if (Number.isNaN(data.getTime())) return '—';
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(data);
   }
 }

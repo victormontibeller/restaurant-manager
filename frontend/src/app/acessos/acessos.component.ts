@@ -74,7 +74,7 @@ function normalizarBusca(texto: string): string {
 @Component({
   selector: 'app-acessos',
   templateUrl: './acessos.component.html',
-  styleUrls: ['../ui/administracao.css', './acessos.component.css'],
+  styleUrls: ['../ui/administracao.css', './corporativo.css', './acessos.component.css'],
 })
 export class AcessosComponent implements OnInit {
   private readonly sessao = inject(SessaoService);

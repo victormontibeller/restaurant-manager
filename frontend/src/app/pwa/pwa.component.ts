@@ -57,7 +57,7 @@ interface PedidoInstalacao extends Event {
     .pwa-instalacao button {
       padding: 0 8px;
       background: transparent;
-      color: var(--primary);
+      color: var(--primary-ink);
       font-size: inherit;
       text-decoration: underline;
       text-underline-offset: 0.2em;

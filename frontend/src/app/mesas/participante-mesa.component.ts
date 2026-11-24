@@ -1,3 +1,4 @@
+import { IconeComponent } from '../rotas/icone.component';
 import {
   Component,
   DestroyRef,
@@ -8,8 +9,6 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { mensagemErro, moeda } from '../catalogo/modelos';
 import { AcompanhamentoEventos } from '../eventos/acompanhamento';
 import { MeusPedidosComponent } from '../pedidos/meus-pedidos.component';
@@ -22,7 +21,7 @@ import { HlmButton } from '../ui/button';
 
 @Component({
   selector: 'app-participante-mesa',
-  imports: [HlmButton, MeusPedidosComponent, NgTemplateOutlet, RouterLink],
+  imports: [IconeComponent, HlmButton, MeusPedidosComponent],
   templateUrl: './participante-mesa.component.html',
   styleUrls: ['../operacao.css', './participante-mesa.component.css'],
 })

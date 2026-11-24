@@ -1,22 +1,37 @@
-<section
-  class="painel-interno pagina-mesa"
-  [class.pagina-mesa-entrada]="!sessao.participante()"
-  aria-labelledby="participante-mesa-titulo"
->
-  <header class="cabecalho-mesa">
-    <h1 class="titulo-cliente" id="participante-mesa-titulo" #titulo tabindex="-1">
-      {{ sessao.participante() ? 'Minha mesa' : 'Participar de uma mesa' }}
-    </h1>
-  </header>
-
+<section class="painel-interno mesa-painel" aria-labelledby="participante-mesa-titulo">
   @if (!sessao.participante()) {
-    <form class="cartao-formulario entrada-mesa" (submit)="entrar($event, codigo, titulo)">
-      @if (mesaInicial()) {
-        <p>Informe o código temporário fornecido pela equipe.</p>
-      } @else {
-        <p>Abra o link do QR da mesa ou preencha os dados fornecidos pela equipe.</p>
+    <div class="mesa-entrada-grid">
+      <form class="cartao-formulario mesa-entrada-form" (submit)="entrar($event, codigo)">
+        <div class="mesa-entrada-topo">
+          <span class="sobretitulo">Acesso à mesa</span>
+          <h2 id="participante-mesa-titulo" class="participante-titulo">Participar de uma mesa</h2>
+          <p class="texto-secundario">
+            Informe os dados da mesa e o código temporário passado pela equipe. Não é preciso criar
+            conta.
+          </p>
+        </div>
+        @if (erro()) {
+          <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+        }
+        @if (aviso()) {
+          <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+        }
+        @if (encerramentoPendente()) {
+          <div class="acoes">
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="sair()"
+              [disabled]="ocupado()"
+            >
+              Tentar encerrar participação novamente
+            </button>
+          </div>
+        }
         <div>
-          <label for="identificador-mesa">Identificador da mesa</label>
+          <label for="identificador-mesa">Código da mesa</label>
           <input
             id="identificador-mesa"
             #mesa
@@ -25,173 +40,277 @@
             required
             maxlength="36"
             autocomplete="off"
+            placeholder="Identificação exibida no QR Code"
             [disabled]="ocupado()"
           />
         </div>
-      }
-      <div>
-        <label for="codigo-mesa">Código temporário do atendimento</label>
-        <input
-          id="codigo-mesa"
-          #codigo
-          required
-          maxlength="100"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false"
-          [disabled]="ocupado()"
-        />
-      </div>
-      <button hlmBtn type="submit" [disabled]="ocupado() || encerramentoPendente()">
-        Autorizar participação na mesa
-      </button>
-      <ng-container [ngTemplateOutlet]="retorno" />
-      @if (mesaInicial()) {
-        <a hlmBtn variant="ghost" routerLink="/mesa">Informar outra mesa</a>
-      }
-      @if (encerramentoPendente()) {
+        <div>
+          <label for="codigo-mesa">Código temporário do atendimento</label>
+          <input
+            id="codigo-mesa"
+            class="codigo-mesa-input"
+            #codigo
+            required
+            maxlength="100"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="Digite o código"
+            [disabled]="ocupado()"
+          />
+        </div>
         <button
           hlmBtn
-          variant="outline"
-          type="button"
-          (click)="sair(titulo)"
-          [disabled]="ocupado()"
+          variant="default"
+          type="submit"
+          [disabled]="ocupado() || encerramentoPendente()"
         >
-          Tentar encerrar participação novamente
+          Autorizar participação na mesa
         </button>
-      }
-    </form>
+      </form>
+
+      <aside class="mesa-guia-salao" aria-label="Orientações do salão">
+        <span class="sobretitulo">Atendimento no salão</span>
+        <h3 class="mesa-guia-titulo">Sua comanda compartilhada, sem cadastro prévio</h3>
+        <ol class="mesa-guia-etapas">
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">01</span>
+            <div>
+              <strong>Autorize com o código da equipe</strong>
+              <p>Quem abre a mesa compartilha o código temporário com quem está sentado junto.</p>
+            </div>
+          </li>
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">02</span>
+            <div>
+              <strong>Peça rodadas direto do cardápio</strong>
+              <p>O canal Mesa fica ativo automaticamente no cardápio após confirmar sua entrada.</p>
+            </div>
+          </li>
+          <li>
+            <span class="mesa-guia-num" aria-hidden="true">03</span>
+            <div>
+              <strong>Chame a equipe ou peça a conta</strong>
+              <p>Acompanhe o consumo em tempo real e solicite ajuda ou fechamento quando quiser.</p>
+            </div>
+          </li>
+        </ol>
+      </aside>
+    </div>
   } @else {
-    <div class="grade-atendimento">
-      <section class="cartao-formulario resumo-comanda" aria-label="Minha comanda">
-        @if (comanda(); as conta) {
-          <div class="estado-comanda">
-            <h2>{{ conta.mesaNome }}</h2>
+    <header class="cabecalho-painel mesa-cabecalho-ativo">
+      <div>
+        <span class="sobretitulo">Atendimento ativo</span>
+        <h2 id="participante-mesa-titulo" class="participante-titulo">Seu atendimento</h2>
+        <p class="texto-secundario">
+          Autorizado apenas para esta mesa. Escolha o canal Mesa no cardápio para enviar novas
+          rodadas.
+        </p>
+      </div>
+    </header>
+    @if (comanda(); as conta) {
+      @if (mesaInicial() && mesaInicial() !== conta.mesaId) {
+        <p class="aviso" role="status">
+          Este link é de outra mesa. Seu atendimento em {{ conta.mesaNome }} permanece ativo; saia
+          dele antes de autorizar uma nova participação.
+        </p>
+      }
+      <section class="cartao-formulario mesa-comanda-cartao" aria-label="Minha comanda">
+        <header class="comanda-cabecalho">
+          <div class="comanda-identificacao">
+            <app-icone nome="mesas" />
+            <h3>{{ conta.mesaNome }}</h3>
             <span class="etiqueta" [attr.data-estado]="conta.estado">
               Comanda {{ nomeEstado(conta.estado) }}
             </span>
           </div>
-
-          @if (mesaInicial() && mesaInicial() !== conta.mesaId) {
-            <p class="aviso">
-              Este link é de outra mesa. Seu atendimento em {{ conta.mesaNome }} permanece ativo;
-              saia dele antes de autorizar uma nova participação.
-            </p>
-          }
-
-          @if (conta.estado === 'EM_FECHAMENTO') {
-            <p class="aviso" role="status">
-              A equipe iniciou o fechamento. Novas rodadas estão bloqueadas; você pode acompanhar as
-              anteriores.
-            </p>
-          }
-
-          <dl class="valores-comanda">
-            <div class="total-comanda">
-              <dt>Total do atendimento</dt>
-              <dd>{{ moeda(conta.totalDevido) }}</dd>
-            </div>
-            <div>
-              <dt>Recebido confirmado</dt>
-              <dd>{{ moeda(conta.pagoConfirmado) }}</dd>
-            </div>
-            <div>
-              <dt>Devolvido confirmado</dt>
-              <dd>{{ moeda(conta.devolvidoConfirmado) }}</dd>
-            </div>
-            <div>
-              <dt>Saldo a receber</dt>
-              <dd>{{ moeda(conta.saldoAReceber) }}</dd>
-            </div>
-            <div>
-              <dt>Saldo a devolver</dt>
-              <dd>{{ moeda(conta.saldoADevolver) }}</dd>
-            </div>
-          </dl>
-          @if (conta.pendenciaFinanceira) {
-            <p class="aviso">Há uma operação financeira pendente nesta comanda.</p>
-          }
-
-          <div class="acoes-comanda">
-            <button
-              hlmBtn
-              variant="outline"
-              type="button"
-              (click)="solicitar('AJUDA')"
-              [disabled]="ocupado() || !!intencao()"
-            >
-              Pedir ajuda à equipe
-            </button>
-            <button
-              hlmBtn
-              type="button"
-              (click)="solicitar('CONTA')"
-              [disabled]="ocupado() || !!intencao() || conta.estado !== 'ABERTA'"
-            >
-              Solicitar a conta
-            </button>
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            class="btn-sair-mesa"
+            type="button"
+            (click)="sair()"
+            [disabled]="ocupado()"
+          >
+            <app-icone nome="sair" />
+            Sair da mesa
+          </button>
+        </header>
+        @if (erro() || aviso() || encerramentoPendente()) {
+          <div class="mesa-feedback-topo">
+            @if (erro()) {
+              <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+            }
+            @if (aviso()) {
+              <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+            }
+            @if (encerramentoPendente()) {
+              <div class="acoes">
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="sair()"
+                  [disabled]="ocupado()"
+                >
+                  Tentar encerrar participação novamente
+                </button>
+              </div>
+            }
           </div>
-          @if (intencao()) {
-            <p class="aviso" role="status">
-              A solicitação ainda não foi confirmada. Recupere-a para verificar o envio.
-            </p>
+        }
+        @if (conta.estado === 'EM_FECHAMENTO') {
+          <p class="aviso" role="status">
+            A equipe iniciou o fechamento. Novas rodadas estão bloqueadas; você pode acompanhar as
+            anteriores.
+          </p>
+        }
+        <dl class="comanda-metricas">
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Total do atendimento</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.totalDevido) }}</dd>
+          </div>
+          <div class="comanda-metrica comanda-metrica--destaque">
+            <dt class="comanda-metrica-rotulo">Saldo a receber</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.saldoAReceber) }}</dd>
+          </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Recebido confirmado</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.pagoConfirmado) }}</dd>
+          </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Devolvido confirmado</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.devolvidoConfirmado) }}</dd>
+          </div>
+          <div class="comanda-metrica">
+            <dt class="comanda-metrica-rotulo">Saldo a devolver</dt>
+            <dd class="comanda-metrica-valor">{{ moeda(conta.saldoADevolver) }}</dd>
+          </div>
+        </dl>
+        @if (conta.pendenciaFinanceira) {
+          <p class="aviso" role="status">Há uma operação financeira pendente nesta comanda.</p>
+        }
+        <p class="comanda-nota">
+          Conta compartilhada da mesa, sem divisão por pessoa. Pagamentos e ajustes são realizados
+          diretamente com a equipe.
+        </p>
+        <div class="acoes">
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            (click)="solicitar('AJUDA')"
+            [disabled]="ocupado() || !!intencao()"
+          >
+            Pedir ajuda à equipe
+          </button>
+          <button
+            hlmBtn
+            variant="default"
+            type="button"
+            (click)="solicitar('CONTA')"
+            [disabled]="ocupado() || !!intencao() || conta.estado !== 'ABERTA'"
+          >
+            Solicitar a conta
+          </button>
+        </div>
+        @if (intencao()) {
+          <p class="aviso" role="status">
+            Solicitação enviada sem confirmação. Confira antes de tentar novamente para não duplicar
+            o chamado.
+          </p>
+          <div class="acoes">
             <button
               hlmBtn
               variant="outline"
+              size="sm"
               type="button"
               (click)="repetirSolicitacao()"
               [disabled]="ocupado()"
             >
               Recuperar solicitação enviada
             </button>
-          }
-        } @else {
-          <h2>Minha comanda</h2>
+          </div>
         }
-        <ng-container [ngTemplateOutlet]="retorno" />
-
-        @if (comanda(); as conta) {
-          <p class="texto-secundario">
-            Os valores são da mesa inteira. A equipe orienta sobre pagamento e devoluções.
-          </p>
-          @if (conta.estado === 'ABERTA') {
-            <p class="texto-secundario">
-              Para enviar uma rodada, selecione a unidade da mesa e o canal Mesa no cardápio.
-            </p>
-            <a hlmBtn variant="outline" routerLink="/cardapio">Ver cardápio</a>
-          }
-        }
-
-        <div class="atualizacao-comanda">
+        <div class="comanda-sync">
           <p role="status">
             {{ acompanhamento.estado() }}
-            Última atualização: {{ acompanhamento.atualizadoEm() || 'ainda não confirmada' }}.
+            @if (acompanhamento.atualizadoEm(); as horario) {
+              · Atualizado às {{ horario }}
+            }
           </p>
-          <button hlmBtn variant="ghost" type="button" (click)="consultar()" [disabled]="ocupado()">
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
+            (click)="consultar()"
+            [disabled]="ocupado()"
+          >
+            Consultar comanda da mesa
+          </button>
+        </div>
+      </section>
+    } @else {
+      @if (erro() || aviso() || encerramentoPendente()) {
+        <div class="mesa-feedback-topo">
+          @if (erro()) {
+            <p class="erro mesa-callout mesa-callout--erro" role="alert">{{ erro() }}</p>
+          }
+          @if (aviso()) {
+            <p class="sucesso mesa-callout mesa-callout--sucesso" role="status">{{ aviso() }}</p>
+          }
+          @if (encerramentoPendente()) {
+            <div class="acoes">
+              <button
+                hlmBtn
+                variant="outline"
+                size="sm"
+                type="button"
+                (click)="sair()"
+                [disabled]="ocupado()"
+              >
+                Tentar encerrar participação novamente
+              </button>
+            </div>
+          }
+        </div>
+      }
+      <div class="barra-conexao mesa-fallback-sync">
+        <p role="status">
+          {{ acompanhamento.estado() }}
+          @if (acompanhamento.atualizadoEm(); as horario) {
+            · Atualizado às {{ horario }}
+          }
+        </p>
+        <div class="mesa-fallback-acoes">
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
+            (click)="consultar()"
+            [disabled]="ocupado()"
+          >
             Consultar comanda da mesa
           </button>
           <button
             hlmBtn
-            variant="ghost"
+            variant="outline"
+            size="sm"
+            class="btn-sair-mesa"
             type="button"
-            (click)="sair(titulo)"
+            (click)="sair()"
             [disabled]="ocupado()"
           >
+            <app-icone nome="sair" />
             Sair da mesa
           </button>
         </div>
-      </section>
-
-      <app-meus-pedidos [mesa]="true" />
-    </div>
+      </div>
+    }
+    <app-meus-pedidos [mesa]="true" />
   }
 </section>
-
-<ng-template #retorno>
-  @if (erro()) {
-    <p class="aviso erro" role="alert">{{ erro() }}</p>
-  }
-  @if (aviso()) {
-    <p class="retorno-mesa" role="status">{{ aviso() }}</p>
-  }
-</ng-template>

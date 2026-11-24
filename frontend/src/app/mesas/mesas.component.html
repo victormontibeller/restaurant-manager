@@ -18,7 +18,7 @@
     <button class="secundario" (click)="carregar()" [disabled]="ocupado()">Atualizar mesas</button>
   </div>
   @if (administrador()) {
-    <details #cadastro class="cadastro-mesa">
+    <details #cadastro class="bistro-details cadastro-mesa cadastro-mesa-details">
       <summary
         #abrirCadastro
         class="spartan-button"
@@ -26,9 +26,15 @@
       >
         Nova mesa
       </summary>
-      <section class="gestao-editor cadastro-mesa-editor" aria-labelledby="cadastro-mesa-titulo">
+      <section
+        class="bistro-details-body cadastro-mesa-corpo gestao-editor cadastro-mesa-editor"
+        aria-labelledby="cadastro-mesa-titulo"
+      >
         <h3 id="cadastro-mesa-titulo" tabindex="-1" data-gestao-foco>Cadastrar mesa</h3>
-        <form class="gestao-toolbar" (submit)="$event.preventDefault(); confirmarSenha(senha)">
+        <form
+          class="gestao-toolbar cadastro-mesa-bloco"
+          (submit)="$event.preventDefault(); confirmarSenha(senha)"
+        >
           <div>
             <label for="senha-mesas">Confirme sua senha para configurar mesas</label>
             <input
@@ -50,7 +56,11 @@
             Confira o resultado do cadastro pendente antes de criar outra mesa.
           </p>
         }
-        <form data-rascunho="nova-mesa" (submit)="criar($event, cadastro, abrirCadastro)">
+        <form
+          class="cadastro-mesa-form"
+          data-rascunho="nova-mesa"
+          (submit)="criar($event, cadastro, abrirCadastro)"
+        >
           <div>
             <label for="nome-nova-mesa">Nome da mesa</label>
             <input

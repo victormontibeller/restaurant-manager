@@ -11,13 +11,101 @@ import {
   signal,
 } from '@angular/core';
 import { ApiFailure, SessaoService } from '../identidade/sessao.service';
+import { HlmButton } from '../ui/button';
 import { Midia, Produto, mensagemErro } from './modelos';
 import { EnvioMidiaPendente, MidiaPendenteService } from './midia-pendente.service';
 
 @Component({
   selector: 'app-midia-editor',
-  templateUrl: './midia-editor.component.html',
-  styleUrls: ['./catalogo.css', './catalogo-editor.css'],
+  imports: [HlmButton],
+  template: `
+    <fieldset
+      class="gc-subcard"
+      [attr.data-rascunho]="'midia-' + produto.id"
+      [disabled]="bloqueado || ocupado()"
+      aria-label="Imagem do produto"
+    >
+      <legend>Imagem do produto</legend>
+
+      <div class="gc-media-box">
+        <div class="gc-media-preview">
+          @if (midiaId) {
+            <img
+              class="previa"
+              [src]="'/api/v1/midias/' + midiaId"
+              alt="Imagem atual do produto"
+              width="88"
+              height="88"
+              decoding="async"
+            />
+          } @else {
+            <span aria-hidden="true">{{ (produto.nome.trim().charAt(0) || 'P').toUpperCase() }}</span>
+          }
+        </div>
+        <div class="gc-field">
+          <p class="gc-nota">
+            Envie uma imagem JPEG ou PNG de até 5 MiB, com até 4096 pixels por lado e 12 milhões de
+            pixels no total. O servidor publica uma cópia de até 1280 pixels por lado, sem
+            metadados. A imagem só será associada após salvar o produto.
+          </p>
+        </div>
+      </div>
+
+      <div class="gc-field">
+        <label for="produto-imagem">Arquivo da imagem</label>
+        <input
+          #arquivo
+          id="produto-imagem"
+          class="gc-file-input"
+          type="file"
+          accept="image/jpeg,image/png"
+          [disabled]="incerto() || temPendencia()"
+          (change)="selecionar(arquivo)"
+        />
+        @if (nomeArquivoSelecionado()) {
+          <p class="gc-nota">
+            Arquivo selecionado: <strong>{{ nomeArquivoSelecionado() }}</strong>
+          </p>
+        }
+      </div>
+
+      <div class="gc-acoes-inline">
+        <button
+          hlmBtn
+          variant="outline"
+          type="button"
+          (click)="enviar()"
+          [disabled]="!selecionado || incerto()"
+        >
+          Enviar imagem
+        </button>
+        @if (incerto()) {
+          <button hlmBtn type="button" (click)="consultar()">Consultar envio da imagem</button>
+        }
+        @if (midiaId && !incerto()) {
+          <button
+            hlmBtn
+            variant="outline"
+            class="btn-cancelar-outline"
+            type="button"
+            (click)="midiaIdChange.emit(null)"
+          >
+            Remover imagem <span class="sr-only">do produto</span>
+          </button>
+        }
+      </div>
+
+      @if (erro()) {
+        <p role="alert" class="gc-callout-danger">{{ erro() }}</p>
+      }
+      @if (aviso()) {
+        <p role="status" [class]="incerto() ? 'gc-callout-amber' : 'gc-callout-ok'">
+          {{ aviso() }}
+        </p>
+      }
+    </fieldset>
+  `,
+  styleUrls: ['./catalogo.css', './gestao-catalogo.css'],
 })
 export class MidiaEditorComponent implements OnChanges {
   @Input({ required: true }) produto!: Produto;
@@ -150,5 +238,9 @@ export class MidiaEditorComponent implements OnChanges {
     if (this.destruido) return;
     this.ocupado.set(false);
     this.bloqueio.emit(this.incerto() || this.temPendencia());
+  }
+
+  nomeArquivoSelecionado(): string {
+    return this.selecionado?.name ?? '';
   }
 }

@@ -1,13 +1,15 @@
 <section
-  class="painel-financeiro"
+  class="painel-financeiro painel-vendas"
   aria-label="Vendas e movimentos financeiros"
   [attr.aria-busy]="ocupado()"
 >
-  <form class="filtros-financeiros" (ngSubmit)="carregar()">
-    <label
+  <form class="filtros-financeiros vendas-filtros-form" (ngSubmit)="carregar()">
+    <label class="campo-filtro"
       >Data inicial<input type="date" name="inicioVendas" [(ngModel)]="inicio" required
     /></label>
-    <label>Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required /></label>
+    <label class="campo-filtro"
+      >Data final<input type="date" name="fimVendas" [(ngModel)]="fim" required
+    /></label>
     <button type="submit" [disabled]="ocupado()">Consultar relatório</button>
   </form>
   @if (erro()) {
@@ -17,57 +19,82 @@
     <p role="status">Consultando o período informado…</p>
   }
   @if (dados(); as r) {
-    <div class="metadados">
-      <strong>Período consultado: {{ data(r.inicio) }} a {{ data(r.fim) }}.</strong>
-      <span
-        >Fuso da unidade: {{ r.fuso }} · Atualizado em {{ dataHora(r.consultadoEm, r.fuso) }}</span
-      >
-    </div>
-    <div class="indicadores">
-      <div>
-        <span>Pedidos criados no período</span><strong>{{ r.pedidosCriados }}</strong
-        ><small>Cancelados atualmente · {{ r.canceladosAtualmente }}</small>
-      </div>
-      <div>
-        <span>Cobranças originais</span><strong>{{ moeda(r.cobrancasOriginais) }}</strong
-        ><small>Dos pedidos criados no período</small>
-      </div>
-      <div>
-        <span>Recebimentos confirmados no período</span
-        ><strong>{{ moeda(r.recebimentosConfirmados) }}</strong
-        ><small>Por data de confirmação</small>
-      </div>
-      <div>
-        <span>Devoluções confirmadas no período</span
-        ><strong>{{ moeda(r.devolucoesConfirmadas) }}</strong
-        ><small>Por data de confirmação</small>
-      </div>
-    </div>
-    <section class="bloco-financeiro">
-      <h2>Posição das cobranças</h2>
-      <dl class="resumos">
-        <div>
-          <dt>Saldo atual a receber</dt>
-          <dd>{{ moeda(r.saldoAReceberAtual) }}</dd>
-        </div>
-        <div>
-          <dt>Saldo atual a devolver</dt>
-          <dd>{{ moeda(r.saldoADevolverAtual) }}</dd>
-        </div>
-        <div>
-          <dt>Reservas atuais de devolução</dt>
-          <dd>{{ moeda(r.reservasAtuais) }}</dd>
-        </div>
-        <div>
-          <dt>Ajustes registrados no período</dt>
-          <dd>{{ moeda(r.ajustesNoPeriodo) }}</dd>
-        </div>
-      </dl>
-      <p class="ajuda">
-        Os saldos incluem cada cobrança com pedido criado no período. Uma comanda reúne suas rodadas
-        e entra uma vez no saldo.
+    <div class="vendas-metadados">
+      <p class="vendas-periodo">Período consultado: {{ data(r.inicio) }} a {{ data(r.fim) }}.</p>
+      <p class="vendas-fuso">
+        Fuso da unidade: {{ r.fuso }} · Atualizado em {{ dataHora(r.consultadoEm, r.fuso) }}
       </p>
-    </section>
+    </div>
+    <dl class="grade-kpis-vendas">
+      <div class="cartao-kpi-vendas">
+        <div class="cartao-kpi-cabecalho">
+          <strong class="cartao-kpi-titulo">Operação &amp; Demanda</strong>
+        </div>
+        <div class="kpi-lista-linhas">
+          <div class="kpi-linha kpi-linha--destaque">
+            <dt>Cobranças originais dos pedidos criados</dt>
+            <dd>{{ moeda(r.cobrancasOriginais) }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Pedidos criados no período</dt>
+            <dd>{{ r.pedidosCriados }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Destes pedidos, cancelados atualmente</dt>
+            <dd>{{ r.canceladosAtualmente }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Ticket médio bruto</dt>
+            <dd>{{ ticketMedio(r) }}</dd>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao-kpi-vendas cartao-kpi-vendas--caixa">
+        <div class="cartao-kpi-cabecalho">
+          <strong class="cartao-kpi-titulo">Caixa Confirmado no Período</strong>
+        </div>
+        <div class="kpi-lista-linhas">
+          <div class="kpi-linha kpi-linha--destaque">
+            <dt>Recebimentos confirmados no período</dt>
+            <dd>{{ moeda(r.recebimentosConfirmados) }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Ajustes registrados no período</dt>
+            <dd>{{ moeda(r.ajustesNoPeriodo) }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Devoluções confirmadas no período</dt>
+            <dd>{{ moeda(r.devolucoesConfirmadas) }}</dd>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao-kpi-vendas cartao-kpi-vendas--saldos">
+        <div class="cartao-kpi-cabecalho">
+          <strong class="cartao-kpi-titulo">Posição Atual de Saldos &amp; Reservas</strong>
+        </div>
+        <div class="kpi-lista-linhas">
+          <div class="kpi-linha kpi-linha--destaque">
+            <dt>Saldo atual a receber</dt>
+            <dd>{{ moeda(r.saldoAReceberAtual) }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Saldo atual a devolver</dt>
+            <dd>{{ moeda(r.saldoADevolverAtual) }}</dd>
+          </div>
+          <div class="kpi-linha">
+            <dt>Reservas atuais de devolução</dt>
+            <dd>{{ moeda(r.reservasAtuais) }}</dd>
+          </div>
+        </div>
+      </div>
+    </dl>
+
+    <p class="nota-metodologia-vendas">
+      Os saldos incluem as cobranças dos pedidos criados no período. Uma comanda reúne suas rodadas
+      e entra uma vez no saldo.
+    </p>
     <div class="analises">
       <section class="bloco-financeiro">
         <h2>Vendas por canal</h2>

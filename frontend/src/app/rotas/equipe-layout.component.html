@@ -1,6 +1,15 @@
-<div class="workplace gestao-compacta" [attr.data-tema-gestao]="tema()">
+<div
+  class="workplace gestao-compacta"
+  [class.kitchen-workplace]="cozinha"
+  [attr.data-tema-gestao]="tema()"
+>
   @if (menuAberto()) {
-    <button class="sidebar-overlay" tabindex="-1" aria-label="Fechar menu" (click)="fecharMenu()"></button>
+    <button
+      class="sidebar-overlay"
+      tabindex="-1"
+      aria-label="Fechar menu"
+      (click)="fecharMenu()"
+    ></button>
   }
   <aside
     id="menu-gestao"
@@ -30,7 +39,8 @@
       @if (contexto.tem('pedido.consultar')) {
         <a
           routerLink="/gestao/pedidos"
-          routerLinkActive="active" ariaCurrentWhenActive="page"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{exact:true}"
           ><app-icone nome="pedidos" />Pedidos</a
         >
@@ -65,7 +75,10 @@
       }
       @if (contexto.administrador()) {
         <p class="nav-label">ADMINISTRAÇÃO</p>
-        <a routerLink="/gestao/configuracoes/delivery" routerLinkActive="active" ariaCurrentWhenActive="page"
+        <a
+          routerLink="/gestao/configuracoes/delivery"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
           ><app-icone nome="unidade" />Regiões e checkout</a
         >
         <a routerLink="/gestao/integracoes" routerLinkActive="active" ariaCurrentWhenActive="page"
@@ -73,20 +86,27 @@
         >
         <a
           routerLink="/gestao/equipe"
-          routerLinkActive="active" ariaCurrentWhenActive="page"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{exact:true}"
           ><app-icone nome="equipe" />Equipe</a
         >
         <a routerLink="/gestao/acessos" routerLinkActive="active" ariaCurrentWhenActive="page"
           ><app-icone nome="filtros" />Acessos</a
         >
-        <a routerLink="/gestao/equipe/convites" routerLinkActive="active" ariaCurrentWhenActive="page"
+        <a
+          routerLink="/gestao/equipe/convites"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
           ><app-icone nome="conta" />Convites</a
         >
         <a routerLink="/gestao/unidades" routerLinkActive="active" ariaCurrentWhenActive="page"
           ><app-icone nome="unidade" />Unidades e horários</a
         >
-        <a routerLink="/gestao/configuracoes/prazos" routerLinkActive="active" ariaCurrentWhenActive="page"
+        <a
+          routerLink="/gestao/configuracoes/prazos"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
           ><app-icone nome="relogio" />Prazos de aceite</a
         >
       }
@@ -97,7 +117,9 @@
       }
     </nav>
     <div class="sidebar-bottom">
-      <a routerLink="/conta" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icone nome="conta" />Minha conta</a>
+      <a routerLink="/conta" routerLinkActive="active" ariaCurrentWhenActive="page"
+        ><app-icone nome="conta" />Minha conta</a
+      >
       <a routerLink="/cardapio"
         ><app-icone nome="cardapio" />Ver cardápio do cliente<app-icone nome="seta" /></a
       ><small>Uma boa experiência começa nos detalhes.</small>
@@ -118,7 +140,28 @@
       >
         <app-icone nome="menu" />
       </button>
-      <div class="breadcrumb">Gestão</div>
+      @if (cozinha) {
+        <div class="kitchen-brand">
+          <span class="brand-mark">
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <img
+                class="brand-logo"
+                [src]="marca.logoUrl()"
+                alt=""
+                width="40"
+                height="40"
+                decoding="async"
+                (error)="marca.marcarErroLogo()"
+              />
+            } @else {
+              <app-icone nome="cozinha" />
+            }
+          </span>
+          <span class="brand-copy">{{ marca.nome() }}<small>Cozinha</small></span>
+        </div>
+      } @else {
+        <div class="breadcrumb">Gestão</div>
+      }
       <div class="workspace-tools">
         @if (cozinha || pagina()['unidade']) {
           <label class="unit-picker"
@@ -135,6 +178,11 @@
               }
             </select></label
           >
+        }
+        @if (
+          cozinha && (contexto.tem('pedido.consultar') || contexto.tem('catalogo.consultar') || contexto.podeExpedicao() || contexto.administrador())
+        ) {
+          <a class="kitchen-gestao-link" hlmBtn variant="outline" routerLink="/gestao">Gestão</a>
         }
         <app-alternar-tema />
         <a class="user-avatar" routerLink="/conta" aria-label="Minha conta"
@@ -153,15 +201,23 @@
       </div>
     </header>
     <main id="conteudo" class="workspace-main" tabindex="-1" (focus)="painel.scrollTo(0, 0)">
-      <div class="page-heading">
-        <div>
-          <h1 id="gestao-titulo" tabindex="-1">{{ titulo() }}</h1>
+      @if (!cozinha || !autorizado() || !contexto.unidadeId()) {
+        <div class="page-heading">
+          <div>
+            <h1 id="gestao-titulo" tabindex="-1">{{ titulo() }}</h1>
+          </div>
+          @if (contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
+            <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
+          }
         </div>
-        @if (contexto.tem('pedido.criar_assistido') && titulo() === 'Pedidos') {
-          <a hlmBtn routerLink="/gestao/pedidos/novo">+ Novo pedido</a>
-        }
-      </div>
-      <div #painel class="workspace-content" tabindex="0" role="region" aria-label="Conteúdo da página">
+      }
+      <div
+        #painel
+        class="workspace-content"
+        tabindex="0"
+        role="region"
+        aria-label="Conteúdo da página"
+      >
         @if (contexto.erro()) {
           <p class="context-error" role="alert">
             {{ contexto.erro() }}

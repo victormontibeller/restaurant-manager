@@ -1,5 +1,26 @@
 # Checkpoint de execução
 
+## Editorial Bistrô — 2026-11-23
+
+A [PR #23](https://github.com/victormontibeller/restaurant-manager/pull/23)
+integra o visual da PR #22 ao projeto e está aberta para revisão. O commit
+`4725422` foi confirmado na [demo local](https://demo.localhost:8095/cardapio)
+às 18h25, com PWA `f59f127e311dfea694fc`. O JAR servido coincide com o
+candidato testado e traz 375 classes Java e 37 migrações SQL idênticas às
+da release anterior. A versão `d7df6d9` segue disponível para retorno.
+
+A revisão cobriu 34 telas e estados de Cliente, Gestão, Cozinha e Plataforma
+em 612 combinações de largura, tema e navegador. Capturas com dados e testes
+de navegação confirmaram carrinho, checkout, pedido assistido, mesa, preparo
+parcial, despacho, revogação de acesso, relatórios, pendências, ofertas por
+unidade, provisionamento e PWA. Os 496 testes Java são da primeira integração
+com o mesmo backend, em PostgreSQL isolado.
+
+O [relatório da integração](evidencias/editorial-bistro-2026-11-23.md)
+registra capturas, resultados, reexecuções e os limites da verificação. A
+homologação completa no Hermes, em dispositivos físicos e com provedor real
+segue pendente.
+
 ## Faixa inferior da Gestão — 2026-11-18
 
 A [demo local](https://demo.localhost:8095/gestao/pedidos) confirmou o commit `f82f286` às 19h24, com PWA `b593797947695774682f` e JAR `237f08d0d4f1ab8c993ccb3bb8baea2e677ff8c9714934db36578dedaa7843a1`. Gestão, Cozinha e Minha conta da equipe ganharam o espaço antes reservado pelo diagnóstico permanente. A faixa inferior aparece quando a PWA tem aviso ou ação disponível. O diagnóstico manual da equipe fica na tela de entrada. As classes Java e as migrações SQL do pacote coincidiram byte a byte com a release anterior.

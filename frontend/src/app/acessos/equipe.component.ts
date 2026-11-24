@@ -26,14 +26,15 @@ interface Funcionario {
 @Component({
   selector: 'app-equipe',
   imports: [RouterLink, DatePipe],
-  styleUrls: ['../ui/administracao.css', './equipe.component.css'],
+  styleUrls: ['../ui/administracao.css', './corporativo.css', './equipe.component.css'],
   template: `
     <section class="admin-pagina" aria-label="Funcionários" [attr.aria-busy]="ocupado()">
-      <div class="gestao-acoes">
+      <div class="gestao-acoes corporativo-atalhos">
         <a class="spartan-button" routerLink="/gestao/equipe/convites">Gerenciar convites</a>
         <button #recarregar type="button" data-variant="outline" (click)="carregar()" [disabled]="ocupado()">Recarregar equipe</button>
       </div>
-      <form class="admin-painel admin-filtros" (submit)="confirmar($event, senha)">
+      <form class="admin-painel admin-filtros corporativo-identidade" (submit)="confirmar($event, senha)">
+        <h2>Confirmar identidade</h2>
         <div>
           <label for="confirmar-senha">Confirme sua senha</label>
           <input #senha id="confirmar-senha" type="password" autocomplete="current-password"
@@ -51,7 +52,7 @@ interface Funcionario {
       @if (carregado()) {
         <div class="gestao-lista" aria-label="Funcionários existentes">
           @for (f of equipe(); track f.id) {
-            <article>
+            <article class="corporativo-registro">
               <header class="gestao-linha">
                 <div>
                   <h3>{{ f.nome || f.email }}</h3>

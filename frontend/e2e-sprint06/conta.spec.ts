@@ -8,8 +8,11 @@ for (const perfil of ['clienteA', 'gerente'] as const) {
     const token = await loginUi(page, titular);
     await abrirConta(page);
     const painel = page.getByRole('region', { name: 'Dados pessoais' });
-    await expect(painel.getByText(titular.email, { exact: true })).toBeVisible();
-    await expect(painel.getByText('Data do cadastro', { exact: true })).toBeVisible();
+    const ficha = page
+      .getByRole('complementary', { name: 'Cartela da conta' })
+      .locator('dl[aria-label="Resumo cadastral"]');
+    await expect(ficha.getByText(titular.email, { exact: true })).toBeVisible();
+    await expect(ficha.getByText('Data do cadastro', { exact: true })).toBeVisible();
     if (perfil === 'gerente') {
       await expect(page.locator('app-equipe-layout')).toBeVisible();
       await expect(painel.getByRole('heading', { name: 'Unidades de acesso' })).toBeVisible();
@@ -35,8 +38,8 @@ for (const perfil of ['clienteA', 'gerente'] as const) {
       await expect(painel.getByText('Dados pessoais salvos.')).toBeVisible();
       await expect(editar).toBeFocused();
       await page.reload();
-      await expect(painel.getByText(alterado, { exact: true })).toBeVisible();
-      await expect(painel.getByText('11988887777', { exact: true })).toBeVisible();
+      await expect(painel.getByLabel('Nome', { exact: true })).toHaveValue(alterado);
+      await expect(painel.getByLabel('Telefone', { exact: true })).toHaveValue('11988887777');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Minha conta');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,

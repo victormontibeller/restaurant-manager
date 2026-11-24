@@ -69,6 +69,20 @@
           </nav>
         }
         @if (area() === 'pedidos') {
+          @if (filaCompacta()) {
+            <div class="atalhos-operacao" role="group" aria-label="Atalhos de estado dos pedidos">
+              @for (atalho of atalhosEstado; track atalho.valor) {
+                <button
+                  class="filtro-pilula"
+                  type="button"
+                  [attr.aria-pressed]="filtroEstado() === atalho.valor"
+                  (click)="filtrar('estado', atalho.valor)"
+                >
+                  {{ atalho.nome }}
+                </button>
+              }
+            </div>
+          }
           <div class="filtros" role="group" aria-label="Filtros da fila de pedidos">
             <div class="campo-filtro">
               <label for="pedidos-estado">Estado dos pedidos</label>

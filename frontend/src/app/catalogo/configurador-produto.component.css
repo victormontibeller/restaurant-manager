@@ -6,36 +6,13 @@
   --espaco-configurador: 24px;
 }
 
-:host(.configurador-cliente) form {
-  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
-  gap: 0;
-  max-block-size: calc(var(--altura-configurador) - 2px);
-}
-
 :host(.configurador-cliente) .configurador-corpo {
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--espaco-configurador);
   scroll-padding-block: 12px;
-}
-
-.configurador-cabecalho {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 12px;
-  align-items: start;
-}
-
-.configurador-cabecalho:has(.configurador-foto) {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-}
-
-.configurador-titulo h3 {
-  margin: 4px 0;
-  font-family: var(--fonte-editorial);
-  font-size: clamp(1.3rem, 4vw, 2rem);
-  font-weight: 600;
 }
 
 .configurador-preco {
@@ -45,31 +22,7 @@
 }
 
 .configurador-preco strong {
-  color: var(--primary);
-}
-
-.configurador-foto {
-  grid-row: 1;
-  grid-column: 1;
-  inline-size: 112px;
-  block-size: 112px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-.configurador-cabecalho:has(.configurador-foto) .configurador-titulo {
-  grid-column: 2;
-}
-
-.configurador-cabecalho button {
-  grid-column: -2;
-}
-
-.configurador-descricao {
-  grid-column: 1 / -1;
-  margin: 0;
-  line-height: 1.55;
-  color: var(--muted-foreground);
+  color: var(--primary-ink);
 }
 
 :host(.configurador-cliente) .configurador-composicao {
@@ -190,19 +143,18 @@
   :host(.configurador-cliente) {
     --espaco-configurador: 16px;
   }
+}
 
-  .configurador-foto {
-    inline-size: 72px;
-    block-size: 72px;
+@media (max-width: 760px), (max-height: 420px) {
+  :host(.configurador-cliente) .configurador-corpo {
+    overflow-y: visible;
   }
 }
 
-@media (max-height: 420px) {
-  :host(.configurador-cliente) form {
-    max-block-size: none;
-  }
-
-  :host(.configurador-cliente) .configurador-corpo {
-    overflow-y: visible;
+@media (max-width: 760px) {
+  :host(.configurador-cliente) .configurador-acoes {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
   }
 }

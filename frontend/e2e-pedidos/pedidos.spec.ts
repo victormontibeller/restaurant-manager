@@ -1034,7 +1034,7 @@ test('S03-UI06 perfis operacionais respeitam ações e não recebem dados financ
         await expect(linkCozinha).toBeVisible();
         await linkCozinha.click();
         await expect(
-          atual.page.getByRole('heading', { name: 'Cozinha', exact: true }),
+          atual.page.getByRole('heading', { name: 'Produção', exact: true }),
         ).toBeVisible();
         if (await menu.isVisible()) await menu.click();
         await expect(linkCozinha).toHaveAttribute('aria-current', 'page');

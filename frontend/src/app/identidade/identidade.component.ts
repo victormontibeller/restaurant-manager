@@ -7,6 +7,8 @@ import { CatalogoPendenteService } from '../catalogo/catalogo-pendente.service';
 import { MidiaPendenteService } from '../catalogo/midia-pendente.service';
 import { ContextoOperacaoService } from '../rotas/contexto-operacao.service';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { IconeComponent } from '../rotas/icone.component';
+import { MarcaService } from '../rotas/marca.service';
 import { retornoSeguro } from '../rotas/guardas';
 import { HlmButton } from '../ui/button';
 import { RecuperacaoComponent } from './recuperacao.component';
@@ -26,6 +28,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     DadosContaComponent,
     RouterLink,
     HlmButton,
+    IconeComponent,
     RecuperacaoComponent,
     CadastroComponent,
     AceitarConviteComponent,
@@ -36,23 +39,36 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     <section
       class="auth-card"
       [class.auth-cliente]="apresentacaoCliente()"
+      [class.auth-login]="pagina() === 'login' && !sessao.identidade()"
       [class.conta-cliente]="pagina() === 'conta'"
       [class.conta-equipe]="pagina() === 'conta' && equipe"
       [attr.aria-labelledby]="tituloFormulario()"
       [attr.aria-busy]="ocupado()"
     >
       @if (sessao.identidade(); as pessoa) {
+        @if (pagina() === 'conta') {
+          <app-dados-conta [nomePerfil]="nomePerfil(pessoa.perfil)" [tituloDaGestao]="equipe">
+            <div acoes-conta class="conta-links">
+              @if (pessoa.perfil === 'CLIENTE') {
+                <a hlmBtn routerLink="/pedidos">Acompanhar meus pedidos</a>
+              } @else if (!equipe) {
+                <a hlmBtn routerLink="/gestao">Abrir área da equipe</a>
+              }
+              <a hlmBtn variant="outline" routerLink="/cardapio">Explorar cardápio</a>
+              <button hlmBtn variant="secondary" type="button" (click)="sair()" [disabled]="ocupado()">Sair da conta</button>
+            </div>
+            @if (pessoa.perfil === 'CLIENTE') {
+              <app-enderecos enderecos-conta [apresentacaoCliente]="apresentacaoCliente()" />
+            }
+          </app-dados-conta>
+        } @else {
         <div class="account-profile">
-          @if (pagina() === 'conta') {
-            @if (!equipe) { <h1 id="conta-titulo">Minha conta</h1> }
-            <app-dados-conta [nomePerfil]="nomePerfil(pessoa.perfil)" />
-          } @else {
+
             <span class="auth-symbol" aria-hidden="true">✓</span>
             <p class="eyebrow">MINHA CONTA</p>
             <h1 id="conta-titulo">Que bom ter você por aqui.</h1>
             <p class="perfil">{{ nomePerfil(pessoa.perfil) }}</p>
             <p>{{ pessoa.emailVerificado ? 'E-mail verificado.' : 'E-mail ainda não verificado.' }}</p>
-          }
           @if (!pessoa.emailVerificado) {
             <p>Para verificar, saia da conta e escolha Verificar e-mail existente na tela de acesso.</p>
           }
@@ -80,6 +96,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
             Sair da conta
           </button>
         }
+        }
       } @else if (pagina() === 'verificacao') {
         <app-verificacao [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else if (pagina() === 'convite') {
@@ -89,14 +106,19 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
       } @else if (pagina() === 'recuperacao') {
         <app-recuperacao [apresentacaoCliente]="apresentacaoCliente()" (voltar)="voltarAoLogin()"/>
       } @else {
-        @if (!apresentacaoCliente()) {
-          <span class="auth-symbol" aria-hidden="true">↗</span>
-          <p class="eyebrow">{{ equipe ? 'ÁREA DA EQUIPE' : 'BEM-VINDO DE VOLTA' }}</p>
-        }
+        <div class="auth-marca-topo">
+          <span class="auth-symbol" aria-hidden="true">
+            @if (marca.logoUrl() && !marca.erroLogo()) {
+              <img [src]="marca.logoUrl()" alt="" width="48" height="48" decoding="async" (error)="marca.marcarErroLogo()" />
+            } @else {
+              <app-icone nome="marca" />
+            }
+          </span>
+          <span>{{ marca.nome() }}</span>
+        </div>
+        <p class="eyebrow">{{ equipe ? 'Área da equipe' : 'Bem-vindo de volta' }}</p>
         <h1 id="conta-titulo">Entre na sua conta.</h1>
-        @if (!apresentacaoCliente()) {
-          <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
-        }
+        <p class="auth-intro">{{ equipe ? 'Entre para cuidar dos pedidos, da cozinha e da rotina do restaurante.' : 'Seu próximo pedido e bons momentos à mesa começam aqui.' }}</p>
         <form (submit)="entrar($event, email.value, senha)">
           <label for="email-conta">E-mail</label>
           <input #email id="email-conta" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="seu@email.com" [disabled]="ocupado()" [attr.aria-describedby]="erro() ? 'erro-identidade' : null">
@@ -117,7 +139,7 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
     </section>
   `,
   styles: `
-    :host{display:block;padding:clamp(1rem,5vw,4rem) 0}.auth-card{width:min(100%,35rem);margin:auto;background:var(--rm-surface,#fff);padding:clamp(1.25rem,5vw,3rem);border:1px solid var(--rm-border,#e4e8e2);border-radius:24px;box-shadow:0 16px 60px #163d2810}.auth-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#edf3e9;color:#254d36;font-size:1.65rem;margin-bottom:1.75rem}.eyebrow{font-size:.73rem;font-weight:750;letter-spacing:.13em;color:var(--rm-primary,#285139)}h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;letter-spacing:-.045em;margin:.6rem 0 1rem}.auth-intro{color:var(--rm-muted,#6b746c);margin-bottom:2rem}form{display:grid;gap:.65rem}input{width:100%;min-height:50px;border:1px solid var(--rm-border,#dce2d9);border-radius:11px;padding:.8rem 1rem;font:inherit;background:#fcfcfa}label{font-size:.88rem;font-weight:650}.password-label{display:flex;justify-content:space-between;align-items:center;margin-top:.65rem;gap:.5rem}.text-action{background:none;border:0;padding:0;color:var(--rm-primary,#285139);font:inherit;font-size:.85rem;text-decoration:underline;text-underline-offset:4px;min-height:44px}form button[type=submit]{margin-top:.75rem;width:100%}.signup{margin:1.2rem 0;text-align:center;font-size:.88rem;color:var(--rm-muted,#6b746c)}.other-access{border-top:1px solid var(--rm-border,#dce2d9);padding-top:1rem;font-size:.85rem}.other-access summary{min-height:44px;cursor:pointer;align-content:center}.other-access nav,.account-actions{display:flex;gap:.6rem;flex-wrap:wrap}.account-actions{margin:1.5rem 0}.erro{color:#9d2424;font-weight:600}.perfil{font-weight:650}
+    :host{display:block;padding:clamp(1rem,5vw,4rem) 0}.auth-card{width:min(100%,35rem);margin:auto;background:var(--rm-surface,#fff);padding:clamp(1.25rem,5vw,3rem);border:1px solid var(--rm-border,#e4e8e2);border-radius:24px;box-shadow:0 16px 60px #163d2810}.auth-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:var(--primary-soft);color:var(--primary-ink);font-size:1.65rem;margin-bottom:1.75rem}.eyebrow{font-size:.73rem;font-weight:750;letter-spacing:.13em;color:var(--rm-primary,#285139)}h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;letter-spacing:-.045em;margin:.6rem 0 1rem}h1{font-family:var(--font-serif);font-weight:500}.auth-intro{color:var(--rm-muted,#6b746c);margin-bottom:2rem}form{display:grid;gap:.65rem}input{width:100%;min-height:50px;border:1px solid var(--rm-border,#dce2d9);border-radius:11px;padding:.8rem 1rem;font:inherit;background:var(--card)}label{font-size:.88rem;font-weight:650}.password-label{display:flex;justify-content:space-between;align-items:center;margin-top:.65rem;gap:.5rem}.text-action{background:none;border:0;padding:0;color:var(--primary-ink);font:inherit;font-size:.85rem;text-decoration:underline;text-underline-offset:4px;min-height:44px}form button[type=submit]{margin-top:.75rem;width:100%}.signup{margin:1.2rem 0;text-align:center;font-size:.88rem;color:var(--rm-muted,#6b746c)}.other-access{border-top:1px solid var(--rm-border,#dce2d9);padding-top:1rem;font-size:.85rem}.other-access summary{min-height:44px;cursor:pointer;align-content:center}.other-access nav,.account-actions{display:flex;gap:.6rem;flex-wrap:wrap}.account-actions{margin:1.5rem 0}.erro{color:var(--danger-fg);font-weight:600}.perfil{font-weight:650}
 
     :host:has(.conta-equipe) { padding: 0; }
     :host(.identidade-cliente) {
@@ -171,41 +193,46 @@ type Formulario = 'login' | 'conta' | 'recuperacao' | 'cadastro' | 'convite' | '
       border-radius: 8px;
       background: #fff1ed;
     }
-    .conta-cliente {
-      width: min(100%, 1000px);
-      padding: 0;
-      border: 0;
-      background: transparent;
+    .auth-login {
+      border-radius: 24px;
+      box-shadow: var(--shadow-soft);
     }
-    .conta-cliente .account-profile {
-      padding: clamp(16px, 3vw, 24px);
+    .auth-marca-topo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.35rem;
+      font: 500 1.08rem var(--font-serif);
+    }
+    .auth-marca-topo .auth-symbol {
+      flex: none;
+      margin: 0;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--primary-foreground);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 3px var(--primary), inset 0 0 0 4px var(--primary-soft-border);
+    }
+    .auth-marca-topo img { width: 100%; height: 100%; object-fit: cover; }
+    .auth-login .eyebrow { margin: 0 0 .45rem; text-transform: uppercase; }
+    .auth-login h1 { margin: 0 0 .75rem; }
+    .auth-login .signup { text-align: center; }
+    .auth-cliente .erro { background: var(--danger-bg, var(--muted)); }
+    .conta-cliente {
+      width: min(100%, 1088px);
+      padding: clamp(12px, 2.3vw, 30px);
       border: 1px solid var(--border);
-      border-radius: var(--raio-painel-cliente);
-      background: var(--superficie-cliente);
+      border-radius: 24px;
+      background: var(--background);
     }
     .conta-equipe { margin-inline: 0; box-shadow: none; }
-    .conta-equipe .account-profile { background: var(--card); border-radius: var(--gestao-raio); }
-    .conta-cliente .account-actions {
-      gap: var(--espaco-acao-cliente);
-      margin: 16px 0 0;
-    }
-    .conta-cliente .account-actions :is(a, button) {
-      min-height: 48px;
-      border-radius: 8px;
-    }
-    @media (max-width: 600px) {
-      .conta-cliente .account-actions :is(a, button) {
-        flex: 1 1 auto;
-        padding-inline: 12px;
-        font-size: 0.875rem;
-      }
-      .conta-cliente .account-actions .account-primary {
-        flex-basis: 100%;
-      }
-    }
+    .conta-links { display: grid; gap: 0.6rem; }
+    .conta-links :is(a, button) { min-height: 48px; }
+
   `,
 })
 export class IdentidadeComponent {
+  readonly marca = inject(MarcaService);
   readonly sessao = inject(SessaoService);
   readonly coordenacao = inject(SessaoNavegacaoService);
   private readonly rotasConfiguradas = inject(ROUTES, { optional: true });

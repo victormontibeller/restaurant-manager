@@ -173,6 +173,20 @@ A implementação e a validação desse incremento ficam no
 [registro do painel](evidencias/painel-cozinha-2026-11-10.md); pendências globais
 continuam no checkpoint.
 
+## Identidade Editorial Bistrô
+
+O redesenho da [PR #22](https://github.com/victormontibeller/restaurant-manager/pull/22)
+usa superfícies de linho e carvão, ações em terracota e tipografia serifada nos
+títulos do cardápio e das áreas operacionais. Cliente, Gestão, Cozinha e
+Plataforma compartilham os tokens e a preferência de tema. O nome da marca
+vem do restaurante associado à origem. O cardápio exibe disponibilidade
+consultada na unidade para o canal selecionado.
+
+A vitrine e a revisão do carrinho podem mostrar estimativas identificadas
+como tais. A confirmação da composição e dos preços depende do resumo emitido
+pela API. Endereço, taxa e envio seguem a jornada correspondente ao canal,
+com avisos de indisponibilidade e recuperação.
+
 ## Densidade da gestão
 
 Todas as rotas da gestão usam o padrão compacto. No desktop, datas, horas, quantidades e preços ocupam larguras próprias. No toque, os alvos permanecem com pelo menos 48 px. O tema claro é o padrão inicial. Superfícies claras, texto escuro, bordas

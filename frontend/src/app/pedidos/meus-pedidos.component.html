@@ -1,100 +1,219 @@
-<section
-  class="painel-interno pedidos-cliente"
-  [class.rodadas-mesa]="mesa()"
-  [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'"
->
-  <header class="cabecalho-meus-pedidos">
-    @if (mesa()) {
-      <h2>Minhas rodadas</h2>
-    } @else {
-      <h1 class="titulo-cliente">Meus pedidos</h1>
-    }
+<section class="painel-interno" [attr.aria-label]="mesa() ? 'Minhas rodadas' : 'Meus pedidos'">
+  <header class="cabecalho-painel">
+    <div>
+      <span class="sobretitulo">
+        @if (!mesa() && nomeEstabelecimento()) {
+          {{ nomeEstabelecimento() }} · Acompanhamento
+        } @else {
+          Acompanhamento
+        }
+      </span>
+      <h2>{{ mesa() ? 'Minhas rodadas' : 'Meus pedidos' }}</h2>
+      <p class="texto-secundario">Veja o andamento e os detalhes de cada pedido.</p>
+    </div>
+  </header>
+  <div class="barra-conexao">
+    <p role="status">
+      {{ acompanhamento.estado() }}
+      @if (acompanhamento.atualizadoEm(); as horario) {
+        Última atualização: {{ horario }}.
+      }
+    </p>
     <button
       hlmBtn
       variant="outline"
+      size="sm"
       type="button"
-      aria-label="Atualizar pedidos"
       (click)="carregar(pagina())"
       [disabled]="ocupado()"
     >
-      Atualizar
+      Atualizar pedidos
     </button>
-    @if (mesa() || pedidos().length) {
-      <div class="conexao-meus-pedidos">
-        <p role="status">
-          <span
-            class="indicador-conexao"
-            [class.conectado]="acompanhamento.conectado()"
-            aria-hidden="true"
-          ></span>
-          {{ acompanhamento.estado() }}
-        </p>
-        @if (acompanhamento.atualizadoEm(); as horario) {
-          <span class="horario-atualizacao">Atualizado às {{ horario }}</span>
-        }
-      </div>
-    }
-  </header>
+  </div>
   @if (outrasUnidades()) {
-    <p class="frequencia-atualizacao">
-      Pedidos desta página são conferidos também a cada cinco segundos.
-    </p>
+    <p class="texto-secundario">Atualização automática ativa em segundo plano.</p>
   }
   @if (erro()) {
     <p role="alert" class="erro">{{ erro() }}</p>
   }
+  @if (pedidos().length > 0) {
+    <div class="filtros-pedidos" role="group" aria-label="Filtrar pedidos desta página">
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'todos'"
+        (click)="filtro.set('todos')"
+      >
+        Todos
+        <span class="filtro-contagem">{{ pedidos().length }}</span>
+      </button>
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'andamento'"
+        (click)="filtro.set('andamento')"
+      >
+        Em andamento
+        <span class="filtro-contagem">{{ contagem('andamento') }}</span>
+      </button>
+      <button
+        type="button"
+        class="filtro-pilula"
+        [attr.aria-pressed]="filtro() === 'concluidos'"
+        (click)="filtro.set('concluidos')"
+      >
+        Concluídos
+        <span class="filtro-contagem">{{ contagem('concluidos') }}</span>
+      </button>
+    </div>
+  }
   <div class="grade-pedidos" [attr.aria-busy]="ocupado()">
-    @for (pedido of pedidos(); track pedido.id) {
-      <app-pedido-detalhe
-        [pedido]="pedido"
-        [contexto]="mesa() ? 'mesa' : 'cliente'"
-        [linkAcompanhamento]="!mesa()"
-        (atualizar)="carregar(pagina())"
-      />
-    } @empty {
-      @if (ocupado()) {
-        <p class="carregamento-pedidos" role="status">
-          {{ mesa() ? 'Buscando suas rodadas…' : 'Buscando seus pedidos…' }}
-        </p>
-      } @else if (!erro()) {
-        <div class="vazio">
-          <span class="icone-vazio"><app-icone nome="pedidos" /></span>
-          @if (mesa()) {
-            <h3>
-              {{ pagina() === 0 ? 'Você ainda não enviou rodadas' : 'Nenhuma rodada nesta página' }}
-            </h3>
-          } @else {
-            <h2>
-              {{ pagina() === 0 ? 'Você ainda não tem pedidos' : 'Nenhum pedido nesta página' }}
-            </h2>
-            @if (pagina() === 0) {
-              <p>Acompanhe seus pedidos por aqui após o envio.</p>
-              <a hlmBtn variant="outline" routerLink="/cardapio">Ver cardápio</a>
+    @for (pedido of pedidosVisiveis(); track pedido.id) {
+      @if (mesa()) {
+        <app-pedido-detalhe [pedido]="pedido" contexto="mesa" (atualizar)="carregar(pagina())" />
+      } @else {
+        <article
+          class="pedido-card-resumo"
+          [attr.data-estado]="pedido.estado"
+          [attr.aria-label]="'Pedido ' + pedido.id"
+        >
+          <header class="pedido-resumo-topo">
+            <div class="pedido-resumo-meta">
+              <span class="pedido-resumo-canal">{{ canalRotulo(pedido.canal) }}</span>
+              <strong class="pedido-resumo-id">#{{ pedido.id.slice(0, 8).toUpperCase() }}</strong>
+              @if (horaPedido(pedido.criadoEm); as hora) {
+                <span class="pedido-resumo-hora">· {{ hora }}</span>
+              }
+            </div>
+            <div class="pedido-resumo-estados">
+              <span class="etiqueta" [attr.data-estado]="pedido.estado">{{
+                nomeEstado(pedido.estado)
+              }}</span>
+              @if (cancelamentoPendente(pedido)) {
+                <span class="etiqueta" data-estado="AGUARDANDO_ACEITE"
+                  >Cancelamento em avaliação</span
+                >
+              }
+            </div>
+          </header>
+
+          <div class="pedido-resumo-lista-itens">
+            @if (pedido.linhas.length === 0) {
+              <p class="pedido-resumo-vazio">Sem itens listados</p>
+            } @else {
+              <ul class="pedido-resumo-itens-lista">
+                @for (linha of linhasVisiveis(pedido); track linha.id) {
+                  <li class="pedido-resumo-item">
+                    @if (midiaLinha(linha); as midia) {
+                      <div class="pedido-resumo-thumb">
+                        <img
+                          class="pedido-resumo-thumb-img"
+                          [src]="'/api/v1/midias/' + midia"
+                          [alt]="linha.nome"
+                          width="36"
+                          height="36"
+                          loading="lazy"
+                          decoding="async"
+                          (error)="registrarErroMidia(midia)"
+                        />
+                      </div>
+                    } @else {
+                      <div class="pedido-resumo-thumb pedido-resumo-thumb--mono" aria-hidden="true">
+                        {{ inicialProduto(linha.nome) }}
+                      </div>
+                    }
+                    <span class="pedido-resumo-item-texto">
+                      <strong class="pedido-resumo-item-qtd">{{ linha.quantidade }} ×</strong>
+                      {{ linha.nome }}
+                    </span>
+                  </li>
+                }
+              </ul>
+              @if (linhasRestantes(pedido) > 0) {
+                <p class="pedido-resumo-mais">
+                  + {{ linhasRestantes(pedido) }}
+                  {{ linhasRestantes(pedido) === 1 ? 'outro item' : 'outros itens' }}
+                </p>
+              }
             }
-          }
-        </div>
+          </div>
+
+          <footer class="pedido-resumo-rodape">
+            <div class="pedido-resumo-rodape-info">
+              <div class="pedido-resumo-situacao">
+                <span class="pedido-resumo-unidades">
+                  {{ totalUnidades(pedido) }}
+                  {{ totalUnidades(pedido) === 1 ? 'item' : 'itens' }}
+                </span>
+                @if (aguardandoPagamentoOnline(pedido)) {
+                  <span class="pedido-resumo-alerta-pgto">Pagamento pendente</span>
+                }
+              </div>
+              @if (totalPedidoFormatado(pedido); as total) {
+                <strong class="pedido-resumo-total">{{ total }}</strong>
+              }
+            </div>
+            <div class="pedido-resumo-acoes">
+              <a
+                hlmBtn
+                [variant]="varianteAcaoPedido(pedido)"
+                size="sm"
+                class="pedido-resumo-cta"
+                [routerLink]="['/pedidos', pedido.id]"
+                [attr.aria-label]="rotuloAcaoPedido(pedido) + ' #' + pedido.id.slice(0, 8).toUpperCase()"
+              >
+                {{ rotuloAcaoPedido(pedido) }}
+              </a>
+            </div>
+          </footer>
+        </article>
       }
+    } @empty {
+      <div class="vazio">
+        <span class="vazio-icone" aria-hidden="true">
+          <app-icone [nome]="mesa() ? 'mesas' : 'pedidos'" />
+        </span>
+        @if (pedidos().length > 0 && !ocupado()) {
+          <h3>Nenhum pedido neste filtro</h3>
+          <p>Altere o filtro acima para visualizar os outros pedidos desta página.</p>
+          <div class="vazio-acao">
+            <button hlmBtn variant="outline" size="sm" type="button" (click)="filtro.set('todos')">
+              Mostrar todos os pedidos
+            </button>
+          </div>
+        } @else {
+          <h3>{{ ocupado() ? 'Atualizando seus pedidos…' : 'Nenhum pedido nesta página' }}</h3>
+          <p>Quando seu pedido for confirmado, você poderá acompanhá-lo aqui.</p>
+          @if (!mesa() && !ocupado()) {
+            <div class="vazio-acao">
+              <a hlmBtn routerLink="/cardapio">Explorar cardápio</a>
+            </div>
+          }
+        }
+      </div>
     }
   </div>
-  @if (pagina() > 0 || mais()) {
-    <nav class="paginacao" aria-label="Páginas dos meus pedidos">
-      <button
-        class="secundario"
-        type="button"
-        (click)="carregar(pagina() - 1)"
-        [disabled]="ocupado() || pagina() === 0"
-      >
-        Página anterior de pedidos
-      </button>
-      <span>Página {{ pagina() + 1 }}</span>
-      <button
-        class="secundario"
-        type="button"
-        (click)="carregar(pagina() + 1)"
-        [disabled]="ocupado() || !mais()"
-      >
-        Próxima página de pedidos
-      </button>
-    </nav>
-  }
+  <nav class="paginacao" aria-label="Páginas dos meus pedidos">
+    <button
+      hlmBtn
+      variant="outline"
+      size="sm"
+      type="button"
+      (click)="carregar(pagina() - 1)"
+      [disabled]="ocupado() || pagina() === 0"
+    >
+      Página anterior de pedidos
+    </button>
+    <span>Página {{ pagina() + 1 }}</span>
+    <button
+      hlmBtn
+      variant="outline"
+      size="sm"
+      type="button"
+      (click)="carregar(pagina() + 1)"
+      [disabled]="ocupado() || !mais()"
+    >
+      Próxima página de pedidos
+    </button>
+  </nav>
 </section>

@@ -56,7 +56,15 @@ export class OperacaoPedidosComponent {
     const visiveis = new Set(this.pedidos().map((pedido) => pedido.id));
     return this.comandos.pendenciasDaFila(this.unidadeId()).filter((id) => !visiveis.has(id));
   });
-  readonly filtroEstado = signal('AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO');
+  readonly atalhosEstado = [
+    { valor: 'AGUARDANDO_ACEITE,NA_FILA,EM_PREPARO,PRONTO', nome: 'Em andamento' },
+    { valor: 'AGUARDANDO_ACEITE', nome: 'Aguardam aceite' },
+    { valor: 'NA_FILA', nome: 'Na fila' },
+    { valor: 'EM_PREPARO', nome: 'Em preparo' },
+    { valor: 'PRONTO', nome: 'Prontos' },
+    { valor: '', nome: 'Todos' },
+  ];
+  readonly filtroEstado = signal(this.atalhosEstado[0].valor);
   readonly filtroCanal = signal('');
   readonly ordenacao = signal<'ANTIGOS' | 'RECENTES'>('RECENTES');
   readonly acompanhamento = new AcompanhamentoEventos();

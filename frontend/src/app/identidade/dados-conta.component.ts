@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import { Unidade, mensagemErro } from '../catalogo/modelos';
 import { NavegacaoProtegidaService } from '../rotas/navegacao-protegida.service';
+import { MarcaService } from '../rotas/marca.service';
+import { IconeComponent } from '../rotas/icone.component';
 import { HlmButton } from '../ui/button';
 import { ApiFailure, SessaoService } from './sessao.service';
 
@@ -30,13 +32,17 @@ const dataPtBr = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' });
 
 @Component({
   selector: 'app-dados-conta',
-  imports: [HlmButton],
+  imports: [HlmButton, IconeComponent],
   templateUrl: './dados-conta.component.html',
   styleUrl: './dados-conta.component.css',
+  host: { '[attr.data-equipe]': 'tituloDaGestao() ? "" : null' },
 })
 export class DadosContaComponent {
   readonly nomePerfil = input.required<string>();
+  readonly tituloDaGestao = input(false);
+  readonly marca = inject(MarcaService);
   private readonly sessao = inject(SessaoService);
+  readonly identidade = this.sessao.identidade;
   private readonly navegacao = inject(NavegacaoProtegidaService);
   private readonly editarBotao = viewChild<ElementRef<HTMLButtonElement>>('editarBotao');
   private readonly campoNome = viewChild<ElementRef<HTMLInputElement>>('campoNome');
@@ -75,6 +81,13 @@ export class DadosContaComponent {
     });
   }
 
+  iniciais(dados: MinhaConta): string {
+    const partes = (dados.nome || dados.email.split('@')[0]).trim().split(/\s+/);
+    const monograma =
+      partes.length > 1 ? partes[0][0] + partes[partes.length - 1][0] : partes[0].slice(0, 2);
+    return monograma.toUpperCase();
+  }
+
   dataCadastro(valor: string): string {
     return dataPtBr.format(new Date(valor));
   }
@@ -106,6 +119,16 @@ export class DadosContaComponent {
     }
     this.fecharEditor();
     this.erro.set('');
+  }
+
+  recarregar(): void {
+    if (
+      this.alterado() &&
+      !this.consultarAntesDeSalvar() &&
+      !window.confirm('Descartar as alterações nos dados pessoais?')
+    )
+      return;
+    void this.consultar();
   }
 
   async consultar(): Promise<void> {
