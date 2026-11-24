@@ -1,9 +1,14 @@
 # Checkpoint de execução
 
-## Editorial Bistrô — 2026-11-23
+## Editorial Bistrô — integração em main, 2026-11-24
 
 A [PR #23](https://github.com/victormontibeller/restaurant-manager/pull/23)
-integra o visual da PR #22 ao projeto e está aberta para revisão. O commit
+integrou o visual da PR #22 à `main` no merge `421a156`. A `main` local
+foi sincronizada com `origin/main`. A aplicação integrada corresponde ao
+head revisado `18c3435`, com [CI aprovado](https://github.com/victormontibeller/restaurant-manager/actions/runs/45269604001)
+e 496 testes Java aprovados em PostgreSQL.
+
+O commit
 `4725422` foi confirmado na [demo local](https://demo.localhost:8095/cardapio)
 às 18h25, com PWA `f59f127e311dfea694fc`. O JAR servido coincide com o
 candidato testado e traz 375 classes Java e 37 migrações SQL idênticas às
@@ -13,8 +18,7 @@ A revisão cobriu 34 telas e estados de Cliente, Gestão, Cozinha e Plataforma
 em 612 combinações de largura, tema e navegador. Capturas com dados e testes
 de navegação confirmaram carrinho, checkout, pedido assistido, mesa, preparo
 parcial, despacho, revogação de acesso, relatórios, pendências, ofertas por
-unidade, provisionamento e PWA. Os 496 testes Java são da primeira integração
-com o mesmo backend, em PostgreSQL isolado.
+unidade, provisionamento e PWA.
 
 O [relatório da integração](evidencias/editorial-bistro-2026-11-23.md)
 registra capturas, resultados, reexecuções e os limites da verificação. A
